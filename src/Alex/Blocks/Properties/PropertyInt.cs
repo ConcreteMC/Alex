@@ -6,6 +6,7 @@ namespace Alex.Blocks.Properties
 	public class PropertyInt : StateProperty<int>
 	{
 		private readonly int _defaultValue = 0;
+
 		public PropertyInt(string name, int defaultValue = 0) : base(name)
 		{
 			_defaultValue = defaultValue;
@@ -15,7 +16,7 @@ namespace Alex.Blocks.Properties
 		/// <inheritdoc />
 		public override IStateProperty<int> WithValue(int value)
 		{
-			return new PropertyInt(Name, _defaultValue) {Value = value};
+			return new PropertyInt(Name, _defaultValue) { Value = value };
 		}
 
 		public override int ParseValue(string value)

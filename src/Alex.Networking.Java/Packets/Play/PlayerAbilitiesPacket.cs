@@ -2,19 +2,19 @@
 
 namespace Alex.Networking.Java.Packets.Play
 {
-    public class PlayerAbilitiesPacket : Packet<PlayerAbilitiesPacket>
-    {
-	    public PlayerAbilitiesPacket()
-	    {
-		    PacketId = 0x19;
-	    }
+	public class PlayerAbilitiesPacket : Packet<PlayerAbilitiesPacket>
+	{
+		public PlayerAbilitiesPacket()
+		{
+			PacketId = 0x19;
+		}
 
-	    public byte Flags;
-	    public float FlyingSpeed;
+		public byte Flags;
+		public float FlyingSpeed;
 		public float WalkingSpeed;
-	    public float FiedOfViewModifier;
+		public float FiedOfViewModifier;
 
-	    public bool ServerBound = false;
+		public bool ServerBound = false;
 
 		public override void Decode(MinecraftStream stream)
 		{
@@ -23,21 +23,21 @@ namespace Alex.Networking.Java.Packets.Play
 			FiedOfViewModifier = stream.ReadFloat();
 		}
 
-	    public override void Encode(MinecraftStream stream)
-	    {
-		    if (ServerBound)
-		    {
-			    stream.WriteByte(Flags);
+		public override void Encode(MinecraftStream stream)
+		{
+			if (ServerBound)
+			{
+				stream.WriteByte(Flags);
 				//stream.WriteFloat(FlyingSpeed);
-			//	stream.WriteFloat(WalkingSpeed);
-		    }
-	    }
+				//	stream.WriteFloat(WalkingSpeed);
+			}
+		}
 
-	    /// <inheritdoc />
-	    protected override void ResetPacket()
-	    {
-		    base.ResetPacket();
-		    ServerBound = false;
-	    }
-    }
+		/// <inheritdoc />
+		protected override void ResetPacket()
+		{
+			base.ResetPacket();
+			ServerBound = false;
+		}
+	}
 }

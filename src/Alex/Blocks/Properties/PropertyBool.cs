@@ -14,14 +14,12 @@ namespace Alex.Blocks.Properties
 		public static readonly PropertyBool WEST = new PropertyBool("west");
 		public static readonly PropertyBool UP = new PropertyBool("up");
 		public static readonly PropertyBool DOWN = new PropertyBool("down");
-		
-		public PropertyBool(string name) : this(name, "true", "false")
-		{
-		
-		}
+
+		public PropertyBool(string name) : this(name, "true", "false") { }
 
 		private string TrueString;
 		private string FalseString;
+
 		public PropertyBool(string name, string trueS, string falseS) : base(name)
 		{
 			TrueString = trueS;
@@ -37,7 +35,7 @@ namespace Alex.Blocks.Properties
 		/// <inheritdoc />
 		public override IStateProperty<bool> WithValue(bool value)
 		{
-			return new PropertyBool(Name, TrueString, FalseString) {Value = value};
+			return new PropertyBool(Name, TrueString, FalseString) { Value = value };
 		}
 
 		public override bool ParseValue(string value)

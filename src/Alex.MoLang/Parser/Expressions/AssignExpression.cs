@@ -14,7 +14,7 @@ namespace Alex.MoLang.Parser.Expressions
 			Variable = variable;
 			Expression = expr;
 		}
-		
+
 		/// <inheritdoc />
 		public override IMoValue Evaluate(MoScope scope, MoLangEnvironment environment)
 		{

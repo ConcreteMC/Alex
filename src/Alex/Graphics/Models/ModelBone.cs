@@ -15,8 +15,9 @@ namespace Alex.Graphics.Models
 	public class ModelBone
 	{
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(ModelBone));
-		
+
 		private List<ModelMesh> _meshes = new List<ModelMesh>();
+
 		public List<ModelMesh> Meshes
 		{
 			get
@@ -28,7 +29,7 @@ namespace Alex.Graphics.Models
 				_meshes = value;
 			}
 		}
-		
+
 		/// <summary>
 		///		 Gets a collection of bones that are children of this bone.
 		/// </summary>
@@ -38,37 +39,39 @@ namespace Alex.Graphics.Models
 		///		Gets the index of this bone in the Bones collection.
 		/// </summary>
 		public int Index { get; set; } = -1;
-		
+
 		/// <summary>
 		///  Gets the name of this bone.
 		/// </summary>
 		public string Name { get; set; }
-		
+
 		/// <summary>
 		///		Gets the parent of this bone.
 		/// </summary>
 		public ModelBone Parent { get; set; }
-		
+
 		/// <summary>
 		///		The root model
 		/// </summary>
 		public Model Model { get; set; }
-		
+
 
 		/// <summary>
 		///		Gets or sets the matrix used to transform this bone relative to its parent bone.
 		/// </summary>
 		public Matrix Transform { get; set; } = Matrix.Identity;
-		
+
 		/// <summary>
 		/// Transform of this node from the root of the model not from the parent
 		/// </summary>
-		public Matrix ModelTransform {
+		public Matrix ModelTransform
+		{
 			get;
 			set;
 		} = Matrix.Identity;
-		
+
 		private Vector3 _baseRotation = Vector3.Zero;
+
 		public Vector3 BaseRotation
 		{
 			get => _baseRotation;
@@ -80,6 +83,7 @@ namespace Alex.Graphics.Models
 		}
 
 		private Vector3 _basePosition = Vector3.Zero;
+
 		public Vector3 BasePosition
 		{
 			get => _basePosition;
@@ -89,8 +93,9 @@ namespace Alex.Graphics.Models
 				//UpdateTransform();
 			}
 		}
-		
+
 		private Vector3 _baseScale = Vector3.One;
+
 		public Vector3 BaseScale
 		{
 			get => _baseScale;
@@ -102,6 +107,7 @@ namespace Alex.Graphics.Models
 		}
 
 		private Vector3? _pivot = null;
+
 		public Vector3? Pivot
 		{
 			get => _pivot;
@@ -113,11 +119,14 @@ namespace Alex.Graphics.Models
 		}
 
 		public bool Visible { get; set; } = true;
-		public ModelBone ()	
+
+		public ModelBone()
 		{
 			Children = new ModelBoneCollection(new List<ModelBone>());
 		}
+
 		public BoundingBox Box { get; set; }
+
 		public void AddMesh(ModelMesh mesh)
 		{
 			mesh.ParentBone = this;
@@ -134,7 +143,7 @@ namespace Alex.Graphics.Models
 		{
 			if (modelBone.Parent != this)
 				return;
-			
+
 			modelBone.Parent = null;
 			Children.Remove(modelBone);
 		}
@@ -145,14 +154,14 @@ namespace Alex.Graphics.Models
 			var pivot = Pivot.GetValueOrDefault(box / 2f);
 
 			return Matrix.CreateScale(_baseScale * data.Scale) * Matrix.CreateTranslation(-pivot)
-			                                                        * MatrixHelper.CreateRotationDegrees(
-				                                                        _baseRotation * new Vector3(1f, 1f, 1f))
-			                                                        * MatrixHelper.CreateRotationDegrees(
-				                                                        (data.Rotation) * new Vector3(-1f, -1f, 1f))
-			                                                        * Matrix.CreateTranslation(pivot)
-			                                                        * Matrix.CreateTranslation(
-				                                                        _basePosition + (data.Position * new Vector3(
-					                                                        -1f, 1f, 1f)));
+			                                                   * MatrixHelper.CreateRotationDegrees(
+				                                                   _baseRotation * new Vector3(1f, 1f, 1f))
+			                                                   * MatrixHelper.CreateRotationDegrees(
+				                                                   (data.Rotation) * new Vector3(-1f, -1f, 1f))
+			                                                   * Matrix.CreateTranslation(pivot)
+			                                                   * Matrix.CreateTranslation(
+				                                                   _basePosition + (data.Position * new Vector3(
+					                                                   -1f, 1f, 1f)));
 		}
 	}
 }

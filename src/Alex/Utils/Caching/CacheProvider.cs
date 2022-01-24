@@ -6,14 +6,14 @@ namespace Alex.Utils.Caching
 {
 	public class CacheProvider<TKey> : IDisposable
 	{
-		private IStorageSystem Storage  { get; }
-		private string         BasePath { get; }
-		public  bool           Enabled  { get; set; } = false;
-		
+		private IStorageSystem Storage { get; }
+		private string BasePath { get; }
+		public bool Enabled { get; set; } = false;
+
 		public CacheProvider(IStorageSystem storage, string cacheIdentifier)
 		{
 			Storage = storage;
-			BasePath = Path.Combine("cache", cacheIdentifier);// "blobs";
+			BasePath = Path.Combine("cache", cacheIdentifier); // "blobs";
 
 			if (!Storage.TryGetDirectory(BasePath, out _))
 			{
@@ -42,9 +42,6 @@ namespace Alex.Utils.Caching
 		}
 
 		/// <inheritdoc />
-		public virtual void Dispose()
-		{
-			
-		}
+		public virtual void Dispose() { }
 	}
 }

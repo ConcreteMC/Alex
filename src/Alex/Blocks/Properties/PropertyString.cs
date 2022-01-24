@@ -8,6 +8,7 @@ namespace Alex.Blocks.Properties
 	public class PropertyString : StateProperty<string>
 	{
 		private readonly string _defaultValue = "";
+
 		public PropertyString(string name, string defaultValue = "") : base(name)
 		{
 			_defaultValue = defaultValue;
@@ -17,7 +18,7 @@ namespace Alex.Blocks.Properties
 		/// <inheritdoc />
 		public override IStateProperty<string> WithValue(string value)
 		{
-			return new PropertyString(Name, _defaultValue) {Value = value};
+			return new PropertyString(Name, _defaultValue) { Value = value };
 		}
 
 		public override string ParseValue(string value)
@@ -25,11 +26,12 @@ namespace Alex.Blocks.Properties
 			return value;
 		}
 	}
-	
+
 	public class ValidatedPropertyString : StateProperty<string>
 	{
 		private readonly string _defaultValue = "";
 		private IReadOnlyDictionary<string, IStateProperty<string>> _propertyStrings;
+
 		public ValidatedPropertyString(string name, string[] values, string defaultValue = "") : base(name)
 		{
 			_defaultValue = defaultValue;
@@ -37,6 +39,7 @@ namespace Alex.Blocks.Properties
 
 			var p = new PropertyString(name);
 			var properties = new Dictionary<string, IStateProperty<string>>(StringComparer.OrdinalIgnoreCase);
+
 			foreach (var prop in values)
 			{
 				properties.Add(name, p.WithValue(prop));
@@ -50,8 +53,8 @@ namespace Alex.Blocks.Properties
 		{
 			if (_propertyStrings.TryGetValue(value, out var state))
 				return state;
-			
-			return new PropertyString(Name, _defaultValue) {Value = value};
+
+			return new PropertyString(Name, _defaultValue) { Value = value };
 		}
 
 		public override string ParseValue(string value)

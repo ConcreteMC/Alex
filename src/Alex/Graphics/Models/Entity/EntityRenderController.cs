@@ -18,6 +18,7 @@ namespace Alex.Graphics.Models.Entity
 		private bool _requiresUpdate = false;
 
 		private IDictionary<string, IDictionary<string, IMoValue>> _context;
+
 		public EntityRenderController(AnimationComponent parent, RenderController definition)
 		{
 			_parent = parent;
@@ -27,17 +28,17 @@ namespace Alex.Graphics.Models.Entity
 
 		private IDictionary<string, IDictionary<string, IMoValue>> BuildContext(RenderController definition)
 		{
-			Dictionary<string, IDictionary<string, IMoValue>> context = new Dictionary<string, IDictionary<string, IMoValue>>(StringComparer.OrdinalIgnoreCase);
+			Dictionary<string, IDictionary<string, IMoValue>> context =
+				new Dictionary<string, IDictionary<string, IMoValue>>(StringComparer.OrdinalIgnoreCase);
 
 			if (_definition.Arrays != null)
 			{
 				foreach (var array in _definition.Arrays)
 				{
 					string key = array.Key;
-
 				}
 			}
-			
+
 			return context;
 		}
 
@@ -52,7 +53,7 @@ namespace Alex.Graphics.Models.Entity
 			{
 				if (part.Expressions == null)
 					continue;
-				
+
 				foreach (var p in part.Expressions)
 				{
 					var result = _parent.Runtime.Execute(p.Value, _parent.Context);
@@ -68,7 +69,7 @@ namespace Alex.Graphics.Models.Entity
 				return;
 
 			UpdatePartVisibility();
-			
+
 			try
 			{
 				var textures = _definition.Textures;
@@ -111,19 +112,18 @@ namespace Alex.Graphics.Models.Entity
 
 					//if (_parent.Entity is AbstractHorse)
 					{
-
 						for (var index = 0; index < textureResults.Length; index++)
 						{
 							if (index > 0)
 								break;
-							
+
 							var result = textureResults[index];
 
 							if (_parent?.Entity?.Texture?.Tag is string str && str == result)
 							{
 								continue;
 							}
-							
+
 							if (_parent.EntityDefinition.Textures.TryGetValue(result, out var texturePath))
 							{
 								if (Alex.Instance.Resources.TryGetBedrockBitmap(texturePath, out var bitmap))
@@ -155,6 +155,7 @@ namespace Alex.Graphics.Models.Entity
 		}
 
 		private ModelRenderer _renderer;
+
 		/// <inheritdoc />
 		public void UpdateBindings(ModelRenderer renderer)
 		{

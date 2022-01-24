@@ -12,6 +12,7 @@ namespace Alex.MoLang.Runtime
 	public class MoLangEnvironment : IMoValue
 	{
 		private static readonly NLog.Logger Log = NLog.LogManager.GetCurrentClassLogger(typeof(MoLangEnvironment));
+
 		/// <inheritdoc />
 		public object Value => Structs;
 
@@ -27,17 +28,19 @@ namespace Alex.MoLang.Runtime
 
 			Structs.TryAdd("context", new ContextStruct());
 		}
-		
-		public IMoValue GetValue(MoPath name) {
+
+		public IMoValue GetValue(MoPath name)
+		{
 			return GetValue(name, MoParams.Empty);
 		}
 
-		public IMoValue GetValue(MoPath name, MoParams param) {
+		public IMoValue GetValue(MoPath name, MoParams param)
+		{
 			try
 			{
-		//		var index = name.IndexOf('.');
+				//		var index = name.IndexOf('.');
 				//string[] segments = name.;
-			//	string main = name.Substring(0, index); //.Dequeue();
+				//	string main = name.Substring(0, index); //.Dequeue();
 
 				//if (!Structs.ContainsKey(main))
 				//{
@@ -69,7 +72,7 @@ namespace Alex.MoLang.Runtime
 				throw new MoLangRuntimeException($"Cannot set value on struct: {name}", ex);
 			}
 		}
-		
+
 		/// <inheritdoc />
 		public bool Equals(IMoValue b)
 		{

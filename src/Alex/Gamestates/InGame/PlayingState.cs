@@ -29,23 +29,26 @@ namespace Alex.Gamestates.InGame
 	{
 		public const string Key = "play";
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(PlayingState));
-		
+
 		public World World { get; private set; }
 
-        private WorldProvider WorldProvider { get; set; }
-        private NetworkProvider NetworkProvider { get; set; }
+		private WorldProvider WorldProvider { get; set; }
+		private NetworkProvider NetworkProvider { get; set; }
 
 		private readonly PlayingHud _playingHud;
 		private readonly GuiDebugInfo _debugInfo;
 		private readonly NetworkDebugHud _networkDebugHud;
-		
-		public PlayingState(Alex alex, GraphicsDevice graphics, WorldProvider worldProvider, NetworkProvider networkProvider) : base()
+
+		public PlayingState(Alex alex,
+			GraphicsDevice graphics,
+			WorldProvider worldProvider,
+			NetworkProvider networkProvider) : base()
 		{
 			NetworkProvider = networkProvider;
 
 			World = new World(alex.ServiceContainer, graphics, Options, networkProvider);
 			World.Player.IsFirstPersonMode = true;
-			
+
 			WorldProvider = worldProvider;
 			var title = new TitleComponent();
 
@@ -57,25 +60,25 @@ namespace Alex.Gamestates.InGame
 			WorldProvider.TitleComponent = title;
 
 			_playingHud = new PlayingHud(Alex, World, title, networkProvider);
-			
+
 			WorldProvider.ScoreboardView = _playingHud.Scoreboard;
 			WorldProvider.ChatRecipient = _playingHud;
 			WorldProvider.BossBarContainer = _playingHud.BossBar;
 			//WorldProvider.ScoreboardView
-			
+
 			_debugInfo = new GuiDebugInfo();
-            InitDebugInfo();
-            
-            _networkDebugHud = new NetworkDebugHud(NetworkProvider);
-            RenderNetworking = Options.MiscelaneousOptions.ShowNetworkInfoByDefault.Value;
-            //Alex.Instance.l
-            World.TickManager.RegisterTicked(WorldProvider);
+			InitDebugInfo();
+
+			_networkDebugHud = new NetworkDebugHud(NetworkProvider);
+			RenderNetworking = Options.MiscelaneousOptions.ShowNetworkInfoByDefault.Value;
+			//Alex.Instance.l
+			World.TickManager.RegisterTicked(WorldProvider);
 		}
 
 		protected override void OnLoad(IRenderArgs args)
 		{
 			Alex.InGame = true;
-			
+
 			World.SpawnPoint = WorldProvider.GetSpawnPoint();
 			World.Camera.MoveTo(World.SpawnPoint, Vector3.Zero);
 
@@ -83,6 +86,7 @@ namespace Alex.Gamestates.InGame
 		}
 
 		private TimeSpan _targetElapsed = TimeSpan.Zero;
+
 		protected override void OnShow()
 		{
 			try
@@ -123,17 +127,18 @@ namespace Alex.Gamestates.InGame
 		protected override void OnHide()
 		{
 			var world = World;
+
 			if (world == null)
 				return;
-	
+
 			world.TickManager.UnregisterTicked(_playingHud.Title);
-			
+
 			if (RenderDebug)
 				Alex.GuiManager.RemoveScreen(_debugInfo);
-			
+
 			Alex.GuiManager.RemoveScreen(_playingHud);
 			Alex.GuiManager.RemoveScreen(_networkDebugHud);
-			
+
 			base.OnHide();
 		}
 
@@ -165,7 +170,8 @@ namespace Alex.Gamestates.InGame
 				return _networkDebugHud.Advanced;
 			}
 			set
-			{ //if (value != _networkDebugHud.Advanced)
+			{
+				//if (value != _networkDebugHud.Advanced)
 				{
 					_networkDebugHud.Advanced = value;
 				}
@@ -175,194 +181,240 @@ namespace Alex.Gamestates.InGame
 		private long _ramUsage = 0;
 		private Biome _currentBiome = BiomeUtils.GetBiome(0);
 		private uint _currentBiomeId = 0;
+
 		private void InitDebugInfo()
 		{
 			string gameVersion = VersionUtils.GetVersion();
 
 			_debugInfo.AddDebugLeft(
-				() => $"Alex {gameVersion} ({Alex.FpsMonitor.Value:##} FPS, {World.TickManager.TicksPerSecond:##} TPS, Chunk Updates: {World.ChunkManager.EnqueuedChunkUpdates} queued, {World.ChunkManager.ConcurrentChunkUpdates}/{World.ChunkManager.MaxConcurrentChunksUpdates} active, Lighting: {World.ChunkManager.LightingUpdates})", TimeSpan.FromMilliseconds(50));
-			
-			_debugInfo.AddDebugLeft(() =>
-			{
-				var pos = World?.Player?.KnownPosition ?? new PlayerLocation();
-				var blockPos = pos.GetCoordinates3D();
-				return $"Position: (X={pos.X:F2}, Y={pos.Y:F2}, Z={pos.Z:F2}, OnGround={pos.OnGround}) / Block: ({blockPos.X:D}, {blockPos.Y:D}, {blockPos.Z:D})";
-			}, TimeSpan.FromMilliseconds(50));
-			
-			_debugInfo.AddDebugLeft(() =>
-			{
-				var pos =  World?.Player?.KnownPosition ?? new PlayerLocation();
-				return  $"Facing: {pos.GetCardinalDirection()} (HeadYaw={pos.HeadYaw:F2}, Yaw={pos.Yaw:F2}, Pitch={pos.Pitch:F2})";
-			}, TimeSpan.FromMilliseconds(50));
-			
-			_debugInfo.AddDebugLeft(() =>
-			{
-				var pos = World?.Player?.Velocity ?? Vector3.Zero;
-				return $"Velocity: (X={pos.X:F2}, Y={pos.Y:F2}, Z={pos.Z:F2}) ({World.Player.Movement.MetersPerSecond:F3} m/s)";// / Target Speed: {(World.Player.CalculateMovementSpeed() * 20f):F3} m/s";
-			});
+				() =>
+					$"Alex {gameVersion} ({Alex.FpsMonitor.Value:##} FPS, {World.TickManager.TicksPerSecond:##} TPS, Chunk Updates: {World.ChunkManager.EnqueuedChunkUpdates} queued, {World.ChunkManager.ConcurrentChunkUpdates}/{World.ChunkManager.MaxConcurrentChunksUpdates} active, Lighting: {World.ChunkManager.LightingUpdates})",
+				TimeSpan.FromMilliseconds(50));
 
-			_debugInfo.AddDebugLeft(() => $"Primitives: {Alex.Metrics.PrimitiveCount:N0} Draw count: {Alex.Metrics.DrawCount}", TimeSpan.FromMilliseconds(500));
-			_debugInfo.AddDebugLeft(() => $"Textures: {Alex.Metrics.TextureCount:N0} Sprite count: {Alex.Metrics.SpriteCount}", TimeSpan.FromMilliseconds(500));
-			_debugInfo.AddDebugLeft(() => $"Graphic Resources: {GpuResourceManager.ResourceCount}", TimeSpan.FromMilliseconds(500));
+			_debugInfo.AddDebugLeft(
+				() =>
+				{
+					var pos = World?.Player?.KnownPosition ?? new PlayerLocation();
+					var blockPos = pos.GetCoordinates3D();
 
-			_debugInfo.AddDebugLeft(() => $"Chunks: {World.ChunkManager.ChunkCount}, {World.ChunkManager.RenderedChunks}, {World.ChunkDrawCount}", TimeSpan.FromMilliseconds(500));
-			_debugInfo.AddDebugLeft(() => $"Entities: {World.EntityManager.EntityCount}, {World.EntityManager.EntitiesRendered}, {World.EntityManager.DrawCount}", TimeSpan.FromMilliseconds(500));
-			_debugInfo.AddDebugLeft(() => $"Particles: {Alex.ParticleManager.ParticleCount}", TimeSpan.FromMilliseconds(500));
-			_debugInfo.AddDebugLeft(() =>
-			{
-				return $"Biome: {_currentBiome.Name} ({_currentBiomeId})";
-			}, TimeSpan.FromMilliseconds(500));
+					return
+						$"Position: (X={pos.X:F2}, Y={pos.Y:F2}, Z={pos.Z:F2}, OnGround={pos.OnGround}) / Block: ({blockPos.X:D}, {blockPos.Y:D}, {blockPos.Z:D})";
+				}, TimeSpan.FromMilliseconds(50));
+
+			_debugInfo.AddDebugLeft(
+				() =>
+				{
+					var pos = World?.Player?.KnownPosition ?? new PlayerLocation();
+
+					return
+						$"Facing: {pos.GetCardinalDirection()} (HeadYaw={pos.HeadYaw:F2}, Yaw={pos.Yaw:F2}, Pitch={pos.Pitch:F2})";
+				}, TimeSpan.FromMilliseconds(50));
+
+			_debugInfo.AddDebugLeft(
+				() =>
+				{
+					var pos = World?.Player?.Velocity ?? Vector3.Zero;
+
+					return
+						$"Velocity: (X={pos.X:F2}, Y={pos.Y:F2}, Z={pos.Z:F2}) ({World.Player.Movement.MetersPerSecond:F3} m/s)"; // / Target Speed: {(World.Player.CalculateMovementSpeed() * 20f):F3} m/s";
+				});
+
+			_debugInfo.AddDebugLeft(
+				() => $"Primitives: {Alex.Metrics.PrimitiveCount:N0} Draw count: {Alex.Metrics.DrawCount}",
+				TimeSpan.FromMilliseconds(500));
+
+			_debugInfo.AddDebugLeft(
+				() => $"Textures: {Alex.Metrics.TextureCount:N0} Sprite count: {Alex.Metrics.SpriteCount}",
+				TimeSpan.FromMilliseconds(500));
+
+			_debugInfo.AddDebugLeft(
+				() => $"Graphic Resources: {GpuResourceManager.ResourceCount}", TimeSpan.FromMilliseconds(500));
+
+			_debugInfo.AddDebugLeft(
+				() =>
+					$"Chunks: {World.ChunkManager.ChunkCount}, {World.ChunkManager.RenderedChunks}, {World.ChunkDrawCount}",
+				TimeSpan.FromMilliseconds(500));
+
+			_debugInfo.AddDebugLeft(
+				() =>
+					$"Entities: {World.EntityManager.EntityCount}, {World.EntityManager.EntitiesRendered}, {World.EntityManager.DrawCount}",
+				TimeSpan.FromMilliseconds(500));
+
+			_debugInfo.AddDebugLeft(
+				() => $"Particles: {Alex.ParticleManager.ParticleCount}", TimeSpan.FromMilliseconds(500));
+
+			_debugInfo.AddDebugLeft(
+				() => { return $"Biome: {_currentBiome.Name} ({_currentBiomeId})"; }, TimeSpan.FromMilliseconds(500));
 			//_debugInfo.AddDebugLeft(() => { return $"Do DaylightCycle: {World.DoDaylightcycle}"; });
 
 			_debugInfo.AddDebugLeft(
 				() =>
 				{
-					return $"Exhaustion: {World.Player.HealthManager.Exhaustion:F1}/{World.Player.HealthManager.MaxExhaustion}";
+					return
+						$"Exhaustion: {World.Player.HealthManager.Exhaustion:F1}/{World.Player.HealthManager.MaxExhaustion}";
 				}, TimeSpan.FromMilliseconds(250));
-			
+
 			_debugInfo.AddDebugLeft(
 				() =>
 				{
-					return $"Saturation: {World.Player.HealthManager.Saturation:F1}/{World.Player.HealthManager.MaxSaturation}";
+					return
+						$"Saturation: {World.Player.HealthManager.Saturation:F1}/{World.Player.HealthManager.MaxSaturation}";
 				}, TimeSpan.FromMilliseconds(250));
-			
+
 			_debugInfo.AddDebugLeft(
 				() =>
 				{
 					return $"Health: {World.Player.HealthManager.Health:F1}/{World.Player.HealthManager.MaxHealth}";
 				}, TimeSpan.FromMilliseconds(250));
-			
+
 			_debugInfo.AddDebugLeft(
 				() =>
 				{
 					return $"Hunger: {World.Player.HealthManager.Hunger:F1}/{World.Player.HealthManager.MaxHunger}";
 				}, TimeSpan.FromMilliseconds(250));
-			
+
+			_debugInfo.AddDebugLeft(() => { return $"Gamemode: {World.Player.Gamemode}"; }, TimeSpan.FromSeconds(5));
+
+			_debugInfo.AddDebugLeft(() => { return $"NoAI: {World.Player.NoAi}"; }, TimeSpan.FromSeconds(1));
+
 			_debugInfo.AddDebugLeft(
-				() =>
-				{
-					return $"Gamemode: {World.Player.Gamemode}";
-				}, TimeSpan.FromSeconds(5));
-			
-			_debugInfo.AddDebugLeft(
-				() =>
-				{
-					return $"NoAI: {World.Player.NoAi}";
-				}, TimeSpan.FromSeconds(1));
-			
-			_debugInfo.AddDebugLeft(
-				() =>
-				{
-					return $"WaitingOnChunk: {World.Player.WaitingOnChunk}";
-				}, TimeSpan.FromSeconds(1));
-			
+				() => { return $"WaitingOnChunk: {World.Player.WaitingOnChunk}"; }, TimeSpan.FromSeconds(1));
+
 			_debugInfo.AddDebugLeft(
 				() =>
 				{
 					var effects = World.Player.Effects.AppliedEffects().ToArray();
-					return $"Applied Effects ({effects.Length}): {string.Join('\n',effects.Select(x => x.EffectId.ToString()))}";
+
+					return
+						$"Applied Effects ({effects.Length}): {string.Join('\n', effects.Select(x => x.EffectId.ToString()))}";
 				}, TimeSpan.FromSeconds(1));
-			
+
 			_debugInfo.AddDebugRight(Alex.OperatingSystem);
 			_debugInfo.AddDebugRight(Alex.Gpu);
 			_debugInfo.AddDebugRight($"{Alex.DotnetRuntime}\n");
 			_debugInfo.AddDebugRight(Alex.RenderingEngine);
-			
-			_debugInfo.AddDebugRight(() => $"RAM: {FormattingUtils.GetBytesReadable(_ramUsage, 2)}", TimeSpan.FromMilliseconds(1000));
-			_debugInfo.AddDebugRight(() => $"GPU: {FormattingUtils.GetBytesReadable(GpuResourceManager.MemoryUsage, 2)}\nTextures: {FormattingUtils.GetBytesReadable(GpuResourceManager.TextureMemory, 2)}\nVertex: {FormattingUtils.GetBytesReadable(GpuResourceManager.VertexMemory, 2)}\nIndexes: {FormattingUtils.GetBytesReadable(GpuResourceManager.IndexMemory, 2)}\nUnknown: {FormattingUtils.GetBytesReadable(GpuResourceManager.UnknownMemory, 2)}", TimeSpan.FromMilliseconds(1000));
-			_debugInfo.AddDebugRight(() => $"Threads: {(ThreadPool.ThreadCount):00}/{Program.MaxThreads:00}\nPending: {ThreadPool.PendingWorkItemCount:00}\n", TimeSpan.FromMilliseconds(50));
-			
-			_debugInfo.AddDebugRight(() => $"Updates: {ChunkColumn.AverageUpdateTime:F2}ms avg\nUpload: {ChunkData.AverageUploadTime:F2}ms avg\n", TimeSpan.FromMilliseconds(50));
-			_debugInfo.AddDebugRight(() => $"UI Tasks: {Alex.UiTaskManager.Pending:00}\nR: {Alex.UiTaskManager.AverageExecutionTime:F2}ms\nQ: {Alex.UiTaskManager.AverageTimeTillExecution:F2}ms", TimeSpan.FromMilliseconds(50));
+
+			_debugInfo.AddDebugRight(
+				() => $"RAM: {FormattingUtils.GetBytesReadable(_ramUsage, 2)}", TimeSpan.FromMilliseconds(1000));
+
+			_debugInfo.AddDebugRight(
+				() =>
+					$"GPU: {FormattingUtils.GetBytesReadable(GpuResourceManager.MemoryUsage, 2)}\nTextures: {FormattingUtils.GetBytesReadable(GpuResourceManager.TextureMemory, 2)}\nVertex: {FormattingUtils.GetBytesReadable(GpuResourceManager.VertexMemory, 2)}\nIndexes: {FormattingUtils.GetBytesReadable(GpuResourceManager.IndexMemory, 2)}\nUnknown: {FormattingUtils.GetBytesReadable(GpuResourceManager.UnknownMemory, 2)}",
+				TimeSpan.FromMilliseconds(1000));
+
+			_debugInfo.AddDebugRight(
+				() =>
+					$"Threads: {(ThreadPool.ThreadCount):00}/{Program.MaxThreads:00}\nPending: {ThreadPool.PendingWorkItemCount:00}\n",
+				TimeSpan.FromMilliseconds(50));
+
+			_debugInfo.AddDebugRight(
+				() =>
+					$"Updates: {ChunkColumn.AverageUpdateTime:F2}ms avg\nUpload: {ChunkData.AverageUploadTime:F2}ms avg\n",
+				TimeSpan.FromMilliseconds(50));
+
+			_debugInfo.AddDebugRight(
+				() =>
+					$"UI Tasks: {Alex.UiTaskManager.Pending:00}\nR: {Alex.UiTaskManager.AverageExecutionTime:F2}ms\nQ: {Alex.UiTaskManager.AverageTimeTillExecution:F2}ms",
+				TimeSpan.FromMilliseconds(50));
+
 			_debugInfo.AddDebugRight(() => $"IsRunningSlow: {Alex.FpsMonitor.IsRunningSlow}");
-			_debugInfo.AddDebugRight(() =>
-			{
-				var player = World?.Player;
 
-				if (player == null)
-					return "";
-				
-				if (player.Raytracer.HasValue)
+			_debugInfo.AddDebugRight(
+				() =>
 				{
-					var raytracedBlock = player.Raytracer.ResultingCoordinates;
-					var raytracedFace = player.Raytracer.Face;
-					var adjacentBlock  = player.Raytracer.AdjacentBlockCoordinates;
-					//var adj             =  Vector3.Floor(adjacentBlock) - Vector3.Floor(raytracedBlock);
-					//adj.Normalize();
+					var player = World?.Player;
 
-				//	var face = adj.GetBlockFace();
+					if (player == null)
+						return "";
 
-                    StringBuilder sb = new StringBuilder();
-					sb.AppendLine($"Target: {raytracedBlock} Face: {raytracedFace}");
-					sb.AppendLine(
-						$"Skylight: {World.GetSkyLight(raytracedBlock)} Face Skylight: {World.GetSkyLight(adjacentBlock)}");
-					sb.AppendLine(
-						$"Blocklight: {World.GetBlockLight(raytracedBlock)} Face Blocklight: {World.GetBlockLight(adjacentBlock)}");
-
-					foreach (var bs in World
-						        .GetBlockStates((int) raytracedBlock.X, (int) raytracedBlock.Y, (int) raytracedBlock.Z))
+					if (player.Raytracer.HasValue)
 					{
-						var blockstate = bs.State;
-						if (blockstate != null && blockstate.Block.HasHitbox)
+						var raytracedBlock = player.Raytracer.ResultingCoordinates;
+						var raytracedFace = player.Raytracer.Face;
+						var adjacentBlock = player.Raytracer.AdjacentBlockCoordinates;
+						//var adj             =  Vector3.Floor(adjacentBlock) - Vector3.Floor(raytracedBlock);
+						//adj.Normalize();
+
+						//	var face = adj.GetBlockFace();
+
+						StringBuilder sb = new StringBuilder();
+						sb.AppendLine($"Target: {raytracedBlock} Face: {raytracedFace}");
+
+						sb.AppendLine(
+							$"Skylight: {World.GetSkyLight(raytracedBlock)} Face Skylight: {World.GetSkyLight(adjacentBlock)}");
+
+						sb.AppendLine(
+							$"Blocklight: {World.GetBlockLight(raytracedBlock)} Face Blocklight: {World.GetBlockLight(adjacentBlock)}");
+
+						foreach (var bs in World.GetBlockStates(
+							         (int)raytracedBlock.X, (int)raytracedBlock.Y, (int)raytracedBlock.Z))
 						{
-							sb.AppendLine($"{blockstate.Name} (S: {bs.Storage})");
-							var dict = blockstate.ToArray();
+							var blockstate = bs.State;
 
-							if (dict.Length > 0)
+							if (blockstate != null && blockstate.Block.HasHitbox)
 							{
-								sb.AppendLine();
-								//sb.AppendLine("Blockstate:");
+								sb.AppendLine($"{blockstate.Name} (S: {bs.Storage})");
+								var dict = blockstate.ToArray();
 
-								foreach (var kv in dict)
+								if (dict.Length > 0)
 								{
-									sb.AppendLine(kv.ToFormattedString());
+									sb.AppendLine();
+									//sb.AppendLine("Blockstate:");
+
+									foreach (var kv in dict)
+									{
+										sb.AppendLine(kv.ToFormattedString());
+									}
 								}
 							}
 						}
+
+						if (World.EntityManager.TryGetBlockEntity(raytracedBlock, out var blockEntity))
+						{
+							sb.AppendLine($"BlockEntity: {blockEntity.Type} ");
+						}
+
+						return sb.ToString();
 					}
-					
-					if (World.EntityManager.TryGetBlockEntity(raytracedBlock, out var blockEntity))
+					else
 					{
-						sb.AppendLine($"BlockEntity: {blockEntity.Type} ");
+						return string.Empty;
 					}
+				}, TimeSpan.FromMilliseconds(500));
 
-					return sb.ToString();
-				}
-				else
-				{
-					return string.Empty;
-				}
-			}, TimeSpan.FromMilliseconds(500));
-			
-			_debugInfo.AddDebugRight(() =>
-			{
-				var player = World.Player;
-				if (player == null || player.HitEntity == null) return string.Empty;
-
-				var entity = player.HitEntity;
-				return $"Hit entity: {entity.EntityId} / {entity.ToString()}\n{ChatFormatting.Reset}Hide nametag: {!entity.HideNameTag}\nNoAI: {entity.NoAi}\nHas Gravity: {entity.IsAffectedByGravity}\nFlying: {entity.IsFlying}\nOn Ground: {entity.KnownPosition.OnGround}\nHas Collisions: {entity.HasCollision}\nHas Model: {entity.ModelRenderer != null}\nHas Texture: {entity.Texture != null} (2nd={entity.ModelRenderer?.Texture != null})\nScale: {entity.Scale}\nTextureSize: {entity.ModelRenderer?.TextureSize}\n";
-			}, TimeSpan.FromMilliseconds(500));
-			
-		/*	_debugInfo.AddDebugRight(
+			_debugInfo.AddDebugRight(
 				() =>
 				{
-					var modelRenderer = World?.Player?.ModelRenderer?.Model;
+					var player = World.Player;
 
-					if (modelRenderer == null)
-						return string.Empty;
-					
-					StringBuilder sb = new StringBuilder();
+					if (player == null || player.HitEntity == null) return string.Empty;
 
-					foreach (var bone in modelRenderer.Bones)
+					var entity = player.HitEntity;
+
+					return
+						$"Hit entity: {entity.EntityId} / {entity.ToString()}\n{ChatFormatting.Reset}Hide nametag: {!entity.HideNameTag}\nNoAI: {entity.NoAi}\nHas Gravity: {entity.IsAffectedByGravity}\nFlying: {entity.IsFlying}\nOn Ground: {entity.KnownPosition.OnGround}\nHas Collisions: {entity.HasCollision}\nHas Model: {entity.ModelRenderer != null}\nHas Texture: {entity.Texture != null} (2nd={entity.ModelRenderer?.Texture != null})\nScale: {entity.Scale}\nTextureSize: {entity.ModelRenderer?.TextureSize}\n";
+				}, TimeSpan.FromMilliseconds(500));
+
+			/*	_debugInfo.AddDebugRight(
+					() =>
 					{
-						sb.AppendLine($"{bone.Name}");
-						sb.AppendLine($"Rotation (X: {(bone.Rotation.X):F3} Y: {bone.Rotation.Y:F3} Z: {bone.Rotation.Z:F3})");
-						sb.AppendLine($"Position (X: {(bone.Position.X):F3} Y: {bone.Position.Y:F3} Z: {bone.Position.Z:F3})");
-						sb.AppendLine();
-					}
-					
-					return sb.ToString();
-				});*/
+						var modelRenderer = World?.Player?.ModelRenderer?.Model;
+	
+						if (modelRenderer == null)
+							return string.Empty;
+						
+						StringBuilder sb = new StringBuilder();
+	
+						foreach (var bone in modelRenderer.Bones)
+						{
+							sb.AppendLine($"{bone.Name}");
+							sb.AppendLine($"Rotation (X: {(bone.Rotation.X):F3} Y: {bone.Rotation.Y:F3} Z: {bone.Rotation.Z:F3})");
+							sb.AppendLine($"Position (X: {(bone.Position.X):F3} Y: {bone.Position.Y:F3} Z: {bone.Position.Z:F3})");
+							sb.AppendLine();
+						}
+						
+						return sb.ToString();
+					});*/
 		}
 
 		private float AspectRatio { get; set; }
@@ -380,13 +432,13 @@ namespace Alex.Gamestates.InGame
 
 			if (world == null || player == null)
 				return;
-			
+
 			var graphics = Alex.GraphicsDevice;
-			var args = new UpdateArgs() {Camera = world.Camera, GraphicsDevice = graphics, GameTime = gameTime};
+			var args = new UpdateArgs() { Camera = world.Camera, GraphicsDevice = graphics, GameTime = gameTime };
 
 			if (Alex.TotalTimeSpan < _targetElapsed)
 				player.SkipUpdate();
-			
+
 			_playingHud.CheckInput = Alex.GuiManager.ActiveDialog == null;
 
 			//	if (Alex.IsActive)
@@ -400,8 +452,9 @@ namespace Alex.Gamestates.InGame
 			bool hasActiveDialog = Alex.Instance.GuiManager.ActiveDialog != null
 			                       || ((player.Network is BedrockClient c)
 			                           && c.WorldProvider.FormManager.IsShowingForm);
-			
+
 			player.Controller.CheckMovementInput = Alex.IsActive && !hasActiveDialog;
+
 			if (!_playingHud.Chat.Focused && Alex.GameStateManager.GetActiveState() is PlayingState)
 			{
 				player.Controller.CheckInput = Alex.IsActive;
@@ -420,9 +473,9 @@ namespace Alex.Gamestates.InGame
 				_previousMemUpdate = now;
 				_ramUsage = Environment.WorkingSet;
 
-				var pos     = player.KnownPosition.GetCoordinates3D();
+				var pos = player.KnownPosition.GetCoordinates3D();
 				var biomeId = world.GetBiome(pos.X, pos.Y, pos.Z);
-				var biome   = biomeId;
+				var biome = biomeId;
 				_currentBiomeId = biomeId.Id;
 				_currentBiome = biome;
 			}
@@ -432,27 +485,25 @@ namespace Alex.Gamestates.InGame
 			//dir = new Vector3(MathF.Round(dir.X), MathF.Round(dir.Y), MathF.Round(dir.Z));
 
 			// Calculate the direction vector.
-			var direction = Vector3.Normalize(world.Camera.Target - world.Camera.Position );
+			var direction = Vector3.Normalize(world.Camera.Target - world.Camera.Position);
 
 			// Calculate the angle between direction and forward on XZ.
-			var xzAngle = MathF.Acos(Vector2.Dot(
-				new Vector2( Vector3.Forward.X, Vector3.Forward.Z),
-				new Vector2( direction.X, direction.Z)));
+			var xzAngle = MathF.Acos(
+				Vector2.Dot(new Vector2(Vector3.Forward.X, Vector3.Forward.Z), new Vector2(direction.X, direction.Z)));
 
 			// Rotate about up.
-			var rotationY = float.IsNaN( xzAngle )
-				? Quaternion.Identity
-				: Quaternion.CreateFromAxisAngle( Vector3.Up, xzAngle );
+			var rotationY = float.IsNaN(xzAngle) ? Quaternion.Identity :
+				Quaternion.CreateFromAxisAngle(Vector3.Up, xzAngle);
 
 			// Get rotation axis.
-			var rotatedForward = Vector3.Transform( Vector3.Forward, rotationY );
+			var rotatedForward = Vector3.Transform(Vector3.Forward, rotationY);
 
 			//dir.Normalize();
 			Alex.AudioEngine.Update(gameTime, world.Camera.Position, Vector3.Normalize(rotatedForward));
 
 			NetworkProvider?.Update(gameTime);
 		}
-		
+
 		protected override void OnDraw(IRenderArgs args)
 		{
 			var world = World;
@@ -460,7 +511,7 @@ namespace Alex.Gamestates.InGame
 
 			if (world == null || player == null)
 				return;
-			
+
 			if (world?.Camera == null)
 				return;
 
@@ -472,6 +523,7 @@ namespace Alex.Gamestates.InGame
 		}
 
 		private bool _closedLevel = false;
+
 		private void CloseLevel()
 		{
 			if (_closedLevel)
@@ -521,6 +573,7 @@ namespace Alex.Gamestates.InGame
 		}
 
 		private bool _didClose = false;
+
 		protected override void OnUnload()
 		{
 			if (_didClose)
@@ -528,10 +581,10 @@ namespace Alex.Gamestates.InGame
 
 			_didClose = true;
 			Log.Info($"Unloading playstate!");
-			
+
 			Alex.InGame = false;
 			Alex.ParticleManager.Hide();
-			
+
 			World?.TickManager?.UnregisterTicked(WorldProvider);
 
 			if (Alex.GuiManager.ActiveDialog is DisconnectedDialog dialog)

@@ -50,15 +50,16 @@ namespace Alex.Blocks.Minecraft.Decorations
 
 		public override void BlockUpdate(World world, BlockCoordinates position, BlockCoordinates updatedBlock)
 		{
-		//	if (UpdateState(world, BlockState, position, updatedBlock, out var state))
-		//	{
-		//		world.SetBlockState(position.X, position.Y, position.Z, state);
-		//	}
+			//	if (UpdateState(world, BlockState, position, updatedBlock, out var state))
+			//	{
+			//		world.SetBlockState(position.X, position.Y, position.Z, state);
+			//	}
 		}
 
 		private bool Check(IBlockAccess world, BlockCoordinates position, BlockFace face, out int yOffset)
 		{
 			yOffset = 0;
+
 			if (world.GetBlockState(position + face.GetBlockCoordinates()).Block is Rail)
 			{
 				return true;
@@ -67,12 +68,14 @@ namespace Alex.Blocks.Minecraft.Decorations
 			if (world.GetBlockState(position + BlockCoordinates.Up + face.GetBlockCoordinates()).Block is Rail)
 			{
 				yOffset = 1;
+
 				return true;
 			}
-			
+
 			if (world.GetBlockState(position + BlockCoordinates.Down + face.GetBlockCoordinates()).Block is Rail)
 			{
 				yOffset = -1;
+
 				return true;
 			}
 
@@ -83,11 +86,11 @@ namespace Alex.Blocks.Minecraft.Decorations
 		{
 			var up = position + BlockCoordinates.Up;
 
-			string shape    = GetShape(state);
-			var    hasNorth = Check(world, position, BlockFace.North, out var northernYOffset);
-			var    hasEast  = Check(world, position, BlockFace.East, out var easternYOffset);
-			var    hasSouth = Check(world, position, BlockFace.South, out var southernYOffset);
-			var    hasWest = Check(world, position, BlockFace.West, out var westernYOffset);
+			string shape = GetShape(state);
+			var hasNorth = Check(world, position, BlockFace.North, out var northernYOffset);
+			var hasEast = Check(world, position, BlockFace.East, out var easternYOffset);
+			var hasSouth = Check(world, position, BlockFace.South, out var southernYOffset);
+			var hasWest = Check(world, position, BlockFace.West, out var westernYOffset);
 
 			if (hasNorth && northernYOffset == 1)
 			{
@@ -105,7 +108,7 @@ namespace Alex.Blocks.Minecraft.Decorations
 			{
 				shape = "ascending_west";
 			}
-			
+
 			if (hasNorth && hasEast)
 			{
 				shape = "south_east";

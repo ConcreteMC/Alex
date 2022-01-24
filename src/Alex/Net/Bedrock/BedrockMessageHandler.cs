@@ -16,41 +16,42 @@ using NLog;
 
 namespace Alex.Net.Bedrock
 {
-    public class BedrockMessageHandler : ICustomMessageHandler
-    {
-        private static readonly ILogger Log = LogManager.GetCurrentClassLogger();
-        
-        private readonly McpeClientMessageDispatcher _messageDispatcher;
+	public class BedrockMessageHandler : ICustomMessageHandler
+	{
+		private static readonly ILogger Log = LogManager.GetCurrentClassLogger();
 
-        public                     Action               ConnectionAction   { get; set; }
-        public                     Action<string, bool> DisconnectedAction { get; set; }
-        
-        private readonly RaknetSession           _session;
+		private readonly McpeClientMessageDispatcher _messageDispatcher;
 
-        public MiNET.Utils.Cryptography.CryptoContext CryptoContext { get; set; }
+		public Action ConnectionAction { get; set; }
+		public Action<string, bool> DisconnectedAction { get; set; }
 
-        private DateTime _lastPacketReceived;
-        public  TimeSpan TimeSinceLastPacket => DateTime.UtcNow - _lastPacketReceived;
-        
+		private readonly RaknetSession _session;
+
+		public MiNET.Utils.Cryptography.CryptoContext CryptoContext { get; set; }
+
+		private DateTime _lastPacketReceived;
+		public TimeSpan TimeSinceLastPacket => DateTime.UtcNow - _lastPacketReceived;
+
 		private BedrockClientPacketHandler PacketHandler { get; }
-        public BedrockMessageHandler(RaknetSession session, BedrockClientPacketHandler handler) : base()
-        {
-	        _session = session;
-            _messageDispatcher = new McpeClientMessageDispatcher(handler);
-            PacketHandler = handler;
-        }
 
-        public void Connected()
-        {
-            ConnectionAction?.Invoke();
-        }
+		public BedrockMessageHandler(RaknetSession session, BedrockClientPacketHandler handler) : base()
+		{
+			_session = session;
+			_messageDispatcher = new McpeClientMessageDispatcher(handler);
+			PacketHandler = handler;
+		}
 
-        public void Disconnect(string reason, bool sendDisconnect = true)
-        {
-            DisconnectedAction?.Invoke(reason, sendDisconnect);
-        }
+		public void Connected()
+		{
+			ConnectionAction?.Invoke();
+		}
 
-        public List<Packet> PrepareSend(List<Packet> packetsToSend)
+		public void Disconnect(string reason, bool sendDisconnect = true)
+		{
+			DisconnectedAction?.Invoke(reason, sendDisconnect);
+		}
+
+		public List<Packet> PrepareSend(List<Packet> packetsToSend)
 		{
 			var sendList = new List<Packet>();
 			var sendInBatch = new List<Packet>();
@@ -66,10 +67,11 @@ namespace Alex.Net.Bedrock
 					var wrapper = McpeWrapper.CreateObject();
 					wrapper.ReliabilityHeader.Reliability = Reliability.ReliableOrdered;
 					wrapper.ForceClear = true;
-					wrapper.payload = Compress(new List<Packet>(){packet});
+					wrapper.payload = Compress(new List<Packet>() { packet });
 					//wrapper.Encode(); // prepare
 					packet.PutPool();
 					sendList.Add(wrapper);
+
 					continue;
 				}
 
@@ -77,13 +79,18 @@ namespace Alex.Net.Bedrock
 				{
 					packet.ReliabilityHeader.Reliability = Reliability.ReliableOrdered;
 					sendList.Add(packet);
+
 					continue;
 				}
 
 				if (!packet.IsMcpe)
 				{
-					packet.ReliabilityHeader.Reliability = packet.ReliabilityHeader.Reliability != Reliability.Undefined ? packet.ReliabilityHeader.Reliability : Reliability.Reliable;
+					packet.ReliabilityHeader.Reliability =
+						packet.ReliabilityHeader.Reliability != Reliability.Undefined ?
+							packet.ReliabilityHeader.Reliability : Reliability.Reliable;
+
 					sendList.Add(packet);
+
 					continue;
 				}
 
@@ -112,46 +119,49 @@ namespace Alex.Net.Bedrock
 
 			return sendList;
 		}
-        
-        public static RecyclableMemoryStreamManager MemoryStreamManager { get; set; } = new RecyclableMemoryStreamManager();
-        private byte[] Compress(ICollection<Packet> packets)
-        {
-	      //  long length = 0;
-	     //   foreach (Packet packet in packets) length += packet.Encode().Length;
 
-	       // var compressionLevel = _session.CompressionThreshold > -1 && length >= _session.CompressionThreshold ?
-		    //   System.IO.Compression.CompressionLevel.Fastest : System.IO.Compression.CompressionLevel.NoCompression;
+		public static RecyclableMemoryStreamManager MemoryStreamManager { get; set; } =
+			new RecyclableMemoryStreamManager();
 
-	        using (MemoryStream stream = MemoryStreamManager.GetStream())
-	        {
-		        using (var compressStream = new DeflateStream(stream, CompressionLevel.Fastest, true))
-		        {
-			        foreach (Packet packet in packets)
-			        {
-				        byte[] bs = packet.Encode();
+		private byte[] Compress(ICollection<Packet> packets)
+		{
+			//  long length = 0;
+			//   foreach (Packet packet in packets) length += packet.Encode().Length;
 
-				        if (bs != null && bs.Length > 0)
-				        {
-					        VarInt.WriteUInt32(compressStream, (uint)bs.Length);
-					        //BatchUtils.WriteLength(compressStream, bs.Length);
-					        compressStream.Write(bs, 0, bs.Length);
-				        }
+			// var compressionLevel = _session.CompressionThreshold > -1 && length >= _session.CompressionThreshold ?
+			//   System.IO.Compression.CompressionLevel.Fastest : System.IO.Compression.CompressionLevel.NoCompression;
 
-				        packet.PutPool();
-			        }
+			using (MemoryStream stream = MemoryStreamManager.GetStream())
+			{
+				using (var compressStream = new DeflateStream(stream, CompressionLevel.Fastest, true))
+				{
+					foreach (Packet packet in packets)
+					{
+						byte[] bs = packet.Encode();
 
-			        compressStream.Flush();
-		        }
+						if (bs != null && bs.Length > 0)
+						{
+							VarInt.WriteUInt32(compressStream, (uint)bs.Length);
+							//BatchUtils.WriteLength(compressStream, bs.Length);
+							compressStream.Write(bs, 0, bs.Length);
+						}
 
-		        byte[] bytes = stream.ToArray();
+						packet.PutPool();
+					}
 
-		        return bytes;
-	        }
-        }
-        
+					compressStream.Flush();
+				}
+
+				byte[] bytes = stream.ToArray();
+
+				return bytes;
+			}
+		}
+
 		public Packet HandleOrderedSend(Packet packet)
 		{
-			if (!packet.ForceClear && CryptoContext != null && CryptoContext.UseEncryption && packet is McpeWrapper wrapper)
+			if (!packet.ForceClear && CryptoContext != null && CryptoContext.UseEncryption
+			    && packet is McpeWrapper wrapper)
 			{
 				var encryptedWrapper = McpeWrapper.CreateObject();
 				encryptedWrapper.ReliabilityHeader.Reliability = Reliability.ReliableOrdered;
@@ -184,7 +194,8 @@ namespace Alex.Net.Bedrock
 					}
 
 					using (var compressionStream = new DeflateStream(
-						new MemoryStreamReader(payload), System.IO.Compression.CompressionMode.Decompress, false))
+						       new MemoryStreamReader(payload), System.IO.Compression.CompressionMode.Decompress,
+						       false))
 					{
 						payload = compressionStream.ReadToReadOnlyMemory();
 					}
@@ -206,7 +217,7 @@ namespace Alex.Net.Bedrock
 					{
 						if (_session.Evicted)
 							return;
-						
+
 						uint len = VarInt.ReadUInt32(ms);
 						long pos = ms.Position;
 
@@ -219,8 +230,7 @@ namespace Alex.Net.Bedrock
 
 						try
 						{
-							packet = PacketFactory.Create((byte) id, data, "mcpe")
-							         ?? new UnknownPacket((byte) id, data);
+							packet = PacketFactory.Create((byte)id, data, "mcpe") ?? new UnknownPacket((byte)id, data);
 
 							packet.ReliabilityHeader = wrapper.ReliabilityHeader;
 
@@ -270,7 +280,7 @@ namespace Alex.Net.Bedrock
 		{
 			if (_session.Evicted)
 				return;
-			
+
 			//RaknetSession.TraceReceive(message);
 
 			Stopwatch sw = Stopwatch.StartNew();
@@ -284,8 +294,7 @@ namespace Alex.Net.Bedrock
 					{
 						if (message is UnknownPacket unknownPacket)
 						{
-							Log.Warn(
-								$"Received unknown packet 0x{unknownPacket.Id:X2}\n");
+							Log.Warn($"Received unknown packet 0x{unknownPacket.Id:X2}\n");
 						}
 					}
 				}
@@ -305,9 +314,9 @@ namespace Alex.Net.Bedrock
 					Log.Warn(
 						$"Packet handling took longer than expected! Time elapsed: {sw.ElapsedMilliseconds}ms (Packet={message})");
 				}
-				
+
 				_lastPacketReceived = DateTime.UtcNow;
 			}
 		}
-    }
+	}
 }

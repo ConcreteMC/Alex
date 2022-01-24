@@ -7,7 +7,7 @@ namespace Alex.Blocks.Minecraft
 		public SoulCampfire()
 		{
 			Luminance = 10;
-			
+
 			base.BlockMaterial = Material.Wood;
 		}
 	}

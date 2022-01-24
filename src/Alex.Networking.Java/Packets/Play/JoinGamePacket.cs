@@ -10,9 +10,11 @@ namespace Alex.Networking.Java.Packets.Play
 			PacketId = 0x24;
 		}
 
-		public int         EntityId;
-		public byte        Gamemode, PreviousGamemode;
+		public int EntityId;
+		public byte Gamemode, PreviousGamemode;
+
 		public NbtCompound Dimension;
+
 		//public byte Difficulty;
 		public int MaxPlayers;
 		public int SimulationDistance;
@@ -28,15 +30,17 @@ namespace Alex.Networking.Java.Packets.Play
 
 		public bool IsDebug, IsFlat;
 		public bool IsHardcore;
+
 		public override void Decode(MinecraftStream stream)
 		{
 			EntityId = stream.ReadInt();
 			IsHardcore = stream.ReadBool();
-			Gamemode = (byte) stream.ReadByte();
-			PreviousGamemode = (byte) stream.ReadByte();
+			Gamemode = (byte)stream.ReadByte();
+			PreviousGamemode = (byte)stream.ReadByte();
 
 			int worldCount = stream.ReadVarInt();
 			WorldNames = new string[worldCount];
+
 			for (int i = 0; i < worldCount; i++)
 			{
 				WorldNames[i] = stream.ReadString();
@@ -46,7 +50,7 @@ namespace Alex.Networking.Java.Packets.Play
 
 			Dimension = stream.ReadNbtCompound(); //stream.ReadString();
 			WorldName = stream.ReadString();
-			
+
 			HashedSeed = stream.ReadLong();
 			MaxPlayers = stream.ReadVarInt();
 			ViewDistance = stream.ReadVarInt();

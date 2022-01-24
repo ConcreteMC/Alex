@@ -6,97 +6,101 @@ using System.Data;
 
 namespace Alex.Common.Resources
 {
-    public class RegistryBase<TEntry> : IRegistry<TEntry> where TEntry : class //, IRegistryEntry<TType>
-    {
-        protected ConcurrentDictionary<ResourceLocation, Func<IRegistryEntry<TEntry>>> Entries { get; }
-        public ResourceLocation RegistryName { get; }
-        public Type RegistryType => typeof(TEntry);
+	public class RegistryBase<TEntry> : IRegistry<TEntry> where TEntry : class //, IRegistryEntry<TType>
+	{
+		protected ConcurrentDictionary<ResourceLocation, Func<IRegistryEntry<TEntry>>> Entries { get; }
+		public ResourceLocation RegistryName { get; }
+		public Type RegistryType => typeof(TEntry);
 
-        public int Count => Entries.Count;
-        public RegistryBase(string registryName)
-        {
-            RegistryName = registryName;
-            Entries = new ConcurrentDictionary<ResourceLocation, Func<IRegistryEntry<TEntry>>>();
-        }
+		public int Count => Entries.Count;
 
-        public void Set(ResourceLocation location, Func<IRegistryEntry<TEntry>> entry)
-        {
-            Entries.AddOrUpdate(location, entry, (resourceLocation, func) => entry);
-        }
+		public RegistryBase(string registryName)
+		{
+			RegistryName = registryName;
+			Entries = new ConcurrentDictionary<ResourceLocation, Func<IRegistryEntry<TEntry>>>();
+		}
 
-        public void Register(Func<IRegistryEntry<TEntry>> entry)
-        {
-            if (!Entries.TryAdd(entry().Location, entry))
-                throw new DuplicateNameException("An item with this location has already been registered!");
-        }
+		public void Set(ResourceLocation location, Func<IRegistryEntry<TEntry>> entry)
+		{
+			Entries.AddOrUpdate(location, entry, (resourceLocation, func) => entry);
+		}
 
-        public void Register(ResourceLocation location, Func<IRegistryEntry<TEntry>> entry)
-        {
-            if (!Entries.TryAdd(location, entry))
-                throw new DuplicateNameException("An item with this location has already been registered!");
-        }
+		public void Register(Func<IRegistryEntry<TEntry>> entry)
+		{
+			if (!Entries.TryAdd(entry().Location, entry))
+				throw new DuplicateNameException("An item with this location has already been registered!");
+		}
 
-        public void Register(ResourceLocation location, IRegistryEntry<TEntry> entry)
-        {
-            if (!Entries.TryAdd(location, () => entry))
-                throw new DuplicateNameException("An item with this location has already been registered!");
-        }
+		public void Register(ResourceLocation location, Func<IRegistryEntry<TEntry>> entry)
+		{
+			if (!Entries.TryAdd(location, entry))
+				throw new DuplicateNameException("An item with this location has already been registered!");
+		}
 
-        public void Register(IRegistryEntry<TEntry> entry)
-        {
-            if (!Entries.TryAdd(entry.Location, () => entry))
-                throw new DuplicateNameException("An item with this location has already been registered!");
-        }
+		public void Register(ResourceLocation location, IRegistryEntry<TEntry> entry)
+		{
+			if (!Entries.TryAdd(location, () => entry))
+				throw new DuplicateNameException("An item with this location has already been registered!");
+		}
 
-        public virtual void RegisterRange(params Func<IRegistryEntry<TEntry>>[] entries)
-        {
-            foreach (var entry in entries)
-            {
-                Register(entry);
-            }
-        }
+		public void Register(IRegistryEntry<TEntry> entry)
+		{
+			if (!Entries.TryAdd(entry.Location, () => entry))
+				throw new DuplicateNameException("An item with this location has already been registered!");
+		}
 
-        public virtual bool ContainsKey(ResourceLocation location)
-        {
-            return Entries.ContainsKey(location);
-        }
+		public virtual void RegisterRange(params Func<IRegistryEntry<TEntry>>[] entries)
+		{
+			foreach (var entry in entries)
+			{
+				Register(entry);
+			}
+		}
 
-        public virtual bool TryGet(ResourceLocation location, out IRegistryEntry<TEntry> value)
-        {
-            if (Entries.TryGetValue(location, out var factory))
-            {
-                value = factory();
-                return true;
-            }
+		public virtual bool ContainsKey(ResourceLocation location)
+		{
+			return Entries.ContainsKey(location);
+		}
 
-            value = default;
-            return false;
-        }
+		public virtual bool TryGet(ResourceLocation location, out IRegistryEntry<TEntry> value)
+		{
+			if (Entries.TryGetValue(location, out var factory))
+			{
+				value = factory();
 
-        public virtual IRegistryEntry<TEntry> Get(ResourceLocation location)
-        {
-            if (TryGet(location, out IRegistryEntry<TEntry> value))
-                return value;
+				return true;
+			}
 
-            throw new KeyNotFoundException("Could not find a registry item with specified location!");
-        }
+			value = default;
 
-        /// <summary>Returns an enumerator that iterates through the collection.</summary>
-        /// <returns>An enumerator that can be used to iterate through the collection.</returns>
-        public IEnumerator<IRegistryEntry<TEntry>> GetEnumerator()
-        {
-            var entries = Entries.ToArray();
-            foreach (var entry in entries)
-            {
-                yield return entry.Value();
-            }
-        }
+			return false;
+		}
 
-        /// <summary>Returns an enumerator that iterates through a collection.</summary>
-        /// <returns>An <see cref="System.Collections.IEnumerator"></see> object that can be used to iterate through the collection.</returns>
-        IEnumerator IEnumerable.GetEnumerator()
-        {
-            return GetEnumerator();
-        }
-    }
+		public virtual IRegistryEntry<TEntry> Get(ResourceLocation location)
+		{
+			if (TryGet(location, out IRegistryEntry<TEntry> value))
+				return value;
+
+			throw new KeyNotFoundException("Could not find a registry item with specified location!");
+		}
+
+		/// <summary>Returns an enumerator that iterates through the collection.</summary>
+		/// <returns>An enumerator that can be used to iterate through the collection.</returns>
+		public IEnumerator<IRegistryEntry<TEntry>> GetEnumerator()
+		{
+			var entries = Entries.ToArray();
+
+			foreach (var entry in entries)
+			{
+				yield return entry.Value();
+			}
+		}
+
+		/// <summary>Returns an enumerator that iterates through a collection.</summary>
+		/// <returns>An <see cref="System.Collections.IEnumerator"></see> object that can be used to iterate through the collection.</returns>
+		IEnumerator IEnumerable.GetEnumerator()
+		{
+			return GetEnumerator();
+		}
+	}
 }

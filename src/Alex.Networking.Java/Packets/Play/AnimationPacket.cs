@@ -8,9 +8,9 @@ namespace Alex.Networking.Java.Packets.Play
 		{
 			PacketId = 0x2C;
 		}
-		
+
 		public int Hand { get; set; }
-		
+
 		/// <inheritdoc />
 		public override void Decode(MinecraftStream stream)
 		{

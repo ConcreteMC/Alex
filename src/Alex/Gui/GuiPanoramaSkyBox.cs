@@ -12,25 +12,26 @@ namespace Alex.Gui
 		public Texture2D Texture => _renderTarget;
 		public Rectangle ClipBounds => _renderTarget?.Bounds ?? new Rectangle(0, 0, Width, Height);
 		public int Width { get; } = 256;
-	    public int Height { get; } = 256;
+		public int Height { get; } = 256;
 
 
-        private bool CanRender { get; set; } = false;
-		
-        private AlphaTestEffect _skyBoxEffect;
+		private bool CanRender { get; set; } = false;
+
+		private AlphaTestEffect _skyBoxEffect;
 		private RenderTarget2D _renderTarget;
 
-	    private BlendState _blendState;
-	    private DepthStencilState _depthStencilState;
-	    private SamplerState _samplerState;
-	    private RasterizerState _rasterizerState;
+		private BlendState _blendState;
+		private DepthStencilState _depthStencilState;
+		private SamplerState _samplerState;
+		private RasterizerState _rasterizerState;
 
 
-	    public bool Loaded = false;
+		public bool Loaded = false;
 
-	    private Texture2D[] _textures;
+		private Texture2D[] _textures;
 
 		private Alex Game { get; }
+
 		public GuiPanoramaSkyBox(Alex alex) : base(alex)
 		{
 			Game = alex;
@@ -39,147 +40,160 @@ namespace Alex.Gui
 		public void Load(IGuiRenderer renderer)
 		{
 			LoadTextures(renderer);
-	        CreateSkybox(Game.GraphicsDevice);
-			
-            CanRender = true;
-	        Loaded = true;
-        }
+			CreateSkybox(Game.GraphicsDevice);
+
+			CanRender = true;
+			Loaded = true;
+		}
 
 		public void LoadTextures(IGuiRenderer renderer)
 		{
 			_textures = new Texture2D[]
 			{
-				renderer.GetTexture2D(AlexGuiTextures.Panorama0),
-				renderer.GetTexture2D(AlexGuiTextures.Panorama1),
-				renderer.GetTexture2D(AlexGuiTextures.Panorama2),
-				renderer.GetTexture2D(AlexGuiTextures.Panorama3),
-				renderer.GetTexture2D(AlexGuiTextures.Panorama4),
-				renderer.GetTexture2D(AlexGuiTextures.Panorama5),
+				renderer.GetTexture2D(AlexGuiTextures.Panorama0), renderer.GetTexture2D(AlexGuiTextures.Panorama1),
+				renderer.GetTexture2D(AlexGuiTextures.Panorama2), renderer.GetTexture2D(AlexGuiTextures.Panorama3),
+				renderer.GetTexture2D(AlexGuiTextures.Panorama4), renderer.GetTexture2D(AlexGuiTextures.Panorama5),
 			};
 		}
-		
+
 		private void CreateSkybox(GraphicsDevice device)
-	    {
-		    InitGraphics();
-	        _renderTarget     = new RenderTarget2D(device, device.Viewport.Width, device.Viewport.Height, false, SurfaceFormat.Color, DepthFormat.None);
+		{
+			InitGraphics();
 
-		    _skyBoxEffect = new AlphaTestEffect(device)
-		    {
-			    View = Matrix.Identity,
-			    Projection = Matrix.CreatePerspectiveFieldOfView(MathHelper.ToRadians(120.0f), device.Viewport.AspectRatio, 0.05f, 10.0f)
-		    };
+			_renderTarget = new RenderTarget2D(
+				device, device.Viewport.Width, device.Viewport.Height, false, SurfaceFormat.Color, DepthFormat.None);
 
-		    _skyboxBuilder = new BufferBuilder<VertexPositionColorTexture>(device, 64 * 6);
+			_skyBoxEffect = new AlphaTestEffect(device)
+			{
+				View = Matrix.Identity,
+				Projection = Matrix.CreatePerspectiveFieldOfView(
+					MathHelper.ToRadians(120.0f), device.Viewport.AspectRatio, 0.05f, 10.0f)
+			};
+
+			_skyboxBuilder = new BufferBuilder<VertexPositionColorTexture>(device, 64 * 6);
 
 			UpdateSkyBoxCube();
-	    }
+		}
 
-	    private Matrix _rotationMatrix;
+		private Matrix _rotationMatrix;
 
-	    private void RotateSkyBox()
-	    {
-		    var xRot = (float) Math.Sin(_rotation / 400.0f) * 25.0f;
+		private void RotateSkyBox()
+		{
+			var xRot = (float)Math.Sin(_rotation / 400.0f) * 25.0f;
 
-		    _rotationMatrix = Matrix.CreateRotationY(MathHelper.ToRadians(_rotation * 0.1f));
+			_rotationMatrix = Matrix.CreateRotationY(MathHelper.ToRadians(_rotation * 0.1f));
 
-		    if (_skyBoxEffect != null)
+			if (_skyBoxEffect != null)
 				_skyBoxEffect.Projection = Matrix.CreatePerspectiveFieldOfView(
-				    MathHelper.ToRadians(120.0f), _skyBoxEffect.GraphicsDevice.Viewport.AspectRatio, 0.05f, 10.0f);
-	    }
+					MathHelper.ToRadians(120.0f), _skyBoxEffect.GraphicsDevice.Viewport.AspectRatio, 0.05f, 10.0f);
+		}
 
 
-	    private BufferBuilder<VertexPositionColorTexture> _skyboxBuilder;
-	    private void UpdateSkyBoxCube()
-	    {
-		    for (int j = 0; j < 64; ++j)
-		    {
-			    int alphaLevel = 255 / (j + 1);
-			    var color      = new Color(255, 255, 255, alphaLevel);
+		private BufferBuilder<VertexPositionColorTexture> _skyboxBuilder;
 
-			    for (int face = 0; face < 6; face++)
-			    {
-				    var i    = face + j * 6;
-					
-				    var vm = Matrix.Identity;
+		private void UpdateSkyBoxCube()
+		{
+			for (int j = 0; j < 64; ++j)
+			{
+				int alphaLevel = 255 / (j + 1);
+				var color = new Color(255, 255, 255, alphaLevel);
 
-				    switch (face)
-				    {
-					    case 1:
-						    vm *= Matrix.CreateRotationY(MathHelper.PiOver2);
-						    break;
-					    case 2:
-						    vm *= Matrix.CreateRotationY(MathHelper.Pi);
-						    break;
-					    case 3:
-						    vm *= Matrix.CreateRotationY(-MathHelper.PiOver2);
-						    break;
-					    case 4:
-						    vm *= Matrix.CreateRotationX(MathHelper.PiOver2);
-						    break;
-					    case 5:
-						    vm *= Matrix.CreateRotationX(-MathHelper.PiOver2);
-						    break;
-				    }
+				for (int face = 0; face < 6; face++)
+				{
+					var i = face + j * 6;
 
-				    _skyboxBuilder[i, 0].Position = Vector3.Transform(new Vector3(-1.0f, -1.0f, 1.0f), vm);
-				    _skyboxBuilder[i, 1].Position = Vector3.Transform(new Vector3( 1.0f, -1.0f, 1.0f), vm);
-				    _skyboxBuilder[i, 2].Position = Vector3.Transform(new Vector3( 1.0f,  1.0f, 1.0f), vm);
-				    _skyboxBuilder[i, 3].Position = Vector3.Transform(new Vector3(-1.0f,  1.0f, 1.0f), vm);
+					var vm = Matrix.Identity;
 
-				    _skyboxBuilder[i, 0].TextureCoordinate = new Vector2(0.0f, 0.0f);
-				    _skyboxBuilder[i, 1].TextureCoordinate = new Vector2(1.0f, 0.0f);
-				    _skyboxBuilder[i, 2].TextureCoordinate = new Vector2(1.0f, 1.0f);
-				    _skyboxBuilder[i, 3].TextureCoordinate = new Vector2(0.0f, 1.0f);
-					
-				    _skyboxBuilder[i, 0].Color = color;
-				    _skyboxBuilder[i, 1].Color = color;
-				    _skyboxBuilder[i, 2].Color = color;
-				    _skyboxBuilder[i, 3].Color = color;
-			    }
+					switch (face)
+					{
+						case 1:
+							vm *= Matrix.CreateRotationY(MathHelper.PiOver2);
+
+							break;
+
+						case 2:
+							vm *= Matrix.CreateRotationY(MathHelper.Pi);
+
+							break;
+
+						case 3:
+							vm *= Matrix.CreateRotationY(-MathHelper.PiOver2);
+
+							break;
+
+						case 4:
+							vm *= Matrix.CreateRotationX(MathHelper.PiOver2);
+
+							break;
+
+						case 5:
+							vm *= Matrix.CreateRotationX(-MathHelper.PiOver2);
+
+							break;
+					}
+
+					_skyboxBuilder[i, 0].Position = Vector3.Transform(new Vector3(-1.0f, -1.0f, 1.0f), vm);
+					_skyboxBuilder[i, 1].Position = Vector3.Transform(new Vector3(1.0f, -1.0f, 1.0f), vm);
+					_skyboxBuilder[i, 2].Position = Vector3.Transform(new Vector3(1.0f, 1.0f, 1.0f), vm);
+					_skyboxBuilder[i, 3].Position = Vector3.Transform(new Vector3(-1.0f, 1.0f, 1.0f), vm);
+
+					_skyboxBuilder[i, 0].TextureCoordinate = new Vector2(0.0f, 0.0f);
+					_skyboxBuilder[i, 1].TextureCoordinate = new Vector2(1.0f, 0.0f);
+					_skyboxBuilder[i, 2].TextureCoordinate = new Vector2(1.0f, 1.0f);
+					_skyboxBuilder[i, 3].TextureCoordinate = new Vector2(0.0f, 1.0f);
+
+					_skyboxBuilder[i, 0].Color = color;
+					_skyboxBuilder[i, 1].Color = color;
+					_skyboxBuilder[i, 2].Color = color;
+					_skyboxBuilder[i, 3].Color = color;
+				}
 			}
 
-		    _skyboxBuilder.Build();
-	    }
+			_skyboxBuilder.Build();
+		}
 
-	    private void DrawSkyBoxCube(GraphicsDevice graphics)
-	    {
-		    for (int j = 0; j < 64; ++j)
-		    {
-			    var pos = new Vector3(((float)(j % 8) / 8.0f - 0.5f) / 64.0f, ((float)(j / 8) / 8.0f - 0.5f) / 64.0f, 0.0f); //x + InSizeX * (y + z * InSizeY)
-				
-			    var world = Matrix.CreateRotationX(MathHelper.Pi);
-			    world *= Matrix.CreateTranslation(pos);
-			    world *= _rotationMatrix;
-			    _skyBoxEffect.World = world;
+		private void DrawSkyBoxCube(GraphicsDevice graphics)
+		{
+			for (int j = 0; j < 64; ++j)
+			{
+				var pos = new Vector3(
+					((float)(j % 8) / 8.0f - 0.5f) / 64.0f, ((float)(j / 8) / 8.0f - 0.5f) / 64.0f,
+					0.0f); //x + InSizeX * (y + z * InSizeY)
 
-			    graphics.BlendFactor = new Color(255, 255, 255, 255);
+				var world = Matrix.CreateRotationX(MathHelper.Pi);
+				world *= Matrix.CreateTranslation(pos);
+				world *= _rotationMatrix;
+				_skyBoxEffect.World = world;
 
-			    for (int k = 0; k < 6; k++)
-			    {
-				    if (_textures[k] == null) continue;
-					
-				    var indexerIndex = 6 * (k + j * 6);
+				graphics.BlendFactor = new Color(255, 255, 255, 255);
 
-				    _skyBoxEffect.VertexColorEnabled = true;
-				    _skyBoxEffect.Texture = _textures[k];
+				for (int k = 0; k < 6; k++)
+				{
+					if (_textures[k] == null) continue;
 
-				    _skyBoxEffect.Techniques[0].Passes[0].Apply();
+					var indexerIndex = 6 * (k + j * 6);
+
+					_skyBoxEffect.VertexColorEnabled = true;
+					_skyBoxEffect.Texture = _textures[k];
+
+					_skyBoxEffect.Techniques[0].Passes[0].Apply();
 					graphics.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, indexerIndex, 2);
 				}
-		    }
-	    }
+			}
+		}
 
-	    /// <inheritdoc />
-	    public override void Update(GameTime gameTime)
-	    {
-		    base.Update(gameTime);
-		    _rotation += (float)Alex.DeltaTimeSpan.TotalMilliseconds / (1000.0f / 20.0f);
+		/// <inheritdoc />
+		public override void Update(GameTime gameTime)
+		{
+			base.Update(gameTime);
+			_rotation += (float)Alex.DeltaTimeSpan.TotalMilliseconds / (1000.0f / 20.0f);
 
-		    RotateSkyBox();
-	    }
+			RotateSkyBox();
+		}
 
-	    private float _rotation = 0f;
-	    private void InitGraphics()
+		private float _rotation = 0f;
+
+		private void InitGraphics()
 		{
 			_depthStencilState = DepthStencilState.None;
 			_rasterizerState = RasterizerState.CullNone;
@@ -190,7 +204,6 @@ namespace Alex.Gui
 				ColorDestinationBlend = Blend.InverseSourceAlpha,
 				AlphaSourceBlend = Blend.One,
 				AlphaDestinationBlend = Blend.Zero,
-
 				IndependentBlendEnable = false,
 			};
 
@@ -199,7 +212,6 @@ namespace Alex.Gui
 				Filter = TextureFilter.Anisotropic,
 				FilterMode = TextureFilterMode.Comparison,
 				ComparisonFunction = CompareFunction.Always,
-
 				MaxAnisotropy = 16,
 				AddressU = TextureAddressMode.Clamp,
 				AddressV = TextureAddressMode.Clamp,
@@ -211,25 +223,26 @@ namespace Alex.Gui
 		{
 			if (!Loaded)
 				return;
-	        
-            if (!CanRender) return;
 
-            var device = args.GraphicsDevice;
-			
-	        device.Clear(Color.SkyBlue);
+			if (!CanRender) return;
 
-	        using (var context = GraphicsContext.CreateContext(args.GraphicsDevice, _blendState, _depthStencilState, _rasterizerState, _samplerState))
-	        {
-		       // device.SetRenderTarget(_renderTarget);
+			var device = args.GraphicsDevice;
 
-		        using (var target = device.PushRenderTarget(_renderTarget))
-		        {
-			        _skyboxBuilder.Bind();
-			        DrawSkyBoxCube(device);
-		        }
+			device.Clear(Color.SkyBlue);
 
-		      //  device.SetRenderTarget(null);
-	        }
-        }
-    }
+			using (var context = GraphicsContext.CreateContext(
+				       args.GraphicsDevice, _blendState, _depthStencilState, _rasterizerState, _samplerState))
+			{
+				// device.SetRenderTarget(_renderTarget);
+
+				using (var target = device.PushRenderTarget(_renderTarget))
+				{
+					_skyboxBuilder.Bind();
+					DrawSkyBoxCube(device);
+				}
+
+				//  device.SetRenderTarget(null);
+			}
+		}
+	}
 }

@@ -12,22 +12,22 @@ namespace Alex.Worlds
 {
 	public class Biome : IHasKey
 	{
-		private static readonly Color DefaultWaterColor    = ColorHelper.HexToColor("#44AFF5");
+		private static readonly Color DefaultWaterColor = ColorHelper.HexToColor("#44AFF5");
 		private static readonly Color DefaultWaterFogColor = ColorHelper.HexToColor("#44AFF5");
 		public static readonly Color DefaultFogColor = ColorHelper.HexToColor("#ABD2FF");
 		public static readonly Color DefaultSkyColor = ColorHelper.HexToColor("#ABD2FF");
-		
-		public                  uint    Id { get; set; }
-		public                  string Name;
-		public                  float  Temperature;
-		public                  float  Downfall;
+
+		public uint Id { get; set; }
+		public string Name;
+		public float Temperature;
+		public float Downfall;
 
 		public Color? FoliageColor { get; set; } = null;
 		public Color? GrassColor { get; set; } = null;
-		public Color? SkyColor                 { get; set; } = null;
-		public Color FogColor                 { get; set; } = DefaultFogColor;
-		public Color Water                    { get; set; } = DefaultWaterColor;
-		
+		public Color? SkyColor { get; set; } = null;
+		public Color FogColor { get; set; } = DefaultFogColor;
+		public Color Water { get; set; } = DefaultWaterColor;
+
 		private bool _waterFogColorSet = false;
 		private Color _waterFogColor = DefaultWaterFogColor;
 
@@ -44,7 +44,7 @@ namespace Alex.Worlds
 			}
 		}
 
-		public float WaterFogDistance         { get; set; } = 15f;
+		public float WaterFogDistance { get; set; } = 15f;
 		public float WaterSurfaceTransparency { get; set; } = 0.65f;
 
 		//public float HeightScale = 100;
@@ -60,7 +60,6 @@ namespace Alex.Worlds
 				Name = "Ocean",
 				Temperature = 0.5f,
 				Downfall = 0.5f,
-				
 				Water = ColorHelper.HexToColor("#1787D4"),
 				WaterFogDistance = 60
 				//	SurfaceBlock = 12,
@@ -246,7 +245,7 @@ namespace Alex.Worlds
 				Downfall = 0.9f,
 				Water = ColorHelper.HexToColor("#1B9ED8")
 			},
-			
+
 			//TODO: The rest of min/max
 			new Biome
 			{
@@ -393,7 +392,7 @@ namespace Alex.Worlds
 				Temperature = 0.5f,
 				Water = ColorHelper.HexToColor("#2080C9"),
 				WaterFogDistance = 60
-			}, 
+			},
 			new Biome()
 			{
 				Id = 49,
@@ -401,56 +400,60 @@ namespace Alex.Worlds
 				Temperature = 0.5f,
 				Water = ColorHelper.HexToColor("#2080C9"),
 				WaterFogDistance = 60
-			}, 
-			new Biome {Id = 127, Name = "The Void", Temperature = 0.8f, Downfall = 0.4f},
-			new Biome {Id = 128, Name = "Unknown Biome", Temperature = 0.8f, Downfall = 0.4f},
-			new Biome {Id = 129, Name = "Sunflower Plains", Temperature = 0.8f, Downfall = 0.4f},
+			},
+			new Biome { Id = 127, Name = "The Void", Temperature = 0.8f, Downfall = 0.4f },
+			new Biome { Id = 128, Name = "Unknown Biome", Temperature = 0.8f, Downfall = 0.4f },
+			new Biome { Id = 129, Name = "Sunflower Plains", Temperature = 0.8f, Downfall = 0.4f },
+			new Biome { Id = 130, Name = "Desert M", Temperature = 2.0f, Downfall = 0.0f },
+			new Biome { Id = 131, Name = "Extreme Hills M", Temperature = 0.2f, Downfall = 0.3f },
 			new Biome
 			{
-				Id = 130,
-				Name = "Desert M",
-				Temperature = 2.0f,
-				Downfall = 0.0f
+				Id = 132,
+				Name = "Flower Forest",
+				Temperature = 0.7f,
+				Downfall = 0.8f,
+				Water = ColorHelper.HexToColor("#20A3CC")
 			},
+			new Biome { Id = 133, Name = "Taiga M", Temperature = 0.05f, Downfall = 0.8f },
 			new Biome
 			{
-				Id = 131,
-				Name = "Extreme Hills M",
-				Temperature = 0.2f,
-				Downfall = 0.3f
+				Id = 134,
+				Name = "Swampland M",
+				Temperature = 0.8f,
+				Downfall = 0.9f,
+				WaterFogDistance = 8
 			},
-			new Biome {Id = 132, Name = "Flower Forest", Temperature = 0.7f, Downfall = 0.8f, Water = ColorHelper.HexToColor("#20A3CC")},
-			new Biome {Id = 133, Name = "Taiga M", Temperature = 0.05f, Downfall = 0.8f},
-			new Biome {Id = 134, Name = "Swampland M", Temperature = 0.8f, Downfall = 0.9f, WaterFogDistance = 8},
-			new Biome {Id = 140, Name = "Ice Plains Spikes", Temperature = 0.0f, Downfall = 0.5f},
-			new Biome {Id = 149, Name = "Jungle M", Temperature = 1.2f, Downfall = 0.9f},
-			new Biome {Id = 150, Name = "Unknown Biome", Temperature = 0.8f, Downfall = 0.4f},
-			new Biome {Id = 151, Name = "JungleEdge M", Temperature = 0.95f, Downfall = 0.8f},
-			new Biome {Id = 155, Name = "Birch Forest M", Temperature = 0.6f, Downfall = 0.6f},
-			new Biome
-			{
-				Id = 156,
-				Name = "Birch Forest Hills M",
-				Temperature = 0.6f,
-				Downfall = 0.6f
-			},
-			new Biome {Id = 157, Name = "Roofed Forest M", Temperature = 0.7f, Downfall = 0.8f},
-			new Biome {Id = 158, Name = "Cold Taiga M", Temperature = -0.5f, Downfall = 0.4f},
-			new Biome {Id = 160, Name = "Mega Spruce Taiga", Temperature = 0.25f, Downfall = 0.8f},
+			new Biome { Id = 140, Name = "Ice Plains Spikes", Temperature = 0.0f, Downfall = 0.5f },
+			new Biome { Id = 149, Name = "Jungle M", Temperature = 1.2f, Downfall = 0.9f },
+			new Biome { Id = 150, Name = "Unknown Biome", Temperature = 0.8f, Downfall = 0.4f },
+			new Biome { Id = 151, Name = "JungleEdge M", Temperature = 0.95f, Downfall = 0.8f },
+			new Biome { Id = 155, Name = "Birch Forest M", Temperature = 0.6f, Downfall = 0.6f },
+			new Biome { Id = 156, Name = "Birch Forest Hills M", Temperature = 0.6f, Downfall = 0.6f },
+			new Biome { Id = 157, Name = "Roofed Forest M", Temperature = 0.7f, Downfall = 0.8f },
+			new Biome { Id = 158, Name = "Cold Taiga M", Temperature = -0.5f, Downfall = 0.4f },
+			new Biome { Id = 160, Name = "Mega Spruce Taiga", Temperature = 0.25f, Downfall = 0.8f },
 			// special exception, temperature not 0.3
+			new Biome { Id = 161, Name = "Mega Spruce Taiga Hills", Temperature = 0.3f, Downfall = 0.8f },
+			new Biome { Id = 162, Name = "Extreme Hills+ M", Temperature = 0.2f, Downfall = 0.3f },
 			new Biome
 			{
-				Id = 161,
-				Name = "Mega Spruce Taiga Hills",
-				Temperature = 0.3f,
-				Downfall = 0.8f
+				Id = 163,
+				Name = "Savanna M",
+				Temperature = 1.2f,
+				Downfall = 0.0f,
+				Water = ColorHelper.HexToColor("#2C8B9C")
 			},
-			new Biome {Id = 162, Name = "Extreme Hills+ M", Temperature = 0.2f, Downfall = 0.3f},
-			new Biome {Id = 163, Name = "Savanna M", Temperature = 1.2f, Downfall = 0.0f, Water = ColorHelper.HexToColor("#2C8B9C")},
-			new Biome {Id = 164, Name = "Savanna Plateau M", Temperature = 1.0f, Downfall = 0.0f, Water = ColorHelper.HexToColor("#2590A8")},
-			new Biome {Id = 165, Name = "Mesa (Bryce)", Temperature = 2.0f, Downfall = 0.0f},
-			new Biome {Id = 166, Name = "Mesa Plateau F M", Temperature = 2.0f, Downfall = 0.0f},
-			new Biome {Id = 167, Name = "Mesa Plateau M", Temperature = 2.0f, Downfall = 0.0f},
+			new Biome
+			{
+				Id = 164,
+				Name = "Savanna Plateau M",
+				Temperature = 1.0f,
+				Downfall = 0.0f,
+				Water = ColorHelper.HexToColor("#2590A8")
+			},
+			new Biome { Id = 165, Name = "Mesa (Bryce)", Temperature = 2.0f, Downfall = 0.0f },
+			new Biome { Id = 166, Name = "Mesa Plateau F M", Temperature = 2.0f, Downfall = 0.0f },
+			new Biome { Id = 167, Name = "Mesa Plateau M", Temperature = 2.0f, Downfall = 0.0f },
 		};
 
 		public static ConcurrentDictionary<uint, Biome> Overrides { get; } = new ConcurrentDictionary<uint, Biome>();

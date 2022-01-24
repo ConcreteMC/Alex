@@ -20,10 +20,11 @@ namespace Alex.ResourcePackLib.Json.Bedrock.MoLang
 	public class MoLangVector3Expression
 	{
 		private IExpression[] _x, _y, _z;
-		
+
 		public MoLangVector3Expression(IExpression[][] values)
 		{
 			IsKeyFramed = false;
+
 			if (values.Length == 3)
 			{
 				_x = values[0];
@@ -39,6 +40,7 @@ namespace Alex.ResourcePackLib.Json.Bedrock.MoLang
 		public bool IsKeyFramed { get; }
 
 		private LinkedList<KeyValuePair<double, AnimationChannelData>> _keyFrames;
+
 		public MoLangVector3Expression(Dictionary<string, AnimationChannelData> keyframes)
 		{
 			IsKeyFramed = true;
@@ -51,7 +53,7 @@ namespace Alex.ResourcePackLib.Json.Bedrock.MoLang
 					newKeyFrames.TryAdd(time, keyframe.Value);
 				}
 			}
-			
+
 			_keyFrames = new LinkedList<KeyValuePair<double, AnimationChannelData>>();
 
 			foreach (var keyframe in newKeyFrames.OrderBy(x => x.Key))
@@ -60,7 +62,11 @@ namespace Alex.ResourcePackLib.Json.Bedrock.MoLang
 			}
 		}
 
-		private Vector3 Evaluate(MoLangRuntime runtime, IExpression[] xExpressions, IExpression[] yExpressions, IExpression[] zExpressions, Vector3 currentValue)
+		private Vector3 Evaluate(MoLangRuntime runtime,
+			IExpression[] xExpressions,
+			IExpression[] yExpressions,
+			IExpression[] zExpressions,
+			Vector3 currentValue)
 		{
 			runtime.Environment.ThisVariable = new DoubleValue(currentValue.X);
 			IMoValue x = runtime.Execute(xExpressions);
@@ -75,6 +81,7 @@ namespace Alex.ResourcePackLib.Json.Bedrock.MoLang
 		private Vector3 Evaluate(MoLangRuntime runtime, IExpression[][] expressions, Vector3 currentValue)
 		{
 			if (expressions == null) return currentValue;
+
 			if (expressions.Length == 3)
 			{
 				return Evaluate(runtime, expressions[0], expressions[1], expressions[2], currentValue);
@@ -82,29 +89,34 @@ namespace Alex.ResourcePackLib.Json.Bedrock.MoLang
 
 			return Evaluate(runtime, expressions[0], expressions[0], expressions[0], currentValue);
 		}
-		
+
 		private Vector3 Evaluate(MoLangRuntime runtime, AnimationChannelData complex, bool isPre, Vector3 currentValue)
 		{
 			if (complex == null)
 				return currentValue;
 
-			
+
 			if (complex.Expressions != null)
 			{
 				var expressions = complex.Expressions;
+
 				return Evaluate(runtime, expressions, currentValue);
 			}
 
 			if (isPre)
 				return Evaluate(runtime, complex.KeyFrame.Pre, currentValue);
-			
+
 			return Evaluate(runtime, complex.KeyFrame.Post, currentValue);
 		}
 
-		public Vector3 Evaluate(MoLangRuntime runtime, Vector3 currentValue, double? animationLength = null, double elapsedTime = 0d, bool isRotational = false)
+		public Vector3 Evaluate(MoLangRuntime runtime,
+			Vector3 currentValue,
+			double? animationLength = null,
+			double elapsedTime = 0d,
+			bool isRotational = false)
 		{
 			if (_keyFrames == null || !animationLength.HasValue) return Evaluate(runtime, _x, _y, _z, currentValue);
-			
+
 
 			KeyValuePair<double, AnimationChannelData>? previous = default;
 			KeyValuePair<double, AnimationChannelData>? next = default;
@@ -125,7 +137,7 @@ namespace Alex.ResourcePackLib.Json.Bedrock.MoLang
 
 			var nextTimeStamp = next.Value.Key;
 			var nextChannelData = next.Value.Value;
-			
+
 			var previousTimeStamp = previous.Value.Key;
 			var previousChannelData = previous.Value.Value;
 
@@ -137,14 +149,14 @@ namespace Alex.ResourcePackLib.Json.Bedrock.MoLang
 			var timeBetweenFrames = (nextTimeStamp - previousTimeStamp);
 			var timeSinceLastKeyFrame = elapsedTime - previousTimeStamp;
 
-			var lerpTime = (float) (timeSinceLastKeyFrame / timeBetweenFrames);
+			var lerpTime = (float)(timeSinceLastKeyFrame / timeBetweenFrames);
 
 			Vector3 previousVector = Evaluate(runtime, previousChannelData, false, currentValue);
 			Vector3 nextVector = Evaluate(runtime, nextChannelData, true, currentValue);
 
 			if (isRotational)
 				return MathUtils.LerpVector3Degrees(previousVector, nextVector, lerpTime);
-			
+
 			return MathUtils.LerpVector3Safe(previousVector, nextVector, lerpTime);
 		}
 	}

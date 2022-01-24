@@ -11,13 +11,10 @@ namespace Alex.ResourcePackLib.Json
 
 	public class ResourcePackInfo
 	{
-		[JsonIgnore]
-		public Image<Rgba32> Logo;
+		[JsonIgnore] public Image<Rgba32> Logo;
 
-		[JsonProperty("pack_format")]
-		public int Format;
+		[JsonProperty("pack_format")] public int Format;
 
-		[JsonProperty("description")]
-		public string Description;
+		[JsonProperty("description")] public string Description;
 	}
 }

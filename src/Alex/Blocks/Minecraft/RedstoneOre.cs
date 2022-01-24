@@ -11,8 +11,9 @@ namespace Alex.Blocks.Minecraft
 
 			BlockMaterial = Material.Ore;
 		}
-		
-		public override byte Luminance {
+
+		public override byte Luminance
+		{
 			get
 			{
 				if (Lit.GetValue(BlockState))
@@ -21,7 +22,7 @@ namespace Alex.Blocks.Minecraft
 				}
 
 				return 0;
-			} 
+			}
 		}
 	}
 }

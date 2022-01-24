@@ -26,6 +26,7 @@ namespace Alex.Blocks.Storage.Palette
 		public uint GetId(TValue value)
 		{
 			if (value == null) throw new Exception("NULL");
+
 			return GetValue(GetIndex(value, HashObject(value)));
 		}
 
@@ -43,6 +44,7 @@ namespace Alex.Blocks.Storage.Palette
 		{
 			uint i = NextId();
 			Put(objectIn, i);
+
 			return i;
 		}
 
@@ -55,7 +57,7 @@ namespace Alex.Blocks.Storage.Palette
 
 			return _nextFreeIndex;
 		}
-		
+
 		private void Grow(int capacity)
 		{
 			TValue[] ak = _values;
@@ -74,7 +76,7 @@ namespace Alex.Blocks.Storage.Palette
 				}
 			}
 		}
-		
+
 		public void Put(TValue objectIn, uint intKey)
 		{
 			uint i = Math.Max(intKey, _mapSize + 1);
@@ -83,9 +85,7 @@ namespace Alex.Blocks.Storage.Palette
 			{
 				int j;
 
-				for (j = _values.Length << 1; j < intKey; j <<= 1)
-				{
-				}
+				for (j = _values.Length << 1; j < intKey; j <<= 1) { }
 
 				Grow(j);
 			}
@@ -104,7 +104,7 @@ namespace Alex.Blocks.Storage.Palette
 
 		private uint HashObject(TValue state)
 		{
-			return (uint) ((state.GetHashCode() & uint.MaxValue) % _values.Length);
+			return (uint)((state.GetHashCode() & uint.MaxValue) % _values.Length);
 		}
 
 		private uint GetIndex(TValue objectIn, uint index)
@@ -189,8 +189,8 @@ namespace Alex.Blocks.Storage.Palette
 		/// <inheritdoc />
 		public void Dispose()
 		{
-		//	_values = null;
-		//	_byId = null;
+			//	_values = null;
+			//	_byId = null;
 		}
 	}
 }

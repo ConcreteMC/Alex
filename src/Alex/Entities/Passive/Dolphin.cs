@@ -11,7 +11,7 @@ namespace Alex.Entities.Passive
 			Width = 0.9;
 			Height = 0.6;
 		}
-		
+
 		/// <inheritdoc />
 		public override void EntityDied()
 		{

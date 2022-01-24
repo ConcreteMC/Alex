@@ -6,6 +6,7 @@ namespace Alex.Common.Commands.Parsers
 	public class StringArgumentParser : ArgumentParser
 	{
 		public StringMode Mode { get; }
+
 		/// <inheritdoc />
 		public StringArgumentParser(string name, StringMode mode) : base(name)
 		{
@@ -24,20 +25,23 @@ namespace Alex.Common.Commands.Parsers
 		{
 			string textInput = null;
 			int length;
+
 			switch (Mode)
 			{
 				case StringMode.SingleWord:
 					length = input.ReadSingleWord(out textInput);
+
 					break;
 
 				case StringMode.QuotablePhrase:
 					length = input.ReadQuoted(out textInput);
+
 					break;
 
 				case StringMode.GreedyPhrase:
 					textInput = input.ReadToEnd();
 					length = textInput.Length;
-					
+
 					break;
 
 				default:
@@ -52,10 +56,7 @@ namespace Alex.Common.Commands.Parsers
 	public class ResourceLocationArgumentParser : ArgumentParser
 	{
 		/// <inheritdoc />
-		public ResourceLocationArgumentParser(string name) : base(name)
-		{
-			
-		}
+		public ResourceLocationArgumentParser(string name) : base(name) { }
 
 		/// <inheritdoc />
 		public override bool TryParse(SeekableTextReader input)

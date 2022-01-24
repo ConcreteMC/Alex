@@ -18,9 +18,10 @@ namespace Alex.Net.Java
 			Provider = provider;
 			Connection = connection;
 		}
-		
+
 		private int _transactionIds = 0;
 		private OnCommandMatch _callback = null;
+
 		/// <inheritdoc />
 		public override void DoMatch(string input, OnCommandMatch callback)
 		{
@@ -29,7 +30,7 @@ namespace Alex.Net.Java
 			var packet = TabCompleteServerBound.CreateObject();
 			packet.TransactionId = transactionId;
 			packet.Text = input;
-			
+
 			Connection.SendPacket(packet);
 		}
 

@@ -68,5 +68,5 @@ namespace Alex.Common.Graphics.Typography
 		
 		#endregion
 	}
-    // @formatter:on
+	// @formatter:on
 }

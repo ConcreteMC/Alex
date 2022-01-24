@@ -7,6 +7,7 @@ namespace Alex.Gui.Elements.Map
 	public class EntityMapIcon : MapIcon
 	{
 		protected readonly Entity Entity;
+
 		public EntityMapIcon(Entity entity, MapMarker marker) : base(marker)
 		{
 			Entity = entity;
@@ -34,10 +35,7 @@ namespace Alex.Gui.Elements.Map
 	public class LocalPlayerMapIcon : EntityMapIcon
 	{
 		/// <inheritdoc />
-		public LocalPlayerMapIcon(Entity entity, MapMarker marker) : base(entity, marker)
-		{
-			
-		}
+		public LocalPlayerMapIcon(Entity entity, MapMarker marker) : base(entity, marker) { }
 
 		/// <inheritdoc />
 		public override float Rotation

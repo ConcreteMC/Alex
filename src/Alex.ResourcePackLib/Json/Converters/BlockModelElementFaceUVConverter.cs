@@ -13,22 +13,20 @@ namespace Alex.ResourcePackLib.Json.Converters
 		{
 			var uv = value as ModelUV;
 
-			serializer.Serialize(writer, new int[]
-			{
-				uv.X1,
-				uv.Y1,
-				uv.X2,
-				uv.Y2
-			});
+			serializer.Serialize(writer, new int[] { uv.X1, uv.Y1, uv.X2, uv.Y2 });
 		}
 
-		public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
+		public override object ReadJson(JsonReader reader,
+			Type objectType,
+			object existingValue,
+			JsonSerializer serializer)
 		{
 			var obj = JToken.Load(reader);
 
 			if (obj.Type == JTokenType.Array)
 			{
 				var arr = (JArray)obj;
+
 				if (arr.Count == 4)
 				{
 					if (arr.All(token => token.Type == JTokenType.Integer))

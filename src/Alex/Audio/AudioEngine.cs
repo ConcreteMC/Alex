@@ -24,22 +24,22 @@ namespace Alex.Audio
 	/// </summary>
 	public class AudioEngine
 	{
+		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(AudioEngine));
+		private IStorageSystem StorageSystem { get; }
+		private string StoragePath { get; }
 
-		private static readonly Logger            Log = LogManager.GetCurrentClassLogger(typeof(AudioEngine));
-		private                 IStorageSystem    StorageSystem { get; }
-		private                 string            StoragePath   { get; }
-
-		private   ConcurrentDictionary<string, SoundInfo> _sounds = new ConcurrentDictionary<string, SoundInfo>();
+		private ConcurrentDictionary<string, SoundInfo> _sounds = new ConcurrentDictionary<string, SoundInfo>();
 		private IReadOnlyDictionary<string, string> _soundMapping;
-		protected FmodSystem                              FmodSystem;
-		private   bool                                    Supported { get; }
+		protected FmodSystem FmodSystem;
+		private bool Supported { get; }
 
 		//private double GlobalVolume  { get; set; } = 1d;
 		//private double MusicVolume   { get; set; } = 1d;
 		//private double SoundFxVolume { get; set; } = 1d;
 		//private double AmbientVolume { get; set; } = 1d;
-		
+
 		private IOptionsProvider OptionsProvider { get; }
+
 		public AudioEngine(IStorageSystem storageSystem, IOptionsProvider optionsProvider)
 		{
 			StorageSystem = storageSystem;
@@ -48,15 +48,15 @@ namespace Alex.Audio
 
 			try
 			{
-				FmodSystem = Fmod.CreateSystem();// new FmodSystem();
-				
+				FmodSystem = Fmod.CreateSystem(); // new FmodSystem();
+
 				FmodSystem.Output = OutputType.Autodetect;
 				FmodSystem.Init(32, InitFlags._3D_RightHanded);
 				FmodSystem.Set3DSettings(1f, 1f, 1f);
-				
+
 				Supported = true;
 			}
-			catch(Exception ex)
+			catch (Exception ex)
 			{
 				Log.Warn(ex, $"Failed to init audio engine. FMod is required.");
 				Supported = false;
@@ -67,6 +67,7 @@ namespace Alex.Audio
 			soundMappings = JsonConvert.DeserializeObject<Dictionary<string, SoundMapping>>(soundJson);
 
 			Dictionary<string, string> mapped = new Dictionary<string, string>();
+
 			//Dictionary<string, string> 
 			foreach (var mapping in soundMappings)
 			{
@@ -113,19 +114,21 @@ namespace Alex.Audio
 		{
 			if (!Supported)
 				return 0;
-			
+
 			if (resourcePack?.SoundDefinitions?.SoundDefinitions == null)
 				return 0;
 
 			int count = 0;
 			int total = resourcePack.SoundDefinitions.SoundDefinitions.Count;
+
 			foreach (var sound in resourcePack.SoundDefinitions.SoundDefinitions)
 			{
 				progress?.UpdateProgress(count, total, "Importing sound definitions...", sound.Key);
 				List<WrappedSound> values = new List<WrappedSound>();
+
 				foreach (var element in sound.Value.Sounds)
 				{
-					string path        = StoragePath;
+					string path = StoragePath;
 					string elementPath = null;
 
 					if (element.SoundClass != null)
@@ -156,7 +159,7 @@ namespace Alex.Audio
 					}
 
 					exists = StorageSystem.Exists(path);
-					
+
 					//Sound s = null;
 
 					if (exists && Supported && elementPath != null)
@@ -164,13 +167,15 @@ namespace Alex.Audio
 						if (StorageSystem.TryGetDirectory(StoragePath, out var directoryInfo))
 						{
 							string filePath = Path.Combine(directoryInfo.FullName, elementPath);
+
 							if (!File.Exists(filePath))
 								Log.Warn($"Invalid path: {filePath}");
 
-							bool is3d = !(element.SoundClass != null && element.SoundClass.Is3D.HasValue && !element.SoundClass.Is3D.Value);
+							bool is3d = !(element.SoundClass != null && element.SoundClass.Is3D.HasValue
+							                                         && !element.SoundClass.Is3D.Value);
 
 							var mode = is3d ? (Mode.CreateStream | Mode._3D) : Mode.CreateStream;
-							
+
 							Sound s = FmodSystem.CreateSound(filePath, mode);
 
 							if (s.SubSoundCount > 0)
@@ -179,11 +184,11 @@ namespace Alex.Audio
 								s = s.GetSubSound(0);
 								//Log.Info($"S: {s.Value.Name}");
 							}
-							
+
 							s.Mode = mode;
-	
+
 							float volume = 1f;
-							float pitch  = 1f;
+							float pitch = 1f;
 
 							if (sound.Value.Pitch.HasValue)
 								pitch = sound.Value.Pitch.Value;
@@ -192,19 +197,19 @@ namespace Alex.Audio
 							{
 								if (element.SoundClass.Pitch.HasValue)
 									pitch = element.SoundClass.Pitch.Value;
-								
+
 								if (element.SoundClass.Volume.HasValue)
 									volume = element.SoundClass.Volume.Value;
 							}
-							
+
 							float max = 16f;
 							float min = 0.5f;
-								
+
 							if (sound.Value.MaxDistance.HasValue)
 							{
 								max = sound.Value.MaxDistance.Value;
 							}
-								
+
 							if (sound.Value.MinDistance.HasValue)
 							{
 								min = sound.Value.MinDistance.Value;
@@ -224,6 +229,7 @@ namespace Alex.Audio
 				{
 					var soundInfo = new SoundInfo(sound.Key, SoundCategory.Effects, values.ToArray());
 					_sounds.AddOrUpdate(sound.Key, s => soundInfo, (s, info) => soundInfo);
+
 					//if (_sounds.TryAdd(sound.Key, ))
 					{
 						count++;
@@ -235,6 +241,7 @@ namespace Alex.Audio
 		}
 
 		private Vector3 _lastPos = Vector3.Zero;
+
 		public void Update(GameTime gameTime, Vector3 position, Vector3 forward)
 		{
 			if (!Supported) return;
@@ -242,14 +249,13 @@ namespace Alex.Audio
 			FmodSystem.Set3DListenerAttributes(
 				0, new System.Numerics.Vector3(position.X, position.Y, position.Z),
 				System.Numerics.Vector3.Zero, //new System.Numerics.Vector3(vel.X, vel.Y, vel.Z), 
-				new System.Numerics.Vector3(forward.X, forward.Y, forward.Z), 
-				System.Numerics.Vector3.UnitY);
-			
+				new System.Numerics.Vector3(forward.X, forward.Y, forward.Z), System.Numerics.Vector3.UnitY);
+
 			_lastPos = position;
-			
+
 			FmodSystem.Update();
 		}
-		
+
 		private string GetName(Sounds sound)
 		{
 			return sound.ToString();
@@ -269,7 +275,7 @@ namespace Alex.Audio
 
 			return false;
 		}
-		
+
 		public bool PlaySound(string sound, Vector3 position, float pitch, float volume, bool isGlobal = false)
 		{
 			if (!_sounds.TryGetValue(sound, out var soundInfo))
@@ -279,8 +285,8 @@ namespace Alex.Audio
 
 			if (Supported && soundInfo.Sound != null)
 			{
-				var     selected    = soundInfo.Sound;
-				Channel instance = FmodSystem.PlaySound(selected.Value, paused:true);
+				var selected = soundInfo.Sound;
+				Channel instance = FmodSystem.PlaySound(selected.Value, paused: true);
 
 				if (selected.Is3D && !isGlobal)
 				{
@@ -291,68 +297,79 @@ namespace Alex.Audio
 				if (volume > 1f)
 				{
 					Log.Debug($"Invalid volume: {volume}");
-				//	volume = (1f / 100f) * volume;
+					//	volume = (1f / 100f) * volume;
 				}
+
 				volume *= selected.Volume;
 
 				switch (soundInfo.Category)
 				{
 					case SoundCategory.Ambient:
 						volume *= (float)OptionsProvider.AlexOptions.SoundOptions.AmbientVolume;
+
 						break;
 
 					case SoundCategory.Weather:
 						volume *= (float)OptionsProvider.AlexOptions.SoundOptions.WeatherVolume;
+
 						break;
 
 					case SoundCategory.Player:
 						volume *= (float)OptionsProvider.AlexOptions.SoundOptions.PlayerVolume;
+
 						break;
 
 					case SoundCategory.Block:
 						volume *= (float)OptionsProvider.AlexOptions.SoundOptions.BlocksVolume;
+
 						break;
 
 					case SoundCategory.Hostile:
 						volume *= (float)OptionsProvider.AlexOptions.SoundOptions.HostileVolume;
+
 						break;
 
 					case SoundCategory.Neutral:
 						volume *= (float)OptionsProvider.AlexOptions.SoundOptions.NeutralVolume;
+
 						break;
 
 					case SoundCategory.Record:
 						volume *= (float)OptionsProvider.AlexOptions.SoundOptions.RecordVolume;
+
 						break;
 
 					case SoundCategory.Bottle:
-						
+
 						break;
 
 					case SoundCategory.Ui:
 						volume = 1f;
+
 						break;
 
 					case SoundCategory.Music:
 						volume *= (float)OptionsProvider.AlexOptions.SoundOptions.MusicVolume;
+
 						break;
 
 					case SoundCategory.Effects:
 						volume *= (float)OptionsProvider.AlexOptions.SoundOptions.SoundEffectsVolume;
+
 						break;
 				}
-			
-				
-				volume *= (float)	OptionsProvider.AlexOptions.SoundOptions.GlobalVolume;
+
+
+				volume *= (float)OptionsProvider.AlexOptions.SoundOptions.GlobalVolume;
 				instance.Volume = Math.Clamp(volume, 0f, 1f);
-				
+
 				instance.Pitch = pitch;
 				instance.Paused = false;
 			}
 
 			return true;
 		}
-		
+
 		public bool PlaySound(string sound, float pitch = 1f, float volume = 1f, bool isGlobal = false)
 		{
 			return PlaySound(sound, _lastPos, pitch, volume, isGlobal);

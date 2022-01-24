@@ -10,9 +10,8 @@ namespace Alex.Common.Commands.Parsers
 		/// <inheritdoc />
 		public override bool TryParse(SeekableTextReader input)
 		{
-			if (input.ReadSingleWord(out string x) > 0 
-			    && input.ReadSingleWord(out string y) > 0
-			    && input.ReadSingleWord(out string z) > 0)
+			if (input.ReadSingleWord(out string x) > 0 && input.ReadSingleWord(out string y) > 0
+			                                           && input.ReadSingleWord(out string z) > 0)
 			{
 				if (ParseRelative(x, out int _) && ParseRelative(y, out int _) && ParseRelative(z, out int _))
 					return true;
@@ -21,7 +20,7 @@ namespace Alex.Common.Commands.Parsers
 			return false;
 		}
 	}
-	
+
 	public class ColumnPositionArgumentParser : ArgumentParser
 	{
 		/// <inheritdoc />
@@ -30,9 +29,8 @@ namespace Alex.Common.Commands.Parsers
 		/// <inheritdoc />
 		public override bool TryParse(SeekableTextReader input)
 		{
-			if (input.ReadSingleWord(out string x) > 0 
-			    && input.ReadSingleWord(out string y) > 0
-			    && input.ReadSingleWord(out string z) > 0)
+			if (input.ReadSingleWord(out string x) > 0 && input.ReadSingleWord(out string y) > 0
+			                                           && input.ReadSingleWord(out string z) > 0)
 			{
 				if (ParseRelative(x, out int _) && ParseRelative(y, out int _) && ParseRelative(z, out int _))
 					return true;
@@ -41,7 +39,7 @@ namespace Alex.Common.Commands.Parsers
 			return false;
 		}
 	}
-	
+
 	public class Vector3ArgumentParser : ArgumentParser
 	{
 		/// <inheritdoc />
@@ -50,9 +48,8 @@ namespace Alex.Common.Commands.Parsers
 		/// <inheritdoc />
 		public override bool TryParse(SeekableTextReader input)
 		{
-			if (input.ReadSingleWord(out string x) > 0 
-			    && input.ReadSingleWord(out string y) > 0
-			    && input.ReadSingleWord(out string z) > 0)
+			if (input.ReadSingleWord(out string x) > 0 && input.ReadSingleWord(out string y) > 0
+			                                           && input.ReadSingleWord(out string z) > 0)
 			{
 				if (ParseRelative(x, out double _) && ParseRelative(y, out double _) && ParseRelative(z, out double _))
 					return true;
@@ -61,7 +58,7 @@ namespace Alex.Common.Commands.Parsers
 			return false;
 		}
 	}
-	
+
 	public class Vector2ArgumentParser : ArgumentParser
 	{
 		/// <inheritdoc />
@@ -70,8 +67,7 @@ namespace Alex.Common.Commands.Parsers
 		/// <inheritdoc />
 		public override bool TryParse(SeekableTextReader input)
 		{
-			if (input.ReadSingleWord(out string x) > 0 
-			    && input.ReadSingleWord(out string y) > 0)
+			if (input.ReadSingleWord(out string x) > 0 && input.ReadSingleWord(out string y) > 0)
 			{
 				if (ParseRelative(x, out double _) && ParseRelative(y, out double _))
 					return true;

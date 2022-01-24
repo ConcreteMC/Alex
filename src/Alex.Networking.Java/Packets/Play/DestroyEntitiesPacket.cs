@@ -3,12 +3,9 @@ using Alex.Networking.Java.Util;
 
 namespace Alex.Networking.Java.Packets.Play
 {
-    public class DestroyEntitiesPacket : Packet<DestroyEntitiesPacket>
-    {
-		public DestroyEntitiesPacket()
-		{
-
-		}
+	public class DestroyEntitiesPacket : Packet<DestroyEntitiesPacket>
+	{
+		public DestroyEntitiesPacket() { }
 
 		public int[] EntityIds;
 
@@ -24,9 +21,6 @@ namespace Alex.Networking.Java.Packets.Play
 			}
 		}
 
-		public override void Encode(MinecraftStream stream)
-		{
-			
-		}
+		public override void Encode(MinecraftStream stream) { }
 	}
 }

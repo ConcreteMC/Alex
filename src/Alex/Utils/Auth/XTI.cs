@@ -4,7 +4,6 @@ namespace Alex.Utils.Auth
 {
 	public class XTI
 	{
-		[JsonProperty("tid")]
-		public string TID { get; set; }
+		[JsonProperty("tid")] public string TID { get; set; }
 	}
 }

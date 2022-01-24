@@ -5,17 +5,14 @@ namespace Alex.Common.Data
 	public class TabCompleteMatch : IEquatable<TabCompleteMatch>
 	{
 		public string Match;
-		
-		public bool   HasTooltip = false;
-		public string Tooltip    = null;
+
+		public bool HasTooltip = false;
+		public string Tooltip = null;
 
 		public string Description = null;
 
-		public TabCompleteMatch()
-		{
-			
-		}
-		
+		public TabCompleteMatch() { }
+
 		public string GetDescriptive()
 		{
 			if (string.IsNullOrWhiteSpace(Description))
@@ -40,7 +37,7 @@ namespace Alex.Common.Data
 			if (ReferenceEquals(this, obj)) return true;
 			if (obj.GetType() != this.GetType()) return false;
 
-			return Equals((TabCompleteMatch) obj);
+			return Equals((TabCompleteMatch)obj);
 		}
 
 		/// <inheritdoc />

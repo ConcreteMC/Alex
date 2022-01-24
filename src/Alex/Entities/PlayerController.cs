@@ -36,27 +36,28 @@ using MathF = System.MathF;
 
 namespace Alex.Entities
 {
-    public class PlayerController : IDisposable
-    {
-	    private readonly GuiManager _guiManager;
-	    private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(PlayerController));
+	public class PlayerController : IDisposable
+	{
+		private readonly GuiManager _guiManager;
+		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(PlayerController));
 
 		public PlayerIndex PlayerIndex { get; }
 		public PlayerInputManager InputManager { get; }
 		public MouseInputListener MouseInputListener { get; }
 
-        //public bool IsFreeCam { get; set; }
+		//public bool IsFreeCam { get; set; }
 
-        private GraphicsDevice Graphics { get; }
+		private GraphicsDevice Graphics { get; }
 
-        private Player Player { get; }
+		private Player Player { get; }
 		private InputManager GlobalInputManager { get; }
 		private GamePadInputListener GamePadInputListener { get; }
 
 		private List<InputActionBinding> _inputBindings { get; }
 
 		private bool _invertX, _invertY;
-		public PlayerController(GraphicsDevice graphics, 
+
+		public PlayerController(GraphicsDevice graphics,
 			GuiManager guiManager,
 			InputManager inputManager,
 			Player player,
@@ -95,94 +96,81 @@ namespace Alex.Entities
 			_invertX = optionsProvider.AlexOptions.ControllerOptions.InvertX.Value;
 			_invertY = optionsProvider.AlexOptions.ControllerOptions.InvertY.Value;
 
-			optionsProvider.AlexOptions.ControllerOptions.InvertX.Bind(
-				(value, newValue) =>
-				{
-					_invertX = newValue;
-				});
-			
-			optionsProvider.AlexOptions.ControllerOptions.InvertY.Bind(
-				(value, newValue) =>
-				{
-					_invertY = newValue;
-				});
-			
+			optionsProvider.AlexOptions.ControllerOptions.InvertX.Bind((value, newValue) => { _invertX = newValue; });
+
+			optionsProvider.AlexOptions.ControllerOptions.InvertY.Bind((value, newValue) => { _invertY = newValue; });
+
 			optionsProvider.AlexOptions.MouseSensitivity.Bind((value, newValue) => { CursorSensitivity = newValue; });
 
 			GamepadSensitivity = optionsProvider.AlexOptions.ControllerOptions.RightJoystickSensitivity.Value;
 
 			optionsProvider.AlexOptions.ControllerOptions.RightJoystickSensitivity.Bind(
 				(value, newValue) => { GamepadSensitivity = newValue; });
-			
-			_inputBindings = new List<InputActionBinding>(new[]
+
+			_inputBindings = new List<InputActionBinding>(
+				new[]
 				{
 					InputManager.RegisterListener(
 						AlexInputCommand.Jump, InputBindingTrigger.Discrete, CheckMovementPredicate, SetFlying),
-					
-					InputManager.RegisterListener(AlexInputCommand.MoveUp, InputBindingTrigger.Discrete, 
-						CheckMovementPredicate, SetFlying),
-					
+					InputManager.RegisterListener(
+						AlexInputCommand.MoveUp, InputBindingTrigger.Discrete, CheckMovementPredicate, SetFlying),
 					InputManager.RegisterListener(
 						AlexInputCommand.ToggleCamera, InputBindingTrigger.Tap, CheckMovementPredicate,
 						() => Player.Level.Camera.ToggleMode()),
-					
 					InputManager.RegisterListener(
 						AlexInputCommand.DropItem, InputBindingTrigger.Tap, CheckMovementPredicate,
 						() => Player.DropHeldItem(InputManager.IsDown(AlexInputCommand.Sprint))),
-					
 					InputManager.RegisterListener(
 						AlexInputCommand.HotBarSelect1, InputBindingTrigger.Tap, CheckMovementPredicate,
 						() => { player.Inventory.SelectedSlot = 0; }),
-					
 					InputManager.RegisterListener(
 						AlexInputCommand.HotBarSelect2, InputBindingTrigger.Tap, CheckMovementPredicate,
 						() => { player.Inventory.SelectedSlot = 1; }),
-					
 					InputManager.RegisterListener(
 						AlexInputCommand.HotBarSelect3, InputBindingTrigger.Tap, CheckMovementPredicate,
 						() => { player.Inventory.SelectedSlot = 2; }),
-					
 					InputManager.RegisterListener(
 						AlexInputCommand.HotBarSelect4, InputBindingTrigger.Tap, CheckMovementPredicate,
 						() => { player.Inventory.SelectedSlot = 3; }),
-					
 					InputManager.RegisterListener(
 						AlexInputCommand.HotBarSelect5, InputBindingTrigger.Tap, CheckMovementPredicate,
 						() => { player.Inventory.SelectedSlot = 4; }),
-					
 					InputManager.RegisterListener(
 						AlexInputCommand.HotBarSelect6, InputBindingTrigger.Tap, CheckMovementPredicate,
 						() => { player.Inventory.SelectedSlot = 5; }),
-					
 					InputManager.RegisterListener(
 						AlexInputCommand.HotBarSelect7, InputBindingTrigger.Tap, CheckMovementPredicate,
 						() => { player.Inventory.SelectedSlot = 6; }),
-					
 					InputManager.RegisterListener(
 						AlexInputCommand.HotBarSelect8, InputBindingTrigger.Tap, CheckMovementPredicate,
 						() => { player.Inventory.SelectedSlot = 7; }),
-					
 					InputManager.RegisterListener(
 						AlexInputCommand.HotBarSelect9, InputBindingTrigger.Tap, CheckMovementPredicate,
 						() => { player.Inventory.SelectedSlot = 8; }),
-					
 					InputManager.RegisterListener(
 						AlexInputCommand.Exit, InputBindingTrigger.Discrete, CloseActiveDialog),
-
 					InputManager.RegisterListener(
-						AlexInputCommand.ToggleInventory, InputBindingTrigger.Discrete, CanOpenDialog, OpenInventory),
-					
+						AlexInputCommand.ToggleInventory, InputBindingTrigger.Discrete, CanOpenDialog,
+						OpenInventory),
 					InputManager.RegisterListener(
 						AlexInputCommand.ToggleMap, InputBindingTrigger.Discrete, CanOpenDialog, OpenMap),
-					
 					InputManager.RegisterListener(
-						AlexInputCommand.TakeScreenshot, InputBindingTrigger.Discrete, CheckMovementPredicate, TakeScreenshot),
-					
-					InputManager.RegisterListener(AlexInputCommand.ToggleDebugInfo, InputBindingTrigger.Discrete, CanOpenDialog, ToggleDebugInfo),
-					InputManager.RegisterListener(AlexInputCommand.ToggleBoundingboxDebugInfo, InputBindingTrigger.Discrete, CanOpenDialog, ToggleBoundingBoxes),
-					InputManager.RegisterListener(AlexInputCommand.ToggleNetworkDebugInfo, InputBindingTrigger.Discrete, CanOpenDialog, ToggleNetworkDebugInfo),
-					InputManager.RegisterListener(AlexInputCommand.ToggleFog, InputBindingTrigger.Discrete, CanOpenDialog, ToggleFog),
-					InputManager.RegisterListener(AlexInputCommand.ToggleWireframe, InputBindingTrigger.Discrete, CanOpenDialog, ToggleWireframe)
+						AlexInputCommand.TakeScreenshot, InputBindingTrigger.Discrete, CheckMovementPredicate,
+						TakeScreenshot),
+					InputManager.RegisterListener(
+						AlexInputCommand.ToggleDebugInfo, InputBindingTrigger.Discrete, CanOpenDialog,
+						ToggleDebugInfo),
+					InputManager.RegisterListener(
+						AlexInputCommand.ToggleBoundingboxDebugInfo, InputBindingTrigger.Discrete, CanOpenDialog,
+						ToggleBoundingBoxes),
+					InputManager.RegisterListener(
+						AlexInputCommand.ToggleNetworkDebugInfo, InputBindingTrigger.Discrete, CanOpenDialog,
+						ToggleNetworkDebugInfo),
+					InputManager.RegisterListener(
+						AlexInputCommand.ToggleFog, InputBindingTrigger.Discrete, CanOpenDialog, ToggleFog),
+					InputManager.RegisterListener(
+						AlexInputCommand.ToggleWireframe, InputBindingTrigger.Discrete, CanOpenDialog,
+						ToggleWireframe)
 				});
 		}
 
@@ -195,15 +183,16 @@ namespace Alex.Entities
 		{
 			//Player.Level.ChunkManager.FogEnabled = !Player.Level.ChunkManager.FogEnabled;
 		}
-		
+
 		private void ToggleBoundingBoxes()
 		{
 			Player.Level.RenderBoundingBoxes = !Player.Level.RenderBoundingBoxes;
 		}
-		
+
 		private void ToggleDebugInfo()
 		{
 			var activeState = Alex.Instance.GameStateManager.GetActiveState();
+
 			if (activeState is PlayingState ps)
 			{
 				ps.RenderDebug = !ps.RenderDebug;
@@ -213,10 +202,11 @@ namespace Alex.Entities
 				Log.Warn($"Active state was not playstate, got {activeState?.GetType().ToString()} instead!");
 			}
 		}
-		
+
 		private void ToggleNetworkDebugInfo()
 		{
 			var activeState = Alex.Instance.GameStateManager.GetActiveState();
+
 			if (activeState is PlayingState ps)
 			{
 				ps.RenderNetworking = !ps.RenderNetworking;
@@ -226,7 +216,7 @@ namespace Alex.Entities
 				Log.Warn($"Active state was not playstate, got {activeState?.GetType().ToString()} instead!");
 			}
 		}
-		
+
 		private void TakeScreenshot()
 		{
 			Alex.Instance.OnEndDraw += OnEndDraw;
@@ -259,8 +249,6 @@ namespace Alex.Entities
 				{
 					try
 					{
-
-
 						var pics = Environment.GetFolderPath(Environment.SpecialFolder.MyPictures);
 						var screenshotPath = Path.Combine(pics, $"alex-{DateTime.Now.ToString("s")}.png");
 
@@ -290,7 +278,7 @@ namespace Alex.Entities
 		{
 			var dialog = new MapDialog(Player.Level.Map);
 			dialog.GuiManager = _guiManager;
-			
+
 			dialog.Show();
 			//Alex.Instance.GuiManager.ShowDialog(dialog);
 		}
@@ -298,13 +286,14 @@ namespace Alex.Entities
 		private void OpenInventory()
 		{
 			var dialog = new GuiPlayerInventoryDialog(Player, Player.Inventory);
+
 			if (Player.Network is BedrockClient client)
 			{
 				dialog.TransactionTracker = client.TransactionTracker;
 			}
 
 			dialog.GuiManager = _guiManager;
-			
+
 			dialog.Show();
 		}
 
@@ -322,7 +311,7 @@ namespace Alex.Entities
 			{
 				Player.SetFlying(!Player.IsFlying);
 			}
-		
+
 			_lastUp = now;
 		}
 
@@ -343,16 +332,16 @@ namespace Alex.Entities
 					IgnoreNextUpdate = true;
 					Player.SkipUpdate();
 				}
-				
+
 				_checkInput = value;
 			}
 		}
-		
+
 		private bool IgnoreNextUpdate { get; set; } = false;
-	    
+
 		private long _lastForward = 0;
 		private DateTime _lastUp = DateTime.UtcNow;
-		
+
 		private Vector2 _previousMousePosition = Vector2.Zero;
 
 		public void Update(GameTime gameTime)
@@ -360,13 +349,15 @@ namespace Alex.Entities
 			UpdatePlayerInput(gameTime);
 
 			bool isShown = Alex.Instance.IsMouseVisible;
-			
+
 			bool showCursor = false;
+
 			if (Alex.Instance.IsActive)
 			{
 				bool hasActiveDialog = GetActiveDialog(out _);
 
-				if (hasActiveDialog || !CanOpenDialog() || Alex.Instance.GameStateManager.GetActiveState() is not PlayingState)
+				if (hasActiveDialog || !CanOpenDialog()
+				                    || Alex.Instance.GameStateManager.GetActiveState() is not PlayingState)
 				{
 					showCursor = true;
 				}
@@ -382,96 +373,100 @@ namespace Alex.Entities
 			}
 		}
 
-	    private void UpdatePlayerInput(GameTime gt)
-	    {
-		    if (CheckInput)
-		    {
-			    /*if (_allowMovementInput != _previousAllowMovementInput)
-			    {
-				    CenterCursor();
-				    _previousAllowMovementInput = _allowMovementInput;
-				    return;
-			    }*/
+		private void UpdatePlayerInput(GameTime gt)
+		{
+			if (CheckInput)
+			{
+				/*if (_allowMovementInput != _previousAllowMovementInput)
+				{
+					CenterCursor();
+					_previousAllowMovementInput = _allowMovementInput;
+					return;
+				}*/
 
-			    UpdateMovementInput(gt);
-			    UpdateMouseInput(gt);
-		    }
-		    else
-		    {
-			    Player.Movement.UpdateHeading(Vector3.Zero);
-		    }
+				UpdateMovementInput(gt);
+				UpdateMouseInput(gt);
+			}
+			else
+			{
+				Player.Movement.UpdateHeading(Vector3.Zero);
+			}
 		}
 
-	    private bool GetActiveDialog(out DialogBase dialog)
-	    {
-		    dialog = _guiManager.ActiveDialog;
-		    return dialog != null && Alex.Instance.GameStateManager.GetActiveState() is PlayingState;
-	    }
+		private bool GetActiveDialog(out DialogBase dialog)
+		{
+			dialog = _guiManager.ActiveDialog;
 
-	    private bool CanOpenDialog()
-	    {
-		    var focusedElement = _guiManager.FocusManager.FocusedElement;
+			return dialog != null && Alex.Instance.GameStateManager.GetActiveState() is PlayingState;
+		}
 
-		    return !GetActiveDialog(out _) && (focusedElement == null || !focusedElement.CanFocus || !focusedElement.Enabled
-		                                    || !focusedElement.Focused);
-	    }
+		private bool CanOpenDialog()
+		{
+			var focusedElement = _guiManager.FocusManager.FocusedElement;
 
-	    private void CloseActiveDialog()
-	    {
-		    if (GetActiveDialog(out var dialog) || dialog != null)
-		    {
-			    if (dialog == null)
-				    return;
+			return !GetActiveDialog(out _) && (focusedElement == null || !focusedElement.CanFocus
+			                                                          || !focusedElement.Enabled
+			                                                          || !focusedElement.Focused);
+		}
 
-			    CenterCursor();
-			    dialog.Close();
-			    Player.SkipUpdate();
-		    }
-		    else if (CanOpenDialog())
-		    {
-			    Alex.Instance.GameStateManager.SetActiveState<InGameMenuState>(true, false);
-			    Player.SkipUpdate();
-		    }
-	    }
+		private void CloseActiveDialog()
+		{
+			if (GetActiveDialog(out var dialog) || dialog != null)
+			{
+				if (dialog == null)
+					return;
 
-	    private void CenterCursor()
-	    {
-		    var centerX = Graphics.Viewport.Width / 2;
-		    var centerY = Graphics.Viewport.Height / 2;
-		    
-		    Mouse.SetPosition(centerX, centerY);
-		    
-		    _previousMousePosition = new Vector2(centerX, centerY);
-		    IgnoreNextUpdate = true;
-	    }
-	    
-	    private Vector3 LastVelocity { get; set; } = Vector3.Zero;
-	    private double CursorSensitivity { get; set; } = 30d;
-	    private double GamepadSensitivity { get; set; } = 200d;
-	    private bool _jumping = false;
+				CenterCursor();
+				dialog.Close();
+				Player.SkipUpdate();
+			}
+			else if (CanOpenDialog())
+			{
+				Alex.Instance.GameStateManager.SetActiveState<InGameMenuState>(true, false);
+				Player.SkipUpdate();
+			}
+		}
 
-	    private MouseState _mouseState = new MouseState();
-	    private void UpdateMovementInput(GameTime gt)
-	    {
-		    if (!CheckMovementInput)
-		    {
-			    Player.Movement.UpdateHeading(Vector3.Zero);
-			    //InputFlags = 0;
-			    return;
-		    }
+		private void CenterCursor()
+		{
+			var centerX = Graphics.Viewport.Width / 2;
+			var centerY = Graphics.Viewport.Height / 2;
 
-		    if (InputManager.IsPressed(AlexInputCommand.HotBarSelectPrevious)
-		        || MouseInputListener.IsButtonDown(MouseButton.ScrollUp))
-		    {
-			    Player.Inventory.SelectedSlot--;
-		    }
-		    else if (InputManager.IsPressed(AlexInputCommand.HotBarSelectNext)
-		             || MouseInputListener.IsButtonDown(MouseButton.ScrollDown))
-		    {
-			    Player.Inventory.SelectedSlot++;
-		    }
-		    
-		      var inputFlags = GetInputFlags();
+			Mouse.SetPosition(centerX, centerY);
+
+			_previousMousePosition = new Vector2(centerX, centerY);
+			IgnoreNextUpdate = true;
+		}
+
+		private Vector3 LastVelocity { get; set; } = Vector3.Zero;
+		private double CursorSensitivity { get; set; } = 30d;
+		private double GamepadSensitivity { get; set; } = 200d;
+		private bool _jumping = false;
+
+		private MouseState _mouseState = new MouseState();
+
+		private void UpdateMovementInput(GameTime gt)
+		{
+			if (!CheckMovementInput)
+			{
+				Player.Movement.UpdateHeading(Vector3.Zero);
+
+				//InputFlags = 0;
+				return;
+			}
+
+			if (InputManager.IsPressed(AlexInputCommand.HotBarSelectPrevious)
+			    || MouseInputListener.IsButtonDown(MouseButton.ScrollUp))
+			{
+				Player.Inventory.SelectedSlot--;
+			}
+			else if (InputManager.IsPressed(AlexInputCommand.HotBarSelectNext)
+			         || MouseInputListener.IsButtonDown(MouseButton.ScrollDown))
+			{
+				Player.Inventory.SelectedSlot++;
+			}
+
+			var inputFlags = GetInputFlags();
 
 			bool canSwim = Player.CanSwim && Player.FeetInWater && Player.HeadInWater;
 
@@ -488,337 +483,339 @@ namespace Alex.Entities
 			}
 
 			if ((inputFlags & AuthInputFlags.StartSprinting) != 0)
-		    {
-			    if (canSwim)
-			    {
-				    swimming = true;
-				    sprinting = false;
-			    }
-			    else
-			    {
-				    sprinting = true;
-				    swimming = false;
-			    }
-		    }
-		    else if ((inputFlags & AuthInputFlags.StopSprinting) != 0)
-		    {
-			    swimming = false;
-			    sprinting = false;
-		    }
+			{
+				if (canSwim)
+				{
+					swimming = true;
+					sprinting = false;
+				}
+				else
+				{
+					sprinting = true;
+					swimming = false;
+				}
+			}
+			else if ((inputFlags & AuthInputFlags.StopSprinting) != 0)
+			{
+				swimming = false;
+				sprinting = false;
+			}
 
 			if (_jumping && Player.Velocity.Y <= 0.00001f && Player.FeetInWater)
-			    _jumping = false;
+				_jumping = false;
 
-		    if (!_canJump && Player.KnownPosition.OnGround && Math.Abs(LastVelocity.Y - Player.Velocity.Y)
-		        < 0.0001f)
-		    {
-			    _canJump = true;
-		    }
+			if (!_canJump && Player.KnownPosition.OnGround && Math.Abs(LastVelocity.Y - Player.Velocity.Y) < 0.0001f)
+			{
+				_canJump = true;
+			}
 
-		    if (!Player.IsFlying && ((inputFlags & AuthInputFlags.JumpDown) != 0 || (inputFlags & AuthInputFlags.WantUp) != 0))
-		    {
-			    if (Player.IsInWater && !_jumping)
-			    {
-				    _jumping = true;
-				    inputFlags |= AuthInputFlags.StartJumping;
-				    Player.Jump();
-			    }
-			    else if (!Player.IsInWater && _canJump)
-			    {
-				    bool readyToJump = Player.Velocity.Y <= 0.00001f && Player.Velocity.Y >= -0.00001f
-				                                                     && Math.Abs(LastVelocity.Y - Player.Velocity.Y)
-				                                                     < 0.0001f;
+			if (!Player.IsFlying && ((inputFlags & AuthInputFlags.JumpDown) != 0
+			                         || (inputFlags & AuthInputFlags.WantUp) != 0))
+			{
+				if (Player.IsInWater && !_jumping)
+				{
+					_jumping = true;
+					inputFlags |= AuthInputFlags.StartJumping;
+					Player.Jump();
+				}
+				else if (!Player.IsInWater && _canJump)
+				{
+					bool readyToJump = Player.Velocity.Y <= 0.00001f && Player.Velocity.Y >= -0.00001f
+					                                                 && Math.Abs(LastVelocity.Y - Player.Velocity.Y)
+					                                                 < 0.0001f;
 
-				    if (Player.KnownPosition.OnGround && readyToJump)
-				    {
-					    inputFlags |= AuthInputFlags.StartJumping;
-					    _canJump = false;
-					    Player.Jump();
-				    }
-			    }
-		    }
+					if (Player.KnownPosition.OnGround && readyToJump)
+					{
+						inputFlags |= AuthInputFlags.StartJumping;
+						_canJump = false;
+						Player.Jump();
+					}
+				}
+			}
 
-		    bool wasSneaking = Player.IsSneaking;
-		    Player.IsSneaking = !Player.IsInWater && (inputFlags & AuthInputFlags.Sneaking) != 0;
+			bool wasSneaking = Player.IsSneaking;
+			Player.IsSneaking = !Player.IsInWater && (inputFlags & AuthInputFlags.Sneaking) != 0;
 
-		    if (Player.IsSneaking != wasSneaking)
-		    {
-			    if (Player.IsSneaking)
-			    {
-				    inputFlags |= AuthInputFlags.StartSneaking;
-			    }
-			    else
-			    {
-				    inputFlags |= AuthInputFlags.StopSneaking;
-			    }
-		    }
-		    
-		    bool wasSwimming = Player.IsSwimming;
-		    Player.SetSwimming(swimming && canSwim);
-		    if (Player.IsSwimming != wasSwimming)
-		    {
-			    if (Player.IsSwimming)
-			    {
-				    inputFlags |= AuthInputFlags.StartSwimming;
-			    }
-			    else
-			    {
-				    inputFlags |= AuthInputFlags.StopSwimming;
-			    }
-		    }
-		    
-		    bool wasSprinting = Player.IsSprinting;
-		    Player.SetSprinting(sprinting && !Player.IsSwimming && !Player.IsInWater && Player.CanSprint);
+			if (Player.IsSneaking != wasSneaking)
+			{
+				if (Player.IsSneaking)
+				{
+					inputFlags |= AuthInputFlags.StartSneaking;
+				}
+				else
+				{
+					inputFlags |= AuthInputFlags.StopSneaking;
+				}
+			}
 
-		    if (Player.IsSprinting != wasSprinting)
-		    {
-			    if (Player.IsSprinting)
-			    {
-				    inputFlags |= AuthInputFlags.StartSprinting;
-			    }
-			    else
-			    {
-				    inputFlags |= AuthInputFlags.StopSprinting;
-			    }
-		    }
+			bool wasSwimming = Player.IsSwimming;
+			Player.SetSwimming(swimming && canSwim);
 
-		    InputFlags = inputFlags;
-		    Player.Movement.UpdateHeading(GetMoveVector(inputFlags));
-		    
+			if (Player.IsSwimming != wasSwimming)
+			{
+				if (Player.IsSwimming)
+				{
+					inputFlags |= AuthInputFlags.StartSwimming;
+				}
+				else
+				{
+					inputFlags |= AuthInputFlags.StopSwimming;
+				}
+			}
+
+			bool wasSprinting = Player.IsSprinting;
+			Player.SetSprinting(sprinting && !Player.IsSwimming && !Player.IsInWater && Player.CanSprint);
+
+			if (Player.IsSprinting != wasSprinting)
+			{
+				if (Player.IsSprinting)
+				{
+					inputFlags |= AuthInputFlags.StartSprinting;
+				}
+				else
+				{
+					inputFlags |= AuthInputFlags.StopSprinting;
+				}
+			}
+
+			InputFlags = inputFlags;
+			Player.Movement.UpdateHeading(GetMoveVector(inputFlags));
+
 			LastVelocity = Player.Velocity;
-	    }
+		}
 
-	    public Vector3 GetMoveVector(AuthInputFlags inputFlags)
-	    {
-		    var moveVector = Vector3.Zero;
+		public Vector3 GetMoveVector(AuthInputFlags inputFlags)
+		{
+			var moveVector = Vector3.Zero;
 
-		    if ((inputFlags & AuthInputFlags.WalkForwards) != 0)
-			    moveVector.Z += 1;
-		    
-		    if ((inputFlags & AuthInputFlags.WalkBackwards) != 0)
-			    moveVector.Z -= 1;
+			if ((inputFlags & AuthInputFlags.WalkForwards) != 0)
+				moveVector.Z += 1;
 
-		    if ((inputFlags & AuthInputFlags.StrafeLeft) != 0)
-			    moveVector.X += 1;
+			if ((inputFlags & AuthInputFlags.WalkBackwards) != 0)
+				moveVector.Z -= 1;
 
-		    if ((inputFlags & AuthInputFlags.StrafeRight) != 0)
-			    moveVector.X -= 1;
-		    
-		    if (Player.IsFlying)
-		    {
-			    if ((inputFlags & AuthInputFlags.WantUp) != 0)
-				    moveVector.Y += 1;
+			if ((inputFlags & AuthInputFlags.StrafeLeft) != 0)
+				moveVector.X += 1;
 
-			    if ((inputFlags & AuthInputFlags.WantDown) != 0)
-				    moveVector.Y -= 1;
-		    }
-		    
-		    return moveVector;
-	    }
-	    
-	    public AuthInputFlags InputFlags { get; private set; }
+			if ((inputFlags & AuthInputFlags.StrafeRight) != 0)
+				moveVector.X -= 1;
 
-	    private bool _canJump = true;
-	    private AuthInputFlags GetInputFlags()
-	    {
-		    AuthInputFlags inputFlags = 0;
+			if (Player.IsFlying)
+			{
+				if ((inputFlags & AuthInputFlags.WantUp) != 0)
+					moveVector.Y += 1;
 
-		    var previousInputFlags = InputFlags;
+				if ((inputFlags & AuthInputFlags.WantDown) != 0)
+					moveVector.Y -= 1;
+			}
 
-		    if (InputManager.IsDown(AlexInputCommand.MoveForwards))
-			    inputFlags |= AuthInputFlags.WalkForwards;
+			return moveVector;
+		}
 
-		    if (InputManager.IsDown(AlexInputCommand.MoveBackwards))
-			    inputFlags |= AuthInputFlags.WalkBackwards;
+		public AuthInputFlags InputFlags { get; private set; }
 
-		    if (InputManager.IsDown(AlexInputCommand.MoveLeft))
-			    inputFlags |= AuthInputFlags.StrafeLeft;
+		private bool _canJump = true;
 
-		    if (InputManager.IsDown(AlexInputCommand.MoveRight))
-			    inputFlags |= AuthInputFlags.StrafeRight;
+		private AuthInputFlags GetInputFlags()
+		{
+			AuthInputFlags inputFlags = 0;
 
-		    if (InputManager.IsDown(AlexInputCommand.MoveUp))
-		    {
-			    inputFlags |= AuthInputFlags.Ascend;
-			    inputFlags |= AuthInputFlags.WantUp;
-		    }
+			var previousInputFlags = InputFlags;
 
-		    if (InputManager.IsDown(AlexInputCommand.MoveDown))
-		    {
-			    inputFlags |= AuthInputFlags.Descend;
-			    inputFlags |= AuthInputFlags.WantDown;
-			    inputFlags |= AuthInputFlags.Sneaking;
-		    }
+			if (InputManager.IsDown(AlexInputCommand.MoveForwards))
+				inputFlags |= AuthInputFlags.WalkForwards;
 
-		    if (InputManager.IsDown(AlexInputCommand.Sneak))
-		    {
-			    inputFlags |= AuthInputFlags.SneakDown;
-			    inputFlags |= AuthInputFlags.Sneaking;
+			if (InputManager.IsDown(AlexInputCommand.MoveBackwards))
+				inputFlags |= AuthInputFlags.WalkBackwards;
 
-			    inputFlags |= AuthInputFlags.WantDown;
-		    }
+			if (InputManager.IsDown(AlexInputCommand.MoveLeft))
+				inputFlags |= AuthInputFlags.StrafeLeft;
 
-		    if (InputManager.IsPressed(AlexInputCommand.Sneak))
-		    {
-			    if (Player.IsSneaking)
-			    {
-				    inputFlags |= AuthInputFlags.StopSneaking;
-			    }
-			    else
-			    {
-				    inputFlags |= AuthInputFlags.StartSneaking;
-			    }
-		    }
+			if (InputManager.IsDown(AlexInputCommand.MoveRight))
+				inputFlags |= AuthInputFlags.StrafeRight;
 
-		    if ((inputFlags & AuthInputFlags.WalkForwards) != 0)
-		    {
-			    bool pressedWalk = (inputFlags & AuthInputFlags.WalkForwards) != 0
-			                       && (previousInputFlags & AuthInputFlags.WalkForwards) == 0;
+			if (InputManager.IsDown(AlexInputCommand.MoveUp))
+			{
+				inputFlags |= AuthInputFlags.Ascend;
+				inputFlags |= AuthInputFlags.WantUp;
+			}
 
-			    if (Player.IsSprinting || (pressedWalk && Player.Age - _lastForward <= 3))
-			    {
-				    inputFlags |= AuthInputFlags.Sprinting;
-			    }
+			if (InputManager.IsDown(AlexInputCommand.MoveDown))
+			{
+				inputFlags |= AuthInputFlags.Descend;
+				inputFlags |= AuthInputFlags.WantDown;
+				inputFlags |= AuthInputFlags.Sneaking;
+			}
 
-			    //if (pressedWalk)
-			    {
-				    _lastForward = Player.Age;
-			    }
-		    }
+			if (InputManager.IsDown(AlexInputCommand.Sneak))
+			{
+				inputFlags |= AuthInputFlags.SneakDown;
+				inputFlags |= AuthInputFlags.Sneaking;
 
-		    if (InputManager.IsDown(AlexInputCommand.Sprint))
-		    {
-			    inputFlags |= AuthInputFlags.SprintDown;
-			    inputFlags |= AuthInputFlags.Sprinting;
-		    }
+				inputFlags |= AuthInputFlags.WantDown;
+			}
 
-		    if (InputManager.IsPressed(AlexInputCommand.SprintToggle))
-		    {
-			    if (Player.IsSprinting)
-			    {
-				    inputFlags |= AuthInputFlags.StopSprinting;
-			    }
-			    else
-			    {
-				    inputFlags |= AuthInputFlags.StartSprinting;
-			    }
-		    }
+			if (InputManager.IsPressed(AlexInputCommand.Sneak))
+			{
+				if (Player.IsSneaking)
+				{
+					inputFlags |= AuthInputFlags.StopSneaking;
+				}
+				else
+				{
+					inputFlags |= AuthInputFlags.StartSneaking;
+				}
+			}
 
-		    if (InputManager.IsDown(AlexInputCommand.Jump))
-		    {
-			    inputFlags |= AuthInputFlags.JumpDown;
-			    inputFlags |= AuthInputFlags.WantUp;
+			if ((inputFlags & AuthInputFlags.WalkForwards) != 0)
+			{
+				bool pressedWalk = (inputFlags & AuthInputFlags.WalkForwards) != 0
+				                   && (previousInputFlags & AuthInputFlags.WalkForwards) == 0;
 
-			    if (!Player.IsFlying)
-				    inputFlags |= AuthInputFlags.NorthJump;
-		    }
+				if (Player.IsSprinting || (pressedWalk && Player.Age - _lastForward <= 3))
+				{
+					inputFlags |= AuthInputFlags.Sprinting;
+				}
 
-		    return inputFlags;
-	    }
+				//if (pressedWalk)
+				{
+					_lastForward = Player.Age;
+				}
+			}
 
-	    public void Tick()
-	    {
-		    if (!CheckMovementInput)
-			    return;
-		    
-		    /*InputFlags = GetInputFlags();
-		    Player.Movement.UpdateHeading(GetMoveVector(InputFlags));
+			if (InputManager.IsDown(AlexInputCommand.Sprint))
+			{
+				inputFlags |= AuthInputFlags.SprintDown;
+				inputFlags |= AuthInputFlags.Sprinting;
+			}
 
-		    if ((InputFlags & AuthInputFlags.StartJumping) != 0)
-		    {
-			    Player.Jump();
-		    }
-		    
-		    LastVelocity = Player.Velocity;*/
-	    }
-	    
-	    private void UpdateMouseInput(GameTime gt)
-	    {
-		    if (!CheckMovementInput)
-			    return;
-		    
-		    if (IgnoreNextUpdate)
-		    {
-			    IgnoreNextUpdate = false;
-		    }
-		    else
-		    {
-			    var checkMouseInput = true;
-			    if (GamePadInputListener != null && GamePadInputListener.IsConnected)
-			    {
-				    var inputValue = GamePadInputListener.GetCursorPosition();
+			if (InputManager.IsPressed(AlexInputCommand.SprintToggle))
+			{
+				if (Player.IsSprinting)
+				{
+					inputFlags |= AuthInputFlags.StopSprinting;
+				}
+				else
+				{
+					inputFlags |= AuthInputFlags.StartSprinting;
+				}
+			}
 
-				    if (inputValue != Vector2.Zero)
-				    {
-					    checkMouseInput = false;
-						
-					    var look = (new Vector2((inputValue.X), (inputValue.Y)) * (float) GamepadSensitivity)
-					               *  Alex.DeltaTime;
+			if (InputManager.IsDown(AlexInputCommand.Jump))
+			{
+				inputFlags |= AuthInputFlags.JumpDown;
+				inputFlags |= AuthInputFlags.WantUp;
 
-					    look = -look;
-						
-					    Player.KnownPosition.HeadYaw = (Player.KnownPosition.HeadYaw - look.X) % 360f;
-					    Player.KnownPosition.Pitch -= look.Y;
-				    }
-			    }
+				if (!Player.IsFlying)
+					inputFlags |= AuthInputFlags.NorthJump;
+			}
 
-			    if (checkMouseInput)
-			    {
-				    var e = MouseInputListener.GetCursorPosition();
-					
-				    if (e.X < 10 || e.X > Graphics.Viewport.Width - 10 || e.Y < 10
-				        || e.Y > Graphics.Viewport.Height - 10)
-				    {
-					    CenterCursor();
-					    IgnoreNextUpdate = true;
-				    }
-				    else
-				    {
-					    var mouseDelta = e - _previousMousePosition;
-					    //_previousMousePosition
-					    //- e;
+			return inputFlags;
+		}
 
-					    if (_invertX)
-						    mouseDelta.X = -mouseDelta.X;
+		public void Tick()
+		{
+			if (!CheckMovementInput)
+				return;
 
-					    if (_invertY)
-						    mouseDelta.Y = -mouseDelta.Y;
+			/*InputFlags = GetInputFlags();
+			Player.Movement.UpdateHeading(GetMoveVector(InputFlags));
 
-					    mouseDelta *= Alex.DeltaTime;
+			if ((InputFlags & AuthInputFlags.StartJumping) != 0)
+			{
+				Player.Jump();
+			}
+			
+			LastVelocity = Player.Velocity;*/
+		}
 
-					    var look = (new Vector2((mouseDelta.X), (mouseDelta.Y)) * (float) CursorSensitivity);
-					    Player.KnownPosition.HeadYaw = (Player.KnownPosition.HeadYaw - look.X) % 360f;
-					    Player.KnownPosition.SetPitchBounded(Player.KnownPosition.Pitch - look.Y);
-					    _previousMousePosition = e;
-				    }
-			    }
-		    }
-	    }
-	    
-	    public bool Disposed { get; private set; } = false;
-	    /// <inheritdoc />
-	    public void Dispose()
-	    {
-		    if (Disposed)
-			    return;
+		private void UpdateMouseInput(GameTime gt)
+		{
+			if (!CheckMovementInput)
+				return;
 
-		    Disposed = true;
-		    
-		    var bindings = _inputBindings.ToArray();
-		    _inputBindings.Clear();
+			if (IgnoreNextUpdate)
+			{
+				IgnoreNextUpdate = false;
+			}
+			else
+			{
+				var checkMouseInput = true;
 
-		    Log.Info($"Unbinding input listeners...");
-		    foreach (var binding in bindings)
-		    {
-			    InputManager.UnregisterListener(binding);
-		    }
+				if (GamePadInputListener != null && GamePadInputListener.IsConnected)
+				{
+					var inputValue = GamePadInputListener.GetCursorPosition();
 
-		    //GlobalInputManager.TryRemovePlayerManager(InputManager.PlayerIndex);
-	    }
+					if (inputValue != Vector2.Zero)
+					{
+						checkMouseInput = false;
 
-	    public void SetRewindHistorySize(int rewindHistorySize)
-	    {
-		    
-	    }
-    }
+						var look = (new Vector2((inputValue.X), (inputValue.Y)) * (float)GamepadSensitivity)
+						           * Alex.DeltaTime;
+
+						look = -look;
+
+						Player.KnownPosition.HeadYaw = (Player.KnownPosition.HeadYaw - look.X) % 360f;
+						Player.KnownPosition.Pitch -= look.Y;
+					}
+				}
+
+				if (checkMouseInput)
+				{
+					var e = MouseInputListener.GetCursorPosition();
+
+					if (e.X < 10 || e.X > Graphics.Viewport.Width - 10 || e.Y < 10
+					    || e.Y > Graphics.Viewport.Height - 10)
+					{
+						CenterCursor();
+						IgnoreNextUpdate = true;
+					}
+					else
+					{
+						var mouseDelta = e - _previousMousePosition;
+						//_previousMousePosition
+						//- e;
+
+						if (_invertX)
+							mouseDelta.X = -mouseDelta.X;
+
+						if (_invertY)
+							mouseDelta.Y = -mouseDelta.Y;
+
+						mouseDelta *= Alex.DeltaTime;
+
+						var look = (new Vector2((mouseDelta.X), (mouseDelta.Y)) * (float)CursorSensitivity);
+						Player.KnownPosition.HeadYaw = (Player.KnownPosition.HeadYaw - look.X) % 360f;
+						Player.KnownPosition.SetPitchBounded(Player.KnownPosition.Pitch - look.Y);
+						_previousMousePosition = e;
+					}
+				}
+			}
+		}
+
+		public bool Disposed { get; private set; } = false;
+
+		/// <inheritdoc />
+		public void Dispose()
+		{
+			if (Disposed)
+				return;
+
+			Disposed = true;
+
+			var bindings = _inputBindings.ToArray();
+			_inputBindings.Clear();
+
+			Log.Info($"Unbinding input listeners...");
+
+			foreach (var binding in bindings)
+			{
+				InputManager.UnregisterListener(binding);
+			}
+
+			//GlobalInputManager.TryRemovePlayerManager(InputManager.PlayerIndex);
+		}
+
+		public void SetRewindHistorySize(int rewindHistorySize) { }
+	}
 }

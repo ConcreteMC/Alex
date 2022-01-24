@@ -11,6 +11,6 @@ namespace Alex.Items
 			{
 				return new ItemBow();
 			});*/
-	}
+		}
 	}
 }

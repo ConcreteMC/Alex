@@ -28,121 +28,107 @@ namespace Alex.Worlds.Singleplayer
 	internal class DebugNetworkProvider : NetworkProvider
 	{
 		public override bool IsConnected { get; } = true;
+
 		protected override ConnectionInfo GetConnectionInfo()
 		{
-			return new ConnectionInfo(DateTime.UtcNow, 0,0,0,0,0,0,0,0,0, 0);
+			return new ConnectionInfo(DateTime.UtcNow, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
 		}
 
 		/// <inheritdoc />
-		public override void PlayerOnGroundChanged(Player player, bool onGround)
-		{
-			
-		}
+		public override void PlayerOnGroundChanged(Player player, bool onGround) { }
 
 		/// <inheritdoc />
-		public override void EntityFell(long entityId, float distance, bool inVoid)
-		{
-			
-		}
+		public override void EntityFell(long entityId, float distance, bool inVoid) { }
 
-		public override void EntityAction(int entityId, EntityAction action)
-		{
-			
-		}
+		public override void EntityAction(int entityId, EntityAction action) { }
 
 		/// <inheritdoc />
-		public override void PlayerAnimate(PlayerAnimations animation)
-		{
-			
-		}
+		public override void PlayerAnimate(PlayerAnimations animation) { }
 
-		public override void BlockPlaced(BlockCoordinates position, BlockFace face, int hand, int slot, Vector3 cursorPosition, Entity p)
-		{
-			
-		}
+		public override void BlockPlaced(BlockCoordinates position,
+			BlockFace face,
+			int hand,
+			int slot,
+			Vector3 cursorPosition,
+			Entity p) { }
 
-		public override void PlayerDigging(DiggingStatus status, BlockCoordinates position, BlockFace face, Vector3 cursorPosition)
-		{
-			
-		}
+		public override void PlayerDigging(DiggingStatus status,
+			BlockCoordinates position,
+			BlockFace face,
+			Vector3 cursorPosition) { }
 
-		public override void EntityInteraction(Entity player, Entity target, ItemUseOnEntityAction action, int hand, int slot, Vector3 cursorPosition)
-		{
-			
-		}
+		public override void EntityInteraction(Entity player,
+			Entity target,
+			ItemUseOnEntityAction action,
+			int hand,
+			int slot,
+			Vector3 cursorPosition) { }
 
-		public override void WorldInteraction(Entity player, BlockCoordinates position, BlockFace face, int hand, int slot, Vector3 cursorPosition)
-		{
-			
-		}
+		public override void WorldInteraction(Entity player,
+			BlockCoordinates position,
+			BlockFace face,
+			int hand,
+			int slot,
+			Vector3 cursorPosition) { }
 
-		public override void UseItem(Item item, int hand, ItemUseAction useAction, BlockCoordinates position, BlockFace face, Vector3 cursorPosition)
-		{
-			
-		}
+		public override void UseItem(Item item,
+			int hand,
+			ItemUseAction useAction,
+			BlockCoordinates position,
+			BlockFace face,
+			Vector3 cursorPosition) { }
 
-		public override void HeldItemChanged(Item item, short slot)
-		{
-			
-		}
-
-		/// <inheritdoc />
-		public override void DropItem(BlockCoordinates position, BlockFace face, Item item, bool dropFullStack)
-		{
-			
-		}
-
-		public override void Close()
-		{
-			
-		}
+		public override void HeldItemChanged(Item item, short slot) { }
 
 		/// <inheritdoc />
-		public override void SendChatMessage(ChatObject message)
-		{
-			
-		}
+		public override void DropItem(BlockCoordinates position, BlockFace face, Item item, bool dropFullStack) { }
+
+		public override void Close() { }
 
 		/// <inheritdoc />
-		public override void RequestRenderDistance(int oldValue, int newValue)
-		{
-			
-		}
+		public override void SendChatMessage(ChatObject message) { }
+
+		/// <inheritdoc />
+		public override void RequestRenderDistance(int oldValue, int newValue) { }
 	}
-	
+
 	public class SPWorldProvider : WorldProvider
 	{
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(SPWorldProvider));
 
 		private readonly IWorldGenerator _generator;
 		private readonly List<ChunkCoordinates> _loadedChunks = new List<ChunkCoordinates>();
-		private ChunkCoordinates PreviousChunkCoordinates { get; set; } = new ChunkCoordinates(int.MaxValue, int.MaxValue);
+
+		private ChunkCoordinates PreviousChunkCoordinates { get; set; } =
+			new ChunkCoordinates(int.MaxValue, int.MaxValue);
+
 		private Alex Alex { get; }
 		public NetworkProvider Network { get; } = new DebugNetworkProvider();
 
-        private CancellationTokenSource ThreadCancellationTokenSource;
+		private CancellationTokenSource ThreadCancellationTokenSource;
 
-        private IOptionsProvider OptionsProvider { get; }
-        private AlexOptions Options => OptionsProvider.AlexOptions;
-        public SPWorldProvider(Alex alex, IWorldGenerator worldGenerator)
+		private IOptionsProvider OptionsProvider { get; }
+		private AlexOptions Options => OptionsProvider.AlexOptions;
+
+		public SPWorldProvider(Alex alex, IWorldGenerator worldGenerator)
 		{
 			Alex = alex;
 			OptionsProvider = Alex.ServiceContainer.GetRequiredService<IOptionsProvider>();
 
 			_generator = worldGenerator;
-		
+
 			ThreadCancellationTokenSource = new CancellationTokenSource();
 		}
 
-        private IEnumerable<ChunkCoordinates> GenerateChunks(ChunkCoordinates center, int renderDistance)
+		private IEnumerable<ChunkCoordinates> GenerateChunks(ChunkCoordinates center, int renderDistance)
 		{
 			var oldChunks = _loadedChunks.ToArray();
-			
+
 			List<ChunkCoordinates> newChunkCoordinates = new List<ChunkCoordinates>();
 
 			int minZ = Math.Min(center.Z - renderDistance, center.Z + renderDistance);
 			int maxZ = Math.Max(center.Z - renderDistance, center.Z + renderDistance);
-			
+
 			int minX = Math.Min(center.X - renderDistance, center.X + renderDistance);
 			int maxX = Math.Max(center.X - renderDistance, center.X + renderDistance);
 
@@ -152,13 +138,14 @@ namespace Alex.Worlds.Singleplayer
 			{
 				var cc = new ChunkCoordinates(x, z);
 				newChunkCoordinates.Add(cc);
-				
+
 				var chunk = _generator.GenerateChunkColumn(cc);
+
 				if (chunk == null) continue;
-					
+
 				base.World.ChunkManager.AddChunk(chunk, new ChunkCoordinates(chunk.X, chunk.Z), false);
 				LoadEntities(chunk);
-				
+
 				yield return cc;
 			}
 
@@ -176,6 +163,7 @@ namespace Alex.Worlds.Singleplayer
 		}
 
 		private long _spEntityIdCounter = 0;
+
 		private void LoadEntities(ChunkColumn chunk)
 		{
 			/*var column = (ChunkColumn)chunk;
@@ -191,7 +179,7 @@ namespace Alex.Worlds.Singleplayer
 				}
 			}*/
 		}
-		
+
 		protected override void Initiate()
 		{
 			/*lock (genLock)
@@ -210,13 +198,13 @@ namespace Alex.Worlds.Singleplayer
 
 			World.Player.CanFly = true;
 			World.Player.IsFlying = true;
-				//world.Player.Controller.IsFreeCam = true;
+			//world.Player.Controller.IsFreeCam = true;
 
 			World.UpdatePlayerPosition(new PlayerLocation(GetSpawnPoint()));
 
 			if (ItemFactory.TryGetItem("minecraft:diamond_sword", out var sword))
 				World.Player.Inventory.SetSlot(World.Player.Inventory.HotbarOffset, sword, false);
-			
+
 			if (ItemFactory.TryGetItem("minecraft:grass_block", out var grass))
 				World.Player.Inventory.SetSlot(World.Player.Inventory.HotbarOffset + 1, grass, false);
 		}
@@ -231,13 +219,13 @@ namespace Alex.Worlds.Singleplayer
 			//	ChunkManager.DoMultiPartCalculations = false;
 
 
-			int    t             = Options.VideoOptions.RenderDistance;
+			int t = Options.VideoOptions.RenderDistance;
 			double radiusSquared = Math.Pow(t, 2);
 
 			var target = radiusSquared * 3;
-			int count  = 0;
+			int count = 0;
 
-			var pp     = GetSpawnPoint();
+			var pp = GetSpawnPoint();
 			var center = new ChunkCoordinates(new PlayerLocation(pp.X, 0, pp.Z));
 
 			Stopwatch sw = Stopwatch.StartNew();
@@ -248,7 +236,7 @@ namespace Alex.Worlds.Singleplayer
 
 				//base.World.ChunkManager.AddChunk(chunk, new ChunkCoordinates(chunk.X, chunk.Z), false);
 
-				progressReport(LoadingState.LoadingChunks, (int) Math.Floor((count / target) * 100));
+				progressReport(LoadingState.LoadingChunks, (int)Math.Floor((count / target) * 100));
 			}
 
 			var loaded = sw.Elapsed;
@@ -262,7 +250,7 @@ namespace Alex.Worlds.Singleplayer
 
 			World.Player.IsSpawned = true;
 
-		//	UpdateThread = new Thread(RunThread) {IsBackground = true};
+			//	UpdateThread = new Thread(RunThread) {IsBackground = true};
 
 			//UpdateThread.Start();
 
@@ -272,7 +260,7 @@ namespace Alex.Worlds.Singleplayer
 		public override void Dispose()
 		{
 			//ChunkManager.DoMultiPartCalculations = true;
-			
+
 			ThreadCancellationTokenSource?.Cancel();
 			base.Dispose();
 		}
@@ -291,8 +279,7 @@ namespace Alex.Worlds.Singleplayer
 				pp = e.KnownPosition;
 			}*/
 			//var pp = base.WorldReceiver.Player;
-			ChunkCoordinates currentCoordinates =
-				new ChunkCoordinates(World.Player.KnownPosition);
+			ChunkCoordinates currentCoordinates = new ChunkCoordinates(World.Player.KnownPosition);
 
 			if (PreviousChunkCoordinates != currentCoordinates)
 			{

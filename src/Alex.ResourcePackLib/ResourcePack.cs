@@ -16,18 +16,16 @@ using Image = SixLabors.ImageSharp.Image;
 
 namespace Alex.ResourcePackLib
 {
-    public class ResourcePack
-    {
-	    public delegate void LoadProgress(int percentage, string file);
-	    
-	    private static readonly ILogger Log = LogManager.GetCurrentClassLogger();
-	    
-	    public LoadProgress         ProgressReporter { get; set; } = null;
-	    public ResourcePackManifest Info             { get; protected set; }
-		protected ResourcePack()
-	    {
+	public class ResourcePack
+	{
+		public delegate void LoadProgress(int percentage, string file);
 
-	    }
+		private static readonly ILogger Log = LogManager.GetCurrentClassLogger();
+
+		public LoadProgress ProgressReporter { get; set; } = null;
+		public ResourcePackManifest Info { get; protected set; }
+
+		protected ResourcePack() { }
 
 		public static IEnumerable<ResourcePackManifest> GetManifests(IFilesystem archive)
 		{
@@ -58,8 +56,8 @@ namespace Alex.ResourcePackLib
 						using (var stream = imgEntry.Open())
 						{
 							//var data = stream.ReadToSpan(entry.Length);
-							
-							var bmp  = Image.Load(stream).CloneAs<Rgba32>();
+
+							var bmp = Image.Load(stream).CloneAs<Rgba32>();
 
 							manifest = new ResourcePackManifest(bmp, "", info.Description, ResourcePackType.Java);
 						}
@@ -89,8 +87,7 @@ namespace Alex.ResourcePackLib
 
 				using (TextReader reader = new StreamReader(entry.Open()))
 				{
-					info =
-						MCJsonConvert.DeserializeObject<McPackManifest>(reader.ReadToEnd());
+					info = MCJsonConvert.DeserializeObject<McPackManifest>(reader.ReadToEnd());
 
 					//info = new ResourcePackInfo() {Description = wrap.Header.Description};
 					//info = wrap.pack;
@@ -106,10 +103,11 @@ namespace Alex.ResourcePackLib
 						using (var stream = imgEntry.Open())
 						{
 							//var data = stream.ReadToSpan(entry.Length);
-							
+
 							var bmp = Image.Load(stream).CloneAs<Rgba32>();
 
-							manifest = new ResourcePackManifest(bmp, info.Header.Name, info.Header.Description, ResourcePackType.Bedrock);
+							manifest = new ResourcePackManifest(
+								bmp, info.Header.Name, info.Header.Description, ResourcePackType.Bedrock);
 						}
 					}
 				}
@@ -120,12 +118,13 @@ namespace Alex.ResourcePackLib
 
 				if (manifest == null)
 				{
-					manifest = new ResourcePackManifest(info.Header.Name, info.Header.Description, ResourcePackType.Bedrock);
+					manifest = new ResourcePackManifest(
+						info.Header.Name, info.Header.Description, ResourcePackType.Bedrock);
 				}
 
 				if (manifest != null)
 					yield return manifest;
 			}
 		}
-    }
+	}
 }

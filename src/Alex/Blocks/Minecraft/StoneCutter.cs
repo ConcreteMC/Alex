@@ -5,7 +5,6 @@ namespace Alex.Blocks.Minecraft
 		public StoneCutter()
 		{
 			Solid = true;
-			
 		}
 	}
 }

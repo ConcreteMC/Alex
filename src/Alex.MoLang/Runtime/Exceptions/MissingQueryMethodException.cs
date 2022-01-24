@@ -9,6 +9,7 @@ namespace Alex.MoLang.Runtime.Exceptions
 		public MissingQueryMethodException(string message, Exception baseException) : base(message, baseException) { }
 
 		/// <inheritdoc />
-		public MissingQueryMethodException(IExpression expression, string message, Exception baseException) : base(expression, message, baseException) { }
+		public MissingQueryMethodException(IExpression expression, string message, Exception baseException) : base(
+			expression, message, baseException) { }
 	}
 }

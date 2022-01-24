@@ -21,21 +21,24 @@ namespace Alex.Worlds.Chunks
 	public class ChunkColumn
 	{
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(ChunkColumn));
-		
+
 		public const int ChunkWidth = 16;
 		public const int ChunkDepth = 16;
 
 		public int X { get; set; }
 		public int Z { get; set; }
-		
+
 		public bool IsNew { get; set; } = true;
 		public bool CalculateLighting { get; set; } = true;
-		public           ChunkSection[] Sections { get; set; }
-	//	private readonly int[] _biomeId;
-		private readonly  short[]        _height  = new short[256];
-		
-		public  object                                              UpdateLock       { get; set; } = new object();
-		public ConcurrentDictionary<BlockCoordinates, NbtCompound> BlockEntities    { get; }
+
+		public ChunkSection[] Sections { get; set; }
+
+		//	private readonly int[] _biomeId;
+		private readonly short[] _height = new short[256];
+
+		public object UpdateLock { get; set; } = new object();
+
+		public ConcurrentDictionary<BlockCoordinates, NbtCompound> BlockEntities { get; }
 		//public  NbtCompound[]                                       GetBlockEntities => BlockEntities.ToArray();
 
 		internal ChunkData ChunkData
@@ -66,8 +69,9 @@ namespace Alex.Worlds.Chunks
 			_sectionOffset = worldSettings.MinY < 0 ? Math.Abs(worldSettings.MinY >> 4) : 0;
 
 			int realHeight = worldSettings.WorldHeight + Math.Abs(worldSettings.MinY);
-			
+
 			Sections = new ChunkSection[realHeight / 16];
+
 			for (int i = 0; i < Sections.Length; i++)
 			{
 				Sections[i] = null;
@@ -79,10 +83,7 @@ namespace Alex.Worlds.Chunks
 			ChunkData = ChunkData.Create(x, z);
 		}
 
-		public ChunkColumn(int x, int z) : this(x,z, WorldSettings.Default)
-		{
-			
-		}
+		public ChunkColumn(int x, int z) : this(x, z, WorldSettings.Default) { }
 
 		private bool CheckWithinCoordinates(int x, int y, int z, bool throwException = true)
 		{
@@ -97,12 +98,11 @@ namespace Alex.Worlds.Chunks
 
 			return true;
 		}
-		
+
 		protected void SetScheduled(int x, int y, int z, bool value)
 		{
 			if (!CheckWithinCoordinates(x, y, z, false))
 				return;
-			
 		}
 
 		public static float AverageUpdateTime => MovingAverage.Average;
@@ -118,7 +118,7 @@ namespace Alex.Worlds.Chunks
 				return false;
 
 			Stopwatch time = Stopwatch.StartNew();
-		
+
 			try
 			{
 				var chunkData = ChunkData;
@@ -127,7 +127,7 @@ namespace Alex.Worlds.Chunks
 					return false;
 
 				world = new OffsetBlockAccess(new BlockCoordinates(X << 4, 0, Z << 4), world);
-				
+
 				for (int sectionIndex = 0; sectionIndex < Sections.Length; sectionIndex++)
 				{
 					var section = Sections[sectionIndex];
@@ -137,8 +137,9 @@ namespace Alex.Worlds.Chunks
 
 					var si = sectionIndex;
 					si -= _sectionOffset;
-					
+
 					var yOffset = (si << 4);
+
 					for (int x = 0; x < 16; x++)
 					{
 						for (int z = 0; z < 16; z++)
@@ -157,8 +158,7 @@ namespace Alex.Worlds.Chunks
 
 									var model = blockState.VariantMapper.Model;
 
-									if ((blockState.Block.RequiresUpdate
-									              || blockState.VariantMapper.IsMultiPart))
+									if ((blockState.Block.RequiresUpdate || blockState.VariantMapper.IsMultiPart))
 									{
 										var newblockState = blockState.Block.BlockPlaced(
 											world, blockState, blockPosition);
@@ -177,7 +177,6 @@ namespace Alex.Worlds.Chunks
 										model.GetVertices(world, chunkData, blockPosition, blockState);
 									}
 								}
-
 							}
 						}
 					}
@@ -190,42 +189,44 @@ namespace Alex.Worlds.Chunks
 				else
 				{
 					chunkData?.Dispose();
+
 					return false;
 				}
-				
+
 				IsNew = false;
 			}
 			finally
 			{
 				Monitor.Exit(_dataLock);
 				time.Stop();
-				
-				MovingAverage.ComputeAverage((float) time.Elapsed.TotalMilliseconds);
+
+				MovingAverage.ComputeAverage((float)time.Elapsed.TotalMilliseconds);
 			}
 
 			return true;
 		}
-		
+
 		public IEnumerable<BlockCoordinates> GetLightSources()
 		{
 			for (int i = 0; i < Sections.Length; i++)
 			{
 				var section = Sections[i];
+
 				if (section == null)
 					continue;
-				
+
 				var si = i;
 				si -= _sectionOffset;
-					
+
 				var yOffset = (si * 16);
-				
+
 				foreach (var ls in section.LightSources.ToArray())
 				{
 					yield return new BlockCoordinates(ls.X, yOffset + ls.Y, ls.Z);
 				}
 			}
 		}
-		
+
 		protected virtual ChunkSection CreateSection(bool storeSkylight, int sections)
 		{
 			return new ChunkSection(sections);
@@ -235,25 +236,27 @@ namespace Alex.Worlds.Chunks
 		{
 			if (_disposed)
 				return null;
-			
+
 			y = y >> 4;
 			y += _sectionOffset;
 
 			if (y >= Sections.Length || y < 0)
 			{
-				throw new IndexOutOfRangeException($"Y value out of range! Expected a number between 0 & {Sections.Length}, Got: {y}");
+				throw new IndexOutOfRangeException(
+					$"Y value out of range! Expected a number between 0 & {Sections.Length}, Got: {y}");
 			}
-			
+
 			var section = Sections[y];
-			
+
 			if (section == null)
 			{
 				var storage = CreateSection(true, 2);
 				Sections[y] = storage;
+
 				return storage;
 			}
 
-			return (ChunkSection) section;
+			return (ChunkSection)section;
 		}
 
 		public void SetBlockState(int x, int y, int z, BlockState blockState)
@@ -265,11 +268,11 @@ namespace Alex.Worlds.Chunks
 		{
 			if (!CheckWithinCoordinates(x, y, z, false))
 				return;
-			
+
 			if ((x < 0 || x > ChunkWidth) || (z < 0 || z > ChunkDepth))
 				return;
 
-			var section  = GetSection(y);
+			var section = GetSection(y);
 			section?.Set(storage, x, y & 0xf, z, state);
 		}
 
@@ -278,21 +281,24 @@ namespace Alex.Worlds.Chunks
 			bool inLight = doLighting;
 
 			bool calculatingHeight = true;
+
 			for (int y = WorldSettings.WorldHeight - 1; y > WorldSettings.MinY; y--)
 			{
 				var section = GetSection(y);
+
 				if (section == null) continue;
-					
+
 				var block = section.Get(x, y & 0xf, z).Block;
+
 				if (calculatingHeight)
 				{
 					if (block.Renderable)
 					{
 						calculatingHeight = false;
-						SetHeight(x, z, (short) (y + 1));
+						SetHeight(x, z, (short)(y + 1));
 					}
 				}
-				
+
 				if (inLight)
 				{
 					if (!block.Renderable || (!block.BlockMaterial.BlocksLight))
@@ -319,9 +325,11 @@ namespace Alex.Worlds.Chunks
 			{
 				{
 					var chunk = GetSection(y);
+
 					if (chunk == null || (isInAir && chunk.IsAllAir))
 					{
 						y -= 15;
+
 						continue;
 					}
 
@@ -338,7 +346,7 @@ namespace Alex.Worlds.Chunks
 
 			return 0;
 		}
-		
+
 		public void CalculateHeight(bool doLighting = true)
 		{
 			for (int x = 0; x < 16; x++)
@@ -363,18 +371,19 @@ namespace Alex.Worlds.Chunks
 			{
 				yield break;
 			}
-			
+
 			if ((bx < 0 || bx > ChunkWidth) || (bz < 0 || bz > ChunkDepth))
 			{
 				yield break;
 			}
 
 			var chunk = GetSection(by);
+
 			if (chunk == null)
 			{
 				yield break;
 			}
-			
+
 			foreach (var bs in chunk.GetAll(bx, by & 0xf, bz))
 			{
 				yield return bs;
@@ -390,11 +399,12 @@ namespace Alex.Worlds.Chunks
 		{
 			if (!CheckWithinCoordinates(bx, by, bz, false))
 				return Air;
-			
+
 			if ((bx < 0 || bx > ChunkWidth) || (bz < 0 || bz > ChunkDepth))
 				return Air;
 
 			var chunk = GetSection(by);
+
 			if (chunk == null) return Air;
 
 			return chunk.Get(bx, by & 0xf, bz, storage) ?? Air;
@@ -420,26 +430,28 @@ namespace Alex.Worlds.Chunks
 		{
 			if (!CheckWithinCoordinates(bx, by, bz, false))
 				return;
-			
+
 			if ((bx < 0 || bx > ChunkWidth) || (bz < 0 || bz > ChunkDepth))
 				return;
-			
+
 			var section = GetSection(by);
+
 			if (section == null) return;
 
 			section.SetBiome(bx, by & 0xf, bz, biome);
 		}
-		
+
 		public Biome GetBiome(int bx, int by, int bz)
 		{
 			if (!CheckWithinCoordinates(bx, by, bz, false))
 				return BiomeUtils.Biomes[0];
-			
+
 			if ((bx < 0 || bx > ChunkWidth) || (bz < 0 || bz > ChunkDepth))
 				return BiomeUtils.Biomes[0];
-			
+
 			var section = GetSection(by);
-			if (section == null) 
+
+			if (section == null)
 				return BiomeUtils.Biomes[0];
 
 			return section.GetBiome(bx, by & 0xf, bz);
@@ -449,24 +461,25 @@ namespace Alex.Worlds.Chunks
 		{
 			if (!CheckWithinCoordinates(bx, by, bz, false))
 				return 0;
-			
+
 			if ((bx < 0 || bx > ChunkWidth) || (bz < 0 || bz > ChunkDepth))
 				return 0;
 
 			var section = GetSection(by);
+
 			if (section == null) return 0;
 
-			return (byte) section.GetBlocklight(bx, by & 0xf, bz);
+			return (byte)section.GetBlocklight(bx, by & 0xf, bz);
 		}
 
 		public bool SetBlocklight(int bx, int by, int bz, byte data)
 		{
 			if (!CheckWithinCoordinates(bx, by, bz, false))
 				return false;
-			
+
 			if ((bx < 0 || bx > ChunkWidth) || (bz < 0 || bz > ChunkDepth))
 				return false;
-			
+
 			return GetSection(by)?.SetBlocklight(bx, by & 0xf, bz, data) ?? false;
 		}
 
@@ -474,14 +487,15 @@ namespace Alex.Worlds.Chunks
 		{
 			skyLight = 0xff;
 			blockLight = 0;
-			
+
 			if (!CheckWithinCoordinates(bx, by, bz, false))
 				return;
-			
+
 			if ((bx < 0 || bx > ChunkWidth) || (bz < 0 || bz > ChunkDepth))
 				return;
 
 			var section = GetSection(by);
+
 			if (section == null) return;
 
 			section.GetLight(bx, by & 0xf, bz, out skyLight, out blockLight);
@@ -491,38 +505,40 @@ namespace Alex.Worlds.Chunks
 		{
 			if (!CheckWithinCoordinates(bx, by, bz, false))
 				return 0xff;
-			
+
 			if ((bx < 0 || bx > ChunkWidth) || (bz < 0 || bz > ChunkDepth))
 				return 0xff;
 
 			var section = GetSection(by);
+
 			if (section == null) return 0xff;
 
-			return section.GetSkylight(bx, by  & 0xf, bz);
+			return section.GetSkylight(bx, by & 0xf, bz);
 		}
 
 		public bool SetSkyLight(int bx, int by, int bz, byte data)
 		{
 			if (!CheckWithinCoordinates(bx, by, bz, false))
 				return false;
-			
+
 			if ((bx < 0 || bx > ChunkWidth) || (bz < 0 || bz > ChunkDepth))
 				return false;
 
-			return GetSection(by)?.SetSkylight(bx, by &  0xf, bz, data) ?? false;
+			return GetSection(by)?.SetSkylight(bx, by & 0xf, bz, data) ?? false;
 		}
 
 		protected int GetCoordinateIndex(int x, int y, int z)
 		{
 			y += Math.Abs(this.WorldSettings.MinY);
+
 			return (y << 8 | z << 4 | x);
 		}
-		
+
 		public void ScheduleBlockUpdate(int x, int y, int z)
 		{
-			SetScheduled(x,y,z, true);
+			SetScheduled(x, y, z, true);
 		}
-		
+
 		public bool AddBlockEntity(BlockCoordinates coordinates, NbtCompound entity)
 		{
 			return BlockEntities.TryAdd(coordinates, entity);
@@ -532,7 +548,7 @@ namespace Alex.Worlds.Chunks
 		{
 			return BlockEntities.TryGetValue(coordinates, out entity);
 		}
-	    
+
 		public bool RemoveBlockEntity(BlockCoordinates coordinates)
 		{
 			return BlockEntities.TryRemove(coordinates, out _);
@@ -540,6 +556,7 @@ namespace Alex.Worlds.Chunks
 
 		public List<ChunkCoordinates> Neighboring = new List<ChunkCoordinates>();
 		private bool _disposed = false;
+
 		private void Dispose(bool disposing)
 		{
 			if (_disposed)
@@ -553,6 +570,7 @@ namespace Alex.Worlds.Chunks
 			}
 
 			var sections = Sections.ToImmutableArray();
+
 			for (var index = 0; index < sections.Length; index++)
 			{
 				var chunksSection = sections[index];
@@ -563,11 +581,8 @@ namespace Alex.Worlds.Chunks
 
 			var blockEntities = BlockEntities.ToArray();
 			BlockEntities.Clear();
-			
-			foreach (var blockEntity in blockEntities)
-			{
-				
-			}
+
+			foreach (var blockEntity in blockEntities) { }
 
 			_chunkData?.Dispose();
 			_chunkData = null;

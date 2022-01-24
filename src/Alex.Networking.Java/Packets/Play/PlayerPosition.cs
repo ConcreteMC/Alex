@@ -15,7 +15,7 @@ namespace Alex.Networking.Java.Packets.Play
 		}
 
 		public override void Decode(MinecraftStream stream)
-		{	
+		{
 			X = stream.ReadDouble();
 			FeetY = stream.ReadDouble();
 			Z = stream.ReadDouble();

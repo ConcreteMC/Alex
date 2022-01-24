@@ -5,143 +5,141 @@ using NLog;
 
 namespace Alex.Common.Data.Options
 {
-    public delegate void OptionsPropertyChangedDelegate<TProperty>(TProperty oldValue, TProperty newValue);
-    public delegate TProperty OptionsPropertyValidator<TProperty>(TProperty currentValue, TProperty newValue);
+	public delegate void OptionsPropertyChangedDelegate<TProperty>(TProperty oldValue, TProperty newValue);
 
-    [Serializable]
-    [JsonConverter(typeof(OptionsPropertyJsonConverter))]
-    public class OptionsProperty<TProperty> : IOptionsProperty
-    {
-        private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(IOptionsProperty));
-        
-        public event OptionsPropertyChangedDelegate<TProperty> ValueChanged;
+	public delegate TProperty OptionsPropertyValidator<TProperty>(TProperty currentValue, TProperty newValue);
 
-        private readonly TProperty _defaultValue;
-        private TProperty _value;
-        public TProperty Value
-        {
-            get => _value;
-            set
-            {
-                var oldValue = _value;
-                var newValue = value;
+	[Serializable]
+	[JsonConverter(typeof(OptionsPropertyJsonConverter))]
+	public class OptionsProperty<TProperty> : IOptionsProperty
+	{
+		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(IOptionsProperty));
 
-                if (_validator != null)
-                {
-                    newValue = _validator.Invoke(oldValue, newValue);
-                }
+		public event OptionsPropertyChangedDelegate<TProperty> ValueChanged;
 
-                _value = newValue;
-                ValueChanged?.Invoke(oldValue, newValue);
-            }
-        }
+		private readonly TProperty _defaultValue;
+		private TProperty _value;
 
-        private readonly OptionsPropertyValidator<TProperty> _validator;
+		public TProperty Value
+		{
+			get => _value;
+			set
+			{
+				var oldValue = _value;
+				var newValue = value;
 
-        public OptionsProperty()
-        {
+				if (_validator != null)
+				{
+					newValue = _validator.Invoke(oldValue, newValue);
+				}
 
-        }
+				_value = newValue;
+				ValueChanged?.Invoke(oldValue, newValue);
+			}
+		}
 
-        internal OptionsProperty(TProperty defaultValue, OptionsPropertyValidator<TProperty> validator = null)
-        {
-            _defaultValue = defaultValue;
-            _value = defaultValue;
-            
-            _validator = validator;
-        }
+		private readonly OptionsPropertyValidator<TProperty> _validator;
 
-        public void ResetToDefault()
-        {
-            Value = _defaultValue;
-        }
+		public OptionsProperty() { }
 
-        public object GetValue()
-        {
-            return Value;
-        }
+		internal OptionsProperty(TProperty defaultValue, OptionsPropertyValidator<TProperty> validator = null)
+		{
+			_defaultValue = defaultValue;
+			_value = defaultValue;
 
-        public void SetValue(object obj)
-        {
-            if (obj == null)
-            {
-                _value = default(TProperty);
-                return;
-            }
-            
-            if (obj.GetType() == typeof(TProperty))
-            {
-                _value = (TProperty) obj;
-            }
-            else
-            {
-                Log.Warn($"Value is not of correct type, got {obj.GetType()} expected {typeof(TProperty)}");
-            }
-        }
+			_validator = validator;
+		}
 
-        public Type PropertyType
-        {
-            get { return typeof(TProperty); }
-        }
+		public void ResetToDefault()
+		{
+			Value = _defaultValue;
+		}
 
-        [OnDeserialized]
-        private void OnDeserialized(StreamingContext context)
-        {
+		public object GetValue()
+		{
+			return Value;
+		}
 
-        }
-        [OnSerializing]
-        private void OnSerialized(StreamingContext context)
-        {
+		public void SetValue(object obj)
+		{
+			if (obj == null)
+			{
+				_value = default(TProperty);
 
-        }
+				return;
+			}
+
+			if (obj.GetType() == typeof(TProperty))
+			{
+				_value = (TProperty)obj;
+			}
+			else
+			{
+				Log.Warn($"Value is not of correct type, got {obj.GetType()} expected {typeof(TProperty)}");
+			}
+		}
+
+		public Type PropertyType
+		{
+			get { return typeof(TProperty); }
+		}
+
+		[OnDeserialized]
+		private void OnDeserialized(StreamingContext context) { }
+
+		[OnSerializing]
+		private void OnSerialized(StreamingContext context) { }
 
 
+		public static implicit operator TProperty(OptionsProperty<TProperty> optionsProperty)
+		{
+			return optionsProperty.Value;
+		}
 
-        public static implicit operator TProperty(OptionsProperty<TProperty> optionsProperty)
-        {
-            return optionsProperty.Value;
-        }
+		public OptionsPropertyAccessor<TProperty> Bind(OptionsPropertyChangedDelegate<TProperty> listenerDelegate)
+		{
+			var accessor = new OptionsPropertyAccessor<TProperty>(this, listenerDelegate);
+			ValueChanged += accessor.Invoke;
 
-        public OptionsPropertyAccessor<TProperty> Bind(OptionsPropertyChangedDelegate<TProperty> listenerDelegate)
-        {
-            var accessor = new OptionsPropertyAccessor<TProperty>(this, listenerDelegate);
-            ValueChanged += accessor.Invoke;
-            
-            return accessor;
-        }
-        internal void Unbind(OptionsPropertyAccessor<TProperty> accessor)
-        {
-            ValueChanged -= accessor.Invoke;
-        }
+			return accessor;
+		}
 
-    }
+		internal void Unbind(OptionsPropertyAccessor<TProperty> accessor)
+		{
+			ValueChanged -= accessor.Invoke;
+		}
+	}
 
-    public class OptionsPropertyJsonConverter : JsonConverter<IOptionsProperty>
-    {
-        private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(OptionsPropertyJsonConverter));
-        
-        public override void WriteJson(JsonWriter writer, IOptionsProperty value, JsonSerializer serializer)
-        {
-            serializer.Serialize(writer, value.GetValue());
-        }
+	public class OptionsPropertyJsonConverter : JsonConverter<IOptionsProperty>
+	{
+		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(OptionsPropertyJsonConverter));
 
-        public override IOptionsProperty ReadJson(JsonReader reader, Type objectType, IOptionsProperty existingValue, bool hasExistingValue,
-            JsonSerializer serializer)
-        {
-            if (hasExistingValue)
-            {
-                var type = existingValue.PropertyType;
+		public override void WriteJson(JsonWriter writer, IOptionsProperty value, JsonSerializer serializer)
+		{
+			serializer.Serialize(writer, value.GetValue());
+		}
 
-                existingValue.SetValue(serializer.Deserialize(reader, type));
-                return existingValue;
-            }
-            
-            
-            var value = serializer.Deserialize(reader);
-            var property = (IOptionsProperty) Activator.CreateInstance(objectType);
-            property.SetValue(value);
+		public override IOptionsProperty ReadJson(JsonReader reader,
+			Type objectType,
+			IOptionsProperty existingValue,
+			bool hasExistingValue,
+			JsonSerializer serializer)
+		{
+			if (hasExistingValue)
+			{
+				var type = existingValue.PropertyType;
 
-            return property;
-        }
-    }
+				existingValue.SetValue(serializer.Deserialize(reader, type));
+
+				return existingValue;
+			}
+
+
+			var value = serializer.Deserialize(reader);
+			var property = (IOptionsProperty)Activator.CreateInstance(objectType);
+			property.SetValue(value);
+
+			return property;
+		}
+	}
 }

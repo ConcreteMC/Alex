@@ -10,11 +10,9 @@ namespace Alex.Graphics.Camera
 	{
 		private static readonly EntityCameraMode[] _modes = new EntityCameraMode[]
 		{
-			EntityCameraMode.FirstPerson,
-			EntityCameraMode.ThirdPersonFront,
-			EntityCameraMode.ThirdPersonBack
+			EntityCameraMode.FirstPerson, EntityCameraMode.ThirdPersonFront, EntityCameraMode.ThirdPersonBack
 		};
-		
+
 		public Entity TrackingEntity { get; }
 
 		private EntityCameraMode _mode;
@@ -34,11 +32,14 @@ namespace Alex.Graphics.Camera
 					case EntityCameraMode.FirstPerson:
 						TrackingEntity.RenderEntity = false;
 						TrackingEntity.IsFirstPersonMode = true;
+
 						break;
+
 					case EntityCameraMode.ThirdPersonBack:
 					case EntityCameraMode.ThirdPersonFront:
 						TrackingEntity.RenderEntity = true;
 						TrackingEntity.IsFirstPersonMode = false;
+
 						break;
 				}
 			}
@@ -50,7 +51,8 @@ namespace Alex.Graphics.Camera
 			Mode = EntityCameraMode.FirstPerson;
 		}
 
-		private int   _cameraIndex = 0;
+		private int _cameraIndex = 0;
+
 		public void ToggleMode()
 		{
 			Mode = _modes[(_cameraIndex++ % _modes.Length)];
@@ -62,12 +64,17 @@ namespace Alex.Graphics.Camera
 			{
 				case EntityCameraMode.FirstPerson:
 					UpdateViewMatrixFirstPerson();
+
 					break;
+
 				case EntityCameraMode.ThirdPersonFront:
 					UpdateThirdPerson(true);
+
 					break;
+
 				case EntityCameraMode.ThirdPersonBack:
 					UpdateThirdPerson(false);
+
 					break;
 			}
 		}
@@ -75,7 +82,7 @@ namespace Alex.Graphics.Camera
 		private void UpdateViewMatrixFirstPerson()
 		{
 			var position = Position;
-			
+
 			var renderLocation = TrackingEntity.KnownPosition;
 			float pitch = (-renderLocation.Pitch).ToRadians();
 			float yaw = ((renderLocation.HeadYaw)).ToRadians();
@@ -89,27 +96,27 @@ namespace Alex.Graphics.Camera
 			Direction = direction;
 
 			var offset = Vector3.Transform(Offset, Matrix.CreateRotationY(yaw));
-			
+
 			ViewMatrix = Matrix.CreateLookAt(cameraPosition + (offset), Target = position + direction, Vector3.Up);
 			Frustum = new BoundingFrustum(ViewMatrix * ProjectionMatrix);
 		}
 
-		private static readonly Vector3 ThirdPersonOffset =  new Vector3(0, 2.5f, 3.5f);
+		private static readonly Vector3 ThirdPersonOffset = new Vector3(0, 2.5f, 3.5f);
 
 		private void UpdateThirdPerson(bool frontSideView)
 		{
 			var boundingBox = TrackingEntity.GetBoundingBox();
-			
+
 			var renderLocation = TrackingEntity.KnownPosition;
-			
+
 			var target = Position;
 			target.Y += boundingBox.GetHeight();
-			
+
 			float pitch = (-renderLocation.Pitch).ToRadians();
-			float yaw   = ((renderLocation.HeadYaw)).ToRadians();
+			float yaw = ((renderLocation.HeadYaw)).ToRadians();
 
 			var directionMatrix = Matrix.CreateRotationX(pitch) * Matrix.CreateRotationY(yaw);
-			
+
 			Vector3 dir = frontSideView ? Vector3.Forward : Vector3.Backward;
 			dir = Vector3.Transform(dir, directionMatrix);
 
@@ -127,18 +134,18 @@ namespace Alex.Graphics.Camera
 		{
 			var entityLocation = TrackingEntity.RenderLocation.ToVector3();
 			var entityPhysicalLocation = TrackingEntity.KnownPosition;
-			
+
 			if (_mode == EntityCameraMode.FirstPerson)
 			{
 				var boundingBox = TrackingEntity.GetBoundingBox();
+
 				MoveTo(
-					entityLocation + new Vector3(0, (float) (boundingBox.GetHeight() - 0.175f), 0),
-						entityPhysicalLocation.GetDirection(true, true));
+					entityLocation + new Vector3(0, (float)(boundingBox.GetHeight() - 0.175f), 0),
+					entityPhysicalLocation.GetDirection(true, true));
 			}
 			else
 			{
-				MoveTo(entityLocation, 
-					entityPhysicalLocation.GetDirection(true, true));
+				MoveTo(entityLocation, entityPhysicalLocation.GetDirection(true, true));
 			}
 		}
 	}

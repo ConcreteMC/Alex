@@ -19,14 +19,21 @@ namespace Alex.MoLang.Runtime.Value
 		/// <inheritdoc />
 		public double Value { get; set; }
 
-		public DoubleValue(object value) {
-			if (value is bool boolean) {
+		public DoubleValue(object value)
+		{
+			if (value is bool boolean)
+			{
 				Value = boolean ? 1.0 : 0.0;
-			} else if (value is double dbl) {
+			}
+			else if (value is double dbl)
+			{
 				Value = dbl;
-			} else if (value is float flt){
+			}
+			else if (value is float flt)
+			{
 				Value = flt;
-			} else if (value is int integer)
+			}
+			else if (value is int integer)
 			{
 				Value = integer;
 			}
@@ -40,12 +47,12 @@ namespace Alex.MoLang.Runtime.Value
 		{
 			Value = value ? 1d : 0d;
 		}
-		
+
 		public DoubleValue(double value)
 		{
 			Value = value;
 		}
-		
+
 		public override bool Equals(object obj)
 		{
 			if (ReferenceEquals(null, obj)) return false;
@@ -55,7 +62,7 @@ namespace Alex.MoLang.Runtime.Value
 			return (obj is DoubleValue dv && dv.Value == Value);
 			// ...the rest of the equality implementation
 		}
-		
+
 		/// <inheritdoc />
 		public double AsDouble()
 		{
@@ -71,7 +78,7 @@ namespace Alex.MoLang.Runtime.Value
 		public static DoubleValue Zero { get; } = new DoubleValue(0d);
 		public static DoubleValue One { get; } = new DoubleValue(1d);
 	}
-	
+
 	/*public class FloatValue : IMoValue<float>
 	{
 		/// <inheritdoc />

@@ -26,7 +26,7 @@ namespace Alex.ResourcePackLib.Json.Converters
 			{
 				return new ResourceLocation(obj.Value<string>());
 			}
-            
+
 			return null;
 			var str = reader.ReadAsString();
 

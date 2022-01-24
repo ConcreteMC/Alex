@@ -10,12 +10,14 @@ using NLog;
 namespace Alex.Utils.Commands
 {
 	public delegate void OnCommandMatch(int start, int length, TabCompleteMatch[] matches);
+
 	public abstract class CommandProvider
 	{
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(CommandProvider));
 		private List<Command> _commands = new List<Command>();
 
 		private World _world;
+
 		protected CommandProvider(World world)
 		{
 			_world = world;
@@ -28,7 +30,7 @@ namespace Alex.Utils.Commands
 		{
 			_commands.Clear();
 		}
-		
+
 		public void Register(Command command)
 		{
 			if (!_commands.Contains(command))
@@ -51,8 +53,9 @@ namespace Alex.Utils.Commands
 
 			Log.Info(
 				$"Matching... (Command={first}) (Remainder={remainder}) MatchingCommands={matchingCommands.Length}");
+
 			List<TabCompleteMatch> matches = new List<TabCompleteMatch>();
-			
+
 			//Resolved command alias, return all matches
 			if (split.Length == 1)
 			{
@@ -73,7 +76,7 @@ namespace Alex.Utils.Commands
 
 				return;
 			}
-			
+
 			Command bestMatch = null;
 			int maxMatchCount = -1;
 			int startIndex = 0;
@@ -81,7 +84,6 @@ namespace Alex.Utils.Commands
 
 			if (remainder.Length > 0)
 			{
-				
 				//	sr.Position += first.Length + 1;
 				foreach (var command in matchingCommands)
 				{
@@ -160,14 +162,15 @@ namespace Alex.Utils.Commands
 			else
 			{
 				var last = split.Last();
-				startIndex = input.Length - last.Length;// first.Length + 1;
+				startIndex = input.Length - last.Length; // first.Length + 1;
 				length = last.Length;
-				
+
 				foreach (var command in matchingCommands)
 				{
 					if (command.Properties.Count < split.Length)
 					{
 						Log.Warn($"Command properties: {command.Properties.Count}, split: {split.Length}");
+
 						continue;
 					}
 
@@ -175,12 +178,10 @@ namespace Alex.Utils.Commands
 					{
 						var property = command.Properties[split.Length - 1];
 						Log.Info($"Property: {property.Name}");
+
 						if (property is EnumCommandProperty enumProp)
 						{
-							matches.AddRange(enumProp.Options.Select(x => new TabCompleteMatch()
-							{
-								Match = x,
-							}));
+							matches.AddRange(enumProp.Options.Select(x => new TabCompleteMatch() { Match = x, }));
 						}
 					}
 					//var firstMatchingAlias = command.GetMatches(first);
@@ -198,7 +199,7 @@ namespace Alex.Utils.Commands
 			{
 				//length = first.Length;
 			}
-			
+
 			if (matches.Count > 0)
 			{
 				Log.Info($"Found {matches.Count} matches for \"{input}\"! (StartIndex={startIndex} Length={length})");
@@ -209,7 +210,7 @@ namespace Alex.Utils.Commands
 				DoMatch(input, onMatch);
 			}
 		}
-		
+
 		public abstract void DoMatch(string input, OnCommandMatch callback);
 	}
 }

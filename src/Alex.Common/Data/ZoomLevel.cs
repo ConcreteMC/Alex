@@ -12,7 +12,7 @@ namespace Alex.Common.Data
 		Level8 = 8,
 		Level9 = 9,
 		Level10 = 10,
-        
+
 		Minimum = Level1,
 		Maximum = Level10,
 		Default = Level5,

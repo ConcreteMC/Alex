@@ -19,7 +19,7 @@ namespace Alex.Common.Items
 		Shears = 1 << 6,
 		Hand = 1 << 7,
 		Shield = 1 << 8,
-		
+
 		//Armor
 		Helmet = 1 << 9,
 		Chestplate = 1 << 10,

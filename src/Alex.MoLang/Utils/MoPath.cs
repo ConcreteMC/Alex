@@ -17,7 +17,7 @@ namespace Alex.MoLang.Utils
 		public string Value { get; }
 
 		public bool HasChildren => Next != null;
-		
+
 		public MoPath(string path)
 		{
 			Previous = null;
@@ -39,7 +39,7 @@ namespace Alex.MoLang.Utils
 
 					if (string.IsNullOrWhiteSpace(value))
 						break;
-					
+
 					currentPath += $".{value}";
 
 					var moPath = new MoPath(Root, _last, currentPath, value);
@@ -57,8 +57,8 @@ namespace Alex.MoLang.Utils
 			Previous = parent;
 			Value = value;
 		}
-		
-	//	public MoPath[] Segments { get; private set; }
+
+		//	public MoPath[] Segments { get; private set; }
 
 		/// <inheritdoc />
 		public override string ToString()

@@ -8,7 +8,7 @@ namespace Alex.Blocks.Minecraft
 		{
 			Solid = true;
 			Transparent = true;
-			
+
 			IsFullCube = false;
 			base.BlockMaterial = Material.Bamboo;
 		}

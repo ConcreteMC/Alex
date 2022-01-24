@@ -17,8 +17,8 @@ namespace Alex.Gamestates
 		private readonly SimpleProgressBar _progressBar;
 		private readonly TextElement _textDisplay;
 		private readonly TextElement _subTextDisplay;
-        private readonly TextElement _percentageDisplay;
-		
+		private readonly TextElement _percentageDisplay;
+
 		public string Text
 		{
 			get { return _textDisplay?.Text ?? string.Empty; }
@@ -37,65 +37,50 @@ namespace Alex.Gamestates
 			}
 		}
 
-        public SplashScreen()
+		public SplashScreen()
 		{
 			Background = new Color(0xFF312823);
 			Background.TextureResource = AlexGuiTextures.SplashBackground;
 			Background.RepeatMode = TextureRepeatMode.ScaleToFit;
 
-			AddChild(_progressBarContainer = new Container()
-			{
-				Width  = 300,
-				Height = 35,
-				Margin = new Thickness(12),
-				
-				Anchor = Alignment.BottomCenter,
-			});
+			AddChild(
+				_progressBarContainer = new Container()
+				{
+					Width = 300, Height = 35, Margin = new Thickness(12), Anchor = Alignment.BottomCenter,
+				});
 
-			_progressBarContainer.AddChild(_textDisplay = new TextElement()
-			{
-				Text      = Text,
-				TextColor = (Color) TextColor.White,
-				
-				Anchor    = Alignment.TopLeft,
-				HasShadow = false
-			});
+			_progressBarContainer.AddChild(
+				_textDisplay = new TextElement()
+				{
+					Text = Text, TextColor = (Color)TextColor.White, Anchor = Alignment.TopLeft, HasShadow = false
+				});
 
-			_progressBarContainer.AddChild(_percentageDisplay = new TextElement()
-			{
-				Text      = Text,
-				TextColor = (Color) TextColor.White,
-				
-				Anchor    = Alignment.TopRight,
-				HasShadow = false
-			});
+			_progressBarContainer.AddChild(
+				_percentageDisplay = new TextElement()
+				{
+					Text = Text, TextColor = (Color)TextColor.White, Anchor = Alignment.TopRight, HasShadow = false
+				});
 
-			_progressBarContainer.AddChild(_progressBar = new SimpleProgressBar()
-			{
-				Width  = 300,
-				Height = 9,
-				
-				Anchor = Alignment.MiddleCenter
-			});
+			_progressBarContainer.AddChild(
+				_progressBar = new SimpleProgressBar() { Width = 300, Height = 9, Anchor = Alignment.MiddleCenter });
 
-			_progressBarContainer.AddChild(_subTextDisplay = new TextElement()
-			{
-				Text = Text,
-				TextColor = (Color) TextColor.White,
-
-				Anchor = Alignment.BottomLeft,
-				HasShadow = false
-			});
+			_progressBarContainer.AddChild(
+				_subTextDisplay = new TextElement()
+				{
+					Text = Text,
+					TextColor = (Color)TextColor.White,
+					Anchor = Alignment.BottomLeft,
+					HasShadow = false
+				});
 		}
-		
+
 
 		public void UpdateProgress(int percentage, string statusMessage)
 		{
-			_progressBar.Value      = percentage;
+			_progressBar.Value = percentage;
 			_percentageDisplay.Text = $"{percentage}%";
 			Text = statusMessage;
 			SubText = "";
-
 		}
 
 		public void UpdateProgress(int percentage, string statusMessage, string sub)

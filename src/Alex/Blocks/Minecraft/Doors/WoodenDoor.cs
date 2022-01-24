@@ -15,10 +15,10 @@ namespace Alex.Blocks.Minecraft.Doors
 		private static PropertyBool POWERED = new PropertyBool("powered");
 		private static PropertyFace FACING = new PropertyFace("facing");
 
-	//	public bool IsOpen => (Metadata & 0x04) == 0x04;
-	//	public bool IsUpper => (Metadata & 0x08) == 0x08;
-	//	public bool IsRightHinch => (Metadata & 0x01) == 0x01;
-	//	public bool IsPowered => (Metadata & 0x02) == 0x02;
+		//	public bool IsOpen => (Metadata & 0x04) == 0x04;
+		//	public bool IsUpper => (Metadata & 0x08) == 0x08;
+		//	public bool IsRightHinch => (Metadata & 0x01) == 0x01;
+		//	public bool IsPowered => (Metadata & 0x02) == 0x02;
 
 		public WoodenDoor(byte meta) : base()
 		{
@@ -27,34 +27,34 @@ namespace Alex.Blocks.Minecraft.Doors
 
 		private void Toggle(World world, BlockCoordinates position)
 		{
-		/*	if (IsUpper)
-			{
-				Block below = (Block)world.GetBlock(position - new BlockCoordinates(0, 1, 0));
-				if (below is WoodenDoor bottom && !bottom.IsUpper)
+			/*	if (IsUpper)
 				{
-					bool open = !bottom.BlockStateResource.GetTypedValue(OPEN);
-
-					IBlockState state = BlockStateResource.Clone().WithProperty(OPEN, open).WithProperty(UPPER, true);
-					world.SetBlock(position.X, position.Y, position.Z, BlockFactory.GetBlock(BlockId, GetMetaFromState(state)));
-
-					IBlockState state2 = bottom.BlockStateResource.Clone().WithProperty(RIGHTHINCHED, IsRightHinch).WithProperty(UPPER, false)
-						.WithProperty(OPEN, open);
-					world.SetBlock(position.X, position.Y - 1, position.Z, BlockFactory.GetBlock(BlockId, GetMetaFromState(state2)));
+					Block below = (Block)world.GetBlock(position - new BlockCoordinates(0, 1, 0));
+					if (below is WoodenDoor bottom && !bottom.IsUpper)
+					{
+						bool open = !bottom.BlockStateResource.GetTypedValue(OPEN);
+	
+						IBlockState state = BlockStateResource.Clone().WithProperty(OPEN, open).WithProperty(UPPER, true);
+						world.SetBlock(position.X, position.Y, position.Z, BlockFactory.GetBlock(BlockId, GetMetaFromState(state)));
+	
+						IBlockState state2 = bottom.BlockStateResource.Clone().WithProperty(RIGHTHINCHED, IsRightHinch).WithProperty(UPPER, false)
+							.WithProperty(OPEN, open);
+						world.SetBlock(position.X, position.Y - 1, position.Z, BlockFactory.GetBlock(BlockId, GetMetaFromState(state2)));
+					}
 				}
-			}
-			else
-			{
-				Block up = (Block)world.GetBlock(position + new BlockCoordinates(0, 1, 0));
-				if (up is WoodenDoor upper && upper.IsUpper)
+				else
 				{
-					bool open = !BlockStateResource.GetTypedValue(OPEN);
-					IBlockState state = BlockStateResource.Clone().WithProperty(RIGHTHINCHED, upper.IsRightHinch).WithProperty(UPPER, false).WithProperty(OPEN, open);
-					world.SetBlock(position.X, position.Y, position.Z, BlockFactory.GetBlock(BlockId, GetMetaFromState(state)));
-
-					IBlockState state2 = upper.BlockStateResource.Clone().WithProperty(OPEN, open).WithProperty(UPPER, true);
-					world.SetBlock(position.X, position.Y + 1, position.Z, BlockFactory.GetBlock(BlockId, GetMetaFromState(state2)));
-				}
-			}*/
+					Block up = (Block)world.GetBlock(position + new BlockCoordinates(0, 1, 0));
+					if (up is WoodenDoor upper && upper.IsUpper)
+					{
+						bool open = !BlockStateResource.GetTypedValue(OPEN);
+						IBlockState state = BlockStateResource.Clone().WithProperty(RIGHTHINCHED, upper.IsRightHinch).WithProperty(UPPER, false).WithProperty(OPEN, open);
+						world.SetBlock(position.X, position.Y, position.Z, BlockFactory.GetBlock(BlockId, GetMetaFromState(state)));
+	
+						IBlockState state2 = upper.BlockStateResource.Clone().WithProperty(OPEN, open).WithProperty(UPPER, true);
+						world.SetBlock(position.X, position.Y + 1, position.Z, BlockFactory.GetBlock(BlockId, GetMetaFromState(state2)));
+					}
+				}*/
 		}
 
 		public byte GetMetaFromState(IBlockState state)
@@ -63,7 +63,7 @@ namespace Alex.Blocks.Minecraft.Doors
 
 			if (state.GetTypedValue(UPPER))
 			{
-				i = (byte) (i | 8);
+				i = (byte)(i | 8);
 
 				if (state.GetTypedValue(RIGHTHINCHED))
 				{
@@ -79,7 +79,7 @@ namespace Alex.Blocks.Minecraft.Doors
 			{
 				var facingValue = Correct(state.GetTypedValue(FACING));
 
-				i = (byte) ((i & 245) + facingValue);
+				i = (byte)((i & 245) + facingValue);
 
 				if (state.GetTypedValue(OPEN))
 				{
@@ -92,10 +92,7 @@ namespace Alex.Blocks.Minecraft.Doors
 
 		private static BlockFace[] HORIZONTALS = new BlockFace[4]
 		{
-			BlockFace.North,
-			BlockFace.East,
-			BlockFace.South,
-			BlockFace.West
+			BlockFace.North, BlockFace.East, BlockFace.South, BlockFace.West
 		};
 
 		private int Correct(BlockFace face)
@@ -104,10 +101,13 @@ namespace Alex.Blocks.Minecraft.Doors
 			{
 				case BlockFace.East:
 					return 0;
+
 				case BlockFace.West:
 					return 2;
+
 				case BlockFace.North:
 					return 3;
+
 				case BlockFace.South:
 					return 1;
 			}

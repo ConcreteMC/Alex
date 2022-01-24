@@ -33,15 +33,12 @@ namespace Alex.Common.Utils
 
 	public class PlayerListItem
 	{
-		public MiNET.Utils.UUID UUID     { get; set; }
-		public string           Username { get; set; }
-		public GameMode         Gamemode { get; set; } = GameMode.Survival;
-		public int              Ping     { get; set; } = 0;
-		
-		public PlayerListItem()
-		{
+		public MiNET.Utils.UUID UUID { get; set; }
+		public string Username { get; set; }
+		public GameMode Gamemode { get; set; } = GameMode.Survival;
+		public int Ping { get; set; } = 0;
 
-		}
+		public PlayerListItem() { }
 
 		public PlayerListItem(MiNET.Utils.UUID id, string username, GameMode gamemode, int ping)
 		{

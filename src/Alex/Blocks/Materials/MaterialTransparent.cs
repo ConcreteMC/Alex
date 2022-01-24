@@ -1,4 +1,3 @@
-
 using Alex.Utils;
 
 namespace Alex.Blocks.Materials
@@ -8,7 +7,7 @@ namespace Alex.Blocks.Materials
 		public MaterialTransparent(MapColor color) : base(color)
 		{
 			this.SetReplaceable();
-			
+
 			base.IsSolid = false;
 			base.BlocksLight = false;
 			base.BlocksMovement = false;

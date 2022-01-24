@@ -12,13 +12,13 @@ namespace Alex.MoLang.Runtime.Value
 		{
 			Value = value;
 		}
-		
+
 		/// <inheritdoc />
 		public bool Equals(IMoValue b)
 		{
 			if (b is StringValue stringValue)
-				return string.Equals(Value, stringValue.Value);// stringValue.Value.
-			
+				return string.Equals(Value, stringValue.Value); // stringValue.Value.
+
 			return false;
 		}
 	}

@@ -22,6 +22,7 @@ namespace Alex.Utils
 	public class ServerTypeManager
 	{
 		private Dictionary<string, ServerTypeImplementation> ServerTypes { get; }
+
 		public ServerTypeManager()
 		{
 			ServerTypes = new Dictionary<string, ServerTypeImplementation>();
@@ -32,12 +33,13 @@ namespace Alex.Utils
 			if (ServerTypes.TryAdd(id, serverType))
 			{
 				serverType.Id = id;
+
 				return true;
 			}
 
 			return false;
 		}
-		
+
 		public bool TryGet<T>(string id, out T serverTypeImplementation) where T : ServerTypeImplementation
 		{
 			if (ServerTypes.TryGetValue(id, out var impl) && impl is T implementation)
@@ -48,6 +50,7 @@ namespace Alex.Utils
 			}
 
 			serverTypeImplementation = null;
+
 			return false;
 		}
 
@@ -62,17 +65,14 @@ namespace Alex.Utils
 		}
 	}
 
-	public abstract class ServerTypeImplementation<TQueryProvider> : ServerTypeImplementation where TQueryProvider : IServerQueryProvider
+	public abstract class ServerTypeImplementation<TQueryProvider> : ServerTypeImplementation
+		where TQueryProvider : IServerQueryProvider
 	{
 		/// <inheritdoc />
-		protected ServerTypeImplementation(Container container,
-			string displayName,
-			string typeIdentifier) : base(container, container.GetRequiredService<TQueryProvider>(), displayName, typeIdentifier)
-		{
-			
-		}
+		protected ServerTypeImplementation(Container container, string displayName, string typeIdentifier) : base(
+			container, container.GetRequiredService<TQueryProvider>(), displayName, typeIdentifier) { }
 	}
-	
+
 	public abstract class ServerTypeImplementation
 	{
 		public IServerQueryProvider QueryProvider { get; }
@@ -81,37 +81,47 @@ namespace Alex.Utils
 
 		public ushort DefaultPort { get; protected set; } = 25565;
 		public int ProtocolVersion { get; protected set; } = 0;
-		
+
 		public string TypeIdentifier { get; }
-		
+
 		public IListStorageProvider<SavedServerEntry> ServerStorageProvider { get; }
 		public IListStorageProvider<PlayerProfile> ProfileProvider { get; }
-		protected ServerTypeImplementation(Container container, IServerQueryProvider queryProvider, string displayName, string typeIdentifier)
+
+		protected ServerTypeImplementation(Container container,
+			IServerQueryProvider queryProvider,
+			string displayName,
+			string typeIdentifier)
 		{
 			var storage = container.GetRequiredService<IStorageSystem>();
 			storage = storage.Open("storage", typeIdentifier);
-			
+
 			ServerStorageProvider = new SavedServerDataProvider(storage, "servers");
 			ProfileProvider = new ProfileManager(storage.Open());
-			
+
 			DisplayName = displayName;
 			QueryProvider = queryProvider;
 			TypeIdentifier = typeIdentifier;
 		}
-		
+
 		public virtual Task<ProfileUpdateResult> UpdateProfile(PlayerProfile session)
 		{
 			throw new NotImplementedException();
 		}
 
-		public virtual bool TryGetWorldProvider(ServerConnectionDetails connectionDetails, PlayerProfile playerProfile, out WorldProvider worldProvider, out NetworkProvider networkProvider)
+		public virtual bool TryGetWorldProvider(ServerConnectionDetails connectionDetails,
+			PlayerProfile playerProfile,
+			out WorldProvider worldProvider,
+			out NetworkProvider networkProvider)
 		{
 			worldProvider = null;
 			networkProvider = null;
+
 			return false;
 		}
 
-		public virtual Task Authenticate(GuiPanoramaSkyBox skyBox, UserSelectionState.ProfileSelected callBack, PlayerProfile profile)
+		public virtual Task Authenticate(GuiPanoramaSkyBox skyBox,
+			UserSelectionState.ProfileSelected callBack,
+			PlayerProfile profile)
 		{
 			return Task.CompletedTask;
 		}

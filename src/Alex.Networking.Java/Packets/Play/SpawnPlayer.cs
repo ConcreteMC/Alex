@@ -27,8 +27,8 @@ namespace Alex.Networking.Java.Packets.Play
 			X = stream.ReadDouble();
 			Y = stream.ReadDouble();
 			Z = stream.ReadDouble();
-			Yaw = (sbyte) stream.ReadByte();
-			Pitch = (sbyte) stream.ReadByte();
+			Yaw = (sbyte)stream.ReadByte();
+			Pitch = (sbyte)stream.ReadByte();
 			stream.ReadByte();
 		}
 

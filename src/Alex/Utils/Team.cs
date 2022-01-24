@@ -10,7 +10,7 @@ namespace Alex.Utils
 		private string _teamPrefix;
 		private string _teamSuffix;
 		private string _displayName;
-		public string                Name        { get; set; }
+		public string Name { get; set; }
 
 		public string DisplayName
 		{
@@ -22,7 +22,7 @@ namespace Alex.Utils
 			}
 		}
 
-		public TeamsPacket.TeamColor Color       { get; set; }
+		public TeamsPacket.TeamColor Color { get; set; }
 
 		public string TeamPrefix
 		{
@@ -53,10 +53,10 @@ namespace Alex.Utils
 				target.DisplayName = $"{_teamPrefix}{Name}{_teamSuffix}";
 			}
 		}
-		
+
 		public WeakReference<ScoreboardEntry> ScoreboardEntry { get; set; } = null;
 		public List<string> Entities { get; } = new List<string>();
-		
+
 		public Team(string name, string displayName, TeamsPacket.TeamColor color, string prefix, string suffix)
 		{
 			Name = name;

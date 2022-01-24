@@ -25,17 +25,17 @@ namespace Alex.Worlds.Multiplayer
 		public readonly ServerConnectionDetails ConnectionDetails;
 		private readonly PlayerProfile _profile;
 		private static Logger Log = LogManager.GetCurrentClassLogger();
-		
+
 		public Alex Alex { get; }
 		protected BedrockClient Client { get; set; }
 		public BedrockFormManager FormManager { get; set; }
-		
+
 		public BedrockWorldProvider(Alex alex, ServerConnectionDetails connectionDetails, PlayerProfile profile)
 		{
 			ConnectionDetails = connectionDetails;
 			_profile = profile;
 			Alex = alex;
-			
+
 			//Client = new ExperimentalBedrockClient(alex, alex.Services, this, endPoint);
 		}
 
@@ -52,7 +52,7 @@ namespace Alex.Worlds.Multiplayer
 		{
 			return new BedrockClient(alex, endPoint, profile, this);
 		}
-		
+
 		public override Vector3 GetSpawnPoint()
 		{
 			return World?.SpawnPoint ?? Vector3.Zero;
@@ -60,10 +60,11 @@ namespace Alex.Worlds.Multiplayer
 
 		private bool _initiated = false;
 		private PlayerLocation _lastLocation = new PlayerLocation();
-        
-        private long _tickTime = 0;
-        private long _lastPrioritization = 0;
-        public override void OnTick()
+
+		private long _tickTime = 0;
+		private long _lastPrioritization = 0;
+
+		public override void OnTick()
 		{
 			if (World == null) return;
 
@@ -71,26 +72,26 @@ namespace Alex.Worlds.Multiplayer
 			{
 				_tickTime++;
 				Client.Tick++;
-				
+
 				if (World.Player != null && World.Player.IsSpawned && _gameStarted)
 				{
-					var pos = (PlayerLocation) World.Player.KnownPosition.Clone();
+					var pos = (PlayerLocation)World.Player.KnownPosition.Clone();
 
-					if ((pos.DistanceTo(_lastLocation) >= 16f)
-					    && (_tickTime - _lastPrioritization >= 10))
+					if ((pos.DistanceTo(_lastLocation) >= 16f) && (_tickTime - _lastPrioritization >= 10))
 					{
 						_lastLocation = pos;
-						
+
 						UnloadChunks(new ChunkCoordinates(pos), Client.World.ChunkManager.RenderDistance + 2);
 						_lastPrioritization = _tickTime;
 					}
-					
+
 					SendLocation(World.Player.RenderLocation);
 				}
 			}
 		}
 
-        private PlayerLocation _previousPlayerLocation = new PlayerLocation();
+		private PlayerLocation _previousPlayerLocation = new PlayerLocation();
+
 		private void SendLocation(PlayerLocation location)
 		{
 			if (Client.ServerAuthoritiveMovement)
@@ -104,7 +105,7 @@ namespace Alex.Worlds.Multiplayer
 
 				var inputFlags = player.Controller.InputFlags;
 				var heading = player.Controller.GetMoveVector(inputFlags);
-				
+
 				McpePlayerAuthInput input = McpePlayerAuthInput.CreateObject();
 				input.InputFlags = inputFlags;
 				input.Position = new System.Numerics.Vector3(location.X, location.Y + Player.EyeLevel, location.Z);
@@ -118,7 +119,7 @@ namespace Alex.Worlds.Multiplayer
 				input.InputMode = McpePlayerAuthInput.PlayerInputMode.Mouse;
 
 				Client.SendPacket(input);
-				
+
 				_previousPlayerLocation = location;
 			}
 			else
@@ -129,7 +130,7 @@ namespace Alex.Worlds.Multiplayer
 						location.Pitch) { OnGround = location.OnGround }, 0, World.Time);
 			}
 		}
-		
+
 		private void UnloadChunks(ChunkCoordinates center, double maxViewDistance)
 		{
 			//var chunkPublisher = Client.ChunkPublishCenter;
@@ -142,6 +143,7 @@ namespace Alex.Worlds.Multiplayer
 					continue;
 
 				var distance = chunk.Key.DistanceTo(center);
+
 				if (distance > maxViewDistance)
 				{
 					World.UnloadChunk(chunk.Key);
@@ -159,35 +161,37 @@ namespace Alex.Worlds.Multiplayer
 		public override LoadResult Load(ProgressReport progressReport)
 		{
 			Client.GameStarted = false;
-			
+
 			Stopwatch timer = Stopwatch.StartNew();
 			progressReport(LoadingState.ConnectingToServer, 25);
-			
+
 			progressReport(LoadingState.ConnectingToServer, 50, "Establishing a connection...");
 
 			CancellationTokenSource cts = new CancellationTokenSource();
 			cts.CancelAfter(TimeSpan.FromSeconds(30));
+
 			if (!Client.Start(cts.Token))
 			{
 				Log.Warn($"Failed to connect to server, resetevent not triggered.");
-				
+
 				return LoadResult.Timeout;
 			}
 
 			progressReport(LoadingState.ConnectingToServer, 98, "Waiting on server confirmation...");
 
-			var  percentage         = 0;
+			var percentage = 0;
 
 			Stopwatch sw = Stopwatch.StartNew();
-			
-			bool         outOfOrder   = false;
-			LoadingState state        = LoadingState.ConnectingToServer;
-			string       subTitle     = "";
+
+			bool outOfOrder = false;
+			LoadingState state = LoadingState.ConnectingToServer;
+			string subTitle = "";
 
 			bool waitingOnResources = false;
 			bool loadingResources = false;
-			
+
 			var resourcePackManager = Client?.ResourcePackManager;
+
 			void statusHandler(object sender, ResourcePackManager.ResourceStatusChangedEventArgs args)
 			{
 				switch (args.Status)
@@ -217,7 +221,7 @@ namespace Alex.Worlds.Multiplayer
 						break;
 				}
 			}
-			
+
 			try
 			{
 				if (resourcePackManager != null)
@@ -230,6 +234,7 @@ namespace Alex.Worlds.Multiplayer
 				}
 
 				LoadResult loadResult = LoadResult.Unknown;
+
 				while (Client.IsConnected && Client.DisconnectReason != DisconnectReason.Unknown)
 				{
 					progressReport(state, percentage, subTitle);
@@ -290,25 +295,28 @@ namespace Alex.Worlds.Multiplayer
 						if (Client.DisconnectReason == DisconnectReason.Kicked)
 						{
 							loadResult = LoadResult.Kicked;
+
 							break;
 						}
 
 						Log.Warn($"Failed to connect to server, timed-out.");
 
 						loadResult = LoadResult.Timeout;
+
 						break;
 					}
 				}
 
 				if (Client.DisconnectReason == DisconnectReason.Kicked)
 					return LoadResult.Kicked;
-				
-				if (Client.DisconnectReason == DisconnectReason.ServerOutOfDate || Client.DisconnectReason == DisconnectReason.ClientOutOfDate)
+
+				if (Client.DisconnectReason == DisconnectReason.ServerOutOfDate
+				    || Client.DisconnectReason == DisconnectReason.ClientOutOfDate)
 					return LoadResult.VersionMismatch;
 
 				if (!Client.IsConnected)
 					return LoadResult.Timeout;
-				
+
 				if (loadResult != LoadResult.Unknown)
 				{
 					return loadResult;
@@ -335,17 +343,14 @@ namespace Alex.Worlds.Multiplayer
 			}
 		}
 
-		protected virtual void OnSpawn()
-		{
-			
-		}
+		protected virtual void OnSpawn() { }
 
 		private bool _gameStarted = false;
 
 		public override void Dispose()
 		{
 			//World?.Ticker?.UnregisterTicked(this);
-			
+
 			base.Dispose();
 			Client.Dispose();
 		}

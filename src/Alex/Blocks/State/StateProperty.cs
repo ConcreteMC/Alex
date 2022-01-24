@@ -27,7 +27,7 @@ namespace Alex.Blocks.State
 			return obj.Identifier;
 		}
 	}
-	
+
 	public abstract class StateProperty : StateProperty<object>
 	{
 		//public static Dictionary<string, StateProperty> _registeredTypes = new Dictionary<string, StateProperty>(StringComparer.InvariantCultureIgnoreCase);
@@ -41,13 +41,15 @@ namespace Alex.Blocks.State
 	{
 		private TType _value;
 		public string Name { get; }
-		
+
 		private string _stringValue { get; set; } = string.Empty;
+
 		/// <inheritdoc />
 		public string StringValue => _stringValue;
 
 		public TType DefaultValue { get; set; } = default(TType);
 		public int Identifier { get; }
+
 		protected StateProperty(string name)
 		{
 			Name = name;
@@ -92,15 +94,15 @@ namespace Alex.Blocks.State
 		{
 			throw new NotImplementedException();
 		}
-		
+
 		public override bool Equals(object obj)
 		{
 			if (ReferenceEquals(null, obj)) return false;
 			if (ReferenceEquals(this, obj)) return true;
-			
+
 			return obj.GetHashCode().Equals(GetHashCode());
 		}
-		
+
 		public override int GetHashCode()
 		{
 			return HashCode.Combine(GetType().Name, Name, Value);
@@ -110,20 +112,20 @@ namespace Alex.Blocks.State
 		{
 			return Name == other.Name && Value.Equals(other.Value);
 		}
-		
+
 		protected bool Equals<T>(StateProperty<T> other)
 		{
 			return Name == other.Name && Value.Equals(other.Value);
 		}
-		
+
 		public bool Equals(IStateProperty other)
 		{
 			if (ReferenceEquals(null, other)) return false;
 			if (ReferenceEquals(this, other)) return true;
-			
+
 			return other.GetHashCode().Equals(GetHashCode());
 		}
-		
+
 		public virtual string ToFormattedString()
 		{
 			return $"{Name}={StringValue}";

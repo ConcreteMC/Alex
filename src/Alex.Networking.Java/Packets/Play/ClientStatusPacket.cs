@@ -13,7 +13,7 @@ namespace Alex.Networking.Java.Packets.Play
 
 		public override void Decode(MinecraftStream stream)
 		{
-			ActionID = (Action)stream.ReadVarInt();	
+			ActionID = (Action)stream.ReadVarInt();
 		}
 
 		public override void Encode(MinecraftStream stream)

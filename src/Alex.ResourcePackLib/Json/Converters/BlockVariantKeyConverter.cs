@@ -22,6 +22,7 @@ namespace Alex.ResourcePackLib.Json.Converters
 			return sourceType == typeof(string) || base.CanConvertFrom(context, sourceType);
 		}
 	}
+
 	public class BlockVariantKeyConverter : JsonConverter
 	{
 		/// <inheritdoc />

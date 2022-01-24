@@ -8,35 +8,26 @@ namespace Alex.ResourcePackLib.Json.Models.Entities
 {
 	public class EntityModelUV
 	{
-		[JsonProperty("north")]
-		public EntityModelUVData North { get; set; }
-		
-		[JsonProperty("south")]
-		public EntityModelUVData South { get; set; }
-		
-		[JsonProperty("east")]
-		public EntityModelUVData East  { get; set; }
-		
-		[JsonProperty("west")]
-		public EntityModelUVData West  { get; set; }
-		
-		[JsonProperty("up")]
-		public EntityModelUVData Up    { get; set; }
-		
-		[JsonProperty("down")]
-		public EntityModelUVData Down  { get; set; }
+		[JsonProperty("north")] public EntityModelUVData North { get; set; }
 
-		public EntityModelUV() : this(Vector2.Zero, false)
-		{
-			
-		}
-		
-		[JsonIgnore]
-		public bool IsCube { get; }
+		[JsonProperty("south")] public EntityModelUVData South { get; set; }
+
+		[JsonProperty("east")] public EntityModelUVData East { get; set; }
+
+		[JsonProperty("west")] public EntityModelUVData West { get; set; }
+
+		[JsonProperty("up")] public EntityModelUVData Up { get; set; }
+
+		[JsonProperty("down")] public EntityModelUVData Down { get; set; }
+
+		public EntityModelUV() : this(Vector2.Zero, false) { }
+
+		[JsonIgnore] public bool IsCube { get; }
+
 		public EntityModelUV(Vector2 origin, bool isCube = true)
 		{
 			IsCube = isCube;
-			var model = new EntityModelUVData() {Origin = origin};
+			var model = new EntityModelUVData() { Origin = origin };
 			Up = Down = North = West = South = East = model;
 		}
 
@@ -46,26 +37,32 @@ namespace Alex.ResourcePackLib.Json.Models.Entities
 			{
 				case BlockFace.Down:
 					return Down;
+
 					break;
 
 				case BlockFace.Up:
 					return Up;
+
 					break;
 
 				case BlockFace.East:
 					return East;
+
 					break;
 
 				case BlockFace.West:
 					return West;
+
 					break;
 
 				case BlockFace.North:
 					return North;
+
 					break;
 
 				case BlockFace.South:
 					return South;
+
 					break;
 			}
 
@@ -83,7 +80,7 @@ namespace Alex.ResourcePackLib.Json.Models.Entities
 			{
 				return (Down.Origin.Y >= textureSize.Y);
 			}
-			
+
 			foreach (BlockFace face in Enum.GetValues<BlockFace>())
 			{
 				var f = GetFace(face);
@@ -112,26 +109,22 @@ namespace Alex.ResourcePackLib.Json.Models.Entities
 
 		public EntityModelUVData Offset(Vector2 amount)
 		{
-			return new EntityModelUVData() {Origin = Origin + amount, Size = Size};
+			return new EntityModelUVData() { Origin = Origin + amount, Size = Size };
 		}
-		
+
 		public EntityModelUVData WithSize(Vector2 size)
 		{
-			return new EntityModelUVData() {Origin = Origin, Size = size};
+			return new EntityModelUVData() { Origin = Origin, Size = size };
 		}
-		
+
 		public EntityModelUVData WithSize(float x, float y)
 		{
-			return new EntityModelUVData() {Origin = Origin, Size = new Vector2(x, y)};
+			return new EntityModelUVData() { Origin = Origin, Size = new Vector2(x, y) };
 		}
-		
+
 		public EntityModelUVData WithOptionalSize(float x, float y)
 		{
-			return new EntityModelUVData()
-			{
-				Origin = Origin, 
-				Size = Size.GetValueOrDefault(new Vector2(x, y))
-			};
+			return new EntityModelUVData() { Origin = Origin, Size = Size.GetValueOrDefault(new Vector2(x, y)) };
 		}
 	}
 }

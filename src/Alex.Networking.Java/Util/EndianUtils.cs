@@ -51,7 +51,7 @@ namespace Alex.Networking.Java.Util
 
 			return BitConverter.ToUInt64(net, 0);
 		}
-		
+
 		public static byte[] HostToNetworkOrder(double d)
 		{
 			var data = BitConverter.GetBytes(d);

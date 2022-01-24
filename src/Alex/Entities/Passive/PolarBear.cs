@@ -6,10 +6,10 @@ namespace Alex.Entities.Passive
 {
 	public class PolarBear : PassiveMob
 	{
-		[MoProperty("standing_scale")]
-		public double StandingScale { get; set; } = 1d;
+		[MoProperty("standing_scale")] public double StandingScale { get; set; } = 1d;
 
 		public bool IsStandingUp { get; set; } = false;
+
 		public PolarBear(World level) : base(level)
 		{
 			Height = 1.4;

@@ -9,9 +9,9 @@ namespace Alex.Entities.Hostile
 {
 	public class Slime : HostileMob
 	{
-		private const double BoundingWidth  = 0.51000005;
+		private const double BoundingWidth = 0.51000005;
 		private const double BoundingHeight = 0.51000005;
-		
+
 		private int _size;
 
 		public int Size
@@ -23,21 +23,19 @@ namespace Alex.Entities.Hostile
 			set
 			{
 				_size = value;
-				
+
 				Width = BoundingWidth + 0.2 * value;
 				Height = BoundingHeight + 0.1 * value;
 
-				Scale = (float) (Width / BoundingWidth);
+				Scale = (float)(Width / BoundingWidth);
 			}
 		}
 
-		[MoProperty("previous_squish_value")]
-		public float PreviousSquishValue { get; set; } = 0f;
-		
-		[MoProperty("current_squish_value")]
-		public float SquishValue { get; set; } = 0f;
+		[MoProperty("previous_squish_value")] public float PreviousSquishValue { get; set; } = 0f;
 
-		public Slime(World level) : base( level)
+		[MoProperty("current_squish_value")] public float SquishValue { get; set; } = 0f;
+
+		public Slime(World level) : base(level)
 		{
 			Height = 0.51000005;
 			Width = 0.51000005;
@@ -50,6 +48,7 @@ namespace Alex.Entities.Hostile
 			{
 				Size = mdb.Value;
 			}
+
 			return base.HandleMetadata(flag, entry);
 		}
 

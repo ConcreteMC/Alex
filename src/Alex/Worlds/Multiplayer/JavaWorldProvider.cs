@@ -87,7 +87,7 @@ namespace Alex.Worlds.Multiplayer
 		private Alex Alex { get; }
 		private NetConnection Client { get; set; }
 		private PlayerProfile Profile { get; }
-		
+
 		private IOptionsProvider OptionsProvider { get; }
 		private AlexOptions Options => OptionsProvider.AlexOptions;
 
@@ -95,15 +95,19 @@ namespace Alex.Worlds.Multiplayer
 		private ManualResetEvent _loginCompleteEvent = new ManualResetEvent(false);
 
 		public string Hostname { get; set; }
-		
-		private          JavaNetworkProvider NetworkProvider { get; }
+
+		private JavaNetworkProvider NetworkProvider { get; }
 		private JavaCommandProvider CommandProvider { get; set; }
-		private readonly List<IDisposable>   _disposables = new List<IDisposable>();
-		
+		private readonly List<IDisposable> _disposables = new List<IDisposable>();
+
 		private WorldSettings WorldSettings { get; set; } = WorldSettings.Default;
-		
+
 		private BufferBlock<ChunkDataPacket> _chunkQueue;
-		public JavaWorldProvider(Alex alex, IPEndPoint endPoint, PlayerProfile profile, out NetworkProvider networkProvider)
+
+		public JavaWorldProvider(Alex alex,
+			IPEndPoint endPoint,
+			PlayerProfile profile,
+			out NetworkProvider networkProvider)
 		{
 			Alex = alex;
 			Profile = profile;
@@ -113,14 +117,21 @@ namespace Alex.Worlds.Multiplayer
 			Client = new NetConnection(endPoint, CancellationToken.None);
 			Client.OnConnectionClosed += OnConnectionClosed;
 			Client.PacketHandler = this;
-			
-			NetworkProvider = new JavaNetworkProvider(Client);;
+
+			NetworkProvider = new JavaNetworkProvider(Client);
+			;
 			networkProvider = NetworkProvider;
-			
-			var blockOptions =
-				new ExecutionDataflowBlockOptions { CancellationToken = CancellationToken.None, EnsureOrdered = false, NameFormat = "Java Chunker: {0}-{1}", MaxDegreeOfParallelism = 1};
+
+			var blockOptions = new ExecutionDataflowBlockOptions
+			{
+				CancellationToken = CancellationToken.None,
+				EnsureOrdered = false,
+				NameFormat = "Java Chunker: {0}-{1}",
+				MaxDegreeOfParallelism = 1
+			};
+
 			_chunkQueue = new BufferBlock<ChunkDataPacket>(blockOptions);
-	        
+
 			var handleBufferItemBlock = new ActionBlock<ChunkDataPacket>(HandleChunkDataPacket, blockOptions);
 			var linkOptions = new DataflowLinkOptions { PropagateCompletion = true };
 			_chunkQueue.LinkTo(handleBufferItemBlock, linkOptions);
@@ -150,13 +161,13 @@ namespace Alex.Worlds.Multiplayer
 						int x = (result.X << 4) + tile.X;
 						int y = tile.Y;
 						int z = (result.Z << 4) + tile.Z;
-						
+
 						tag["x"] = new NbtInt("x", x);
 						tag["y"] = new NbtInt("y", y);
 						tag["z"] = new NbtInt("z", z);
-						
+
 						var pos = new BlockCoordinates(x, y, z);
-						
+
 						var registry = Alex.Resources.Registries.BlockEntities;
 
 						if (registry != null)
@@ -169,7 +180,7 @@ namespace Alex.Worlds.Multiplayer
 								//Log.Info($"Resolved BlockEntity: {match.Key} = {pos}");
 							}
 						}
-						
+
 						result.AddBlockEntity(new BlockCoordinates(x, y, z), tag);
 					}
 					catch (Exception ex)
@@ -186,7 +197,7 @@ namespace Alex.Worlds.Multiplayer
 				{
 					if (result.Sections[y] == null)
 						continue;
-					
+
 					if (lightingData.SkyLightMask.Count >= y + 1)
 					{
 						if (lightingData.SkyLightMask.IsSet(y + 1))
@@ -217,7 +228,7 @@ namespace Alex.Worlds.Multiplayer
 
 		private bool _disconnected = false;
 		private string _disconnectReason = string.Empty;
-		
+
 		private void OnConnectionClosed(object sender, ConnectionClosedEventArgs e)
 		{
 			if (_disconnected) return;
@@ -237,15 +248,21 @@ namespace Alex.Worlds.Multiplayer
 
 		private bool _disconnectShown = false;
 		private bool _wasKicked = false;
-		public void ShowDisconnect(string reason, bool useTranslation = false, bool force = false, bool wasKicked = false)
+
+		public void ShowDisconnect(string reason,
+			bool useTranslation = false,
+			bool force = false,
+			bool wasKicked = false)
 		{
 			if (_disconnectShown && !force)
 				return;
-			
+
 			_disconnectShown = true;
 			_wasKicked = wasKicked;
-			
-			DisconnectedDialog.Show(Alex, reason, useTranslation, new Gamestates.InGame.ConnectionInfo(Endpoint, JavaServerType.Identifier, Hostname, Profile));
+
+			DisconnectedDialog.Show(
+				Alex, reason, useTranslation,
+				new Gamestates.InGame.ConnectionInfo(Endpoint, JavaServerType.Identifier, Hostname, Profile));
 		}
 
 		private PlayerLocation _lastSentLocation = new PlayerLocation(Vector3.Zero);
@@ -254,9 +271,10 @@ namespace Alex.Worlds.Multiplayer
 
 		public void SendSettings()
 		{
-			NetworkProvider.SendSettings(World.Player.SkinFlags.Value, World.Player.IsLeftHanded, World.ChunkManager.RenderDistance);
+			NetworkProvider.SendSettings(
+				World.Player.SkinFlags.Value, World.Player.IsLeftHanded, World.ChunkManager.RenderDistance);
 		}
-		
+
 		private void SendPlayerAbilities(Player player)
 		{
 			byte flags = 0;
@@ -274,8 +292,8 @@ namespace Alex.Worlds.Multiplayer
 			PlayerAbilitiesPacket abilitiesPacket = PlayerAbilitiesPacket.CreateObject();
 			abilitiesPacket.ServerBound = true;
 
-			abilitiesPacket.Flags = (byte) flags;
-			
+			abilitiesPacket.Flags = (byte)flags;
+
 			//abilitiesPacket.FlyingSpeed = (float) player.FlyingSpeed;
 			//abilitiesPacket.WalkingSpeed = (float)player.MovementSpeed;
 
@@ -286,13 +304,15 @@ namespace Alex.Worlds.Multiplayer
 		{
 			if (World == null || _disconnected || Client == null) return;
 
-		//	var isTick = _isRealTick;
+			//	var isTick = _isRealTick;
 			//_isRealTick = !isTick;
 
 			//if (!_initiated) return;
-			
+
 			var player = World.Player;
-			if (player != null && player.IsSpawned && Client.ConnectionState == ConnectionState.Play && ReadyToSpawn && HasSpawnPosition)
+
+			if (player != null && player.IsSpawned && Client.ConnectionState == ConnectionState.Play && ReadyToSpawn
+			    && HasSpawnPosition)
 			{
 				Client.Latency = player.Latency;
 				//player.IsSpawned = Spawned;
@@ -308,22 +328,23 @@ namespace Alex.Worlds.Multiplayer
 				}
 
 				var pos = player.KnownPosition;
-					
+
 				//Log.Info($"Tick... (Distance: {Vector3.DistanceSquared(pos.ToVector3(), _lastSentLocation.ToVector3())})");
-					
+
 				if (Math.Abs(pos.DistanceTo(_lastSentLocation)) > 0.0f)
 				{
 					SendPlayerPositionAndLook(pos, SendPositionReason.Tick);
 					//World.ChunkManager.FlagPrioritization();
 				}
-				else if (Math.Abs(pos.Pitch - _lastSentLocation.Pitch) > 0f || Math.Abs(pos.HeadYaw - _lastSentLocation.Yaw) > 0f)
+				else if (Math.Abs(pos.Pitch - _lastSentLocation.Pitch) > 0f
+				         || Math.Abs(pos.HeadYaw - _lastSentLocation.Yaw) > 0f)
 				{
 					SendPlayerLook(pos, SendPositionReason.Tick);
 
 					//_tickSinceLastPositionUpdate = 0;
-						
+
 					//World.ChunkManager.FlagPrioritization();
-						
+
 					//_lastSentLocation.Pitch = pos.Pitch;
 					//_lastSentLocation.Yaw = pos.HeadYaw;
 				}
@@ -363,7 +384,7 @@ namespace Alex.Worlds.Multiplayer
 				return;
 			}
 			Log.Info($"Sending PlayerPosition: {reason}");*/
-			
+
 			PlayerPosition packet = PlayerPosition.CreateObject();
 			packet.FeetY = pos.Y;
 			packet.X = pos.X;
@@ -371,7 +392,7 @@ namespace Alex.Worlds.Multiplayer
 			packet.OnGround = pos.OnGround;
 
 			SendPacket(packet);
-			
+
 			_lastSentLocation = pos;
 			_tickSinceLastPositionUpdate = 0;
 		}
@@ -385,7 +406,7 @@ namespace Alex.Worlds.Multiplayer
 
 			return value;
 		}
-		
+
 		private void SendPlayerPositionAndLook(PlayerLocation pos, SendPositionReason reason = SendPositionReason.Other)
 		{
 			/*if (reason == SendPositionReason.Tick && (!ReadyToSpawn || !HasSpawnPosition || !World.Player.IsSpawned))
@@ -393,7 +414,7 @@ namespace Alex.Worlds.Multiplayer
 				return;
 			}
 			Log.Info($"Sending PlayerPositionAndLook: {reason}");*/
-			
+
 			PlayerPositionAndLookPacketServerBound packet = PlayerPositionAndLookPacketServerBound.CreateObject();
 			packet.Yaw = FixRotation(-pos.HeadYaw);
 			packet.Pitch = -pos.Pitch;
@@ -403,7 +424,7 @@ namespace Alex.Worlds.Multiplayer
 			packet.OnGround = pos.OnGround;
 
 			SendPacket(packet);
-			
+
 			_lastSentLocation = pos;
 			_tickSinceLastPositionUpdate = 0;
 		}
@@ -422,7 +443,7 @@ namespace Alex.Worlds.Multiplayer
 
 			SendPacket(playerLook);
 		}
-		
+
 		public override Vector3 GetSpawnPoint()
 		{
 			return World?.SpawnPoint ?? Vector3.Zero;
@@ -435,9 +456,9 @@ namespace Alex.Worlds.Multiplayer
 			World.ChunkManager.CalculateSkyLighting = false;
 			World.ChunkManager.CalculateBlockLighting = false;
 		}
-		
-		private bool                            _hasDoneInitialChunks = false;
-		private int                             _chunksReceived       = 0;
+
+		private bool _hasDoneInitialChunks = false;
+		private int _chunksReceived = 0;
 
 		private LoadResult DetermineDisconnectReason()
 		{
@@ -445,12 +466,12 @@ namespace Alex.Worlds.Multiplayer
 
 			return LoadResult.ConnectionLost;
 		}
-		
+
 		public override LoadResult Load(ProgressReport progressReport)
 		{
 			if (!Client.Initialize(CancellationToken.None))
 				return LoadResult.Failed;
-			
+
 			progressReport(LoadingState.ConnectingToServer, 0);
 
 			if (!Login(Profile.PlayerName))
@@ -480,15 +501,16 @@ namespace Alex.Worlds.Multiplayer
 
 			int loaded = 0;
 			World.Player.OnSpawn();
+
 			SpinWait.SpinUntil(
 				() =>
 				{
 					loaded = World.ChunkManager.ChunkCount;
-					
-					int    t             = World.ChunkManager.RenderDistance;
+
+					int t = World.ChunkManager.RenderDistance;
 					double radiusSquared = Math.Pow(t, 2);
-					var    target        = radiusSquared;
-					
+					var target = radiusSquared;
+
 					var playerChunkCoords = new ChunkCoordinates(World.Player.KnownPosition);
 
 					/*if (_chunksReceived >= target && !_generatingHelper.IsAddingCompleted)
@@ -498,7 +520,9 @@ namespace Alex.Worlds.Multiplayer
 
 					if (_chunksReceived < target)
 					{
-						progressReport(LoadingState.LoadingChunks, (int) Math.Floor((100 / target) * _chunksReceived), $"{_chunksReceived} of {target}");
+						progressReport(
+							LoadingState.LoadingChunks, (int)Math.Floor((100 / target) * _chunksReceived),
+							$"{_chunksReceived} of {target}");
 					}
 					else if (loaded < target || !allowSpawn)
 					{
@@ -511,7 +535,7 @@ namespace Alex.Worlds.Multiplayer
 						{
 							allowSpawn = true;
 						}
-						
+
 
 						if (loaded >= target)
 						{
@@ -522,11 +546,15 @@ namespace Alex.Worlds.Multiplayer
 								p += 25;
 							}
 
-							progressReport(LoadingState.Spawning, p, (ReadyToSpawn && !allowSpawn) ? "Waiting on spawn chunk" : "");
+							progressReport(
+								LoadingState.Spawning, p,
+								(ReadyToSpawn && !allowSpawn) ? "Waiting on spawn chunk" : "");
 						}
 						else
 						{
-							progressReport(LoadingState.GeneratingVertices, (int) Math.Floor((100 / target) * loaded), $"{loaded} of {target}");
+							progressReport(
+								LoadingState.GeneratingVertices, (int)Math.Floor((100 / target) * loaded),
+								$"{loaded} of {target}");
 						}
 					}
 					else
@@ -543,7 +571,7 @@ namespace Alex.Worlds.Multiplayer
 			if (ReadyToSpawn && HasSpawnPosition)
 			{
 				//SendPlayerPositionAndLook(World.Player.KnownPosition, SendPositionReason.Server);
-				
+
 				ClientStatusPacket clientStatus = ClientStatusPacket.CreateObject();
 				clientStatus.ActionID = ClientStatusPacket.Action.PerformRespawnOrConfirmLogin;
 				SendPacket(clientStatus);
@@ -582,7 +610,7 @@ namespace Alex.Worlds.Multiplayer
 				itemEntity.Velocity = velocity;
 				itemEntity.KnownPosition = position;
 				entity = itemEntity;
-				
+
 				//itemEntity.SetItem(itemClone);
 			}
 
@@ -813,12 +841,14 @@ namespace Alex.Worlds.Multiplayer
 
 				case SetTitleSubTextPacket setTitleSubTextPacket:
 					HandleSetTitleSubTextPacket(setTitleSubTextPacket);
+
 					break;
-				
+
 				case SetTitleTextPacket titleTextPacket:
 					HandleSetTitlePacket(titleTextPacket);
+
 					break;
-				
+
 				case SetTitleTimesPacket titlePacket:
 					HandleTitlePacket(titlePacket);
 
@@ -883,9 +913,10 @@ namespace Alex.Worlds.Multiplayer
 					HandleAcknowledgePlayerDiggingPacket(diggingPacket);
 
 					break;
-				
+
 				case BlockBreakAnimationPacket blockBreakAnimationPacket:
 					HandleBlockBreakAnimationPacket(blockBreakAnimationPacket);
+
 					break;
 
 				case DisplayScoreboardPacket displayScoreboardPacket:
@@ -912,15 +943,17 @@ namespace Alex.Worlds.Multiplayer
 					HandleSoundEffectPacket(soundEffectPacket);
 
 					break;
-				
+
 				case EntitySoundEffectPacket entitySoundEffectPacket:
 					HandleEntitySoundEffectPacket(entitySoundEffectPacket);
+
 					break;
 
 				case NamedSoundEffectPacket namedSoundEffectPacket:
 					HandleNamedSoundEffectPacket(namedSoundEffectPacket);
+
 					break;
-				
+
 				case ParticlePacket particlePacket:
 					HandleParticlePacket(particlePacket);
 
@@ -933,28 +966,34 @@ namespace Alex.Worlds.Multiplayer
 
 				case PluginMessagePacket pluginMessagePacket:
 					HandlePluginMessagePacket(pluginMessagePacket);
+
 					break;
-				
+
 				case BossBarPacket bossBarPacket:
 					HandleBossBarPacket(bossBarPacket);
+
 					break;
-				
+
 				case SetExperiencePacket experiencePacket:
 					HandleSetExperiencePacket(experiencePacket);
+
 					break;
-				
+
 				case DeclareCommandsPacket declareCommandsPacket:
 					HandleDeclareCommandsPacket(declareCommandsPacket);
+
 					break;
 
 				case PlayPingPacket pingPacket:
-					HandlePingPacket(pingPacket); 
+					HandlePingPacket(pingPacket);
+
 					break;
-				
+
 				case ServerDifficultyPacket serverDifficultyPacket:
 					HandleDifficulty(serverDifficultyPacket);
+
 					break;
-				
+
 				default:
 				{
 					if (UnhandledPackets.TryAdd(packet.PacketId, packet.GetType()))
@@ -973,7 +1012,7 @@ namespace Alex.Worlds.Multiplayer
 		{
 			World.Difficulty = (Difficulty)packet.Difficulty;
 		}
-		
+
 		private void HandlePingPacket(PlayPingPacket packet)
 		{
 			PlayPongPacket pong = PlayPongPacket.CreateObject();
@@ -1054,7 +1093,7 @@ namespace Alex.Worlds.Multiplayer
 					CommandProvider.Register(command);
 				}
 			}
-			
+
 			Log.Info($"Registered {CommandProvider.Count} commands.");
 			//CommandProvider.Register();
 		}
@@ -1068,7 +1107,7 @@ namespace Alex.Worlds.Multiplayer
 				
 			}
 		}*/
-		
+
 		private void HandleSetExperiencePacket(SetExperiencePacket packet)
 		{
 			var player = World?.Player;
@@ -1079,7 +1118,7 @@ namespace Alex.Worlds.Multiplayer
 			player.ExperienceLevel = packet.Level;
 			player.Experience = packet.ExperienceBar;
 		}
-		
+
 		private void HandleBossBarPacket(BossBarPacket packet)
 		{
 			var container = BossBarContainer;
@@ -1092,22 +1131,27 @@ namespace Alex.Worlds.Multiplayer
 				case BossBarPacket.BossBarAction.Add:
 					container.Add(
 						packet.Uuid, packet.Title, packet.Health, packet.Color, packet.Divisions, packet.Flags);
+
 					break;
 
 				case BossBarPacket.BossBarAction.Remove:
 					container.Remove(packet.Uuid);
+
 					break;
 
 				case BossBarPacket.BossBarAction.UpdateHealth:
 					container.UpdateHealth(packet.Uuid, packet.Health);
+
 					break;
 
 				case BossBarPacket.BossBarAction.UpdateTitle:
 					container.UpdateTitle(packet.Uuid, packet.Title);
+
 					break;
 
 				case BossBarPacket.BossBarAction.UpdateStyle:
 					container.UpdateStyle(packet.Uuid, packet.Color, packet.Divisions);
+
 					break;
 
 				case BossBarPacket.BossBarAction.UpdateFlags:
@@ -1122,7 +1166,7 @@ namespace Alex.Worlds.Multiplayer
 		{
 			Log.Info($"Received plugin message. Channel={packet.Channel} Data={Encoding.UTF8.GetString(packet.Data)}");
 		}
-		
+
 		private void HandleEntityEffectPacket(EntityEffectPacket packet)
 		{
 			if (World.TryGetEntity(packet.EntityId, out var entity))
@@ -1133,24 +1177,37 @@ namespace Alex.Worlds.Multiplayer
 				{
 					case 1:
 						effect = new SpeedEffect();
+
 						break;
+
 					case 2:
 						effect = new SlownessEffect();
+
 						break;
+
 					case 3:
 						effect = new HasteEffect();
+
 						break;
+
 					case 4:
 						effect = new MiningFatigueEffect();
+
 						break;
+
 					case 8:
 						effect = new JumpBoostEffect();
+
 						break;
+
 					case 16:
 						effect = new NightVisionEffect();
+
 						break;
+
 					default:
 						Log.Warn($"Missing effect implementation: {packet.EffectId}");
+
 						break;
 				}
 
@@ -1159,12 +1216,12 @@ namespace Alex.Worlds.Multiplayer
 					effect.Duration = packet.Duration;
 					effect.Level = packet.Amplifier;
 					effect.Particles = (packet.Flags & 0x02) != 0;
-					
+
 					entity.Effects.AddOrUpdateEffect(effect);
 				}
 			}
 		}
-		
+
 		private float RandomParticleOffset()
 		{
 			return 1f - (FastRandom.Instance.NextFloat() * 2f);
@@ -1236,7 +1293,6 @@ namespace Alex.Worlds.Multiplayer
 							    (float)((float)packet.Z + (packet.OffsetZ * RandomParticleOffset()))),
 						    out var particleInstance, data, dataMode))
 					{
-
 						//particleInstance.Scale = packet.Scale;
 					}
 					else
@@ -1256,13 +1312,15 @@ namespace Alex.Worlds.Multiplayer
 
 		private ThreadSafeList<string> _missingSounds = new ThreadSafeList<string>();
 
-		private static readonly Regex _blockRegex = new Regex("block\\.(?<name>.*)\\.(?<action>.*)", RegexOptions.Compiled);
+		private static readonly Regex _blockRegex = new Regex(
+			"block\\.(?<name>.*)\\.(?<action>.*)", RegexOptions.Compiled);
 
 		private bool TryResolveSound(int soundId, out string name)
 		{
 			name = null;
-			var soundEffect =
-				Alex.Resources.Registries.Sounds.Entries.FirstOrDefault(x => x.Value.ProtocolId == soundId).Key;
+
+			var soundEffect = Alex.Resources.Registries.Sounds.Entries
+			   .FirstOrDefault(x => x.Value.ProtocolId == soundId).Key;
 
 			if (string.IsNullOrWhiteSpace(soundEffect))
 				return false;
@@ -1346,30 +1404,30 @@ namespace Alex.Worlds.Multiplayer
 					Log.Warn($"Missing named sound: {packet.SoundName}");
 			}
 		}
-		
+
 		private void HandleEntitySoundEffectPacket(EntitySoundEffectPacket packet)
 		{
 			if (World.TryGetEntity(packet.EntityId, out var entity))
 			{
 				if (TryResolveSound(packet.SoundId, out var soundEffect) && !Alex.AudioEngine.PlayJavaSound(
-					soundEffect, entity.KnownPosition, packet.Pitch, packet.Volume))
+					    soundEffect, entity.KnownPosition, packet.Pitch, packet.Volume))
 				{
 					if (_missingSounds.TryAdd(soundEffect))
 						Log.Warn($"Missing entity sound: {soundEffect}");
 				}
 			}
 		}
-		
+
 		private void HandleSoundEffectPacket(SoundEffectPacket packet)
 		{
-			if (TryResolveSound(packet.SoundId, out var soundEffect) &&
-			    !Alex.AudioEngine.PlayJavaSound(soundEffect, packet.Position, packet.Pitch, packet.Volume))
+			if (TryResolveSound(packet.SoundId, out var soundEffect) && !Alex.AudioEngine.PlayJavaSound(
+				    soundEffect, packet.Position, packet.Pitch, packet.Volume))
 			{
 				if (_missingSounds.TryAdd(soundEffect))
 					Log.Warn($"Missing sound: {soundEffect}");
 			}
 		}
-		
+
 		private TeamsManager TeamsManager { get; } = new TeamsManager();
 
 		private void UpdateTeamEntry(Team team)
@@ -1385,6 +1443,7 @@ namespace Alex.Worlds.Multiplayer
 				}
 			}
 		}
+
 		private void HandleTeamsPacket(TeamsPacket packet)
 		{
 			switch (packet.PacketMode)
@@ -1394,24 +1453,23 @@ namespace Alex.Worlds.Multiplayer
 					{
 						Team team = new Team(
 							packet.TeamName, ct.TeamDisplayName, ct.TeamColor, ct.TeamPrefix, ct.TeamSuffix);
-						
+
 						foreach (var entity in ct.Entities)
 						{
 							team.AddEntity(entity);
 						}
-						
-						TeamsManager.AddOrUpdateTeam(
-							packet.TeamName,
-							team);
-						
+
+						TeamsManager.AddOrUpdateTeam(packet.TeamName, team);
+
 						UpdateTeamEntry(team);
 					}
 
 					break;
 
 				case TeamsPacket.Mode.RemoveTeam:
-				//	Log.Info($"Remove team: {packet.TeamName}");
+					//	Log.Info($"Remove team: {packet.TeamName}");
 					TeamsManager.RemoveTeam(packet.TeamName);
+
 					break;
 
 				case TeamsPacket.Mode.UpdateTeam:
@@ -1423,7 +1481,7 @@ namespace Alex.Worlds.Multiplayer
 							team.Color = ut.TeamColor;
 							team.TeamPrefix = ut.TeamPrefix;
 							team.TeamSuffix = ut.TeamSuffix;
-							
+
 							TeamsManager.AddOrUpdateTeam(packet.TeamName, team);
 							UpdateTeamEntry(team);
 						}
@@ -1440,10 +1498,11 @@ namespace Alex.Worlds.Multiplayer
 							{
 								team.AddEntity(entity);
 							}
-							
+
 							UpdateTeamEntry(team);
 						}
 					}
+
 					break;
 
 				case TeamsPacket.Mode.RemovePlayer:
@@ -1457,28 +1516,32 @@ namespace Alex.Worlds.Multiplayer
 							}
 						}
 					}
+
 					break;
 
 				default:
 					throw new ArgumentOutOfRangeException();
 			}
 		}
-		
+
 		private void HandleUpdateScorePacket(UpdateScorePacket packet)
 		{
 			//Log.Info($"Update score, action={packet.Action} value={packet.Value} entityname={packet.EntityName} objectiveName={packet.ObjectiveName}");
 			var scoreboard = ScoreboardView;
+
 			if (scoreboard == null)
 				return;
 
-			if (scoreboard.TryGetEntityScoreboard(packet.EntityName, out var obj) || scoreboard.TryGetObjective(packet.ObjectiveName, out obj))
+			if (scoreboard.TryGetEntityScoreboard(packet.EntityName, out var obj)
+			    || scoreboard.TryGetObjective(packet.ObjectiveName, out obj))
 			{
 				if (packet.Action == UpdateScorePacket.UpdateScoreAction.CreateOrUpdate)
 				{
 					string displayName = packet.EntityName;
 					ScoreboardEntry entry = null;
 
-					obj.AddOrUpdate(packet.EntityName, new ScoreboardEntry(packet.EntityName, (uint) packet.Value, displayName));
+					obj.AddOrUpdate(
+						packet.EntityName, new ScoreboardEntry(packet.EntityName, (uint)packet.Value, displayName));
 
 					if (TeamsManager.TryGetEntityTeam(packet.EntityName, out var entityTeam))
 					{
@@ -1487,7 +1550,7 @@ namespace Alex.Worlds.Multiplayer
 				}
 				else if (packet.Action == UpdateScorePacket.UpdateScoreAction.Remove)
 				{
-				//	Log.Info($"Removed {packet.EntityName}");
+					//	Log.Info($"Removed {packet.EntityName}");
 					obj.Remove(packet.EntityName);
 				}
 			}
@@ -1499,22 +1562,27 @@ namespace Alex.Worlds.Multiplayer
 
 		private void HandleScoreboardObjectivePacket(ScoreboardObjectivePacket packet)
 		{
-		//	Log.Info($"Scoreboard objective, mode={packet.Mode} Name={packet.ObjectiveName} Value={packet.Value ?? "N/A"} Type={packet.Type}");
+			//	Log.Info($"Scoreboard objective, mode={packet.Mode} Name={packet.ObjectiveName} Value={packet.Value ?? "N/A"} Type={packet.Type}");
 			var scoreboard = ScoreboardView;
+
 			if (scoreboard == null)
 				return;
 
 			bool showScores = Alex.Options.AlexOptions.UserInterfaceOptions.Scoreboard.ShowScore.Value;
-			
+
 			switch (packet.Mode)
 			{
 				case ScoreboardObjectivePacket.ObjectiveMode.Create:
 					//packet.Type
-					scoreboard.AddObjective(new ScoreboardObjective(packet.ObjectiveName, packet.Value, 1, showScores ? string.Empty : "dummy"));
+					scoreboard.AddObjective(
+						new ScoreboardObjective(
+							packet.ObjectiveName, packet.Value, 1, showScores ? string.Empty : "dummy"));
+
 					break;
 
 				case ScoreboardObjectivePacket.ObjectiveMode.Remove:
 					scoreboard.RemoveObjective(packet.ObjectiveName);
+
 					break;
 
 				case ScoreboardObjectivePacket.ObjectiveMode.UpdateText:
@@ -1522,6 +1590,7 @@ namespace Alex.Worlds.Multiplayer
 					{
 						objective.DisplayName = packet.Value;
 					}
+
 					break;
 			}
 			//packet.
@@ -1529,20 +1598,20 @@ namespace Alex.Worlds.Multiplayer
 
 		private void HandleDisplayScoreboardPacket(DisplayScoreboardPacket packet)
 		{
-		//	Log.Info($"Display scoreboard: {packet.ScoreName} Position: {packet.Position}");
+			//	Log.Info($"Display scoreboard: {packet.ScoreName} Position: {packet.Position}");
 			if (packet.Position == DisplayScoreboardPacket.ScoreboardPosition.Sidebar)
 			{
 				var scoreboard = ScoreboardView;
+
 				if (scoreboard == null)
 					return;
-				
-			
 			}
 		}
 
 		private void HandleBlockBreakAnimationPacket(BlockBreakAnimationPacket packet)
 		{
-			var blockCoordinates = (BlockCoordinates) packet.Position;
+			var blockCoordinates = (BlockCoordinates)packet.Position;
+
 			if (packet.DestroyStage > 9)
 			{
 				World.EndBreakBlock(blockCoordinates);
@@ -1556,6 +1625,7 @@ namespace Alex.Worlds.Multiplayer
 		private void HandleAcknowledgePlayerDiggingPacket(AcknowledgePlayerDiggingPacket packet)
 		{
 			Log.Info($"Player digging acknowledgement, status={packet.Status} success={packet.Successful}");
+
 			if (packet.Status == AcknowledgePlayerDiggingPacket.DigStatus.StartedDigging)
 			{
 				if (!packet.Successful)
@@ -1563,14 +1633,12 @@ namespace Alex.Worlds.Multiplayer
 					World.Player.CancelBlockBreaking();
 				}
 			}
+
 			if (!packet.Successful)
 			{
 				World.SetBlockState(packet.Position, BlockFactory.GetBlockState((uint)packet.Block));
 			}
-			else
-			{
-				
-			}
+			else { }
 		}
 
 		private void HandleBlockAction(BlockActionPacket packet)
@@ -1583,10 +1651,10 @@ namespace Alex.Worlds.Multiplayer
 
 		private void HandleUpdateViewDistancePacket(UpdateViewDistancePacket packet)
 		{
-		//	World.ChunkManager.RenderDistance = Math.Min(packet.ViewDistance, Alex.Options.AlexOptions.VideoOptions.RenderDistance);
-		//	World.ChunkManager.RenderDistance = packet.ViewDistance;
+			//	World.ChunkManager.RenderDistance = Math.Min(packet.ViewDistance, Alex.Options.AlexOptions.VideoOptions.RenderDistance);
+			//	World.ChunkManager.RenderDistance = packet.ViewDistance;
 		}
-		
+
 		private void HandleUpdateViewPositionPacket(UpdateViewPositionPacket packet)
 		{
 			World.ChunkManager.ViewPosition = new ChunkCoordinates(packet.ChunkX, packet.ChunkZ);
@@ -1599,54 +1667,59 @@ namespace Alex.Worlds.Multiplayer
 			World.SpawnPoint = packet.SpawnPosition;
 			HasSpawnPosition = true;
 		}
-		
+
 		private void InventoryOnCursorChanged(object sender, CursorChangedEventArgs e)
 		{
 			if (e.IsServerTransaction)
 				return;
-			
+
 			if (sender is InventoryBase inv)
 			{
 				ClickWindowPacket.TransactionMode mode = ClickWindowPacket.TransactionMode.Click;
 				byte button = 0;
+
 				switch (e.Button)
 				{
 					case MouseButton.Left:
 						button = 0;
+
 						break;
+
 					case MouseButton.Right:
 						button = 1;
+
 						break;
+
 					case MouseButton.Middle:
 						button = 2;
+
 						break;
 				}
-				
+
 				/*if (e.Value.Id <= 0 || e.Value is ItemAir)
 				{
 					e.Value.Id = -1;
 					mode = ClickWindowPacket.TransactionMode.Drop;
 				}*/
 
-				short actionNumber = (short) inv.ActionNumber++;
+				short actionNumber = (short)inv.ActionNumber++;
 
 				ClickWindowPacket packet = ClickWindowPacket.CreateObject();
 				packet.Mode = mode;
 				packet.Button = button;
 				//packet.Action = actionNumber;
 				packet.StateId = inv.StateId;
-				packet.WindowId = (byte) inv.InventoryId;
-				packet.Slot = (short) e.Index;
+				packet.WindowId = (byte)inv.InventoryId;
+				packet.Slot = (short)e.Index;
+
 				packet.ClickedItem = new SlotData()
 				{
-					Count = (byte) e.Value.Count,
-					Nbt = e.Value.Nbt,
-					ItemID = e.Value.Id
+					Count = (byte)e.Value.Count, Nbt = e.Value.Nbt, ItemID = e.Value.Id
 				};
-				
+
 				inv.UnconfirmedWindowTransactions.TryAdd(actionNumber, (packet, e, true));
 				Client.SendPacket(packet);
-				
+
 				Log.Info($"Sent transaction with id: {actionNumber} Item: {e.Value.Id} Mode: {mode}");
 			}
 		}
@@ -1655,13 +1728,12 @@ namespace Alex.Worlds.Multiplayer
 		{
 			if (e.IsServerTransaction)
 				return;
-			
-			
 		}
 
 		private void HandleWindowConfirmationPacket(WindowConfirmationPacket packet)
 		{
 			InventoryBase inventory = null;
+
 			if (packet.WindowId == 0)
 			{
 				inventory = World.Player.Inventory;
@@ -1676,18 +1748,18 @@ namespace Alex.Worlds.Multiplayer
 
 			if (!packet.Accepted)
 			{
-			//	Log.Warn($"Inventory / window transaction has been denied! (Action: {packet.ActionNumber})");
-				
+				//	Log.Warn($"Inventory / window transaction has been denied! (Action: {packet.ActionNumber})");
+
 				WindowConfirmationPacket response = WindowConfirmationPacket.CreateObject();
 				response.Accepted = false;
 				response.ActionNumber = packet.ActionNumber;
 				response.WindowId = packet.WindowId;
-				
+
 				Client.SendPacket(response);
 			}
 			else
 			{
-			//	Log.Info($"Transaction got accepted! (Action: {packet.ActionNumber})");
+				//	Log.Info($"Transaction got accepted! (Action: {packet.ActionNumber})");
 			}
 
 			if (inventory == null)
@@ -1700,13 +1772,12 @@ namespace Alex.Worlds.Multiplayer
 				if (!packet.Accepted)
 				{
 					//if (transaction.isCursorTransaction)
-					{
-						
-					}
+					{ }
+
 					//else
 					{
-						inventory.SetSlot(transaction.packet.Slot,
-							GetItemFromSlotData(transaction.packet.ClickedItem), true);
+						inventory.SetSlot(
+							transaction.packet.Slot, GetItemFromSlotData(transaction.packet.ClickedItem), true);
 					}
 				}
 			}
@@ -1716,20 +1787,25 @@ namespace Alex.Worlds.Multiplayer
 		{
 			World.InventoryManager.Close(packet.WindowId);
 		}
-		
+
 		private void HandleOpenWindowPacket(OpenWindowPacket packet)
 		{
 			GuiInventoryBase inventoryBase = null;
+
 			switch (packet.WindowType)
 			{
 				//Chest
 				case 2:
-					inventoryBase = World.InventoryManager.Show(World.Player.Inventory, packet.WindowId, ContainerType.Chest);
+					inventoryBase = World.InventoryManager.Show(
+						World.Player.Inventory, packet.WindowId, ContainerType.Chest);
+
 					break;
-				
+
 				//Large Chest:
 				case 5:
-					inventoryBase = World.InventoryManager.Show(World.Player.Inventory, packet.WindowId, ContainerType.Chest);
+					inventoryBase = World.InventoryManager.Show(
+						World.Player.Inventory, packet.WindowId, ContainerType.Chest);
+
 					break;
 			}
 
@@ -1738,11 +1814,12 @@ namespace Alex.Worlds.Multiplayer
 
 			inventoryBase.Inventory.CursorChanged += InventoryOnCursorChanged;
 			inventoryBase.Inventory.SlotChanged += InventoryOnSlotChanged;
+
 			inventoryBase.OnContainerClose += (sender, args) =>
 			{
 				inventoryBase.Inventory.CursorChanged -= InventoryOnCursorChanged;
 				inventoryBase.Inventory.SlotChanged -= InventoryOnSlotChanged;
-				ClosedContainer((byte) inventoryBase.Inventory.InventoryId);
+				ClosedContainer((byte)inventoryBase.Inventory.InventoryId);
 			};
 		}
 
@@ -1752,7 +1829,7 @@ namespace Alex.Worlds.Multiplayer
 			packet.WindowId = containerId;
 			Client.SendPacket(packet);
 		}
-		
+
 		private void HandleAnimationPacket(EntityAnimationPacket packet)
 		{
 			if (World.TryGetEntity(packet.EntityId, out Entity entity))
@@ -1761,10 +1838,12 @@ namespace Alex.Worlds.Multiplayer
 				{
 					case EntityAnimationPacket.Animations.SwingMainArm:
 						entity.SwingArm(false, false);
+
 						break;
 
 					case EntityAnimationPacket.Animations.TakeDamage:
 						entity.EntityHurt();
+
 						break;
 
 					case EntityAnimationPacket.Animations.LeaveBed:
@@ -1772,6 +1851,7 @@ namespace Alex.Worlds.Multiplayer
 
 					case EntityAnimationPacket.Animations.SwingOffhand:
 						entity.SwingArm(false, true);
+
 						break;
 
 					case EntityAnimationPacket.Animations.CriticalEffect:
@@ -1796,11 +1876,12 @@ namespace Alex.Worlds.Multiplayer
 		{
 			TitleComponent.SetSubtitle(packet.Text);
 		}
+
 		private void HandleSetTitlePacket(SetTitleTextPacket packet)
 		{
 			TitleComponent.SetTitle(packet.Text);
 		}
-		
+
 		private void HandleTitlePacket(SetTitleTimesPacket packet)
 		{
 			/*switch (packet.Action)
@@ -1815,39 +1896,47 @@ namespace Alex.Worlds.Multiplayer
 					
 					break;
 				case SetTitleTimesPacket.ActionEnum.SetTimesAndDisplay:*/
-					TitleComponent.SetTimes(packet.FadeIn, packet.Stay, packet.FadeOut);
-					TitleComponent.Show();
-				/*	break;
-				case SetTitleTimesPacket.ActionEnum.Hide:
-					TitleComponent.Hide();
-					break;
-				case SetTitleTimesPacket.ActionEnum.Reset:
-					TitleComponent.Reset();
-					break;
-				default:
-					Log.Warn($"Unknown Title Action: {(int) packet.Action}");
-					break;
-			}*/
+			TitleComponent.SetTimes(packet.FadeIn, packet.Stay, packet.FadeOut);
+			TitleComponent.Show();
+			/*	break;
+			case SetTitleTimesPacket.ActionEnum.Hide:
+				TitleComponent.Hide();
+				break;
+			case SetTitleTimesPacket.ActionEnum.Reset:
+				TitleComponent.Reset();
+				break;
+			default:
+				Log.Warn($"Unknown Title Action: {(int) packet.Action}");
+				break;
+		}*/
 		}
-		
+
 		private void HandleDimension(NbtCompound dim)
 		{
 			//Log.Info(dim.ToString());
-			
+
 			Dimension dimension = Dimension.Overworld;
+
 			switch (dim["effects"]?.StringValue)
 			{
 				case "minecraft:the_nether":
 					dimension = Dimension.Nether;
+
 					break;
+
 				case "minecraft:overworld":
 					dimension = Dimension.Overworld;
+
 					break;
+
 				case "minecraft:the_end":
 					dimension = Dimension.TheEnd;
+
 					break;
+
 				default:
 					Log.Warn($"Unknown dimension: {dim}");
+
 					break;
 			}
 
@@ -1872,18 +1961,17 @@ namespace Alex.Worlds.Multiplayer
 
 			if (hasSkyLight != null && hasSkyLight.HasValue)
 			{
-				if (hasSkyLight.ByteValue == 1)
-				{
-					
-				}
+				if (hasSkyLight.ByteValue == 1) { }
 			}
 
 			int minY = 0;
 			int worldHeight = 256;
+
 			if (dim.TryGet("min_y", out NbtInt minYTag))
 			{
 				minY = minYTag.Value;
 			}
+
 			if (dim.TryGet("height", out NbtInt heightTag))
 			{
 				worldHeight = heightTag.Value;
@@ -1891,15 +1979,15 @@ namespace Alex.Worlds.Multiplayer
 
 			WorldSettings = new WorldSettings(worldHeight, minY);
 		}
-		
+
 		private void HandleRespawnPacket(RespawnPacket packet)
 		{
 			Log.Info("Respawn!");
 			HandleDimension(packet.Dimension);
-			
+
 			World.Player.UpdateGamemode(packet.Gamemode);
 			World.ClearChunksAndEntities();
-			
+
 			SendPlayerPositionAndLook(World.Player.KnownPosition, SendPositionReason.Respawn);
 		}
 
@@ -1907,22 +1995,23 @@ namespace Alex.Worlds.Multiplayer
 		{
 			if (data == null)
 				return new ItemAir();
-			
+
 			if (ItemFactory.ResolveItemName(data.ItemID, out var location))
 			{
 				if (ItemFactory.TryGetItem(location, out Item item))
 				{
 					//item = item.Clone();
-					
-					item.Id = (short) data.ItemID;
+
+					item.Id = (short)data.ItemID;
 					item.Count = data.Count;
 					item.Nbt = data.Nbt;
 
 					return item;
 				}
-				
+
 				Log.Info($"Resolved itemId but failed to get item: {data.ItemID} -> {location}");
 			}
+
 			Log.Info($"Failed to resolve item name: {data.ItemID}");
 
 			return new ItemAir();
@@ -1938,29 +2027,41 @@ namespace Alex.Worlds.Multiplayer
 
 			if (World.TryGetEntity(packet.EntityId, out Entity entity))
 			{
-				foreach(var slot in packet.Slots)
+				foreach (var slot in packet.Slots)
 				{
-					Item item = GetItemFromSlotData(slot.Data).Clone();;
+					Item item = GetItemFromSlotData(slot.Data).Clone();
+					;
 
 					switch (slot.Slot)
 					{
 						case EntityEquipmentPacket.SlotEnum.MainHand:
 							entity.Inventory.MainHand = item;
+
 							break;
+
 						case EntityEquipmentPacket.SlotEnum.OffHand:
 							entity.Inventory.OffHand = item;
+
 							break;
+
 						case EntityEquipmentPacket.SlotEnum.Boots:
 							entity.Inventory.Boots = item;
+
 							break;
+
 						case EntityEquipmentPacket.SlotEnum.Leggings:
 							entity.Inventory.Leggings = item;
+
 							break;
+
 						case EntityEquipmentPacket.SlotEnum.Chestplate:
 							entity.Inventory.Chestplate = item;
+
 							break;
+
 						case EntityEquipmentPacket.SlotEnum.Helmet:
 							entity.Inventory.Helmet = item;
+
 							break;
 					}
 				}
@@ -1973,6 +2074,7 @@ namespace Alex.Worlds.Multiplayer
 			if (World.TryGetEntity(packet.EntityId, out var entity))
 			{
 				packet.FinishReading();
+
 				foreach (var entry in packet.Entries)
 				{
 					entity.HandleJavaMetadata(entry);
@@ -2006,27 +2108,41 @@ namespace Alex.Worlds.Multiplayer
 			{
 				case GameStateReason.InvalidBed:
 					break;
+
 				case GameStateReason.EndRain:
 					World?.SetRain(false, packet.Value);
+
 					break;
+
 				case GameStateReason.StartRain:
 					World?.SetRain(true, packet.Value);
+
 					break;
+
 				case GameStateReason.ChangeGamemode:
-					World?.Player?.UpdateGamemode((GameMode) packet.Value);
+					World?.Player?.UpdateGamemode((GameMode)packet.Value);
+
 					break;
+
 				case GameStateReason.ExitEnd:
 					break;
+
 				case GameStateReason.DemoMessage:
 					break;
+
 				case GameStateReason.ArrowHitPlayer:
 					break;
+
 				case GameStateReason.RainLevelChange:
 					World?.SetRain(World.Raining, packet.Value);
+
 					break;
+
 				case GameStateReason.ThunderLevelChange:
 					World?.SetThunder(World.Thundering, packet.Value);
+
 					break;
+
 				case GameStateReason.PlayerElderGuardianMob:
 					break;
 			}
@@ -2036,7 +2152,7 @@ namespace Alex.Worlds.Multiplayer
 		{
 			CommandProvider.HandleTabCompleteClientBound(tabComplete);
 			//TODO: Re-implement tab complete
-		//	Log.Info($"!!! TODO: Re-implement tab complete.");
+			//	Log.Info($"!!! TODO: Re-implement tab complete.");
 			//ChatReceiver?.ReceivedTabComplete(tabComplete.TransactionId, tabComplete.Start, tabComplete.Length, tabComplete.Matches);
 		}
 
@@ -2047,22 +2163,18 @@ namespace Alex.Worlds.Multiplayer
 			{
 				var pos = new BlockCoordinates(blockUpdate.X, blockUpdate.Y, blockUpdate.Z);
 				var state = BlockFactory.GetBlockState(blockUpdate.BlockId);
-				
-			//	Log.Info($"Received blockupdates ({packet.Records.Length})! Coord={pos} State={state.FormattedString}");
-				World?.SetBlockState(
-					pos, 
-					state,
-					BlockUpdatePriority.High);
+
+				//	Log.Info($"Received blockupdates ({packet.Records.Length})! Coord={pos} State={state.FormattedString}");
+				World?.SetBlockState(pos, state, BlockUpdatePriority.High);
 			}
 		}
 
 		private void HandleBlockChangePacket(BlockChangePacket packet)
 		{
 			var state = BlockFactory.GetBlockState(packet.PalleteId);
-		//	Log.Info($"Received blockupdate. Pos={packet.Location}, State={state.FormattedString}");
+			//	Log.Info($"Received blockupdate. Pos={packet.Location}, State={state.FormattedString}");
 			//throw new NotImplementedException();
-			World?.SetBlockState(packet.Location, state, 
-				BlockUpdatePriority.High);
+			World?.SetBlockState(packet.Location, state, BlockUpdatePriority.High);
 		}
 
 		private void HandleHeldItemChangePacket(HeldItemChangePacket packet)
@@ -2073,6 +2185,7 @@ namespace Alex.Worlds.Multiplayer
 		private void HandleSetSlot(SetSlot packet)
 		{
 			InventoryBase inventory = null;
+
 			if (packet.WindowId == 0 || packet.WindowId == -2)
 			{
 				inventory = World.Player.Inventory;
@@ -2080,6 +2193,7 @@ namespace Alex.Worlds.Multiplayer
 			else if (packet.WindowId == -1)
 			{
 				var active = World.InventoryManager.ActiveWindow;
+
 				if (active != null)
 				{
 					inventory = active.Inventory;
@@ -2096,10 +2210,11 @@ namespace Alex.Worlds.Multiplayer
 			if (inventory == null) return;
 
 			inventory.StateId = packet.StateId;
+
 			if (packet.WindowId == -1 && packet.SlotId == -1) //Set cursor
 			{
 				inventory.SetCursor(GetItemFromSlotData(packet.Slot), true);
-			} 
+			}
 			else if (packet.SlotId < inventory.SlotCount)
 			{
 				inventory.SetSlot(packet.SlotId, GetItemFromSlotData(packet.Slot), true);
@@ -2110,6 +2225,7 @@ namespace Alex.Worlds.Multiplayer
 		private void HandleWindowItems(WindowItems packet)
 		{
 			InventoryBase inventory = null;
+
 			if (packet.WindowId == 0)
 			{
 				inventory = World.Player.Inventory;
@@ -2125,6 +2241,7 @@ namespace Alex.Worlds.Multiplayer
 			if (inventory == null) return;
 
 			inventory.StateId = packet.StateId;
+
 			if (packet.Slots != null && packet.Slots.Length > 0)
 			{
 				for (int i = 0; i < packet.Slots.Length; i++)
@@ -2132,6 +2249,7 @@ namespace Alex.Worlds.Multiplayer
 					if (i >= inventory.SlotCount)
 					{
 						Log.Warn($"Slot index {i} is out of bounds (Max: {inventory.SlotCount})");
+
 						continue;
 					}
 
@@ -2141,10 +2259,7 @@ namespace Alex.Worlds.Multiplayer
 					{
 						inventory.SetSlot(i, item, true);
 					}
-					else
-					{
-						
-					}
+					else { }
 
 					//inventory[i] = GetItemFromSlotData(packet.Slots[i]);
 				}
@@ -2153,7 +2268,7 @@ namespace Alex.Worlds.Multiplayer
 
 		private void HandleDestroyEntitiesPacket(DestroyEntitiesPacket packet)
 		{
-			foreach(var id in packet.EntityIds)
+			foreach (var id in packet.EntityIds)
 			{
 				/*var p = _players.ToArray().FirstOrDefault(x => x.Value.EntityId == id);
 				if (p.Key != null)
@@ -2169,12 +2284,11 @@ namespace Alex.Worlds.Multiplayer
 		{
 			if (_players.TryGetValue(packet.Uuid, out var entry))
 			{
-				RemotePlayer entity = new RemotePlayer(
-					World, "geometry.humanoid.custom");
-				
-				entity.UpdateGamemode((GameMode) entry.Gamemode);
+				RemotePlayer entity = new RemotePlayer(World, "geometry.humanoid.custom");
+
+				entity.UpdateGamemode((GameMode)entry.Gamemode);
 				entity.UUID = packet.Uuid;
-					
+
 				if (entry.HasDisplayName)
 				{
 					if (ChatObject.TryParse(entry.DisplayName, out string chat))
@@ -2194,7 +2308,10 @@ namespace Alex.Worlds.Multiplayer
 				entity.HideNameTag = false;
 				entity.IsAlwaysShowName = true;
 				float yaw = MathUtils.AngleToNotchianDegree(packet.Yaw);
-				entity.KnownPosition = new PlayerLocation(packet.X, packet.Y, packet.Z, yaw, yaw, -MathUtils.AngleToNotchianDegree(packet.Pitch));
+
+				entity.KnownPosition = new PlayerLocation(
+					packet.X, packet.Y, packet.Z, yaw, yaw, -MathUtils.AngleToNotchianDegree(packet.Pitch));
+
 				entity.EntityId = packet.EntityId;
 
 				if (World.SpawnEntity(entity))
@@ -2214,10 +2331,13 @@ namespace Alex.Worlds.Multiplayer
 			}
 		}
 
-		private ConcurrentDictionary<MiNET.Utils.UUID, PlayerListItemPacket.AddPlayerEntry> _players = new ConcurrentDictionary<MiNET.Utils.UUID, PlayerListItemPacket.AddPlayerEntry>();
+		private ConcurrentDictionary<MiNET.Utils.UUID, PlayerListItemPacket.AddPlayerEntry> _players =
+			new ConcurrentDictionary<MiNET.Utils.UUID, PlayerListItemPacket.AddPlayerEntry>();
+
 		private void HandlePlayerListItemPacket(PlayerListItemPacket packet)
 		{
 			List<Action> actions = new List<Action>();
+
 			if (packet.Action == PlayerListAction.AddPlayer)
 			{
 				foreach (var entry in packet.AddPlayerEntries)
@@ -2227,7 +2347,7 @@ namespace Alex.Worlds.Multiplayer
 					if (_players.TryAdd(uuid, entry))
 					{
 						World.AddPlayerListItem(
-							new PlayerListItem(uuid, entry.Name, (GameMode) entry.Gamemode, entry.Ping));
+							new PlayerListItem(uuid, entry.Name, (GameMode)entry.Gamemode, entry.Ping));
 					}
 				}
 			}
@@ -2236,7 +2356,7 @@ namespace Alex.Worlds.Multiplayer
 				foreach (var entry in packet.UpdateLatencyEntries)
 				{
 					var uuid = entry.UUID;
-					
+
 					World?.UpdatePlayerLatency(uuid, entry.Ping);
 				}
 			}
@@ -2263,7 +2383,7 @@ namespace Alex.Worlds.Multiplayer
 						{
 							//entity.NameTag = entity.Name;
 						}
-						
+
 						World?.UpdatePlayerListDisplayName(uuid, entity.NameTag);
 					}
 				}
@@ -2285,6 +2405,7 @@ namespace Alex.Worlds.Multiplayer
 			if (string.IsNullOrWhiteSpace(skinJson))
 			{
 				Log.Warn($"Invalid java skin, skinJson was null or whitespace.");
+
 				return;
 			}
 
@@ -2296,7 +2417,6 @@ namespace Alex.Worlds.Multiplayer
 						{
 							if (texture != null)
 							{
-
 								var geometryName = slim ? "geometry.humanoid.customSlim" : "geometry.humanoid.custom";
 
 								if (ModelFactory.TryGetModel(geometryName, out var entityModel))
@@ -2305,10 +2425,8 @@ namespace Alex.Worlds.Multiplayer
 									skin.UpdateTexture(texture);
 									entity.Skin = skin;
 								}
-								else
-								{
-									
-								}
+								else { }
+
 								texture.Dispose();
 								//entity.UpdateSkin(skin);
 							}
@@ -2323,7 +2441,7 @@ namespace Alex.Worlds.Multiplayer
 
 			//if (World.TryGetEntity(packet.EntityId, out var entity))
 			{
-			//	var     currentPosition = entity.KnownPosition;
+				//	var     currentPosition = entity.KnownPosition;
 				//currentPosition.X 
 				var yaw = MathUtils.AngleToNotchianDegree(packet.Yaw);
 
@@ -2332,7 +2450,8 @@ namespace Alex.Worlds.Multiplayer
 					new PlayerLocation(
 						MathUtils.FromFixedPoint(packet.DeltaX), MathUtils.FromFixedPoint(packet.DeltaY),
 						MathUtils.FromFixedPoint(packet.DeltaZ), -yaw, -yaw,
-						-MathUtils.AngleToNotchianDegree(packet.Pitch)) {OnGround = packet.OnGround}, true, true, true);
+						-MathUtils.AngleToNotchianDegree(packet.Pitch)) { OnGround = packet.OnGround }, true, true,
+					true);
 			}
 		}
 
@@ -2340,17 +2459,19 @@ namespace Alex.Worlds.Multiplayer
 		{
 			if (packet.EntityId == World.Player.EntityId)
 				return;
-			
-			World.UpdateEntityPosition(packet.EntityId, new PlayerLocation(MathUtils.FromFixedPoint(packet.DeltaX), MathUtils.FromFixedPoint(packet.DeltaY), MathUtils.FromFixedPoint(packet.DeltaZ))
-			{
-				OnGround = packet.OnGround
-			}, true);
+
+			World.UpdateEntityPosition(
+				packet.EntityId,
+				new PlayerLocation(
+					MathUtils.FromFixedPoint(packet.DeltaX), MathUtils.FromFixedPoint(packet.DeltaY),
+					MathUtils.FromFixedPoint(packet.DeltaZ)) { OnGround = packet.OnGround }, true);
 		}
 
 		private void HandleFacePlayer(FacePlayerPacket packet)
 		{
-			bool    isEntity       = packet.IsEntity;
+			bool isEntity = packet.IsEntity;
 			Vector3 targetPosition = packet.Target;
+
 			if (isEntity)
 			{
 				if (World.TryGetEntity(packet.EntityId, out var entity))
@@ -2371,7 +2492,7 @@ namespace Alex.Worlds.Multiplayer
 		{
 			if (packet.EntityId == World.Player.EntityId)
 				return;
-			
+
 			if (World.TryGetEntity(packet.EntityId, out var entity))
 			{
 				entity.KnownPosition.HeadYaw = -MathUtils.AngleToNotchianDegree(packet.HeadYaw);
@@ -2383,31 +2504,37 @@ namespace Alex.Worlds.Multiplayer
 		{
 			if (packet.EntityId == World.Player.EntityId)
 				return;
-			
-			World.UpdateEntityLook(packet.EntityId, -MathUtils.AngleToNotchianDegree(packet.Yaw), -MathUtils.AngleToNotchianDegree(packet.Pitch), packet.OnGround);
+
+			World.UpdateEntityLook(
+				packet.EntityId, -MathUtils.AngleToNotchianDegree(packet.Yaw),
+				-MathUtils.AngleToNotchianDegree(packet.Pitch), packet.OnGround);
 		}
 
 		private void HandleEntityTeleport(EntityTeleport packet)
 		{
 			if (packet.EntityID == World.Player.EntityId)
 				return;
-			
+
 			float yaw = MathUtils.AngleToNotchianDegree(packet.Yaw);
-			World.UpdateEntityPosition(packet.EntityID, new PlayerLocation(packet.X, packet.Y, packet.Z, -yaw, -yaw, -MathUtils.AngleToNotchianDegree(packet.Pitch))
-			{
-				OnGround = packet.OnGround
-			}, updateLook: true, updatePitch:true, relative:false, teleport:true);
+
+			World.UpdateEntityPosition(
+				packet.EntityID,
+				new PlayerLocation(
+					packet.X, packet.Y, packet.Z, -yaw, -yaw, -MathUtils.AngleToNotchianDegree(packet.Pitch))
+				{
+					OnGround = packet.OnGround
+				}, updateLook: true, updatePitch: true, relative: false, teleport: true);
 		}
-		
+
 		private Vector3 ModifyVelocity(Vector3 velocity)
 		{
 			return velocity / 8000f;
 		}
-		
+
 		private void HandleEntityVelocity(EntityVelocity packet)
 		{
 			Entity entity = null;
-			
+
 			if (packet.EntityId == World.Player.EntityId)
 			{
 				entity = World.Player;
@@ -2421,8 +2548,7 @@ namespace Alex.Worlds.Multiplayer
 
 			if (entity != null)
 			{
-				var velocity = ModifyVelocity(new Vector3(
-					packet.VelocityX, packet.VelocityY, packet.VelocityZ));
+				var velocity = ModifyVelocity(new Vector3(packet.VelocityX, packet.VelocityY, packet.VelocityZ));
 
 				//var old = entity.Velocity;
 
@@ -2442,7 +2568,7 @@ namespace Alex.Worlds.Multiplayer
 			{
 				return;
 			}
-			
+
 			foreach (var prop in packet.Properties.Values)
 			{
 				target.AddOrUpdateProperty(prop);
@@ -2453,9 +2579,9 @@ namespace Alex.Worlds.Multiplayer
 		{
 			var flags = packet.Flags;
 			var player = World.Player;
-			
+
 			//player.FlyingSpeed = packet.FlyingSpeed;
-			
+
 			//player.AddOrUpdateProperty();
 
 			//player.FlyingSpeed = packet.FlyingSpeed * 10f;
@@ -2476,7 +2602,6 @@ namespace Alex.Worlds.Multiplayer
 				player.IsFlying = false;
 				_flying = false;
 			}
-
 		}
 
 		private void HandleTimeUpdatePacket(TimeUpdatePacket packet)
@@ -2489,19 +2614,25 @@ namespace Alex.Worlds.Multiplayer
 			if (ChatObject.TryParse(packet.Message, out string chat))
 			{
 				MessageType msgType = MessageType.Chat;
+
 				switch (packet.Position)
 				{
 					case 0:
 						msgType = MessageType.Chat;
+
 						break;
+
 					case 1:
 						msgType = MessageType.System;
+
 						break;
+
 					case 2:
 						msgType = MessageType.Popup;
+
 						break;
 				}
-				
+
 				ChatRecipient?.AddMessage(chat, msgType);
 
 				//EventDispatcher.DispatchEvent(new ChatMessageReceivedEvent(chat, msgType));
@@ -2524,17 +2655,17 @@ namespace Alex.Worlds.Multiplayer
 
 			if (packet.ViewDistance != World.ChunkManager.RenderDistance)
 			{
-			//	Log.Warn()
+				//	Log.Warn()
 			}
 			//World.ChunkManager.RenderDistance = Math.Min(World.ChunkManager.RenderDistance, packet.ViewDistance);
-			
+
 			SendSettings();
-			
+
 			//World.ChunkManager.RenderDistance = packet.ViewDistance / 16;
-			
+
 			World.Player.EntityId = packet.EntityId;
-			World.Player.UpdateGamemode((GameMode) packet.Gamemode);
-			
+			World.Player.UpdateGamemode((GameMode)packet.Gamemode);
+
 			HandleDimensionCodec(packet.DimensionCodec);
 			HandleDimension(packet.Dimension);
 		}
@@ -2542,12 +2673,14 @@ namespace Alex.Worlds.Multiplayer
 		private void HandleDimensionCodec(NbtCompound compound)
 		{
 			int registered = 0;
+
 			if (compound.TryGet("minecraft:worldgen/biome", out NbtCompound biomeCompound)
 			    && biomeCompound.TryGet("value", out NbtList biomeList))
 			{
 				foreach (var tag in biomeList)
 				{
-					if (tag is NbtCompound registryEntry && registryEntry.TryGet("element", out NbtCompound biomeElement))
+					if (tag is NbtCompound registryEntry
+					    && registryEntry.TryGet("element", out NbtCompound biomeElement))
 					{
 						var biomeName = registryEntry["name"].StringValue;
 						var biomeId = (uint)registryEntry["id"].IntValue;
@@ -2569,36 +2702,33 @@ namespace Alex.Worlds.Multiplayer
 		{
 			if (!compound.TryGet("effects", out NbtCompound effects))
 				return null;
-			
+
 			Biome biome = new Biome();
 			biome.Name = name;
 			biome.Id = id;
 
-			if (compound.TryGet("precipitation", out NbtString precipitationTag))
-			{
-				
-			}
+			if (compound.TryGet("precipitation", out NbtString precipitationTag)) { }
 
 			if (compound.TryGet("temperature", out NbtFloat temperatureTag))
 				biome.Temperature = temperatureTag.Value;
-			
+
 			if (compound.TryGet("downfall", out NbtFloat downfallTag))
 				biome.Downfall = downfallTag.Value;
-			
+
 			if (effects.TryGet("sky_color", out NbtInt colorTag))
 				biome.SkyColor = ColorHelper.Unpack(colorTag.Value);
-				
+
 			if (effects.TryGet("water_fog_color", out colorTag))
-				biome.WaterFogColor = ColorHelper.Unpack(colorTag.Value);//new Color(colorTag.Value);
-				
+				biome.WaterFogColor = ColorHelper.Unpack(colorTag.Value); //new Color(colorTag.Value);
+
 			if (effects.TryGet("fog_color", out colorTag))
-				biome.FogColor = ColorHelper.Unpack(colorTag.Value);//new Color(colorTag.Value);
-				
+				biome.FogColor = ColorHelper.Unpack(colorTag.Value); //new Color(colorTag.Value);
+
 			if (effects.TryGet("grass_color", out colorTag))
-				biome.GrassColor = ColorHelper.Unpack(colorTag.Value);//new Color(colorTag.Value);
-				
+				biome.GrassColor = ColorHelper.Unpack(colorTag.Value); //new Color(colorTag.Value);
+
 			if (effects.TryGet("foliage_color", out colorTag))
-				biome.FoliageColor = ColorHelper.Unpack(colorTag.Value);//new Color(colorTag.Value);
+				biome.FoliageColor = ColorHelper.Unpack(colorTag.Value); //new Color(colorTag.Value);
 
 			return biome;
 		}
@@ -2632,109 +2762,112 @@ namespace Alex.Worlds.Multiplayer
 		}
 
 		private void HandleChunkData(ChunkDataPacket packet)
-        {
-	        packet.AddReferences(1);
-	        
-	        _chunksReceived++;
-	        _chunkQueue.Post(packet);
-        }
+		{
+			packet.AddReferences(1);
 
-        private void HandleBlockEntityData(BlockEntityDataPacket packet)
-        {
-	        var compound = packet.Compound;
-	        var location = packet.Location;
-	        var type = packet.Type;
-	       // var action = packet.Action;
-	        packet.AddReferences(1);
-	        
-	        World.BackgroundWorker.Enqueue(
-		        () =>
-		        {
-			        try
-			        {
-				        var world = World;
+			_chunksReceived++;
+			_chunkQueue.Post(packet);
+		}
 
-				        if (world?.EntityManager == null)
-					        return;
+		private void HandleBlockEntityData(BlockEntityDataPacket packet)
+		{
+			var compound = packet.Compound;
+			var location = packet.Location;
+			var type = packet.Type;
+			// var action = packet.Action;
+			packet.AddReferences(1);
 
-				        try
-				        {
-					        if (compound == null)
-					        {
-						        world.EntityManager.RemoveBlockEntity(location);
-						        return;
-					        }
+			World.BackgroundWorker.Enqueue(
+				() =>
+				{
+					try
+					{
+						var world = World;
 
-					        var registry = Alex.Resources.Registries.BlockEntities;
+						if (world?.EntityManager == null)
+							return;
 
-					        if (registry != null)
-					        {
-						        var match = registry.Entries.FirstOrDefault(x => x.Value.ProtocolId == type);
+						try
+						{
+							if (compound == null)
+							{
+								world.EntityManager.RemoveBlockEntity(location);
 
-						        if (match.Key != null)
-						        {
-							        compound["id"] = new NbtString("id", match.Key);
-						        }
-					        }
-					        
-					        BlockEntityFactory.ReadFrom(compound, World, location);
-				        }
-				        catch (Exception ex)
-				        {
-					        Log.Warn(ex, $"Could not add block entity: {compound}");
-				        }
-			        }
-			        finally
-			        {
-				        packet.PutPool();
-			        }
-		        });
-        }
+								return;
+							}
 
-        private void HandleKeepAlivePacket(KeepAlivePacket packet)
-        {
-	      //  Log.Info($"Keep alive: {packet.KeepAliveid}");
-	        KeepAliveResponsePacket response =   KeepAliveResponsePacket.CreateObject();
+							var registry = Alex.Resources.Registries.BlockEntities;
+
+							if (registry != null)
+							{
+								var match = registry.Entries.FirstOrDefault(x => x.Value.ProtocolId == type);
+
+								if (match.Key != null)
+								{
+									compound["id"] = new NbtString("id", match.Key);
+								}
+							}
+
+							BlockEntityFactory.ReadFrom(compound, World, location);
+						}
+						catch (Exception ex)
+						{
+							Log.Warn(ex, $"Could not add block entity: {compound}");
+						}
+					}
+					finally
+					{
+						packet.PutPool();
+					}
+				});
+		}
+
+		private void HandleKeepAlivePacket(KeepAlivePacket packet)
+		{
+			//  Log.Info($"Keep alive: {packet.KeepAliveid}");
+			KeepAliveResponsePacket response = KeepAliveResponsePacket.CreateObject();
 			response.KeepAliveid = packet.KeepAliveid;
-				//response.PacketId = 0x0F;
+			//response.PacketId = 0x0F;
 			//response.PacketId = 0x0E;
 
 			SendPacket(response);
 		}
 
-        public bool ReadyToSpawn { get; set; } = false;
-        private bool HasSpawnPosition { get; set; } = false;
-        private void HandlePlayerPositionAndLookPacket(PlayerPositionAndLookPacket packet)
+		public bool ReadyToSpawn { get; set; } = false;
+		private bool HasSpawnPosition { get; set; } = false;
+
+		private void HandlePlayerPositionAndLookPacket(PlayerPositionAndLookPacket packet)
 		{
-		//	Respawning = false;
+			//	Respawning = false;
 			var x = (float)packet.X;
 			var y = (float)packet.Y;
 			var z = (float)packet.Z;
 
 			var yaw = -packet.Yaw;
 			var pitch = -packet.Pitch;
-			
+
 			var flags = packet.Flags;
+
 			if ((flags & 0x01) != 0)
 			{
 				x = World.Player.KnownPosition.X + x;
 			}
-			
+
 			if ((flags & 0x02) != 0)
 			{
 				y = World.Player.KnownPosition.Y + y;
 			}
-			
+
 			if ((flags & 0x04) != 0)
 			{
 				z = World.Player.KnownPosition.Z + z;
 			}
-			
+
 			if ((flags & 0x08) != 0)
 			{
 				pitch = World.Player.KnownPosition.Pitch + pitch;
 			}
-			
+
 			if ((flags & 0x10) != 0)
 			{
 				yaw = World.Player.KnownPosition.Yaw + yaw;
@@ -2759,8 +2892,8 @@ namespace Alex.Worlds.Multiplayer
 
 				SendPlayerPositionAndLook(World.Player.KnownPosition, SendPositionReason.Other);
 			}
-			
-			
+
+
 			if (!ReadyToSpawn)
 			{
 				Log.Info($"Ready to spawn!");
@@ -2771,10 +2904,10 @@ namespace Alex.Worlds.Multiplayer
 			//	new PlayerLocation(packet.X, packet.Y, packet.Z, packet.Yaw, packet.Yaw, pitch: packet.Pitch));
 		}
 
-        Task IPacketHandler.HandleHandshake(Packet packet)
-        {
-	        return Task.CompletedTask;
-        }
+		Task IPacketHandler.HandleHandshake(Packet packet)
+		{
+			return Task.CompletedTask;
+		}
 
 		Task IPacketHandler.HandleStatus(Packet packet)
 		{
@@ -2833,19 +2966,19 @@ namespace Alex.Worlds.Multiplayer
 			//	() =>
 			//	{
 
-					var mob = SpawnMob(entityId, uuid, entityType, pos, velocity);
+			var mob = SpawnMob(entityId, uuid, entityType, pos, velocity);
 
-					if (mob is EntityFallingBlock efb)
-					{
-						//32
-						var blockId = packet.Data << 12 >> 12;
-						var metaData = packet.Data >> 12;
+			if (mob is EntityFallingBlock efb)
+			{
+				//32
+				var blockId = packet.Data << 12 >> 12;
+				var metaData = packet.Data >> 12;
 
-						if (ItemFactory.TryGetItem((short)blockId, (short)metaData, out var item))
-						{
-							efb.SetItem(item);
-						}
-					}
+				if (ItemFactory.TryGetItem((short)blockId, (short)metaData, out var item))
+				{
+					efb.SetItem(item);
+				}
+			}
 			//	});
 		}
 
@@ -2859,20 +2992,19 @@ namespace Alex.Worlds.Multiplayer
 			//World.BackgroundWorker.Enqueue(
 			//	() =>
 			//	{
-					SpawnMob(
-						entityId, uuid, entityType, pos, velocity);
+			SpawnMob(entityId, uuid, entityType, pos, velocity);
 			//	});
-
 		}
 
 		private void HandleDisconnectPacket(DisconnectPacket packet)
 		{
 			World?.EntityManager?.ClearEntities();
-			
+
 			Log.Info($"Received disconnect: {packet.Message}");
+
 			if (ChatObject.TryParse(packet.Message, out string o))
 			{
-				ShowDisconnect(o, force:true, wasKicked: true);
+				ShowDisconnect(o, force: true, wasKicked: true);
 			}
 			else
 			{
@@ -2882,7 +3014,7 @@ namespace Alex.Worlds.Multiplayer
 			_disconnected = true;
 			Client?.Stop();
 		}
-		
+
 		private void HandleLoginSuccess(LoginSuccessPacket packet)
 		{
 			Log.Info($"Login success! Username: {packet.Username}");
@@ -2902,13 +3034,15 @@ namespace Alex.Worlds.Multiplayer
 			if (Profile == null)
 			{
 				Log.Warn("Invalid session, profile was null.");
+
 				return false;
 			}
-			
+
 			return await MojangApi.JoinServer(Profile, serverHash);
 		}
-		
+
 		private readonly byte[] _sharedSecret = new byte[16];
+
 		private void HandleEncryptionRequest(EncryptionRequestPacket packet)
 		{
 			FastRandom.Instance.NextBytes(_sharedSecret);
@@ -2916,7 +3050,7 @@ namespace Alex.Worlds.Multiplayer
 			var serverId = packet.ServerId;
 			var publicKey = packet.PublicKey;
 			var verificationToken = packet.VerifyToken;
-			
+
 			string serverHash;
 
 			using (MemoryStream ms = new MemoryStream())
@@ -2928,7 +3062,7 @@ namespace Alex.Worlds.Multiplayer
 
 				serverHash = JavaHexDigest(ms.ToArray());
 			}
-			
+
 			VerifySession(serverHash).ContinueWith(
 				x =>
 				{
@@ -2936,18 +3070,19 @@ namespace Alex.Worlds.Multiplayer
 					{
 						Log.Warn($"Invalid session detected!");
 						ShowDisconnect("disconnect.loginFailedInfo.invalidSession", true);
+
 						return;
 					}
-					
+
 					var cryptoProvider = RsaHelper.DecodePublicKey(publicKey);
 					var encrypted = cryptoProvider.Encrypt(_sharedSecret, RSAEncryptionPadding.Pkcs1);
 
 					EncryptionResponsePacket response = EncryptionResponsePacket.CreateObject();
 					response.SharedSecret = encrypted;
 					response.VerifyToken = cryptoProvider.Encrypt(verificationToken, RSAEncryptionPadding.Pkcs1);
-					
+
 					Client.InitEncryption(_sharedSecret);
-					
+
 					Client.SendPacket(response);
 				});
 		}
@@ -2959,7 +3094,7 @@ namespace Alex.Worlds.Multiplayer
 				HandshakePacket handshake = HandshakePacket.CreateObject();
 				handshake.NextState = ConnectionState.Login;
 				handshake.ServerAddress = Hostname;
-				handshake.ServerPort = (ushort) Endpoint.Port;
+				handshake.ServerPort = (ushort)Endpoint.Port;
 				handshake.ProtocolVersion = JavaProtocol.ProtocolVersion;
 				SendPacket(handshake);
 
@@ -2972,12 +3107,14 @@ namespace Alex.Worlds.Multiplayer
 			catch (SocketException ex)
 			{
 				Log.Warn(ex, "Error while connecting to server.");
+
 				return false;
 			}
 			catch (Exception ex)
 			{
 				Log.Warn(ex, "Error while connecting to server.");
 				ShowDisconnect(ex.Message);
+
 				return false;
 			}
 
@@ -2986,14 +3123,11 @@ namespace Alex.Worlds.Multiplayer
 
 		public sealed class JoinRequest
 		{
-			[JsonProperty("accessToken")]
-			public string AccessToken;
+			[JsonProperty("accessToken")] public string AccessToken;
 
-			[JsonProperty("selectedProfile")]
-			public string SelectedProfile;
+			[JsonProperty("selectedProfile")] public string SelectedProfile;
 
-			[JsonProperty("serverId")]
-			public string ServerId;
+			[JsonProperty("serverId")] public string ServerId;
 		}
 
 		private static string JavaHexDigest(byte[] input)
@@ -3001,8 +3135,9 @@ namespace Alex.Worlds.Multiplayer
 			var hash = new SHA1Managed().ComputeHash(input);
 			// Reverse the bytes since BigInteger uses little endian
 			Array.Reverse(hash);
-        
+
 			BigInteger b = new BigInteger(hash);
+
 			if (b < 0)
 			{
 				return "-" + (-b).ToString("x").TrimStart('0');
@@ -3014,13 +3149,14 @@ namespace Alex.Worlds.Multiplayer
 		}
 
 		private bool _disposed = false;
+
 		public override void Dispose()
 		{
 			if (_disposed)
 				return;
-			
+
 			Log.Info("WorldProvider disposing...");
-			
+
 			_disconnected = true;
 			//World?.Ticker?.UnregisterTicked(this);
 
@@ -3032,7 +3168,7 @@ namespace Alex.Worlds.Multiplayer
 			{
 				disposable?.Dispose();
 			}
-			
+
 			_disposables?.Clear();
 
 			Client?.Stop();

@@ -19,9 +19,13 @@ namespace Alex.MoLang.Parser.Expressions
 		/// <inheritdoc />
 		public override IMoValue Evaluate(MoScope scope, MoLangEnvironment environment)
 		{
-			if (Condition.Evaluate(scope, environment).Equals(DoubleValue.One)) {
-				return ThenExpr == null ? Condition.Evaluate(scope, environment) : ThenExpr.Evaluate(scope, environment);
-			} else if (ElseExpr != null) {
+			if (Condition.Evaluate(scope, environment).Equals(DoubleValue.One))
+			{
+				return ThenExpr == null ? Condition.Evaluate(scope, environment) :
+					ThenExpr.Evaluate(scope, environment);
+			}
+			else if (ElseExpr != null)
+			{
 				return ElseExpr.Evaluate(scope, environment);
 			}
 

@@ -13,7 +13,7 @@ namespace Alex.MoLang.Parser.Expressions.BinaryOp
 		{
 			var left = Left.Evaluate(scope, environment);
 			var right = Right.Evaluate(scope, environment);
-			
+
 			return new DoubleValue(!left.Equals(right));
 		}
 

@@ -10,7 +10,9 @@ namespace Alex.Blocks.Minecraft
 		{
 			Solid = true;
 			Transparent = false;
-			base.BlockMaterial = Material.Metal.Clone().WithMapColor(MapColor.Diamond).SetRequiredTool(ItemType.PickAxe, ItemMaterial.Stone);
+
+			base.BlockMaterial = Material.Metal.Clone().WithMapColor(MapColor.Diamond)
+			   .SetRequiredTool(ItemType.PickAxe, ItemMaterial.Stone);
 		}
 	}
 }

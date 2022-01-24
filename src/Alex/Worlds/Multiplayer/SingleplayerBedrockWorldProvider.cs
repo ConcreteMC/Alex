@@ -17,8 +17,10 @@ public class SinglePlayerClient : BedrockClient
 	private readonly SingleplayerBedrockWorldProvider _provider;
 
 	/// <inheritdoc />
-	public SinglePlayerClient(Alex alex, ServerConnectionDetails endpoint, PlayerProfile playerProfile, SingleplayerBedrockWorldProvider wp) :
-		base(alex, endpoint, playerProfile, wp)
+	public SinglePlayerClient(Alex alex,
+		ServerConnectionDetails endpoint,
+		PlayerProfile playerProfile,
+		SingleplayerBedrockWorldProvider wp) : base(alex, endpoint, playerProfile, wp)
 	{
 		_provider = wp;
 	}
@@ -43,17 +45,16 @@ public class SingleplayerBedrockWorldProvider : BedrockWorldProvider
 	private readonly MiNetServer _miNetServer;
 
 	private IDisposable _optionsBinding = null;
+
 	/// <inheritdoc />
-	public SingleplayerBedrockWorldProvider(Alex alex,
-		MiNetServer miNetServer,
-		PlayerProfile profile) : base(
+	public SingleplayerBedrockWorldProvider(Alex alex, MiNetServer miNetServer, PlayerProfile profile) : base(
 		alex, new ServerConnectionDetails(new IPEndPoint(IPAddress.Loopback, 19132)), profile)
 	{
 		_miNetServer = miNetServer;
 		_miNetServer.StartServer();
 		_miNetServer.PlayerFactory.PlayerCreated += PlayerFactoryOnPlayerCreated;
 		_miNetServer.PluginManager?.LoadCommands(new VanillaCommands());
-		
+
 		_optionsBinding = alex.Options.AlexOptions.VideoOptions.RenderDistance.Bind(RenderDistanceChanged);
 		SetRenderDistance(alex.Options.AlexOptions.VideoOptions.RenderDistance.Value);
 	}
@@ -82,7 +83,7 @@ public class SingleplayerBedrockWorldProvider : BedrockWorldProvider
 		{
 			level.ViewDistance = value;
 		}
-		
+
 		var p = _minetPlayer;
 
 		if (p != null)
@@ -91,19 +92,20 @@ public class SingleplayerBedrockWorldProvider : BedrockWorldProvider
 			p.SetChunkRadius(value);
 		}
 	}
-	
+
 	private void RenderDistanceChanged(int oldvalue, int newvalue)
 	{
 		SetRenderDistance(newvalue);
 	}
 
 	private Player _minetPlayer = null;
+
 	private void PlayerFactoryOnPlayerCreated(object? sender, PlayerEventArgs e)
 	{
 		_minetPlayer = e.Player;
 		e.Player.MaxViewDistance = _renderDistance;
 		e.Player.SetChunkRadius(_renderDistance);
-		
+
 		e.Player.ActionPermissions = ActionPermissions.Operator;
 		e.Player.CommandPermission = 4;
 		e.Player.PermissionLevel = PermissionLevel.Operator;

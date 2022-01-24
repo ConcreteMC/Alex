@@ -5,6 +5,7 @@ namespace Alex.Networking.Java.Packets.Login
 	public class SetCompressionPacket : Packet<SetCompressionPacket>
 	{
 		public int Threshold;
+
 		public SetCompressionPacket()
 		{
 			PacketId = 0x04;

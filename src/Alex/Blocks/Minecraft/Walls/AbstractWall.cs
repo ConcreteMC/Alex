@@ -15,7 +15,7 @@ namespace Alex.Blocks.Minecraft.Walls
 		{
 			Solid = true;
 			Transparent = true;
-			
+
 			IsFullCube = false;
 			RequiresUpdate = true;
 
@@ -31,7 +31,7 @@ namespace Alex.Blocks.Minecraft.Walls
 			state = Check(world, position, position + BlockCoordinates.West, state);
 
 			return state;
-			
+
 			//return base.BlockPlaced(world, state, position);
 		}
 
@@ -39,31 +39,35 @@ namespace Alex.Blocks.Minecraft.Walls
 		public override void BlockUpdate(World world, BlockCoordinates position, BlockCoordinates updatedBlock)
 		{
 			var state = Check(world, position, updatedBlock, BlockState);
+
 			if (state != BlockState)
 				world.SetBlockState(position, state);
-			
+
 			//base.BlockUpdate(world, position, updatedBlock);
 		}
 
-		private BlockState Check(IBlockAccess world, BlockCoordinates position, BlockCoordinates updatedBlock, BlockState current)
+		private BlockState Check(IBlockAccess world,
+			BlockCoordinates position,
+			BlockCoordinates updatedBlock,
+			BlockState current)
 		{
 			string checkAttach = "low";
 			var up = world.GetBlockState(position + BlockCoordinates.Up);
 
 			if (CanAttach(BlockFace.Up, up.Block))
 				checkAttach = "tall";
-			
+
 			var neighbor = world.GetBlockState(updatedBlock);
-			
+
 			var facePos = updatedBlock - position;
-			var fp      = new Vector3(facePos.X, facePos.Y, facePos.Z);
+			var fp = new Vector3(facePos.X, facePos.Y, facePos.Z);
 			fp.Normalize();
-			
-			var face       = new Vector3(fp.X, fp.Y, fp.Z).GetBlockFace();
+
+			var face = new Vector3(fp.X, fp.Y, fp.Z).GetBlockFace();
 			var faceString = face.ToString().ToLower();
-			
+
 			current.TryGetValue(faceString, out var currentValue);
-			
+
 			if (CanAttach(face, neighbor.Block))
 			{
 				if (currentValue != checkAttach)
@@ -72,7 +76,7 @@ namespace Alex.Blocks.Minecraft.Walls
 					//world.SetBlockState(position, state);
 				}
 			}
-			else 
+			else
 			{
 				if (currentValue != "none")
 				{
@@ -89,7 +93,7 @@ namespace Alex.Blocks.Minecraft.Walls
 		{
 			if (block is AbstractWall)
 				return true;
-			
+
 			return base.CanAttach(face, block);
 		}
 
@@ -97,16 +101,16 @@ namespace Alex.Blocks.Minecraft.Walls
 		/// <inheritdoc />
 		public override bool TryGetStateProperty(string prop, out IStateProperty stateProperty)
 		{
-		/*	switch (prop)
-			{
-				case "up":
-				case "north":
-				case "east":
-				case "south":
-				case "west":
-					stateProperty = new PropertyBool(prop, "true", "none");
-					return true;
-			}*/
+			/*	switch (prop)
+				{
+					case "up":
+					case "north":
+					case "east":
+					case "south":
+					case "west":
+						stateProperty = new PropertyBool(prop, "true", "none");
+						return true;
+				}*/
 			return base.TryGetStateProperty(prop, out stateProperty);
 		}
 	}

@@ -19,17 +19,20 @@ namespace Alex.Common.Utils
 	public static class TextureUtils
 	{
 		public delegate void TextureCreated(Texture2D texture);
-		
+
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(TextureUtils));
-		public static Thread         RenderThread        { get; set; }
+		public static Thread RenderThread { get; set; }
 		public static Action<Action> QueueOnRenderThread { get; set; }
-		
-		public static Texture2D BitmapToTexture2D<TImageFormat>(GraphicsDevice device, Image<TImageFormat> bmp, [CallerMemberName] string caller = "Image Converter")  where TImageFormat : unmanaged, IPixel<TImageFormat>
+
+		public static Texture2D BitmapToTexture2D<TImageFormat>(GraphicsDevice device,
+			Image<TImageFormat> bmp,
+			[CallerMemberName] string caller = "Image Converter") where TImageFormat : unmanaged, IPixel<TImageFormat>
 		{
 			return BitmapToTexture2D(caller, device, bmp, out _);
 		}
 
-		private static uint[] GetPixelData<TImageFormat>(this Image<TImageFormat> image) where TImageFormat : unmanaged, IPixel<TImageFormat>
+		private static uint[] GetPixelData<TImageFormat>(this Image<TImageFormat> image)
+			where TImageFormat : unmanaged, IPixel<TImageFormat>
 		{
 			uint[] colorData;
 
@@ -38,6 +41,7 @@ namespace Alex.Common.Utils
 				colorData = new uint[pixelSpan.Length];
 
 				Rgba32 dest = new Rgba32();
+
 				for (int i = 0; i < pixelSpan.Length; i++)
 				{
 					pixelSpan[i].ToRgba32(ref dest);
@@ -51,21 +55,22 @@ namespace Alex.Common.Utils
 
 			return colorData;
 		}
-		
-		public static void BitmapToTexture2DAsync<TImageFormat>(object owner, GraphicsDevice device, Image<TImageFormat> image, TextureCreated onTextureCreated) where TImageFormat : unmanaged, IPixel<TImageFormat>
+
+		public static void BitmapToTexture2DAsync<TImageFormat>(object owner,
+			GraphicsDevice device,
+			Image<TImageFormat> image,
+			TextureCreated onTextureCreated) where TImageFormat : unmanaged, IPixel<TImageFormat>
 		{
 			if (image == null)
 				return;
-			
+
 			Texture2D Execute()
 			{
-				var r = new Texture2D(
-					device, image.Width,
-					image.Height);
+				var r = new Texture2D(device, image.Width, image.Height);
 
 				r.SetData(image.GetPixelData());
 				r.Tag = owner;
-				
+
 				return r;
 			}
 
@@ -84,11 +89,13 @@ namespace Alex.Common.Utils
 					});
 			}
 		}
-		
-		public static Texture2D BitmapToTexture2D<TImageFormat>(object owner, GraphicsDevice device, Image<TImageFormat> bmp) where TImageFormat : unmanaged, IPixel<TImageFormat>
-        {
-	        return BitmapToTexture2D(owner, device, bmp, out _);
-        }
+
+		public static Texture2D BitmapToTexture2D<TImageFormat>(object owner,
+			GraphicsDevice device,
+			Image<TImageFormat> bmp) where TImageFormat : unmanaged, IPixel<TImageFormat>
+		{
+			return BitmapToTexture2D(owner, device, bmp, out _);
+		}
 
 		public static Texture2D BitmapToTexture2D<TImageFormat>(object owner,
 			GraphicsDevice device,
@@ -99,13 +106,11 @@ namespace Alex.Common.Utils
 
 			Texture2D Execute()
 			{
-				var r = new Texture2D(
-					device, image.Width,
-					image.Height);
+				var r = new Texture2D(device, image.Width, image.Height);
 
 				r.SetData(image.GetPixelData());
 				r.Tag = owner;
-				
+
 				return r;
 			}
 
@@ -116,6 +121,7 @@ namespace Alex.Common.Utils
 			else
 			{
 				AutoResetEvent resetEvent = new AutoResetEvent(false);
+
 				QueueOnRenderThread(
 					() =>
 					{
@@ -128,6 +134,7 @@ namespace Alex.Common.Utils
 			}
 
 			byteSize = result.MemoryUsage();
+
 			return result;
 		}
 
@@ -139,13 +146,18 @@ namespace Alex.Common.Utils
 					return BitmapToTexture2D(owner, device, image);
 			}
 		}
-		
-		public static void ImageToTexture2DAsync(object owner, GraphicsDevice device, byte[] bmp, TextureCreated textureCreated)
+
+		public static void ImageToTexture2DAsync(object owner,
+			GraphicsDevice device,
+			byte[] bmp,
+			TextureCreated textureCreated)
 		{
 			//using (MemoryStream s = new MemoryStream(bmp))
 			{
 				var image = Image.Load(bmp);
-					BitmapToTexture2DAsync(owner, device, image, (t) =>
+
+				BitmapToTexture2DAsync(
+					owner, device, image, (t) =>
 					{
 						image.Dispose();
 						textureCreated?.Invoke(t);
@@ -153,36 +165,50 @@ namespace Alex.Common.Utils
 			}
 		}
 
-        public static Texture2D Slice<TImageFormat>(this Image<TImageFormat> bmp, GraphicsDevice graphics, Rectangle region)  where TImageFormat : unmanaged, IPixel<TImageFormat>
-        {
-	        return BitmapToTexture2D(graphics, bmp.Clone(context => context.Crop(new SixLabors.ImageSharp.Rectangle(region.X, region.Y, region.Width, region.Height))));
-        }
+		public static Texture2D Slice<TImageFormat>(this Image<TImageFormat> bmp,
+			GraphicsDevice graphics,
+			Rectangle region) where TImageFormat : unmanaged, IPixel<TImageFormat>
+		{
+			return BitmapToTexture2D(
+				graphics,
+				bmp.Clone(
+					context => context.Crop(
+						new SixLabors.ImageSharp.Rectangle(region.X, region.Y, region.Width, region.Height))));
+		}
 
-        public static void ClearRegion<TImageFormat>(ref Image<TImageFormat> target, Rectangle rectangle) where TImageFormat : unmanaged, IPixel<TImageFormat>
-        {
-	        target.Mutate<TImageFormat>(
-		        x =>
-		        {
-			        x.Clear(
-				        SixLabors.ImageSharp.Color.White.WithAlpha(0f),
-				        new RectangleF(rectangle.X, rectangle.Y, rectangle.Width, rectangle.Height));
-			       // x.Fill(SixLabors.ImageSharp.Color.White, new RectangleF(rectangle.X, rectangle.Y, rectangle.Width, rectangle.Height));
-		        });
-        }
-        
-        public static void CopyRegionIntoImage<TImageFormat>(Image<TImageFormat> srcBitmap, System.Drawing.Rectangle srcRegion,
+		public static void ClearRegion<TImageFormat>(ref Image<TImageFormat> target, Rectangle rectangle)
+			where TImageFormat : unmanaged, IPixel<TImageFormat>
+		{
+			target.Mutate<TImageFormat>(
+				x =>
+				{
+					x.Clear(
+						SixLabors.ImageSharp.Color.White.WithAlpha(0f),
+						new RectangleF(rectangle.X, rectangle.Y, rectangle.Width, rectangle.Height));
+					// x.Fill(SixLabors.ImageSharp.Color.White, new RectangleF(rectangle.X, rectangle.Y, rectangle.Width, rectangle.Height));
+				});
+		}
+
+		public static void CopyRegionIntoImage<TImageFormat>(Image<TImageFormat> srcBitmap,
+			System.Drawing.Rectangle srcRegion,
 			ref Image<TImageFormat> destBitmap,
-			System.Drawing.Rectangle destRegion, bool interpolate = false, float interpolateProgress = 0.5f, bool clear = false)  where TImageFormat : unmanaged, IPixel<TImageFormat>
+			System.Drawing.Rectangle destRegion,
+			bool interpolate = false,
+			float interpolateProgress = 0.5f,
+			bool clear = false) where TImageFormat : unmanaged, IPixel<TImageFormat>
 		{
 			try
 			{
-				using (var newImage = srcBitmap.Clone(x =>
-				{
-					x.Crop(new SixLabors.ImageSharp.Rectangle(srcRegion.X, srcRegion.Y, srcRegion.Width,
-						srcRegion.Height));
-				}))
+				using (var newImage = srcBitmap.Clone(
+					       x =>
+					       {
+						       x.Crop(
+							       new SixLabors.ImageSharp.Rectangle(
+								       srcRegion.X, srcRegion.Y, srcRegion.Width, srcRegion.Height));
+					       }))
 				{
 					var nwImage = newImage;
+
 					/*if (interpolate){
 						for (int x = 0; x < destRegion.Width; x++)
 						{
@@ -203,9 +229,10 @@ namespace Alex.Common.Utils
 								{
 									context.Clear(
 										SixLabors.ImageSharp.Color.White.WithAlpha(0f),
-										new RectangleF(destRegion.X, destRegion.Y, destRegion.Width, destRegion.Height));
+										new RectangleF(
+											destRegion.X, destRegion.Y, destRegion.Width, destRegion.Height));
 								}
-								
+
 								if (interpolate)
 								{
 									context.ApplyProcessor(
@@ -214,7 +241,8 @@ namespace Alex.Common.Utils
 											new SixLabors.ImageSharp.Point(
 												destRegion.Location.X, destRegion.Location.Y),
 											PixelColorBlendingMode.Normal,
-											nwImage.GetConfiguration().GetGraphicsOptions().AlphaCompositionMode, interpolateProgress));
+											nwImage.GetConfiguration().GetGraphicsOptions().AlphaCompositionMode,
+											interpolateProgress));
 
 									/*context.DrawImage(
 										nwImage, new SixLabors.ImageSharp.Point(destRegion.Location.X, destRegion.Location.Y),
@@ -264,7 +292,7 @@ namespace Alex.Common.Utils
 			PixelAlphaCompositionMode alphaCompositionMode,
 			float interpolationValue) : base(configuration, source, sourceRectangle)
 		{
-		//	Guard.MustBeBetweenOrEqualTo(opacity, 0.0f, 1f, nameof(opacity));
+			//	Guard.MustBeBetweenOrEqualTo(opacity, 0.0f, 1f, nameof(opacity));
 			this.Image = image;
 			this.InterpolationValue = interpolationValue;
 			this.Blender = PixelOperations<TPixelBg>.Instance.GetPixelBlender(colorBlendingMode, alphaCompositionMode);
@@ -298,7 +326,9 @@ namespace Alex.Common.Utils
 			int top = Math.Max(this.Location.Y, sourceRectangle.Y);
 			int bottom = Math.Min(this.Location.Y + rectangle1.Height, sourceRectangle.Bottom);
 			int width = right - num;
-			SixLabors.ImageSharp.Rectangle rectangle2 = SixLabors.ImageSharp.Rectangle.FromLTRB(num, top, right, bottom);
+
+			SixLabors.ImageSharp.Rectangle
+				rectangle2 = SixLabors.ImageSharp.Rectangle.FromLTRB(num, top, right, bottom);
 
 			if (rectangle2.Width <= 0 || rectangle2.Height <= 0)
 				throw new ImageProcessingException(
@@ -317,15 +347,15 @@ namespace Alex.Common.Utils
 		/// </summary>
 		private readonly struct RowOperation : IRowOperation
 		{
-			private readonly ImageFrame<TPixelBg>                 sourceFrame;
+			private readonly ImageFrame<TPixelBg> sourceFrame;
 			private readonly SixLabors.ImageSharp.Image<TPixelFg> targetImage;
-			private readonly PixelBlender<TPixelBg>               blender;
-			private readonly Configuration                        configuration;
-			private readonly int                                  minX;
-			private readonly int                                  width;
-			private readonly int                                  locationY;
-			private readonly int                                  targetX;
-			private readonly float                                interpolationValue;
+			private readonly PixelBlender<TPixelBg> blender;
+			private readonly Configuration configuration;
+			private readonly int minX;
+			private readonly int width;
+			private readonly int locationY;
+			private readonly int targetX;
+			private readonly float interpolationValue;
 
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			public RowOperation(ImageFrame<TPixelBg> sourceFrame,
@@ -359,7 +389,7 @@ namespace Alex.Common.Utils
 				   .Slice(this.targetX, this.width);
 
 				//Vector4.Lerp(span[i].ToVector4(), destination[i].ToVector4(), interpolationValue)
-				
+
 				for (int i = 0; i < destination.Length; i++)
 				{
 					var currentValue = destination[i];
@@ -394,8 +424,7 @@ namespace Alex.Common.Utils
 		/// <summary>Gets the opacity of the image to blend.</summary>
 		public float InterpolationValue { get; }
 
-		public InterpolateProcessor(
-			Image image,
+		public InterpolateProcessor(Image image,
 			Point location,
 			PixelColorBlendingMode colorBlendingMode,
 			PixelAlphaCompositionMode alphaCompositionMode,
@@ -407,7 +436,7 @@ namespace Alex.Common.Utils
 			this.AlphaCompositionMode = alphaCompositionMode;
 			this.InterpolationValue = interpolationValue;
 		}
-		
+
 		/// <inheritdoc />
 		public IImageProcessor<TPixelBg> CreatePixelSpecificProcessor<TPixelBg>(Configuration configuration,
 			Image<TPixelBg> source,
@@ -417,16 +446,16 @@ namespace Alex.Common.Utils
 				new InterpolateProcessor.ProcessorFactoryVisitor<TPixelBg>(
 					configuration, this, source, sourceRectangle);
 
-			this.Image.AcceptVisitor((IImageVisitor) processorFactoryVisitor);
+			this.Image.AcceptVisitor((IImageVisitor)processorFactoryVisitor);
 
 			return processorFactoryVisitor.Result;
 		}
 
 		private class ProcessorFactoryVisitor<TPixelBg> : IImageVisitor where TPixelBg : unmanaged, IPixel<TPixelBg>
 		{
-			private readonly Configuration                  configuration;
-			private readonly InterpolateProcessor           definition;
-			private readonly Image<TPixelBg>                source;
+			private readonly Configuration configuration;
+			private readonly InterpolateProcessor definition;
+			private readonly Image<TPixelBg> source;
 			private readonly SixLabors.ImageSharp.Rectangle sourceRectangle;
 
 			public ProcessorFactoryVisitor(Configuration configuration,
@@ -444,9 +473,10 @@ namespace Alex.Common.Utils
 
 			public void Visit<TPixelFg>(Image<TPixelFg> image) where TPixelFg : unmanaged, IPixel<TPixelFg>
 			{
-				this.Result = (IImageProcessor<TPixelBg>) new InterpolateProcessor<TPixelBg, TPixelFg>(
+				this.Result = (IImageProcessor<TPixelBg>)new InterpolateProcessor<TPixelBg, TPixelFg>(
 					this.configuration, image, this.source, this.sourceRectangle, this.definition.Location,
-					this.definition.ColorBlendingMode, this.definition.AlphaCompositionMode, this.definition.InterpolationValue);
+					this.definition.ColorBlendingMode, this.definition.AlphaCompositionMode,
+					this.definition.InterpolationValue);
 			}
 		}
 	}

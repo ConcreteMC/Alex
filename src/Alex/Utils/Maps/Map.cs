@@ -23,11 +23,12 @@ namespace Alex.Utils
 		public float Scale { get; set; } = 1f;
 		public Vector3 Center { get; set; } = Vector3.Zero;
 		public float Rotation { get; set; } = 0f;
-		
+
 		private Color[] _colors;
 		private readonly ConcurrentHashSet<MapIcon> _markers;
 
 		public bool HasChanges { get; protected set; } = false;
+
 		public Map(int width, int height)
 		{
 			Width = width;
@@ -57,13 +58,14 @@ namespace Alex.Utils
 		public Image GetImage()
 		{
 			Image<Rgba32> image = new Image<Rgba32>(Width, Height);
-			for(int x = 0; x < Width; x++)
+
+			for (int x = 0; x < Width; x++)
 			for (int y = 0; y < Height; y++)
 				image[x, y] = new Rgba32(this[x, y].PackedValue);
 
 			return image;
 		}
-		
+
 		public virtual uint[] GetData()
 		{
 			var data = _colors.Select(x => x.PackedValue).ToArray();
@@ -79,7 +81,7 @@ namespace Alex.Utils
 			var texture = new Texture2D(device, Width, Height);
 			texture.SetData(GetData());
 
-			return texture;	
+			return texture;
 		}
 
 		/// <inheritdoc />
@@ -93,7 +95,7 @@ namespace Alex.Utils
 		{
 			if (icon == null)
 				return;
-            
+
 			_markers.Add(icon);
 		}
 
@@ -110,12 +112,14 @@ namespace Alex.Utils
 		public IEnumerable<MapIcon> GetMarkers(ChunkCoordinates center, int radius)
 		{
 			var markers = _markers;
+
 			if (markers == null || markers.IsEmpty)
 				yield break;
 
 			foreach (var icon in markers
-			   .Where(
-					x => x.AlwaysShown || Math.Abs(new ChunkCoordinates(x.Position).DistanceTo(center)) <= radius).OrderBy(x => x.DrawOrder))
+				        .Where(
+					         x => x.AlwaysShown || Math.Abs(new ChunkCoordinates(x.Position).DistanceTo(center))
+						         <= radius).OrderBy(x => x.DrawOrder))
 			{
 				yield return icon;
 			}
@@ -125,8 +129,8 @@ namespace Alex.Utils
 		{
 			if (disposing)
 			{
-		//		_texture?.Dispose();
-			//	_texture = null;
+				//		_texture?.Dispose();
+				//	_texture = null;
 			}
 		}
 
@@ -147,6 +151,7 @@ namespace Alex.Utils
 			public Vector3 Position { get; }
 
 			private Texture2D _texture;
+
 			public WrappedTexture(Vector3 position, Texture2D texture)
 			{
 				Position = position;

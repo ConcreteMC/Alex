@@ -8,8 +8,9 @@ namespace Alex.Networking.Java.Packets.Status
 		{
 			PacketId = 0x01;
 		}
-		
+
 		public long PingId { get; set; }
+
 		/// <inheritdoc />
 		public override void Decode(MinecraftStream stream)
 		{

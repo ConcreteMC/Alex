@@ -13,11 +13,9 @@ namespace Alex.Blocks.Mapping
 
 		public BlockState Original { get; }
 	}
+
 	public static class BlockMapper
 	{
-		public static void Init(IProgressReceiver progressReceiver)
-		{
-			
-		}
+		public static void Init(IProgressReceiver progressReceiver) { }
 	}
 }

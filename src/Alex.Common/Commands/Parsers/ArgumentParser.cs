@@ -15,7 +15,7 @@ namespace Alex.Common.Commands.Parsers
 	{
 		bool TryParse(SeekableTextReader reader, out string[] matches);
 	}
-	
+
 	public abstract class ArgumentParser : IArgumentParser
 	{
 		public CommandNode Parent { get; set; }
@@ -27,7 +27,7 @@ namespace Alex.Common.Commands.Parsers
 		}
 
 		public abstract bool TryParse(SeekableTextReader input);
-		
+
 		/// <inheritdoc />
 		public override string ToString()
 		{
@@ -59,6 +59,7 @@ namespace Alex.Common.Commands.Parsers
 		public bool TryParse(SeekableTextReader input, out string s)
 		{
 			var startPosition = input.Position;
+
 			if (TryParse(input))
 			{
 				var endPosition = input.Position;
@@ -73,9 +74,10 @@ namespace Alex.Common.Commands.Parsers
 			}
 
 			s = null;
+
 			return false;
 		}
-		
+
 		public bool ParseRelative(string input, out double value)
 		{
 			if (input[0] == '~')
@@ -85,7 +87,7 @@ namespace Alex.Common.Commands.Parsers
 
 			return double.TryParse(input, out value);
 		}
-		
+
 		public bool ParseRelative(string input, out int value)
 		{
 			if (input[0] == '~')

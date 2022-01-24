@@ -9,17 +9,17 @@ namespace Alex.Common.Utils.Vectors
 		private float _headYaw;
 		private float _yaw;
 		private float _pitch;
-		
-		public  float X { get; set; }
-		public  float Y { get; set; }
-		public  float Z { get; set; }
+
+		public float X { get; set; }
+		public float Y { get; set; }
+		public float Z { get; set; }
 
 		public float Yaw
 		{
 			get => _yaw;
 			set
 			{
-				_yaw = value;// FixValue(value);
+				_yaw = value; // FixValue(value);
 			}
 		}
 
@@ -64,12 +64,10 @@ namespace Alex.Common.Utils.Vectors
 
 			return val;
 		}
-		
-		public   bool OnGround { get; set; }
 
-		public PlayerLocation()
-		{
-		}
+		public bool OnGround { get; set; }
+
+		public PlayerLocation() { }
 
 		public PlayerLocation(float x, float y, float z, float headYaw = 0f, float yaw = 0f, float pitch = 0f)
 		{
@@ -81,13 +79,11 @@ namespace Alex.Common.Utils.Vectors
 			Pitch = pitch;
 		}
 
-		public PlayerLocation(double x, double y, double z, float headYaw = 0f, float yaw = 0f, float pitch = 0f) : this((float)x, (float)y, (float)z, headYaw, yaw, pitch)
-		{
-		}
+		public PlayerLocation(double x, double y, double z, float headYaw = 0f, float yaw = 0f, float pitch = 0f) :
+			this((float)x, (float)y, (float)z, headYaw, yaw, pitch) { }
 
-		public PlayerLocation(Vector3 vector, float headYaw = 0f, float yaw = 0f, float pitch = 0f) : this(vector.X, vector.Y, vector.Z, headYaw, yaw, pitch)
-		{
-		}
+		public PlayerLocation(Vector3 vector, float headYaw = 0f, float yaw = 0f, float pitch = 0f) : this(
+			vector.X, vector.Y, vector.Z, headYaw, yaw, pitch) { }
 
 		public void SetPitchBounded(float pitch)
 		{
@@ -111,7 +107,7 @@ namespace Alex.Common.Utils.Vectors
 
 			_pitch = Math.Clamp(pitch, -89.99f, 89.99f);
 		}
-		
+
 		/*public PlayerLocation(MiNET.Utils.PlayerLocation p)
 		{
 			if (p == null) return;
@@ -131,9 +127,7 @@ namespace Alex.Common.Utils.Vectors
 
 		public double DistanceTo(PlayerLocation other)
 		{
-			return Math.Sqrt(Square(other.X - X) +
-							 Square(other.Y - Y) +
-							 Square(other.Z - Z));
+			return Math.Sqrt(Square(other.X - X) + Square(other.Y - Y) + Square(other.Z - Z));
 		}
 
 		public double Distance(PlayerLocation other)
@@ -155,49 +149,34 @@ namespace Alex.Common.Utils.Vectors
 		{
 			Vector3 vector = Vector3.Backward;
 			vector = Vector3.Transform(vector, GetDirectionMatrix(includePitch, useHeadYaw));
-			
-			return vector;
-			
-		//	vector.X = (-MathF.Sin(yaw) * MathF.Cos(pitch));
-			//vector.Y = -MathF.Sin(pitch);
-		//	vector.Z = (MathF.Cos(yaw) * MathF.Cos(pitch));
 
-		//	return vector;
+			return vector;
+
+			//	vector.X = (-MathF.Sin(yaw) * MathF.Cos(pitch));
+			//vector.Y = -MathF.Sin(pitch);
+			//	vector.Z = (MathF.Cos(yaw) * MathF.Cos(pitch));
+
+			//	return vector;
 		}
 
 		public Matrix GetDirectionMatrix(bool includePitch = false, bool useHeadYaw = false)
 		{
 			float pitch = (includePitch ? Pitch : 0f).ToRadians();
-			float yaw   = ((useHeadYaw ? HeadYaw : Yaw)).ToRadians();
+			float yaw = ((useHeadYaw ? HeadYaw : Yaw)).ToRadians();
 
 			return Matrix.CreateRotationX(pitch) * Matrix.CreateRotationY(yaw);
 		}
-		
+
 		public static PlayerLocation operator *(PlayerLocation a, float b)
 		{
-			return new PlayerLocation(
-				a.X * b,
-				a.Y * b,
-				a.Z * b,
-				a.HeadYaw * b,
-				a.Yaw * b,
-				a.Pitch * b);
+			return new PlayerLocation(a.X * b, a.Y * b, a.Z * b, a.HeadYaw * b, a.Yaw * b, a.Pitch * b);
 		}
-		
+
 		public static PlayerLocation operator +(PlayerLocation a, Vector3 b)
 		{
 			var (x, y, z) = b;
 
-			return new PlayerLocation(
-				a.X + x,
-				a.Y + y,
-				a.Z + z,
-				a.HeadYaw,
-				a.Yaw,
-				a.Pitch)
-			{
-				OnGround = a.OnGround
-			};
+			return new PlayerLocation(a.X + x, a.Y + y, a.Z + z, a.HeadYaw, a.Yaw, a.Pitch) { OnGround = a.OnGround };
 		}
 
 		public static implicit operator Vector2(PlayerLocation a)
@@ -223,6 +202,7 @@ namespace Alex.Common.Utils.Vectors
 		public Matrix CalculateWorldMatrix(bool includePitch = false)
 		{
 			var dir = GetDirection(includePitch);
+
 			return Matrix.CreateWorld(ToVector3(), dir, Vector3.Up);
 		}
 
@@ -231,6 +211,7 @@ namespace Alex.Common.Utils.Vectors
 			byte direction = (byte)((int)Math.Floor((HeadYaw * 4F) / 360F + 0.5D) & 0x03);
 
 			BlockFace facing = BlockFace.North;
+
 			switch (direction)
 			{
 				case 0: //East
@@ -256,10 +237,11 @@ namespace Alex.Common.Utils.Vectors
 
 			return facing;
 		}
-		
+
 		public string GetCardinalDirection()
 		{
 			double rotation = (HeadYaw) % 360;
+
 			if (rotation < 0)
 			{
 				rotation += 360.0;
@@ -267,7 +249,7 @@ namespace Alex.Common.Utils.Vectors
 
 			return GetDirection(rotation);
 		}
-		
+
 		private static string GetDirection(double rotation)
 		{
 			if (0 <= rotation && rotation < 22.5)
@@ -311,7 +293,7 @@ namespace Alex.Common.Utils.Vectors
 				return "N/A";
 			}
 		}
-		
+
 		public override string ToString()
 		{
 			return $"X={X}, Y={Y}, Z={Z}, HeadYaw={HeadYaw}, Yaw={Yaw}, Pitch={Pitch}";

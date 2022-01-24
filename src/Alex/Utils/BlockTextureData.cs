@@ -3,47 +3,55 @@ using Microsoft.Xna.Framework;
 
 namespace Alex.Utils
 {
-    [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    // ReSharper disable once InconsistentNaming
-    public struct BlockTextureData
-    {
-        public Color ColorLeft;
-        public Color ColorRight;
+	[StructLayout(LayoutKind.Sequential, Pack = 1)]
+	// ReSharper disable once InconsistentNaming
+	public struct BlockTextureData
+	{
+		public Color ColorLeft;
+		public Color ColorRight;
 
-        public Color ColorFront;
-        public Color ColorBack;
+		public Color ColorFront;
+		public Color ColorBack;
 
-        public Color ColorTop;
-        public Color ColorBottom;
+		public Color ColorTop;
+		public Color ColorBottom;
 
-        public Vector2 TopLeft;
-        public Vector2 TopRight;
+		public Vector2 TopLeft;
+		public Vector2 TopRight;
 
-        public Vector2 BottomLeft;
-        public Vector2 BottomRight;
+		public Vector2 BottomLeft;
+		public Vector2 BottomRight;
 
-        public bool IsAnimated;
+		public bool IsAnimated;
 
-        public TextureInfo TextureInfo;
-        public BlockTextureData(TextureInfo textureInfo, Vector2 topLeft, Vector2 topRight, Vector2 bottomLeft, Vector2 bottomRight, Color colorSide,
-            Color colorTop, Color colorBottom, bool isAnimated = false)
-        {
-            TextureInfo = textureInfo;
-            TopLeft = topLeft;
-            TopRight = topRight;
-            BottomLeft = bottomLeft;
-            BottomRight = bottomRight;
+		public TextureInfo TextureInfo;
 
-	        ColorFront = colorSide;
-	        ColorBack = colorSide;
+		public BlockTextureData(TextureInfo textureInfo,
+			Vector2 topLeft,
+			Vector2 topRight,
+			Vector2 bottomLeft,
+			Vector2 bottomRight,
+			Color colorSide,
+			Color colorTop,
+			Color colorBottom,
+			bool isAnimated = false)
+		{
+			TextureInfo = textureInfo;
+			TopLeft = topLeft;
+			TopRight = topRight;
+			BottomLeft = bottomLeft;
+			BottomRight = bottomRight;
 
-	        ColorLeft = colorSide;
-	        ColorRight = colorSide;
+			ColorFront = colorSide;
+			ColorBack = colorSide;
 
-	        ColorTop = colorTop;
-	        ColorBottom = colorBottom;
+			ColorLeft = colorSide;
+			ColorRight = colorSide;
 
-            IsAnimated = isAnimated;
-        }
-    }
+			ColorTop = colorTop;
+			ColorBottom = colorBottom;
+
+			IsAnimated = isAnimated;
+		}
+	}
 }

@@ -9,12 +9,14 @@ namespace Alex.ResourcePackLib.Json.Converters.Bedrock
 	internal class VersionedResourceConverter<T> : JsonConverter<VersionedResource<T>>
 	{
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(VersionedResourceConverter<T>));
-		
+
 		private string ValuesProperty { get; }
 		private bool IsSingle { get; }
 		private Func<T, string> KeySelector { get; }
 
-		public VersionedResourceConverter(string valuesProperty, bool isSingle = false, Func<T, string> keySelector = null)
+		public VersionedResourceConverter(string valuesProperty,
+			bool isSingle = false,
+			Func<T, string> keySelector = null)
 		{
 			ValuesProperty = valuesProperty;
 			IsSingle = isSingle;
@@ -22,10 +24,7 @@ namespace Alex.ResourcePackLib.Json.Converters.Bedrock
 		}
 
 		/// <inheritdoc />
-		public override void WriteJson(JsonWriter writer, VersionedResource<T> value, JsonSerializer serializer)
-		{
-			
-		}
+		public override void WriteJson(JsonWriter writer, VersionedResource<T> value, JsonSerializer serializer) { }
 
 		/// <inheritdoc />
 		public override VersionedResource<T> ReadJson(JsonReader reader,
@@ -36,21 +35,22 @@ namespace Alex.ResourcePackLib.Json.Converters.Bedrock
 		{
 			var obj = JToken.Load(reader);
 
-			if (obj.Type != JTokenType.Object) 
+			if (obj.Type != JTokenType.Object)
 				return null;
 
-			string              formatVersion = "1.8.0";
-			var                 jObject       = (JObject)obj;
-			VersionedResource<T> result        = new VersionedResource<T>();
+			string formatVersion = "1.8.0";
+			var jObject = (JObject)obj;
+			VersionedResource<T> result = new VersionedResource<T>();
+
 			if (jObject.TryGetValue(
-				"format_version", StringComparison.InvariantCultureIgnoreCase, out var versionToken))
+				    "format_version", StringComparison.InvariantCultureIgnoreCase, out var versionToken))
 			{
 				string format = versionToken.Value<string>();
 				formatVersion = format;
 			}
 
 			result.FormatVersion = FormatVersionHelpers.FromString(formatVersion);
-			
+
 			if (jObject.TryGetValue(ValuesProperty, out var values))
 			{
 				if (IsSingle)
@@ -69,7 +69,7 @@ namespace Alex.ResourcePackLib.Json.Converters.Bedrock
 				{
 					if (values.Type == JTokenType.Object)
 					{
-						foreach (var property in (JObject) values)
+						foreach (var property in (JObject)values)
 						{
 							if (!result.TryAdd(property.Key, property.Value.ToObject<T>(serializer)))
 							{
@@ -79,7 +79,7 @@ namespace Alex.ResourcePackLib.Json.Converters.Bedrock
 					}
 				}
 			}
-			
+
 			return result;
 		}
 

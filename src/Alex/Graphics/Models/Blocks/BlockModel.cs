@@ -14,21 +14,28 @@ namespace Alex.Graphics.Models.Blocks
 {
 	public abstract class BlockModel : ModelBase
 	{
-		public virtual void GetVertices(IBlockAccess blockAccess, ChunkData chunkBuilder, BlockCoordinates position, BlockState state)
-        {
-			
-        }
+		public virtual void GetVertices(IBlockAccess blockAccess,
+			ChunkData chunkBuilder,
+			BlockCoordinates position,
+			BlockState state) { }
 
 		public virtual IEnumerable<BoundingBox> GetBoundingBoxes(BlockState blockState, Vector3 blockPos)
-	    {
-		    yield return new BoundingBox(blockPos, blockPos + Vector3.One);
-	    }
+		{
+			yield return new BoundingBox(blockPos, blockPos + Vector3.One);
+		}
 
-	    protected BlockShaderVertex[] GetFaceVertices(BlockFace blockFace, Vector3 startPosition, Vector3 endPosition, BlockTextureData uvmap)
+		protected BlockShaderVertex[] GetFaceVertices(BlockFace blockFace,
+			Vector3 startPosition,
+			Vector3 endPosition,
+			BlockTextureData uvmap)
 		{
 			Color faceColor = Color.White;
 			Vector3 normal = Vector3.Zero;
-			Vector3 positionTopLeft = Vector3.Zero, positionBottomLeft = Vector3.Zero, positionBottomRight = Vector3.Zero, positionTopRight = Vector3.Zero;
+
+			Vector3 positionTopLeft = Vector3.Zero,
+				positionBottomLeft = Vector3.Zero,
+				positionBottomRight = Vector3.Zero,
+				positionTopRight = Vector3.Zero;
 
 			switch (blockFace)
 			{
@@ -41,7 +48,9 @@ namespace Alex.Graphics.Models.Blocks
 
 					normal = Vector3.Up;
 					faceColor = uvmap.ColorTop; //new Color(0x00, 0x00, 0xFF);
+
 					break;
+
 				case BlockFace.Down: //Negative Y
 					positionTopLeft = new Vector3(startPosition.X, startPosition.Y, endPosition.Z);
 					positionTopRight = new Vector3(endPosition.X, startPosition.Y, endPosition.Z);
@@ -51,7 +60,9 @@ namespace Alex.Graphics.Models.Blocks
 
 					normal = Vector3.Down;
 					faceColor = uvmap.ColorBottom; //new Color(0xFF, 0xFF, 0x00);
+
 					break;
+
 				case BlockFace.West: //Negative X
 					positionTopLeft = new Vector3(startPosition.X, endPosition.Y, startPosition.Z);
 					positionTopRight = new Vector3(startPosition.X, endPosition.Y, endPosition.Z);
@@ -61,7 +72,9 @@ namespace Alex.Graphics.Models.Blocks
 
 					normal = Vector3.Left;
 					faceColor = uvmap.ColorLeft; // new Color(0xFF, 0x00, 0xFF);
+
 					break;
+
 				case BlockFace.East: //Positive X
 					positionTopLeft = new Vector3(endPosition.X, endPosition.Y, startPosition.Z);
 					positionTopRight = new Vector3(endPosition.X, endPosition.Y, endPosition.Z);
@@ -71,7 +84,9 @@ namespace Alex.Graphics.Models.Blocks
 
 					normal = Vector3.Right;
 					faceColor = uvmap.ColorRight; //new Color(0x00, 0xFF, 0xFF);
+
 					break;
+
 				case BlockFace.South: //Positive Z
 					positionTopLeft = new Vector3(startPosition.X, endPosition.Y, endPosition.Z);
 					positionTopRight = new Vector3(endPosition.X, endPosition.Y, endPosition.Z);
@@ -81,7 +96,9 @@ namespace Alex.Graphics.Models.Blocks
 
 					normal = Vector3.Backward;
 					faceColor = uvmap.ColorFront; // ew Color(0x00, 0xFF, 0x00);
+
 					break;
+
 				case BlockFace.North: //Negative Z
 					positionTopLeft = new Vector3(startPosition.X, endPosition.Y, startPosition.Z);
 					positionTopRight = new Vector3(endPosition.X, endPosition.Y, startPosition.Z);
@@ -91,70 +108,52 @@ namespace Alex.Graphics.Models.Blocks
 
 					normal = Vector3.Forward;
 					faceColor = uvmap.ColorBack; // new Color(0xFF, 0x00, 0x00);
+
 					break;
+
 				case BlockFace.None:
 					break;
 			}
 
 			var topLeft = new BlockShaderVertex(positionTopLeft, normal, uvmap.TopLeft, faceColor);
 			var topRight = new BlockShaderVertex(positionTopRight, normal, uvmap.TopRight, faceColor);
-			var bottomLeft = new BlockShaderVertex(positionBottomLeft, normal, uvmap.BottomLeft,
-				faceColor);
-			var bottomRight = new BlockShaderVertex(positionBottomRight, normal, uvmap.BottomRight,
-				faceColor);
+			var bottomLeft = new BlockShaderVertex(positionBottomLeft, normal, uvmap.BottomLeft, faceColor);
+			var bottomRight = new BlockShaderVertex(positionBottomRight, normal, uvmap.BottomRight, faceColor);
 
 			switch (blockFace)
 			{
 				case BlockFace.Up:
-					return new[]
-					{
-						bottomLeft, topLeft, topRight,
-						bottomRight, bottomLeft, topRight
-					};
+					return new[] { bottomLeft, topLeft, topRight, bottomRight, bottomLeft, topRight };
+
 				case BlockFace.Down:
-					return new[]
-					{
-						topLeft, bottomLeft, topRight,
-						bottomLeft, bottomRight, topRight
-					};
+					return new[] { topLeft, bottomLeft, topRight, bottomLeft, bottomRight, topRight };
+
 				case BlockFace.South:
-					return new[]
-					{
-						topLeft, bottomLeft, topRight,
-						bottomLeft, bottomRight, topRight
-					};
+					return new[] { topLeft, bottomLeft, topRight, bottomLeft, bottomRight, topRight };
+
 				case BlockFace.East:
-					return new[]
-					{
-						bottomLeft, topLeft, topRight,
-						bottomRight, bottomLeft, topRight
-					};
+					return new[] { bottomLeft, topLeft, topRight, bottomRight, bottomLeft, topRight };
+
 				case BlockFace.North:
-					return new[]
-					{
-						bottomLeft, topLeft, topRight,
-						bottomRight, bottomLeft, topRight
-					};
+					return new[] { bottomLeft, topLeft, topRight, bottomRight, bottomLeft, topRight };
+
 				case BlockFace.West:
-					return new[]
-					{
-						topLeft, bottomLeft, topRight,
-						bottomLeft, bottomRight, topRight
-					};
+					return new[] { topLeft, bottomLeft, topRight, bottomLeft, bottomRight, topRight };
+
 					break;
+
 				default:
 					return new BlockShaderVertex[0];
 			}
 		}
 
-	    protected BlockTextureData GetTextureUVMap(
-		    ResourceManager resources,
+		protected BlockTextureData GetTextureUVMap(ResourceManager resources,
 			ResourceLocation texture,
 			float x1,
 			float x2,
 			float y1,
 			float y2,
-		    int rotation,
+			int rotation,
 			Color color,
 			TextureInfo? ti)
 		{
@@ -165,10 +164,9 @@ namespace Alex.Graphics.Models.Blocks
 				y1 = 0;
 				y2 = 1 / 32f;
 
-				return new BlockTextureData(new  TextureInfo(new Vector2(), Vector2.Zero, 16, 16, false, 1, 1), 
-					new Vector2(x1, y1), new Vector2(x2, y1),
-					new Vector2(x1, y2), new Vector2(x2, y2), color,
-					color, color);
+				return new BlockTextureData(
+					new TextureInfo(new Vector2(), Vector2.Zero, 16, 16, false, 1, 1), new Vector2(x1, y1),
+					new Vector2(x2, y1), new Vector2(x1, y2), new Vector2(x2, y2), color, color, color);
 			}
 
 			if (ti == null)
@@ -179,10 +177,12 @@ namespace Alex.Graphics.Models.Blocks
 			var textureInfo = ti.Value;
 
 			var xDifference = x2 - x1;
+
 			if (xDifference < 16)
 				xDifference = 16;
 
 			var yDifference = y2 - y1;
+
 			if (yDifference < 16)
 				yDifference = 16;
 
@@ -213,87 +213,75 @@ namespace Alex.Graphics.Models.Blocks
 						y2 = ox1;
 						x1 = oy1;
 						x2 = oy2;
+
 						break;
+
 					case 180:
 						y1 = oy2;
 						y2 = oy1;
 						x1 = ox2;
 						x2 = ox1;
+
 						break;
+
 					case 90:
 						y1 = ox1;
 						y2 = ox2;
 						x1 = oy2;
 						x2 = oy1;
+
 						break;
 				}
 			}
-			
+
 			var topLeft = new Vector2(x1, y1);
 			var topRight = new Vector2(x2, y1);
 			var bottomLeft = new Vector2(x1, y2);
 			var bottomRight = new Vector2(x2, y2);
-			
-			var map = new BlockTextureData(textureInfo,
-				topLeft, topRight,
-				bottomLeft, bottomRight,
-				color, color,
-				color, textureInfo.Animated);
+
+			var map = new BlockTextureData(
+				textureInfo, topLeft, topRight, bottomLeft, bottomRight, color, color, color, textureInfo.Animated);
 
 			return map;
 		}
 
-		public static BlockFace[] INVALID_FACE_ROTATION = {
-		    BlockFace.Up,
-		    BlockFace.Down,
-		    BlockFace.None
-	    };
-	    
+		public static BlockFace[] INVALID_FACE_ROTATION = { BlockFace.Up, BlockFace.Down, BlockFace.None };
 
-	    public static BlockFace[] FACE_ROTATION =
+
+		public static BlockFace[] FACE_ROTATION = { BlockFace.North, BlockFace.East, BlockFace.South, BlockFace.West };
+
+		protected static BlockFace[] FACE_ROTATION_X =
 		{
-			BlockFace.North,
-			BlockFace.East,
-			BlockFace.South,
-			BlockFace.West
+			BlockFace.North, BlockFace.Down, BlockFace.South, BlockFace.Up
 		};
 
-	    protected static BlockFace[] FACE_ROTATION_X =
+		protected static BlockFace[] INVALID_FACE_ROTATION_X = { BlockFace.East, BlockFace.West, BlockFace.None };
+
+
+		public static BlockFace RotateDirection(BlockFace val, int offset, BlockFace[] rots, BlockFace[] invalid)
 		{
-			BlockFace.North,
-			BlockFace.Down,
-			BlockFace.South,
-			BlockFace.Up
-		};
-
-		protected static BlockFace[] INVALID_FACE_ROTATION_X = {
-			BlockFace.East,
-			BlockFace.West,
-			BlockFace.None
-		};
-
-
-		public static BlockFace RotateDirection(BlockFace val, int offset, BlockFace[] rots, BlockFace[] invalid){
 			if (invalid.Any(d => d == val))
 				return val;
 
 			int pos = 0;
+
 			for (var index = 0; index < rots.Length; index++)
 			{
 				if (rots[index] != val)
 					continue;
-				
+
 				pos = index;
 			}
 
 			return rots[(rots.Length + pos + offset) % rots.Length];
 		}
-		
+
 		public Color CombineColors(params Color[] aColors)
 		{
 			int r = 0;
 			int g = 0;
 			int b = 0;
+
 			foreach (Color c in aColors)
 			{
 				r += c.R;

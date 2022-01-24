@@ -10,7 +10,7 @@ namespace Alex.Blocks.Minecraft
 			Transparent = true;
 
 			Luminance = 15;
-			
+
 			base.BlockMaterial = Material.Metal;
 		}
 	}

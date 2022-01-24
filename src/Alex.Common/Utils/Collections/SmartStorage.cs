@@ -6,24 +6,23 @@ namespace Alex.Common.Utils.Collections
 {
 	public class SmartStorage<T>
 	{
-		private T[]                             Data       { get; set; }
+		private T[] Data { get; set; }
+
 		//private int[]                           References { get; set; }
-		private ConcurrentDictionary<int, int> Indexer    { get; set; }
-		
+		private ConcurrentDictionary<int, int> Indexer { get; set; }
+
 		private IEqualityComparer<T> EqualityComparer { get; }
+
 		public SmartStorage(IEqualityComparer<T> equalityComparer)
 		{
 			EqualityComparer = equalityComparer;
 
 			Data = new T[0];
-		//	References = new int[0];
+			//	References = new int[0];
 			Indexer = new ConcurrentDictionary<int, int>();
 		}
 
-		public SmartStorage() : this(EqualityComparer<T>.Default)
-		{
-			
-		}
+		public SmartStorage() : this(EqualityComparer<T>.Default) { }
 
 		private object _writeLock = new object();
 
@@ -33,6 +32,7 @@ namespace Alex.Common.Utils.Collections
 				return index;
 
 			return -1;
+
 			lock (_writeLock)
 			{
 				for (int i = 0; i < Data.Length; i++)
@@ -51,18 +51,18 @@ namespace Alex.Common.Utils.Collections
 		{
 			lock (_writeLock)
 			{
-				var items      = Data;
+				var items = Data;
 				//var references = References;
-				
+
 				Array.Resize(ref items, items.Length + 1);
 				//Array.Resize(ref references, references.Length + 1);
-				
+
 				items[^1] = data;
 				Data = items;
 				//References = references;
 
 				Indexer.TryAdd(data.GetHashCode(), items.Length - 1);
-				
+
 				return items.Length - 1;
 			}
 		}
@@ -70,6 +70,7 @@ namespace Alex.Common.Utils.Collections
 		public void IncreaseUsage(int index)
 		{
 			return;
+
 			lock (_writeLock)
 			{
 				//References[index] += 1;
@@ -79,9 +80,10 @@ namespace Alex.Common.Utils.Collections
 		public void DecrementUsage(int index)
 		{
 			return;
+
 			lock (_writeLock)
 			{
-			//	References[index] -= 1;
+				//	References[index] -= 1;
 			}
 		}
 

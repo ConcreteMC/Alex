@@ -9,12 +9,13 @@ namespace Alex.MoLang.Parser.Parselet
 		/// <inheritdoc />
 		public override IExpression Parse(MoLangParser parser, Token token)
 		{
-			var    args = parser.ParseArgs();
+			var args = parser.ParseArgs();
 			string name = parser.FixNameShortcut(token.Text);
 
 			IExpression nameExpr = new NameExpression(name);
 
-			if (args.Count > 0){
+			if (args.Count > 0)
+			{
 				return new FuncCallExpression(nameExpr, args.ToArray());
 			}
 

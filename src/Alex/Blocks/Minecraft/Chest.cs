@@ -33,22 +33,20 @@ namespace Alex.Blocks.Minecraft
 		{
 			if (world is World w)
 			{
-				if ((w.EntityManager.TryGetBlockEntity(position, out var entity) &&!(entity is ChestBlockEntity)))
+				if ((w.EntityManager.TryGetBlockEntity(position, out var entity) && !(entity is ChestBlockEntity)))
 				{
 					w.EntityManager.RemoveBlockEntity(position);
 				}
 
-				if (entity is ChestBlockEntity) 
+				if (entity is ChestBlockEntity)
 					return base.BlockPlaced(world, state, position);
 
-				var ent = new ChestBlockEntity(w)
-				{
-					X = position.X & 0xf, Y = position.Y & 0xff, Z = position.Z & 0xf
-				};
+				var ent = new ChestBlockEntity(w) { X = position.X & 0xf, Y = position.Y & 0xff, Z = position.Z & 0xf };
 
 				if (ent.SetBlock(this))
 					w.SetBlockEntity(position.X, position.Y, position.Z, ent);
 			}
+
 			return base.BlockPlaced(world, state, position);
 		}
 	}

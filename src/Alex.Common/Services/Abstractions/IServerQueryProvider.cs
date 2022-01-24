@@ -12,65 +12,71 @@ namespace Alex.Common.Services
 	using N = Newtonsoft.Json.NullValueHandling;
 
 	public delegate void PingServerDelegate(ServerPingResponse response);
+
 	public delegate void ServerStatusDelegate(ServerQueryResponse reponse);
+
 	public delegate Task LandDiscoveryDelegate(LanDiscoveryResult result);
-	
-    public interface IServerQueryProvider
-    {
-	  //  Task QueryBedrockServerAsync(string hostname, ushort port, PingServerDelegate pingCallback = null, ServerStatusDelegate statusCallBack = null);
-		Task QueryServerAsync(ServerConnectionDetails connectionDetails, PingServerDelegate pingCallback = null, ServerStatusDelegate statusCallBack = null, CancellationToken cancellationToken = default);
+
+	public interface IServerQueryProvider
+	{
+		//  Task QueryBedrockServerAsync(string hostname, ushort port, PingServerDelegate pingCallback = null, ServerStatusDelegate statusCallBack = null);
+		Task QueryServerAsync(ServerConnectionDetails connectionDetails,
+			PingServerDelegate pingCallback = null,
+			ServerStatusDelegate statusCallBack = null,
+			CancellationToken cancellationToken = default);
 
 		Task StartLanDiscovery(CancellationToken cancellationToken, LandDiscoveryDelegate callback = null);
-    }
+	}
 
-    public class LanDiscoveryResult
-    {
-	    public IPEndPoint          EndPoint      { get; set; }
-	    public ServerPingResponse  PingResponse  { get; set; }
-	    public ServerQueryResponse QueryResponse { get; set; }
+	public class LanDiscoveryResult
+	{
+		public IPEndPoint EndPoint { get; set; }
+		public ServerPingResponse PingResponse { get; set; }
+		public ServerQueryResponse QueryResponse { get; set; }
 
-	    public LanDiscoveryResult(IPEndPoint endPoint,
-		    ServerPingResponse pingResponse,
-		    ServerQueryResponse queryResponse)
-	    {
-		    EndPoint = endPoint;
-		    PingResponse = pingResponse;
-		    QueryResponse = queryResponse;
-	    }
-    }
-    
-    public class ServerConnectionDetails
-    {
-	    public string     Hostname { get; set; }
-	    public IPEndPoint EndPoint { get; set; }
-		
-	    public ServerConnectionDetails(IPEndPoint endPoint, string hostname = null)
-	    {
-		    EndPoint = endPoint;
-		    Hostname = hostname;
-	    }
-    }
-    
+		public LanDiscoveryResult(IPEndPoint endPoint,
+			ServerPingResponse pingResponse,
+			ServerQueryResponse queryResponse)
+		{
+			EndPoint = endPoint;
+			PingResponse = pingResponse;
+			QueryResponse = queryResponse;
+		}
+	}
+
+	public class ServerConnectionDetails
+	{
+		public string Hostname { get; set; }
+		public IPEndPoint EndPoint { get; set; }
+
+		public ServerConnectionDetails(IPEndPoint endPoint, string hostname = null)
+		{
+			EndPoint = endPoint;
+			Hostname = hostname;
+		}
+	}
+
 	public class ServerListPingDescriptionJson
 	{
 		public string Text { get; set; }
 
 		public class DescriptionConverter : JsonConverter<Description>
 		{
-			public override Description ReadJson(JsonReader reader, Type objectType, Description existingValue,
-				bool hasExistingValue, JsonSerializer serializer)
+			public override Description ReadJson(JsonReader reader,
+				Type objectType,
+				Description existingValue,
+				bool hasExistingValue,
+				JsonSerializer serializer)
 			{
 				if (reader.TokenType == JsonToken.StartObject)
 				{
 					JObject item = JObject.Load(reader);
+
 					return item.ToObject<Description>();
 				}
 				else if (reader.TokenType == JsonToken.String)
 				{
-					return new Description()
-					{
-						Text = (string)reader.Value
-					};
+					return new Description() { Text = (string)reader.Value };
 				}
 
 				return null;
@@ -94,7 +100,9 @@ namespace Alex.Common.Services
 		[J("players")] public Players Players { get; set; }
 
 		[JsonConverter(typeof(ServerListPingDescriptionJson.DescriptionConverter))]
-		[J("description")] public Description Description { get; set; }
+		[J("description")]
+		public Description Description { get; set; }
+
 		[J("favicon")] public string Favicon { get; set; }
 		[J("modinfo")] public Modinfo Modinfo { get; set; }
 	}
@@ -108,12 +116,24 @@ namespace Alex.Common.Services
 	public partial class Extra
 	{
 		[J("text")] public string Text { get; set; }
-		[J("color", NullValueHandling = N.Ignore)] public string Color { get; set; }
-		[J("bold", NullValueHandling = N.Ignore)] public bool? Bold { get; set; }
-		[J("italic", NullValueHandling = N.Ignore)] public bool? Italic { get; set; }
-		[J("underlined", NullValueHandling = N.Ignore)] public bool? Underlined { get; set; }
-		[J("strikethrough", NullValueHandling = N.Ignore)] public bool? Strikethrough { get; set; }
-		[J("obfuscated", NullValueHandling = N.Ignore)] public bool? Obfuscated { get; set; }
+
+		[J("color", NullValueHandling = N.Ignore)]
+		public string Color { get; set; }
+
+		[J("bold", NullValueHandling = N.Ignore)]
+		public bool? Bold { get; set; }
+
+		[J("italic", NullValueHandling = N.Ignore)]
+		public bool? Italic { get; set; }
+
+		[J("underlined", NullValueHandling = N.Ignore)]
+		public bool? Underlined { get; set; }
+
+		[J("strikethrough", NullValueHandling = N.Ignore)]
+		public bool? Strikethrough { get; set; }
+
+		[J("obfuscated", NullValueHandling = N.Ignore)]
+		public bool? Obfuscated { get; set; }
 	}
 
 	public partial class Modinfo
@@ -170,36 +190,36 @@ namespace Alex.Common.Services
 		}
 	}
 
-    public class ServerQueryResponse
-    {
-        public bool Success { get; }
-        
-        public string ErrorMessage { get; }
-        public ServerQueryStatus Status { get; }
+	public class ServerQueryResponse
+	{
+		public bool Success { get; }
 
-        public ServerQueryResponse(bool success, ServerQueryStatus status)
-        {
-            Success = success;
-            Status = status;
-        }
+		public string ErrorMessage { get; }
+		public ServerQueryStatus Status { get; }
 
-        public ServerQueryResponse(bool success, string errorMessage, ServerQueryStatus status)
-        {
-            Success = success;
-            ErrorMessage = errorMessage;
-            Status = status;
-        }
-    }
+		public ServerQueryResponse(bool success, ServerQueryStatus status)
+		{
+			Success = success;
+			Status = status;
+		}
 
-    public struct ServerQueryStatus
-    {
-	    public bool WaitingOnPing { get; set; }
-        public bool Success { get; set; }
-        public long Delay   { get; set; }
-        public IPEndPoint EndPoint { get; set; }
-        public string Address { get; set; }
-        public ushort Port { get; set; }
+		public ServerQueryResponse(bool success, string errorMessage, ServerQueryStatus status)
+		{
+			Success = success;
+			ErrorMessage = errorMessage;
+			Status = status;
+		}
+	}
 
-	    public ServerQuery Query { get; set; }
-    }
+	public struct ServerQueryStatus
+	{
+		public bool WaitingOnPing { get; set; }
+		public bool Success { get; set; }
+		public long Delay { get; set; }
+		public IPEndPoint EndPoint { get; set; }
+		public string Address { get; set; }
+		public ushort Port { get; set; }
+
+		public ServerQuery Query { get; set; }
+	}
 }

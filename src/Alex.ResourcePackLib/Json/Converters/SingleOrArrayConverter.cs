@@ -21,26 +21,29 @@ namespace Alex.ResourcePackLib.Json.Converters
 			}
 
 			serializer.Serialize(writer, list);
-
 		}
 
-		public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
+		public override object ReadJson(JsonReader reader,
+			Type objectType,
+			object existingValue,
+			JsonSerializer serializer)
 		{
 			JToken token = JToken.Load(reader);
+
 			if (token.Type == JTokenType.Array)
 			{
 				return token.ToObject(objectType, serializer);
-//				return token.ToObject<List<T>>();
+				//				return token.ToObject<List<T>>();
 			}
 
 			var obj = token.ToObject<T>(serializer);
 
 			if (objectType == typeof(T[]))
 			{
-				return new T[] {obj};
+				return new T[] { obj };
 			}
 
-			return new List<T> {token.ToObject<T>(serializer)};
+			return new List<T> { token.ToObject<T>(serializer) };
 		}
 
 		public override bool CanConvert(Type objectType)

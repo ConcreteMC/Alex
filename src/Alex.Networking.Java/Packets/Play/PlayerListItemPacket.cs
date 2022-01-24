@@ -6,12 +6,12 @@ namespace Alex.Networking.Java.Packets.Play
 {
 	public class PlayerListItemPacket : Packet<PlayerListItemPacket>
 	{
-		public PlayerListAction         Action;
-		
-		public AddPlayerEntry[]         AddPlayerEntries         = new AddPlayerEntry[0];
-		public RemovePlayerEntry[]      RemovePlayerEntries      = new RemovePlayerEntry[0];
+		public PlayerListAction Action;
+
+		public AddPlayerEntry[] AddPlayerEntries = new AddPlayerEntry[0];
+		public RemovePlayerEntry[] RemovePlayerEntries = new RemovePlayerEntry[0];
 		public UpdateDisplayNameEntry[] UpdateDisplayNameEntries = new UpdateDisplayNameEntry[0];
-		public UpdateLatencyEntry[]     UpdateLatencyEntries     = new UpdateLatencyEntry[0];
+		public UpdateLatencyEntry[] UpdateLatencyEntries = new UpdateLatencyEntry[0];
 
 		public PlayerListItemPacket()
 		{
@@ -20,23 +20,27 @@ namespace Alex.Networking.Java.Packets.Play
 
 		public override void Decode(MinecraftStream stream)
 		{
-			Action = (PlayerListAction) stream.ReadVarInt();
+			Action = (PlayerListAction)stream.ReadVarInt();
 			int count = stream.ReadVarInt();
+
 			if (Action == PlayerListAction.AddPlayer)
 			{
 				ReadAddPlayerEntries(count, stream);
+
 				return;
 			}
 
 			if (Action == PlayerListAction.UpdateLatency)
 			{
 				ReadUpdateLatencyEntries(count, stream);
+
 				return;
 			}
 
 			if (Action == PlayerListAction.RemovePlayer)
 			{
 				RemovePlayerEntries = new RemovePlayerEntry[count];
+
 				for (int i = 0; i < RemovePlayerEntries.Length; i++)
 				{
 					var entry = new RemovePlayerEntry();
@@ -60,7 +64,7 @@ namespace Alex.Networking.Java.Packets.Play
 				var entry = new UpdateLatencyEntry();
 				entry.UUID = stream.ReadUuid();
 				entry.Ping = stream.ReadVarInt();
-				
+
 				UpdateLatencyEntries[i] = entry;
 			}
 		}
@@ -68,11 +72,13 @@ namespace Alex.Networking.Java.Packets.Play
 		private void ReadUpdateDisplayNameEntries(int count, MinecraftStream stream)
 		{
 			UpdateDisplayNameEntries = new UpdateDisplayNameEntry[count];
+
 			for (int i = 0; i < count; i++)
 			{
 				var entry = new UpdateDisplayNameEntry();
 				entry.UUID = stream.ReadUuid();
 				entry.HasDisplayName = stream.ReadBool();
+
 				if (entry.HasDisplayName)
 				{
 					entry.DisplayName = stream.ReadString();
@@ -85,6 +91,7 @@ namespace Alex.Networking.Java.Packets.Play
 		private void ReadAddPlayerEntries(int count, MinecraftStream stream)
 		{
 			AddPlayerEntries = new AddPlayerEntry[count];
+
 			for (int i = 0; i < count; i++)
 			{
 				var newEntry = new AddPlayerEntry();
@@ -92,13 +99,12 @@ namespace Alex.Networking.Java.Packets.Play
 				newEntry.Name = stream.ReadString();
 				int propertyLength = stream.ReadVarInt();
 				newEntry.Properties = new PlayerListProperty[propertyLength];
+
 				for (int ii = 0; ii < propertyLength; ii++)
 				{
 					newEntry.Properties[ii] = new PlayerListProperty()
 					{
-						Name = stream.ReadString(),
-						Value = stream.ReadString(),
-						IsSigned = stream.ReadBool()
+						Name = stream.ReadString(), Value = stream.ReadString(), IsSigned = stream.ReadBool()
 					};
 
 					if (newEntry.Properties[ii].IsSigned)
@@ -110,6 +116,7 @@ namespace Alex.Networking.Java.Packets.Play
 				newEntry.Gamemode = stream.ReadVarInt();
 				newEntry.Ping = stream.ReadVarInt();
 				newEntry.HasDisplayName = stream.ReadBool();
+
 				if (newEntry.HasDisplayName)
 				{
 					newEntry.DisplayName = stream.ReadString();
@@ -122,16 +129,19 @@ namespace Alex.Networking.Java.Packets.Play
 		private void WritePlayerEntries(MinecraftStream stream)
 		{
 			stream.WriteVarInt(AddPlayerEntries.Length);
+
 			foreach (var playerEntry in AddPlayerEntries)
 			{
 				stream.WriteUuid(playerEntry.UUID);
 				stream.WriteString(playerEntry.Name);
 				stream.WriteVarInt(playerEntry.Properties.Length);
+
 				foreach (var property in playerEntry.Properties)
 				{
 					stream.WriteString(property.Name);
 					stream.WriteString(property.Value);
 					stream.WriteBool(property.IsSigned);
+
 					if (property.IsSigned)
 					{
 						stream.WriteString(property.Signature);
@@ -141,6 +151,7 @@ namespace Alex.Networking.Java.Packets.Play
 				stream.WriteVarInt(playerEntry.Gamemode);
 				stream.WriteVarInt(playerEntry.Ping);
 				stream.WriteBool(playerEntry.HasDisplayName);
+
 				if (playerEntry.HasDisplayName)
 				{
 					stream.WriteString(playerEntry.DisplayName);
@@ -150,32 +161,40 @@ namespace Alex.Networking.Java.Packets.Play
 
 		public override void Encode(MinecraftStream stream)
 		{
-			stream.WriteVarInt((int) Action);
+			stream.WriteVarInt((int)Action);
+
 			switch (Action)
 			{
 				case PlayerListAction.AddPlayer:
 					WritePlayerEntries(stream);
+
 					break;
+
 				case PlayerListAction.UpdateGamemode:
 					//stream.WriteVarInt(Gamemode);
 					break;
+
 				case PlayerListAction.UpdateLatency:
-				//	stream.WriteVarInt(Ping);
+					//	stream.WriteVarInt(Ping);
 					break;
+
 				case PlayerListAction.UpdateDisplayName:
-				//	bool hdn = !string.IsNullOrEmpty(Displayname);
-				//	stream.WriteBool(hdn);
-				//	if (hdn)
-				//	{
-				//		stream.WriteString(Displayname);
-				//	}
+					//	bool hdn = !string.IsNullOrEmpty(Displayname);
+					//	stream.WriteBool(hdn);
+					//	if (hdn)
+					//	{
+					//		stream.WriteString(Displayname);
+					//	}
 					break;
+
 				case PlayerListAction.RemovePlayer:
 					stream.WriteVarInt(RemovePlayerEntries.Length);
+
 					foreach (var remove in RemovePlayerEntries)
 					{
 						stream.WriteUuid(remove.UUID);
 					}
+
 					break;
 			}
 		}
@@ -184,7 +203,7 @@ namespace Alex.Networking.Java.Packets.Play
 		{
 			public UUID UUID;
 		}
-		
+
 		public class UpdateDisplayNameEntry : PlayerEntry
 		{
 			public bool HasDisplayName;

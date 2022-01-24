@@ -20,75 +20,76 @@ namespace Alex
 {
 	public static class Extensions
 	{
-		static Extensions()
-		{
-			
-		}
-		
+		static Extensions() { }
+
 		public static Color Blend(this Color color, Color backColor, byte amount)
 		{
 			amount = (byte)(255 - amount);
 			byte r = (byte)((color.R * amount / 255) + backColor.R * (255 - amount) / 255);
 			byte g = (byte)((color.G * amount / 255) + backColor.G * (255 - amount) / 255);
 			byte b = (byte)((color.B * amount / 255) + backColor.B * (255 - amount) / 255);
+
 			return new Color(r, g, b, backColor.A);
 		}
-		
-		 /// <summary>
-        /// Calculate percentage similarity of two strings
-        /// <param name="source">Source String to Compare with</param>
-        /// <param name="target">Targeted String to Compare</param>
-        /// <returns>Return Similarity between two strings from 0 to 1.0</returns>
-        /// </summary>
-        public static double CalculateSimilarity(this string source, string target)
-        {
-            if ((source == null) || (target == null)) return 0.0;
-            if ((source.Length == 0) || (target.Length == 0)) return 0.0;
-            if (source == target) return 1.0;
 
-            int stepsToSame = ComputeLevenshteinDistance(source, target);
-            return (1.0 - (stepsToSame / (double)Math.Max(source.Length, target.Length)));
-        }
-        /// <summary>
-        /// Returns the number of steps required to transform the source string
-        /// into the target string.
-        /// </summary>
-        static int ComputeLevenshteinDistance(string source, string target)
-        {
-            if ((source == null) || (target == null)) return 0;
-            if ((source.Length == 0) || (target.Length == 0)) return 0;
-            if (source == target) return source.Length;
+		/// <summary>
+		/// Calculate percentage similarity of two strings
+		/// <param name="source">Source String to Compare with</param>
+		/// <param name="target">Targeted String to Compare</param>
+		/// <returns>Return Similarity between two strings from 0 to 1.0</returns>
+		/// </summary>
+		public static double CalculateSimilarity(this string source, string target)
+		{
+			if ((source == null) || (target == null)) return 0.0;
+			if ((source.Length == 0) || (target.Length == 0)) return 0.0;
+			if (source == target) return 1.0;
 
-            int sourceWordCount = source.Length;
-            int targetWordCount = target.Length;
+			int stepsToSame = ComputeLevenshteinDistance(source, target);
 
-            // Step 1
-            if (sourceWordCount == 0)
-                return targetWordCount;
+			return (1.0 - (stepsToSame / (double)Math.Max(source.Length, target.Length)));
+		}
 
-            if (targetWordCount == 0)
-                return sourceWordCount;
+		/// <summary>
+		/// Returns the number of steps required to transform the source string
+		/// into the target string.
+		/// </summary>
+		static int ComputeLevenshteinDistance(string source, string target)
+		{
+			if ((source == null) || (target == null)) return 0;
+			if ((source.Length == 0) || (target.Length == 0)) return 0;
+			if (source == target) return source.Length;
 
-            int[,] distance = new int[sourceWordCount + 1, targetWordCount + 1];
+			int sourceWordCount = source.Length;
+			int targetWordCount = target.Length;
 
-            // Step 2
-            for (int i = 0; i <= sourceWordCount; distance[i, 0] = i++) ;
-            for (int j = 0; j <= targetWordCount; distance[0, j] = j++) ;
+			// Step 1
+			if (sourceWordCount == 0)
+				return targetWordCount;
 
-            for (int i = 1; i <= sourceWordCount; i++)
-            {
-                for (int j = 1; j <= targetWordCount; j++)
-                {
-                    // Step 3
-                    int cost = (target[j - 1] == source[i - 1]) ? 0 : 1;
+			if (targetWordCount == 0)
+				return sourceWordCount;
 
-                    // Step 4
-                    distance[i, j] = Math.Min(Math.Min(distance[i - 1, j] + 1, distance[i, j - 1] + 1), distance[i - 1, j - 1] + cost);
-                }
-            }
+			int[,] distance = new int[sourceWordCount + 1, targetWordCount + 1];
 
-            return distance[sourceWordCount, targetWordCount];
-        }
+			// Step 2
+			for (int i = 0; i <= sourceWordCount; distance[i, 0] = i++) ;
+			for (int j = 0; j <= targetWordCount; distance[0, j] = j++) ;
+
+			for (int i = 1; i <= sourceWordCount; i++)
+			{
+				for (int j = 1; j <= targetWordCount; j++)
+				{
+					// Step 3
+					int cost = (target[j - 1] == source[i - 1]) ? 0 : 1;
+
+					// Step 4
+					distance[i, j] = Math.Min(
+						Math.Min(distance[i - 1, j] + 1, distance[i, j - 1] + 1), distance[i - 1, j - 1] + cost);
+				}
+			}
+
+			return distance[sourceWordCount, targetWordCount];
+		}
 
 		public static void InitMarkers(GuiRenderer renderer)
 		{
@@ -101,53 +102,65 @@ namespace Alex
 		private static GuiTexture2D GetTexture2D(MapMarker marker, IGuiRenderer renderer)
 		{
 			GuiTextures texture;
+
 			switch (marker)
 			{
 				case MapMarker.None:
 					return null;
-				
+
 				case MapMarker.WhitePointer:
 					texture = AlexGuiTextures.MapMarkers.WhitePointer;
+
 					break;
 
 				case MapMarker.RedPointer:
 					texture = AlexGuiTextures.MapMarkers.RedPointer;
+
 					break;
 
 				case MapMarker.GreenPointer:
 					texture = AlexGuiTextures.MapMarkers.GreenPointer;
+
 					break;
 
 				case MapMarker.BluePointer:
 					texture = AlexGuiTextures.MapMarkers.BluePointer;
+
 					break;
 
 				case MapMarker.Cross:
 					texture = AlexGuiTextures.MapMarkers.Cross;
+
 					break;
 
 				case MapMarker.RedThing:
 					texture = AlexGuiTextures.MapMarkers.RedThing;
+
 					break;
 
 				case MapMarker.BigBlip:
 					texture = AlexGuiTextures.MapMarkers.BigDot;
+
 					break;
 
 				case MapMarker.SmallBlip:
 					texture = AlexGuiTextures.MapMarkers.SmallDot;
+
 					break;
 
 				case MapMarker.House:
 					texture = AlexGuiTextures.MapMarkers.House;
+
 					break;
 
 				case MapMarker.BlueStructure:
 					texture = AlexGuiTextures.MapMarkers.BlueStructure;
+
 					break;
 
 				case MapMarker.RedCross:
 					texture = AlexGuiTextures.MapMarkers.RedCross;
+
 					break;
 
 				default:
@@ -157,12 +170,12 @@ namespace Alex
 			GuiTexture2D value = texture;
 			value.RepeatMode = TextureRepeatMode.Stretch;
 			value.TryResolveTexture(renderer);
-			
+
 			return value;
 		}
 
 		private static Dictionary<MapMarker, GuiTexture2D> _mapTextures = new Dictionary<MapMarker, GuiTexture2D>();
-		
+
 		public static GuiTexture2D ToTexture(this MapMarker marker)
 		{
 			return _mapTextures[marker];
@@ -172,44 +185,53 @@ namespace Alex
 		public static IMapColor ToMapColor(this WoodType woodType)
 		{
 			MapColor mapColor = MapColor.Wood;
+
 			switch (woodType)
 			{
 				case WoodType.Oak:
 					mapColor = MapColor.Wood;
+
 					break;
 
 				case WoodType.Spruce:
 					mapColor = MapColor.Podzol;
+
 					break;
 
 				case WoodType.Birch:
 					mapColor = MapColor.Sand;
+
 					break;
 
 				case WoodType.Jungle:
 					mapColor = MapColor.Dirt;
+
 					break;
 
 				case WoodType.Acacia:
 					mapColor = MapColor.Orange;
+
 					break;
 
 				case WoodType.DarkOak:
 					mapColor = MapColor.Brown;
+
 					break;
 
 				case WoodType.Crimson:
 					mapColor = MapColor.CrimsonStem;
+
 					break;
 
 				case WoodType.Warped:
 					mapColor = MapColor.WarpedStem;
+
 					break;
 			}
 
 			return mapColor;
 		}
-		
+
 		public static IMapColor ToMapColor(this BlockColor color)
 		{
 			switch (color)
@@ -325,7 +347,7 @@ namespace Alex
 		{
 			return item == null || item is ItemAir || item.Count <= 0;
 		}
-		
+
 		/// <summary>
 		/// Creates a new <see cref="T:Microsoft.Xna.Framework.Vector3" /> that contains a transformation of 3d-vector by the specified <see cref="T:Microsoft.Xna.Framework.Matrix" />.
 		/// </summary>
@@ -347,9 +369,9 @@ namespace Alex
 		/// <param name="result">Transformed <see cref="T:Microsoft.Xna.Framework.Vector3" /> as an output parameter.</param>
 		public static void Transform(ref Vector3 position, ref Matrix matrix, out Vector3 result)
 		{
-			result.X =  position.X * matrix.M11 +  position.Y *  matrix.M21 +  position.Z *  matrix.M31 + matrix.M41;
-			result.Y =  position.X * matrix.M12 +  position.Y *  matrix.M22 +  position.Z *  matrix.M32 + matrix.M42;
-			result.Z =  position.X * matrix.M13 +  position.Y *  matrix.M23 +  position.Z *  matrix.M33 + matrix.M43;
+			result.X = position.X * matrix.M11 + position.Y * matrix.M21 + position.Z * matrix.M31 + matrix.M41;
+			result.Y = position.X * matrix.M12 + position.Y * matrix.M22 + position.Z * matrix.M32 + matrix.M42;
+			result.Z = position.X * matrix.M13 + position.Y * matrix.M23 + position.Z * matrix.M33 + matrix.M43;
 		}
 
 		public static RasterizerState Copy(this RasterizerState state)
@@ -377,37 +399,43 @@ namespace Alex
 				{
 					result.Append(' ');
 				}
+
 				result.Append(ch);
 			}
-			
+
 			return result.ToString();
 		}
 
 		public static byte[] ReadAllBytes(this Stream reader)
 		{
 			const int bufferSize = 4096;
+
 			using (var ms = new MemoryStream())
 			{
 				byte[] buffer = new byte[bufferSize];
 				int count;
+
 				while ((count = reader.Read(buffer, 0, buffer.Length)) != 0)
 					ms.Write(buffer, 0, count);
+
 				return ms.ToArray();
 			}
 		}
-		
+
 
 		public static BoundingBox OffsetBy(this BoundingBox box, Vector3 offset)
 		{
 			box.Min += offset;
 			box.Max += offset;
+
 			return box;
 		}
 
-	    public static Vector3 Floor(this Vector3 toFloor)
-	    {
-	        return new Vector3((float)Math.Floor(toFloor.X), (float)Math.Floor(toFloor.Y), (float)Math.Floor(toFloor.Z));
-	    }
+		public static Vector3 Floor(this Vector3 toFloor)
+		{
+			return new Vector3(
+				(float)Math.Floor(toFloor.X), (float)Math.Floor(toFloor.Y), (float)Math.Floor(toFloor.Z));
+		}
 
 		public static BlockFace GetBlockFace(this Vector3 vector)
 		{
@@ -419,19 +447,19 @@ namespace Alex
 
 			if (vector == Vector3.Forward)
 				return BlockFace.North;
-			
+
 			if (vector == Vector3.Left)
 				return BlockFace.East;
-			
+
 			if (vector == Vector3.Backward)
 				return BlockFace.South;
-			
+
 			if (vector == Vector3.Right)
 				return BlockFace.West;
 
 			return BlockFace.None;
 		}
-		
+
 		public static BlockFace GetBlockFace(this BlockCoordinates coordinates)
 		{
 			if (coordinates == BlockCoordinates.Up)
@@ -442,13 +470,13 @@ namespace Alex
 
 			if (coordinates == BlockCoordinates.North)
 				return BlockFace.North;
-			
+
 			if (coordinates == BlockCoordinates.East)
 				return BlockFace.East;
-			
+
 			if (coordinates == BlockCoordinates.South)
 				return BlockFace.South;
-			
+
 			if (coordinates == BlockCoordinates.West)
 				return BlockFace.West;
 
@@ -467,28 +495,20 @@ namespace Alex
 		{
 			byte[] uuidMostSignificantBytes = BitConverter.GetBytes(most);
 			byte[] uuidLeastSignificantBytes = BitConverter.GetBytes(least);
-			byte[] guidBytes = new byte[16] {
-				uuidMostSignificantBytes[4],
-				uuidMostSignificantBytes[5],
-				uuidMostSignificantBytes[6],
-				uuidMostSignificantBytes[7],
-				uuidMostSignificantBytes[2],
-				uuidMostSignificantBytes[3],
-				uuidMostSignificantBytes[0],
-				uuidMostSignificantBytes[1],
-				uuidLeastSignificantBytes[7],
-				uuidLeastSignificantBytes[6],
-				uuidLeastSignificantBytes[5],
-				uuidLeastSignificantBytes[4],
-				uuidLeastSignificantBytes[3],
-				uuidLeastSignificantBytes[2],
-				uuidLeastSignificantBytes[1],
+
+			byte[] guidBytes = new byte[16]
+			{
+				uuidMostSignificantBytes[4], uuidMostSignificantBytes[5], uuidMostSignificantBytes[6],
+				uuidMostSignificantBytes[7], uuidMostSignificantBytes[2], uuidMostSignificantBytes[3],
+				uuidMostSignificantBytes[0], uuidMostSignificantBytes[1], uuidLeastSignificantBytes[7],
+				uuidLeastSignificantBytes[6], uuidLeastSignificantBytes[5], uuidLeastSignificantBytes[4],
+				uuidLeastSignificantBytes[3], uuidLeastSignificantBytes[2], uuidLeastSignificantBytes[1],
 				uuidLeastSignificantBytes[0]
 			};
 
 			return new Guid(guidBytes);
 		}
-		
+
 		public static bool IsBitSet(this byte b, int pos)
 		{
 			return (b & (1 << pos)) != 0;
@@ -497,7 +517,7 @@ namespace Alex
 		public static byte SetBit(this byte b, int bit, bool value)
 		{
 			var mask = (byte)(1 << bit);
-			
+
 			if (value)
 			{
 				b |= mask;

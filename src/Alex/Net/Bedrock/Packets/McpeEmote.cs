@@ -13,7 +13,7 @@ namespace Alex.Net.Bedrock.Packets
 		public long RuntimeEntityId { get; set; }
 		public string EmoteId { get; set; }
 		public byte Flags { get; set; }
-		
+
 		/// <inheritdoc />
 		protected override void DecodePacket()
 		{

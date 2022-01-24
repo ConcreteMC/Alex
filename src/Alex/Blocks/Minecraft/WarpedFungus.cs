@@ -11,7 +11,7 @@ namespace Alex.Blocks.Minecraft
 			Solid = false;
 
 			IsFullCube = false;
-			
+
 			base.BlockMaterial = Material.Plants.Clone().WithMapColor(MapColor.WarpedStem);
 		}
 	}

@@ -6,18 +6,19 @@ namespace Alex.MoLang.Runtime.Struct
 	public class PropertyAccessor : ValueAccessor
 	{
 		private PropertyInfo _propertyInfo;
+
 		public PropertyAccessor(PropertyInfo propertyInfo)
 		{
 			_propertyInfo = propertyInfo;
 		}
-		
+
 		/// <inheritdoc />
 		public override IMoValue Get(object instance)
 		{
 			var value = _propertyInfo.GetValue(instance);
 
 			return value is IMoValue moValue ? moValue : MoValue.FromObject(value);
-			return (IMoValue) _propertyInfo.GetValue(instance);
+			return (IMoValue)_propertyInfo.GetValue(instance);
 		}
 
 		/// <inheritdoc />
@@ -25,7 +26,7 @@ namespace Alex.MoLang.Runtime.Struct
 		{
 			if (!_propertyInfo.CanWrite)
 				return;
-			
+
 			_propertyInfo.SetValue(instance, value);
 		}
 	}

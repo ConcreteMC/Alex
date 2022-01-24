@@ -11,7 +11,7 @@ namespace Alex.Blocks.Minecraft
 			base.BlockMaterial = Material.Clay.Clone().WithMapColor(color.ToMapColor());
 		}
 	}
-	
+
 	public class ConcretePowder : Block
 	{
 		public ConcretePowder(BlockColor color)

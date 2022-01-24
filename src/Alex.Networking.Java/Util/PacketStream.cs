@@ -32,7 +32,7 @@ namespace Alex.Networking.Java.Util
 
 			return stream.Position < stream.Length;
 		}
-		
+
 		public bool DataAvailable
 		{
 			get
@@ -40,12 +40,10 @@ namespace Alex.Networking.Java.Util
 				return IsDataAvailable(BaseStream);
 			}
 		}
-		
+
 		protected CancellationTokenSource CancellationToken { get; }
-		protected PacketStream(byte[] data) : this(new MemoryStream(data), System.Threading.CancellationToken.None)
-		{
-			
-		}
+
+		protected PacketStream(byte[] data) : this(new MemoryStream(data), System.Threading.CancellationToken.None) { }
 
 		public PacketStream(Stream baseStream, CancellationToken cancellationToken)
 		{
@@ -101,8 +99,11 @@ namespace Alex.Networking.Java.Util
 		{
 			BaseStream.Flush();
 		}
-		
-		public override async Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
+
+		public override async Task<int> ReadAsync(byte[] buffer,
+			int offset,
+			int count,
+			CancellationToken cancellationToken)
 		{
 			try
 			{
@@ -113,9 +114,9 @@ namespace Alex.Networking.Java.Util
 			catch (Exception)
 			{
 				return 0;
-			}//TODO better handling of this
+			} //TODO better handling of this
 		}
-		
+
 		public virtual async Task<int> ReadAsync(byte[] buffer, CancellationToken cancellationToken = default)
 		{
 			try
@@ -127,9 +128,9 @@ namespace Alex.Networking.Java.Util
 			catch (Exception)
 			{
 				return 0;
-			}//TODO better handling of this
+			} //TODO better handling of this
 		}
-		
+
 		public override async Task WriteAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
 		{
 			await BaseStream.WriteAsync(buffer.AsMemory(offset, count), cancellationToken);
@@ -142,7 +143,6 @@ namespace Alex.Networking.Java.Util
 
 		public async Task<byte[]> ReadAsync(int length)
 		{
-			
 			Memory<byte> buffer = new Memory<byte>(new byte[length]);
 			int read = 0;
 
@@ -169,27 +169,29 @@ namespace Alex.Networking.Java.Util
 		{
 			return IPAddress.NetworkToHostOrder(BitConverter.ToInt32(data, 0));
 		}
-		
+
 		public async Task WriteByteAsync(byte value)
 		{
 			await WriteAsync(new byte[] { value });
 		}
-		
+
 		public sbyte ReadSignedByte() => (sbyte)this.ReadUnsignedByte();
 
 		public async Task<sbyte> ReadByteAsync() => (sbyte)await this.ReadUnsignedByteAsync();
-		
+
 		public byte ReadUnsignedByte()
 		{
 			Span<byte> buffer = stackalloc byte[1];
 			BaseStream.Read(buffer);
+
 			return buffer[0];
 		}
-		
+
 		public async Task<byte> ReadUnsignedByteAsync()
 		{
 			var buffer = new byte[1];
 			await this.ReadAsync(buffer);
+
 			return buffer[0];
 		}
 
@@ -223,6 +225,7 @@ namespace Alex.Networking.Java.Util
 			int numRead = 0;
 			int result = 0;
 			byte read;
+
 			do
 			{
 				read = await ReadUnsignedByteAsync();
@@ -231,12 +234,13 @@ namespace Alex.Networking.Java.Util
 				result |= (value << (7 * numRead));
 
 				numRead++;
+
 				if (numRead > 5)
 				{
 					throw new Exception("VarInt is too big");
 				}
 			} while ((read & 0x80) != 0);
-			
+
 			return result;
 		}
 
@@ -304,21 +308,21 @@ namespace Alex.Networking.Java.Util
 			//if (y > 2048)
 			//	y = -(0xFFF - y);
 
-			var z = Convert.ToSingle(val << 26 >> 38);  //Convert.ToSingle((val << 38 >> 38) >> 12);
+			var z = Convert.ToSingle(val << 26 >> 38); //Convert.ToSingle((val << 38 >> 38) >> 12);
 
-			if (x >= (2^25))
+			if (x >= (2 ^ 25))
 			{
-				x -= 2^26;
+				x -= 2 ^ 26;
 			}
 
-			if (y >= (2^11))
+			if (y >= (2 ^ 11))
 			{
-				y -= 2^12;
+				y -= 2 ^ 12;
 			}
 
-			if (z >= (2^25))
+			if (z >= (2 ^ 25))
 			{
-				z -= 2^26;
+				z -= 2 ^ 26;
 			}
 
 			return new Vector3(x, y, z);
@@ -329,16 +333,16 @@ namespace Alex.Networking.Java.Util
 		{
 			var val = await ReadLongAsync();
 			var x = (val >> 38);
-			var y =(val & 0xFFF);
+			var y = (val & 0xFFF);
 
 			//if (y > 2048)
 			//	y = -(0xFFF - y);
 
-			var z = ((val << 38 >> 38) >> 12);  //Convert.ToSingle((val << 38 >> 38) >> 12);
+			var z = ((val << 38 >> 38) >> 12); //Convert.ToSingle((val << 38 >> 38) >> 12);
 
-			if (x >= (2^25))
+			if (x >= (2 ^ 25))
 			{
-				x -= 2^26;
+				x -= 2 ^ 26;
 			}
 
 			//if (y >= (2^11))
@@ -346,9 +350,9 @@ namespace Alex.Networking.Java.Util
 			//    y -= 2^12;
 			//}
 
-			if (z >= (2^25))
+			if (z >= (2 ^ 25))
 			{
-				z -= 2^26;
+				z -= 2 ^ 26;
 			}
 
 			return new BlockCoordinates((int)x, (int)y, (int)z);
@@ -358,15 +362,16 @@ namespace Alex.Networking.Java.Util
 		public async Task<SlotData> ReadSlotAsync()
 		{
 			bool present = await ReadBoolAsync();
+
 			if (!present) return null;
 
 			int id = await ReadVarIntAsync();
 			byte count = 0;
 			NbtCompound nbt = null;
-			
+
 			count = await ReadUnsignedByteAsync();
 			nbt = await ReadNbtCompoundAsync();
-			
+
 
 			SlotData slot = new SlotData();
 			slot.Count = count;
@@ -381,9 +386,10 @@ namespace Alex.Networking.Java.Util
 		public async Task WriteSlotAsync(SlotData slot)
 		{
 			await WriteBoolAsync(slot != null && slot.ItemID != -1);
+
 			if (slot == null)
 				return;
-			
+
 			await WriteVarIntAsync(slot.ItemID);
 			await WriteByteAsync(slot.Count);
 			await WriteNbtCompoundAsync(slot.Nbt);
@@ -409,13 +415,14 @@ namespace Alex.Networking.Java.Util
 		public async Task<int> WriteRawVarInt32Async(uint value)
 		{
 			int written = 0;
+
 			while ((value & -128) != 0)
 			{
-				await WriteByteAsync((byte) ((value & 0x7F) | 0x80));
+				await WriteByteAsync((byte)((value & 0x7F) | 0x80));
 				value >>= 7;
 			}
 
-			await WriteByteAsync((byte) value);
+			await WriteByteAsync((byte)value);
 			written++;
 
 			return written;
@@ -424,24 +431,28 @@ namespace Alex.Networking.Java.Util
 		/// <inheritdoc />
 		public async Task<int> WriteVarIntAsync(int value)
 		{
-			return await WriteRawVarInt32Async((uint) value);
+			return await WriteRawVarInt32Async((uint)value);
 		}
 
 		/// <inheritdoc />
 		public async Task<int> WriteVarLongAsync(long value)
 		{
 			int write = 0;
+
 			do
 			{
 				byte temp = (byte)(value & 127);
 				value >>= 7;
+
 				if (value != 0)
 				{
 					temp |= 128;
 				}
+
 				await WriteByteAsync(temp);
 				write++;
 			} while (value != 0);
+
 			return write;
 		}
 
@@ -528,16 +539,16 @@ namespace Alex.Networking.Java.Util
 			//return Task.Run(
 			//	 (Func<NbtCompound>)(() =>
 			//	{
-					NbtTagType t = (NbtTagType)(await ReadUnsignedByteAsync());
+			NbtTagType t = (NbtTagType)(await ReadUnsignedByteAsync());
 
-					if (t != NbtTagType.Compound) return null;
-					Position--;
+			if (t != NbtTagType.Compound) return null;
+			Position--;
 
-					NbtFile file = new NbtFile() { BigEndian = true, UseVarInt = false };
+			NbtFile file = new NbtFile() { BigEndian = true, UseVarInt = false };
 
-					file.LoadFromStream(this, NbtCompression.None);
+			file.LoadFromStream(this, NbtCompression.None);
 
-					return (NbtCompound)file.RootTag;
+			return (NbtCompound)file.RootTag;
 			//	}));
 		}
 
@@ -563,12 +574,13 @@ namespace Alex.Networking.Java.Util
 		public async Task<string> ReadChatObjectAsync()
 		{
 			string raw = await ReadStringAsync();
+
 			if (ChatObject.TryParse(raw, out string result))
 			{
 				return result;
 			}
 
-			return raw;// new ChatObject(raw);
+			return raw; // new ChatObject(raw);
 		}
 	}
 }

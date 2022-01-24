@@ -25,6 +25,7 @@ namespace Alex.Particles
 	public class ParticleManager : DrawableGameComponent, ITicked
 	{
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(ParticleManager));
+
 		private Dictionary<string, ParticleEmitter> _particles =
 			new Dictionary<string, ParticleEmitter>(StringComparer.OrdinalIgnoreCase);
 
@@ -33,10 +34,10 @@ namespace Alex.Particles
 
 		public int ParticleCount { get; private set; }
 
-		private Dictionary<string, Texture2D> _sharedTextures =
-			new Dictionary<string, Texture2D>();
+		private Dictionary<string, Texture2D> _sharedTextures = new Dictionary<string, Texture2D>();
 		private ResourceManager ResourceManager { get; }
 		private IReadOnlyDictionary<string, string> _particleMapping;
+
 		public ParticleManager(Game game, GraphicsDevice device, ResourceManager resourceManager) : base(game)
 		{
 			_spriteBatch = new SpriteBatch(device);
@@ -49,8 +50,9 @@ namespace Alex.Particles
 
 			string soundJson = ResourceManager.ReadStringResource("Alex.Resources.particles.json");
 			var particleMappings = JsonConvert.DeserializeObject<Dictionary<string, ParticleMapping>>(soundJson);
-			
+
 			Dictionary<string, string> mapped = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+
 			if (particleMappings != null)
 			{
 				foreach (var mapping in particleMappings)
@@ -68,10 +70,11 @@ namespace Alex.Particles
 		public int Load(MCBedrockResourcePack resourcePack, IProgressReceiver progress)
 		{
 			int counter = 0;
+
 			try
 			{
 				Enabled = false;
-				
+
 				int total = resourcePack.Particles.Count;
 
 				foreach (var particle in resourcePack.Particles)
@@ -158,11 +161,13 @@ namespace Alex.Particles
 		}
 
 		private ICamera _camera;
+
 		public void Initialize(ICamera camera)
 		{
 			Visible = true;
-			
+
 			_camera = camera;
+
 			foreach (var particle in _particles)
 			{
 				particle.Value.Reset();
@@ -181,9 +186,10 @@ namespace Alex.Particles
 				return;
 
 			int count = 0;
+
 			_spriteBatch.Begin(
-				SpriteSortMode.BackToFront, BlendState.NonPremultiplied, SamplerState.PointWrap, DepthStencilState.DepthRead,
-				RasterizerState.CullCounterClockwise);
+				SpriteSortMode.BackToFront, BlendState.NonPremultiplied, SamplerState.PointWrap,
+				DepthStencilState.DepthRead, RasterizerState.CullCounterClockwise);
 
 			try
 			{
@@ -201,17 +207,18 @@ namespace Alex.Particles
 		}
 
 		private double _accumulator = 0d;
+
 		/// <inheritdoc />
 		public override void Update(GameTime gameTime)
 		{
 			if (!Enabled)
 				return;
-			
+
 			foreach (var particle in _particles.Values)
 			{
 				particle.Update(gameTime);
 			}
-			
+
 			_accumulator += Alex.DeltaTimeSpan.TotalMilliseconds;
 
 			while (_accumulator >= 50d)
@@ -233,15 +240,18 @@ namespace Alex.Particles
 		private bool TryConvert(ParticleType type, out string value, out ParticleDataMode dataMode)
 		{
 			dataMode = ParticleDataMode.None;
+
 			switch (type)
 			{
 				case ParticleType.Bubble:
 					value = "minecraft:basic_bubble_particle";
+
 					return true;
 
 				case ParticleType.Critical:
 					value = "minecraft:critical_hit_emitter";
 					dataMode = ParticleDataMode.Scale;
+
 					return true;
 
 				case ParticleType.BlockForceField:
@@ -250,10 +260,12 @@ namespace Alex.Particles
 				case ParticleType.Smoke:
 					value = "minecraft:basic_smoke_particle";
 					dataMode = ParticleDataMode.Scale;
+
 					return true;
 
 				case ParticleType.Explode:
 					value = "minecraft:explosion_particle";
+
 					return true;
 
 				case ParticleType.WhiteSmoke:
@@ -263,27 +275,34 @@ namespace Alex.Particles
 
 				case ParticleType.Flame:
 					value = "minecraft:basic_flame_particle";
+
 					return true;
 
 				case ParticleType.Lava:
 					value = "minecraft:lava_particle";
-;					return true;
+					;
+
+					return true;
 
 				case ParticleType.LargeSmoke:
 					value = "minecraft:water_evaporation_actor_emitter";
+
 					return true;
 
 				case ParticleType.Redstone:
 					value = "minecraft:redstone_wire_dust_particle";
+
 					return true;
 
 				case ParticleType.RisingRedDust:
 					value = "minecraft:redstone_wire_dust_particle";
+
 					return true;
 
 				case ParticleType.ItemBreak:
 					dataMode = ParticleDataMode.Item;
 					value = "minecraft:breaking_item_icon";
+
 					return true;
 
 				case ParticleType.SnowballPoof:
@@ -291,23 +310,29 @@ namespace Alex.Particles
 
 				case ParticleType.LargeExplode:
 					value = "minecraft:large_explosion";
+
 					return true;
 
 				case ParticleType.HugeExplode:
 					value = "minecraft:huge_explosion_emitter";
+
 					return true;
 
 				case ParticleType.MobFlame:
 					value = "minecraft:mobflame_single";
+
 					return true;
 
 				case ParticleType.Heart:
 					value = "minecraft:heart_particle";
-;					return true;
+					;
+
+					return true;
 
 				case ParticleType.Terrain:
 					dataMode = ParticleDataMode.BlockRuntimeId;
 					value = "minecraft:breaking_item_terrain";
+
 					return true;
 
 				case ParticleType.TownAura:
@@ -315,18 +340,22 @@ namespace Alex.Particles
 
 				case ParticleType.Portal:
 					value = "minecraft:mob_portal";
+
 					return true;
 
 				case ParticleType.WaterSplash:
 					value = "minecraft:water_splash_particle";
+
 					return true;
 
 				case ParticleType.WaterWake:
 					value = "minecraft:water_wake_particle";
+
 					return true;
 
 				case ParticleType.DripWater:
 					value = "minecraft:water_drip_particle";
+
 					return true;
 
 				case ParticleType.DripLava:
@@ -336,28 +365,34 @@ namespace Alex.Particles
 
 				case ParticleType.DripHoney:
 					value = "minecraft:honey_drip_particle";
+
 					return true;
 
 				case ParticleType.Dust:
 					value = "minecraft:redstone_wire_dust_particle";
 					dataMode = ParticleDataMode.Color;
+
 					return true;
 
 				case ParticleType.MobSpell:
 					value = "minecraft:mobspell_emitter";
+
 					return true;
 
-				case ParticleType.MobSpellAmbient: 
+				case ParticleType.MobSpellAmbient:
 					value = "minecraft:mobspell_emitter";
+
 					return true;
 
 				case ParticleType.MobSpellInstantaneous:
 					value = "minecraft:mobspell_emitter";
+
 					return true;
 
 				case ParticleType.Ink:
 					value = "minecraft:ink_emitter";
 					dataMode = ParticleDataMode.Scale;
+
 					return true;
 
 				case ParticleType.Slime:
@@ -365,18 +400,22 @@ namespace Alex.Particles
 
 				case ParticleType.RainSplash:
 					value = "minecraft:rain_splash_particle";
+
 					return true;
 
 				case ParticleType.VillagerAngry:
 					value = "minecraft:villager_angry";
+
 					return true;
 
 				case ParticleType.VillagerHappy:
 					value = "minecraft:villager_happy";
+
 					return true;
 
 				case ParticleType.EnchantmentTable:
 					value = "minecraft:enchanting_table_particle";
+
 					return true;
 
 				case ParticleType.TrackingEmitter:
@@ -384,10 +423,12 @@ namespace Alex.Particles
 
 				case ParticleType.Note:
 					value = "minecraft:note_particle";
+
 					return true;
 
 				case ParticleType.WitchSpell:
 					value = "minecraft:splash_spell_emitter";
+
 					return true;
 
 				case ParticleType.Carrot:
@@ -406,10 +447,12 @@ namespace Alex.Particles
 
 				case ParticleType.Spit:
 					value = "minecraft:llama_spit_smoke";
+
 					return true;
 
 				case ParticleType.Totem:
 					value = "minecraft:totem_particle";
+
 					return true;
 
 				case ParticleType.Food:
@@ -417,18 +460,22 @@ namespace Alex.Particles
 
 				case ParticleType.FireworksStarter:
 					value = "minecraft:sparkler_emitter";
+
 					break;
 
 				case ParticleType.FireworksSpark:
 					value = "minecraft:sparkler_emitter";
+
 					return true;
 
 				case ParticleType.FireworksOverlay:
 					value = "minecraft:sparkler_emitter";
+
 					break;
 
 				case ParticleType.BalloonGas:
 					value = "minecraft:balloon_gas_particle";
+
 					return true;
 
 				case ParticleType.ColoredFlame:
@@ -438,24 +485,30 @@ namespace Alex.Particles
 
 				case ParticleType.Sparkler:
 					value = "minecraft:sparkler_emitter";
+
 					return true;
 
 				case ParticleType.Conduit:
 					value = "minecraft:conduit_particle";
+
 					return true;
 
 				case ParticleType.BubbleColumnUp:
 					value = "minecraft:bubble_column_up_particle";
+
 					return true;
 
 				case ParticleType.BubbleColumnDown:
 					value = "minecraft:bubble_column_down_particle";
+
 					return true;
 
 				case ParticleType.Sneeze:
 					break;
 			}
+
 			value = null;
+
 			return false;
 		}
 
@@ -466,7 +519,7 @@ namespace Alex.Particles
 
 			if (type == ParticleType.TrackingEmitter)
 				return true;
-			
+
 			if (TryConvert(type, out var str, out ParticleDataMode dataMode))
 			{
 				return SpawnParticle(str, position, data, dataMode);
@@ -474,19 +527,26 @@ namespace Alex.Particles
 
 			return false;
 		}
-		
-		public bool SpawnParticle(string name, Vector3 position, long data = 0, ParticleDataMode dataMode = ParticleDataMode.None)
+
+		public bool SpawnParticle(string name,
+			Vector3 position,
+			long data = 0,
+			ParticleDataMode dataMode = ParticleDataMode.None)
 		{
 			return SpawnParticle(name, position, out _, data, dataMode);
 		}
-		
-		public bool SpawnParticle(string name, Vector3 position, out ParticleInstance instance, long data = 0, ParticleDataMode dataMode = ParticleDataMode.None)
+
+		public bool SpawnParticle(string name,
+			Vector3 position,
+			out ParticleInstance instance,
+			long data = 0,
+			ParticleDataMode dataMode = ParticleDataMode.None)
 		{
 			instance = null;
-			
+
 			if (!Enabled)
 				return true;
-			
+
 			if (_particles.TryGetValue(name, out var p))
 			{
 				return p.Spawn(position, data, dataMode, out instance);
@@ -500,12 +560,11 @@ namespace Alex.Particles
 		{
 			return _particleMapping.TryGetValue(particleName, out bedrockParticleName);
 		}
-		
+
 		/// <inheritdoc />
 		protected override void UnloadContent()
 		{
 			base.UnloadContent();
-			
 		}
 
 		public void Reset()
@@ -517,7 +576,7 @@ namespace Alex.Particles
 			{
 				particle.Value.Dispose();
 			}
-			
+
 			var textures = _sharedTextures.ToArray();
 			_sharedTextures.Clear();
 
@@ -529,7 +588,7 @@ namespace Alex.Particles
 						texture.Value.Dispose();
 				}
 			}
-			}
+		}
 	}
 
 	public enum ParticleDataMode

@@ -13,7 +13,10 @@ namespace Alex.ResourcePackLib.Json.Converters
 		}
 
 		/// <inheritdoc />
-		public override object ReadJson(JsonReader reader, Type objectType, object? existingValue, JsonSerializer serializer)
+		public override object ReadJson(JsonReader reader,
+			Type objectType,
+			object? existingValue,
+			JsonSerializer serializer)
 		{
 			var obj = JToken.Load(reader);
 

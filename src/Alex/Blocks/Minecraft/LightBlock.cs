@@ -6,7 +6,6 @@ namespace Alex.Blocks.Minecraft
 		{
 			HasHitbox = false;
 			Renderable = false;
-			
 		}
 	}
 }

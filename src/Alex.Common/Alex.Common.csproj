@@ -1,47 +1,47 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk" ToolsVersion="15.0">
-  <PropertyGroup>
-    <OldToolsVersion>2.0</OldToolsVersion>
-    <LangVersion>latest</LangVersion>
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <Configurations>Release;Debug;Appveyor;DirectX</Configurations>
-    <Platforms>x64;AnyCPU</Platforms>
-    <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
-  </PropertyGroup>
-  
-  <PropertyGroup>
-    <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
-    <IncludeAllContentForselfExtract>true</IncludeAllContentForselfExtract>
-    <PublishSingleFile>true</PublishSingleFile>
-  </PropertyGroup>
-  
-  <ItemGroup>
-    <PackageReference Include="MiNET.fnbt" Version="1.0.22" />
-    <PackageReference Include="MojangAPI" Version="1.0.3" />
-    <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
-    <PackageReference Include="NLog" Version="4.7.12" />
-    <PackageReference Include="SharpAvi" Version="2.1.2" />
-    <PackageReference Include="SixLabors.ImageSharp" Version="1.0.4" />
-    <PackageReference Include="SixLabors.ImageSharp.Drawing" Version="1.0.0-beta13" />
-    <PackageReference Include="Tmds.DBus" Version="0.9.1" />
-  </ItemGroup>
-  
-  <ItemGroup>
-    <Compile Remove="Events\EventPriority.cs" />
-    <Compile Remove="Events\EventHandlerAttribute.cs" />
-    <Compile Remove="Events\EventDispatcher.cs" />
-    <Compile Remove="Events\Event.cs" />
-    <Compile Remove="Events\DuplicateTypeException.cs" />
-  </ItemGroup>
-  
-  <ItemGroup>
-    <Folder Include="Blocks\BlockComponents" />
-    <Folder Include="Commands\Properties" />
-    <Folder Include="Entities\Effects" />
-  </ItemGroup>
-  
-  <ItemGroup>
-    <ProjectReference Include="..\..\submodules\MiNET\src\MiNET\MiNET\MiNET.csproj" />
-    <ProjectReference Include="..\..\submodules\RocketUI\src\RocketUI\RocketUI.csproj" Exclude="MonoGame.Framework.DesktopGL">
-    </ProjectReference>
-  </ItemGroup>
+    <PropertyGroup>
+        <OldToolsVersion>2.0</OldToolsVersion>
+        <LangVersion>latest</LangVersion>
+        <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+        <Configurations>Release;Debug;Appveyor;DirectX</Configurations>
+        <Platforms>x64;AnyCPU</Platforms>
+        <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+    </PropertyGroup>
+
+    <PropertyGroup>
+        <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
+        <IncludeAllContentForselfExtract>true</IncludeAllContentForselfExtract>
+        <PublishSingleFile>true</PublishSingleFile>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="MiNET.fnbt" Version="1.0.22"/>
+        <PackageReference Include="MojangAPI" Version="1.0.3"/>
+        <PackageReference Include="Newtonsoft.Json" Version="13.0.1"/>
+        <PackageReference Include="NLog" Version="4.7.12"/>
+        <PackageReference Include="SharpAvi" Version="2.1.2"/>
+        <PackageReference Include="SixLabors.ImageSharp" Version="1.0.4"/>
+        <PackageReference Include="SixLabors.ImageSharp.Drawing" Version="1.0.0-beta13"/>
+        <PackageReference Include="Tmds.DBus" Version="0.9.1"/>
+    </ItemGroup>
+
+    <ItemGroup>
+        <Compile Remove="Events\EventPriority.cs"/>
+        <Compile Remove="Events\EventHandlerAttribute.cs"/>
+        <Compile Remove="Events\EventDispatcher.cs"/>
+        <Compile Remove="Events\Event.cs"/>
+        <Compile Remove="Events\DuplicateTypeException.cs"/>
+    </ItemGroup>
+
+    <ItemGroup>
+        <Folder Include="Blocks\BlockComponents"/>
+        <Folder Include="Commands\Properties"/>
+        <Folder Include="Entities\Effects"/>
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\..\submodules\MiNET\src\MiNET\MiNET\MiNET.csproj"/>
+        <ProjectReference Include="..\..\submodules\RocketUI\src\RocketUI\RocketUI.csproj" Exclude="MonoGame.Framework.DesktopGL">
+        </ProjectReference>
+    </ItemGroup>
 </Project>

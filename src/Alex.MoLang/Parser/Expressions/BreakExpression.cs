@@ -9,6 +9,7 @@ namespace Alex.MoLang.Parser.Expressions
 		public override IMoValue Evaluate(MoScope scope, MoLangEnvironment environment)
 		{
 			scope.IsBreak = true;
+
 			return DoubleValue.Zero;
 		}
 	}

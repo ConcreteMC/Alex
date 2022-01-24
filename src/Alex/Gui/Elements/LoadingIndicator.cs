@@ -25,12 +25,10 @@ namespace Alex.Gui.Elements
 				_progress = Math.Clamp(value, 0d, 1d);
 			}
 		}
-		public LoadingIndicator()
-		{
-			
-		}
-		
-	//	private void Draw(GuiSpriteBatch graphics, )
+
+		public LoadingIndicator() { }
+
+		//	private void Draw(GuiSpriteBatch graphics, )
 
 		/// <inheritdoc />
 		protected override void OnDraw(GuiSpriteBatch graphics, GameTime gameTime)
@@ -64,7 +62,9 @@ namespace Alex.Gui.Elements
 			graphics.FillRectangle(RenderBounds, BackgroundColor);
 			var xOffset = (_progress * RenderBounds.Width);
 
-			graphics.FillRectangle(new Rectangle(RenderBounds.X + (int) xOffset, RenderBounds.Y, RenderBounds.Height, RenderBounds.Height), ForegroundColor);
+			graphics.FillRectangle(
+				new Rectangle(RenderBounds.X + (int)xOffset, RenderBounds.Y, RenderBounds.Height, RenderBounds.Height),
+				ForegroundColor);
 		}
 	}
 }

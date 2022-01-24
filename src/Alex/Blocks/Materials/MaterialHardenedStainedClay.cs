@@ -9,7 +9,7 @@ namespace Alex.Blocks.Materials
 		public MaterialHardenedStainedClay(ClayColor color) : base(color)
 		{
 			Hardness = 1.25f;
-			
+
 			SetRequiredTool(ItemType.PickAxe);
 		}
 	}

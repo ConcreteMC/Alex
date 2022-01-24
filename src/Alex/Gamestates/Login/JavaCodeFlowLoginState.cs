@@ -25,7 +25,7 @@ namespace Alex.Gamestates.Login
 		/// <inheritdoc />
 		public JavaCodeFlowLoginState(ServerTypeImplementation serverType,
 			GuiPanoramaSkyBox skyBox,
-			UserSelectionState.ProfileSelected  readyAction,
+			UserSelectionState.ProfileSelected readyAction,
 			PlayerProfile currentProfile = null) : base(skyBox, readyAction, serverType)
 		{
 			_serverType = serverType;
@@ -73,7 +73,7 @@ namespace Alex.Gamestates.Login
 			{
 				Log.Warn(ex, $"Unknown AUTH exception...");
 			}
-			
+
 			return new LoginResponse(null, false);
 		}
 	}

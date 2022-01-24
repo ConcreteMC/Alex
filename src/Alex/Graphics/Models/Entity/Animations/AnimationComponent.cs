@@ -32,6 +32,7 @@ namespace Alex.Graphics.Models.Entity.Animations
 
 		public bool Initialized => _didInit;
 		public MoLangRuntime Runtime { get; set; }
+
 		public AnimationComponent(Entities.Entity entity) : base(entity)
 		{
 			Runtime = new MoLangRuntime(entity);
@@ -41,9 +42,13 @@ namespace Alex.Graphics.Models.Entity.Animations
 		public EntityDescription EntityDefinition { get; private set; }
 		private IReadOnlyDictionary<string, IAnimation> _animations = null;
 		private IReadOnlyDictionary<string, EntityRenderController> _renderControllers = null;
-		
-		public readonly IDictionary<string, IMoValue> Context = new Dictionary<string, IMoValue>(StringComparer.OrdinalIgnoreCase);
-		public void UpdateEntityDefinition(IAnimationProvider animationProvider, IRenderControllerProvider controllerProvider, EntityDescription definition)
+
+		public readonly IDictionary<string, IMoValue> Context =
+			new Dictionary<string, IMoValue>(StringComparer.OrdinalIgnoreCase);
+
+		public void UpdateEntityDefinition(IAnimationProvider animationProvider,
+			IRenderControllerProvider controllerProvider,
+			EntityDescription definition)
 		{
 			//Monitor.Enter(_lock);
 
@@ -70,10 +75,7 @@ namespace Alex.Graphics.Models.Entity.Animations
 
 					if (definition.Scripts.Initialize != null)
 					{
-						foreach (var init in ConditionalExecute(runtime, definition.Scripts.Initialize, Context))
-						{
-							
-						}
+						foreach (var init in ConditionalExecute(runtime, definition.Scripts.Initialize, Context)) { }
 					}
 
 					if (definition.Scripts.PreAnimation != null)
@@ -84,19 +86,19 @@ namespace Alex.Graphics.Models.Entity.Animations
 						}
 					}
 				}
-				
+
 				if (definition.Animations != null)
 					LoadAnimations(animationProvider, definition.Animations);
 
 				if (definition.RenderControllers != null)
 					LoadRenderControllers(controllerProvider, definition.RenderControllers);
-				
+
 				if (definition.AnimationControllers != null)
 					LoadAnimationControllers(animationProvider, definition.AnimationControllers);
-				
+
 				EntityDefinition = definition;
 				_preRenderExpressions = preRender.ToArray();
-				
+
 				Runtime = runtime;
 				_didInit = true;
 			}
@@ -107,18 +109,20 @@ namespace Alex.Graphics.Models.Entity.Animations
 		}
 
 		private IReadOnlyDictionary<string, IAnimation> _animationControllers;
+
 		private void LoadAnimationControllers(IAnimationProvider animationProvider, AnnoyingMolangElement[] input)
 		{
 			Dictionary<string, IAnimation> animationControllers =
 				new Dictionary<string, IAnimation>(StringComparer.OrdinalIgnoreCase);
-			
+
 			int idx = 0;
+
 			foreach (var element in input)
 			{
 				idx++;
 				string key = null;
 				string search = null;
-				
+
 				if (!element.IsString)
 				{
 					foreach (var kv in element.Expressions)
@@ -146,7 +150,7 @@ namespace Alex.Graphics.Models.Entity.Animations
 				{
 					search = element.StringValue;
 				}
-				
+
 				if (search == null)
 					continue;
 
@@ -154,7 +158,7 @@ namespace Alex.Graphics.Models.Entity.Animations
 				{
 					key = $"anim{idx}";
 				}
-				
+
 				if (animationProvider.TryGetAnimationController(search, out var controller))
 				{
 					if (!animationControllers.TryAdd(key, new AnimationController(this, controller)))
@@ -167,18 +171,20 @@ namespace Alex.Graphics.Models.Entity.Animations
 			_animationControllers = animationControllers;
 		}
 
-		private void LoadRenderControllers(IRenderControllerProvider renderControllerProvider, AnnoyingMolangElement[] input)
+		private void LoadRenderControllers(IRenderControllerProvider renderControllerProvider,
+			AnnoyingMolangElement[] input)
 		{
 			Dictionary<string, EntityRenderController> renderControllers =
 				new Dictionary<string, EntityRenderController>(StringComparer.OrdinalIgnoreCase);
-			
+
 			int idx = 0;
+
 			foreach (var element in input)
 			{
 				idx++;
 				string key = null;
 				string search = null;
-				
+
 				if (!element.IsString)
 				{
 					foreach (var kv in element.Expressions)
@@ -206,7 +212,7 @@ namespace Alex.Graphics.Models.Entity.Animations
 				{
 					search = element.StringValue;
 				}
-				
+
 				if (search == null)
 					continue;
 
@@ -214,7 +220,7 @@ namespace Alex.Graphics.Models.Entity.Animations
 				{
 					key = $"renderer{idx}";
 				}
-				
+
 				if (renderControllerProvider.TryGetRenderController(search, out var controller))
 				{
 					if (!renderControllers.TryAdd(key, new EntityRenderController(this, controller)))
@@ -229,7 +235,9 @@ namespace Alex.Graphics.Models.Entity.Animations
 
 		private void LoadAnimations(IAnimationProvider animationProvider, Dictionary<string, string> input)
 		{
-			Dictionary<string, IAnimation> animations = new Dictionary<string, IAnimation>(StringComparer.OrdinalIgnoreCase);
+			Dictionary<string, IAnimation> animations =
+				new Dictionary<string, IAnimation>(StringComparer.OrdinalIgnoreCase);
+
 			foreach (var kv in input)
 			{
 				if (kv.Value.StartsWith("controller."))
@@ -248,7 +256,7 @@ namespace Alex.Graphics.Models.Entity.Animations
 					{
 						var entityAnimation = new EntityAnimation(this, animation, kv.Key);
 						//entityAnimation.Play();
-						
+
 						if (!animations.TryAdd(kv.Key, entityAnimation))
 						{
 							Log.Warn($"Failed to add animation: {kv.Key}");
@@ -256,19 +264,22 @@ namespace Alex.Graphics.Models.Entity.Animations
 					}
 				}
 			}
+
 			_animations = animations;
 		}
 
-		private IEnumerable<IMoValue> ConditionalExecute(MoLangRuntime runtime, IExpression[][] expressions, IDictionary<string, IMoValue> context)
+		private IEnumerable<IMoValue> ConditionalExecute(MoLangRuntime runtime,
+			IExpression[][] expressions,
+			IDictionary<string, IMoValue> context)
 		{
 			if (expressions == null)
 				yield break;
-			
+
 			foreach (var expressionList in expressions)
 			{
 				if (expressionList == null || expressionList.Length == 0)
 					continue;
-				
+
 				yield return runtime.Execute(expressionList, context);
 			}
 		}
@@ -284,15 +295,16 @@ namespace Alex.Graphics.Models.Entity.Animations
 		private static readonly MoPath _isHoldingLeft = new MoPath("variable.is_holding_left");
 		private static readonly MoPath _isHoldingRight = new MoPath("variable.is_holding_right");
 		private static readonly MoPath _playerXRotation = new MoPath("variable.player_x_rotation");
-		
+
 		private Stopwatch _deltaTimeStopwatch = new Stopwatch();
 		private bool _didInit = false;
 		private ModelRenderer _modelRenderer = null;
+
 		private void ProcessAnimations()
 		{
 			if (!_didInit)
 				return;
-			
+
 			var renderer = Entity?.ModelRenderer;
 
 			if (renderer == null)
@@ -313,9 +325,10 @@ namespace Alex.Graphics.Models.Entity.Animations
 				var animations = _animations;
 
 				var renderControllers = _renderControllers;
+
 				if (animations == null)
 					return;
-				
+
 				if (renderer != _modelRenderer)
 				{
 					if (animations != null)
@@ -336,21 +349,24 @@ namespace Alex.Graphics.Models.Entity.Animations
 
 					_modelRenderer = renderer;
 				}
-				
+
 				Context.Clear();
-				
+
 				if (_preRenderExpressions != null)
 					runtime.Execute(_preRenderExpressions, Context);
-				
+
 				runtime.Environment.SetValue(_glidingSpeed, new DoubleValue(1d));
 				runtime.Environment.SetValue(_isFirstPerson, new DoubleValue(Entity.IsFirstPersonMode ? 1 : 0));
 				runtime.Environment.SetValue(_attackTime, new DoubleValue(Entity.AttackTime));
 				runtime.Environment.SetValue(_isUsingVr, new DoubleValue(0d));
 				runtime.Environment.SetValue(_isPaperDoll, new DoubleValue(0d));
-				runtime.Environment.SetValue(_swimAmount, Entity.IsSwimming ? new DoubleValue(1d) : new DoubleValue(0d));
+
+				runtime.Environment.SetValue(
+					_swimAmount, Entity.IsSwimming ? new DoubleValue(1d) : new DoubleValue(0d));
+
 				runtime.Environment.SetValue(_bobAnimation, new DoubleValue(1d));
 				runtime.Environment.SetValue(_handBob, new DoubleValue(1d));
-				
+
 				if (Entity is RemotePlayer player)
 				{
 					bool holdingLeft = false;
@@ -362,22 +378,18 @@ namespace Alex.Graphics.Models.Entity.Animations
 					{
 						holdingLeft = true;
 					}
-					
+
 					var rightHand = player.Inventory?.MainHand;
 
 					if (rightHand != null && !(rightHand is ItemAir) && rightHand.Count > 0)
 					{
 						holdingRight = true;
 					}
-					
-					runtime.Environment.SetValue(
-						_isHoldingLeft,
-						new DoubleValue(holdingLeft));
 
-					runtime.Environment.SetValue(
-						_isHoldingRight,
-						new DoubleValue(holdingRight));
-					
+					runtime.Environment.SetValue(_isHoldingLeft, new DoubleValue(holdingLeft));
+
+					runtime.Environment.SetValue(_isHoldingRight, new DoubleValue(holdingRight));
+
 					runtime.Environment.SetValue(_playerXRotation, new DoubleValue(Entity.KnownPosition.Pitch));
 				}
 
@@ -386,7 +398,7 @@ namespace Alex.Graphics.Models.Entity.Animations
 					if (def.Scripts.ShouldUpdateBonesAndEffectsOffscreen != null)
 					{
 						if (!Entity.IsRendered && !runtime.Execute(
-							def.Scripts.ShouldUpdateBonesAndEffectsOffscreen, Context).AsBool())
+							    def.Scripts.ShouldUpdateBonesAndEffectsOffscreen, Context).AsBool())
 							return;
 					}
 
@@ -414,12 +426,12 @@ namespace Alex.Graphics.Models.Entity.Animations
 						controller.Value.Tick();
 					}
 				}
-				
+
 				renderer.ApplyPending();
 			}
 			finally
 			{
-			//	Monitor.Exit(_lock);
+				//	Monitor.Exit(_lock);
 			}
 		}
 
@@ -433,7 +445,7 @@ namespace Alex.Graphics.Models.Entity.Animations
 				}
 			}
 		}
-		
+
 		public IMoValue Execute(IExpression[] expressions)
 		{
 			return Runtime.Execute(expressions, Context);
@@ -449,7 +461,7 @@ namespace Alex.Graphics.Models.Entity.Animations
 			{
 				foreach (var expression in key.Expressions)
 				{
-					ExecuteAnimationUpdate(expression.Key,  !forceStop && Execute(expression.Value).AsBool());
+					ExecuteAnimationUpdate(expression.Key, !forceStop && Execute(expression.Value).AsBool());
 				}
 			}
 		}
@@ -466,12 +478,13 @@ namespace Alex.Graphics.Models.Entity.Animations
 						if (!ea.CanPlay() || !play)
 						{
 							ea.Stop();
+
 							return;
 						}
-						
+
 						if (!ea.Playing)
 							ea.Play();
-					
+
 						ea.Tick();
 
 						//ea.AfterUpdate();
@@ -488,10 +501,11 @@ namespace Alex.Graphics.Models.Entity.Animations
 					Log.Debug($"Could not find animation: {name}");
 			}
 		}
-		
+
 		internal bool TryGetAnimation(string name, out EntityAnimation animation)
 		{
 			animation = null;
+
 			if (_animations.TryGetValue(name, out var anim) && anim is EntityAnimation entityAnimation)
 			{
 				animation = entityAnimation;
@@ -507,14 +521,14 @@ namespace Alex.Graphics.Models.Entity.Animations
 		{
 			if (!Enabled)
 				return;
-			
+
 			_deltaTimeStopwatch.Stop();
 			//Stopwatch sw = Stopwatch.StartNew();
 			//_queryStruct?.Tick(_deltaTimeStopwatch.Elapsed);
 			ProcessAnimations();
 			//sw.Stop();
 			//if (sw.Elapsed.TotalMilliseconds > 10)
-			
+
 			_deltaTimeStopwatch.Restart();
 		}
 	}

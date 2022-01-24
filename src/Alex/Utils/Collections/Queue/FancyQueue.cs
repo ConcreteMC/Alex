@@ -10,6 +10,7 @@ namespace Alex.Utils.Collections.Queue
 		private object _lock = new object();
 
 		private Func<T, T, int> _ordering = null;
+
 		public FancyQueue(Func<T, T, int> ordering = null)
 		{
 			_ordering = ordering;
@@ -26,7 +27,7 @@ namespace Alex.Utils.Collections.Queue
 				}
 			}
 		}
-		
+
 		public bool IsEmpty
 		{
 			get
@@ -49,20 +50,22 @@ namespace Alex.Utils.Collections.Queue
 		public bool TryDequeue(out T item, Func<T, bool> predicate = null)
 		{
 			item = default;
+
 			lock (_lock)
 			{
 				if (_items.Count == 0)
 					return false;
 
 				var first = _items.First;
-				
+
 				if (first != null)
 				{
 					if (predicate != null)
 					{
 						//List<T> candidates = 
 						double lowest = double.MaxValue;
-						var    currentItem   = first;
+						var currentItem = first;
+
 						while (currentItem.Next != null)
 						{
 							if (predicate(currentItem.Value))
@@ -83,13 +86,14 @@ namespace Alex.Utils.Collections.Queue
 									break;
 								}
 							}
-							
+
 							currentItem = currentItem.Next;
 						}
 					}
-					
+
 					_items.Remove(first);
 					item = first.Value;
+
 					return true;
 				}
 			}
@@ -120,7 +124,7 @@ namespace Alex.Utils.Collections.Queue
 				_items.Clear();
 			}
 		}
-		
+
 		/// <inheritdoc />
 		public IEnumerator<T> GetEnumerator()
 		{

@@ -6,7 +6,7 @@ namespace Alex.Graphics.Models;
 public interface IModel : IDisposable
 {
 	EventHandler Disposed { get; set; }
-	
+
 	/// <summary>
 	/// A collection of <see cref="ModelBone"/> objects which describe how each mesh in the
 	/// mesh collection for this model relates to its parent mesh.
@@ -34,5 +34,10 @@ public interface IModel : IDisposable
 	object Tag { get; set; }
 
 	int Draw(Matrix world, Matrix view, Matrix projection, Matrix[] matrices);
-	int Draw(Matrix world, Matrix view, Matrix projection, Matrix[] matrices, Microsoft.Xna.Framework.Graphics.Effect effect);
+
+	int Draw(Matrix world,
+		Matrix view,
+		Matrix projection,
+		Matrix[] matrices,
+		Microsoft.Xna.Framework.Graphics.Effect effect);
 }

@@ -7,7 +7,6 @@ namespace Alex.Blocks.Minecraft.Stairs
 			Solid = true;
 			Transparent = true;
 			IsFullCube = false;
-			
 		}
 	}
 }

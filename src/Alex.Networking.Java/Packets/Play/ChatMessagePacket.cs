@@ -11,6 +11,7 @@ namespace Alex.Networking.Java.Packets.Play
 		public const byte Hotbar = 2;
 
 		public bool ServerBound = false;
+
 		public ChatMessagePacket()
 		{
 			PacketId = 0x03;
@@ -23,6 +24,7 @@ namespace Alex.Networking.Java.Packets.Play
 		public override void Decode(MinecraftStream stream)
 		{
 			Message = stream.ReadString();
+
 			if (!ServerBound)
 			{
 				Position = (byte)stream.ReadByte();
@@ -33,6 +35,7 @@ namespace Alex.Networking.Java.Packets.Play
 		public override void Encode(MinecraftStream stream)
 		{
 			stream.WriteString(Message);
+
 			if (!ServerBound)
 			{
 				stream.WriteByte(Position);
@@ -44,7 +47,7 @@ namespace Alex.Networking.Java.Packets.Play
 		protected override void ResetPacket()
 		{
 			base.ResetPacket();
-			
+
 			ServerBound = false;
 			Position = Chat;
 		}

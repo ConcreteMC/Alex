@@ -11,7 +11,7 @@ namespace Alex.Entities.Generic
 	public class EntityAreaEffectCloud : Entity
 	{
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(EntityAreaEffectCloud));
-		
+
 		private float _radius = 0.5f;
 
 		public float Radius
@@ -20,7 +20,7 @@ namespace Alex.Entities.Generic
 			set
 			{
 				_radius = value;
-				
+
 				Width = 2f * value;
 				Height = 0.5f;
 			}
@@ -32,7 +32,7 @@ namespace Alex.Entities.Generic
 		public int? ParticleId { get; set; } = null;
 		public int Duration { get; set; } = 5 * 20;
 		public float RadiusPerTick { get; set; } = 0f;
-		
+
 		/// <inheritdoc />
 		public EntityAreaEffectCloud(World level) : base(level)
 		{
@@ -43,7 +43,7 @@ namespace Alex.Entities.Generic
 		protected override void HandleJavaMeta(MetaDataEntry entry)
 		{
 			base.HandleJavaMeta(entry);
-			
+
 			if (entry.Index == 8 && entry is MetadataFloat radius)
 			{
 				Radius = radius.Value;
@@ -71,7 +71,7 @@ namespace Alex.Entities.Generic
 			public const AREA_EFFECT_CLOUD_RADIUS_CHANGE_ON_PICKUP = 98; //float
 			public const AREA_EFFECT_CLOUD_PICKUP_COUNT = 99; //int
 		 */
-		
+
 		/// <inheritdoc />
 		protected override bool HandleMetadata(MiNET.Entities.Entity.MetadataFlags flag, MetadataEntry entry)
 		{
@@ -82,38 +82,42 @@ namespace Alex.Entities.Generic
 
 				return true;
 			}
-			
-			if ((int) flag == 61 && entry is MiNET.Utils.Metadata.MetadataFloat flt) //Cloud Radius
+
+			if ((int)flag == 61 && entry is MiNET.Utils.Metadata.MetadataFloat flt) //Cloud Radius
 			{
 				Radius = flt.Value;
+
 				return true;
 			}
-			
-			if ((int) flag == 62 && entry is MiNET.Utils.Metadata.MetadataInt cloudWaiting) //Cloud Waiting
+
+			if ((int)flag == 62 && entry is MiNET.Utils.Metadata.MetadataInt cloudWaiting) //Cloud Waiting
 			{
 				//Radius = flt.Value;
 				return true;
 			}
-			
-			if ((int) flag == 63 && entry is MiNET.Utils.Metadata.MetadataInt particleId) //Cloud ParticleId
+
+			if ((int)flag == 63 && entry is MiNET.Utils.Metadata.MetadataInt particleId) //Cloud ParticleId
 			{
 				ParticleId = particleId.Value;
+
 				return true;
 			}
-			
-			if ((int) flag == 95 && entry is MiNET.Utils.Metadata.MetadataInt cloudDuration) //Cloud Duration
+
+			if ((int)flag == 95 && entry is MiNET.Utils.Metadata.MetadataInt cloudDuration) //Cloud Duration
 			{
 				Age = 0;
 				Duration = cloudDuration.Value;
+
 				return true;
 			}
-			
-			if ((int) flag == 97 && entry is MiNET.Utils.Metadata.MetadataFloat radiusPerTick) //Cloud Radius Per Tick
+
+			if ((int)flag == 97 && entry is MiNET.Utils.Metadata.MetadataFloat radiusPerTick) //Cloud Radius Per Tick
 			{
 				RadiusPerTick = radiusPerTick.Value;
+
 				return true;
 			}
-			
+
 			return base.HandleMetadata(flag, entry);
 		}
 
@@ -130,10 +134,7 @@ namespace Alex.Entities.Generic
 
 			if (ParticleId.HasValue)
 			{
-				if (Alex.Instance.ParticleManager.SpawnParticle((ParticleType) ParticleId, RenderLocation, Color))
-				{
-					
-				}
+				if (Alex.Instance.ParticleManager.SpawnParticle((ParticleType)ParticleId, RenderLocation, Color)) { }
 			}
 		}
 	}

@@ -5,9 +5,10 @@ namespace Alex.Audio
 {
 	public class SoundInfo
 	{
-		private static FastRandom    _fastRandom = new FastRandom();
-		public         string        Name     { get; set; }
-		public         SoundCategory Category { get; set; }
+		private static FastRandom _fastRandom = new FastRandom();
+		public string Name { get; set; }
+		public SoundCategory Category { get; set; }
+
 		public WrappedSound Sound
 		{
 			get
@@ -18,8 +19,9 @@ namespace Alex.Audio
 				return _sounds[_fastRandom.Next() % _sounds.Length];
 			}
 		}
-		
+
 		private WrappedSound[] _sounds;
+
 		public SoundInfo(string name, SoundCategory category, WrappedSound[] sounds)
 		{
 			Name = name;

@@ -15,11 +15,8 @@ namespace Alex.ResourcePackLib.Json
 
 		public static readonly JsonSerializerSettings DefaultSettings = new JsonSerializerSettings()
 		{
-			ContractResolver = new CamelCasePropertyNamesContractResolver()
-			{
-				NamingStrategy = new CamelCaseNamingStrategy()
-			},
-
+			ContractResolver =
+				new CamelCasePropertyNamesContractResolver() { NamingStrategy = new CamelCaseNamingStrategy() },
 			NullValueHandling = NullValueHandling.Ignore,
 			//DefaultValueHandling = DefaultValueHandling.,
 			PreserveReferencesHandling = PreserveReferencesHandling.None
@@ -48,27 +45,30 @@ namespace Alex.ResourcePackLib.Json
 
 		public static string SerializeObject(object obj, bool prettyPrint = PrettyPrint)
 		{
-			return JsonConvert.SerializeObject(obj, prettyPrint ? Formatting.Indented : Formatting.None, DefaultSettings);
+			return JsonConvert.SerializeObject(
+				obj, prettyPrint ? Formatting.Indented : Formatting.None, DefaultSettings);
 		}
 
 		public static T DeserializeObject<T>(string json)
 		{
 			return JsonConvert.DeserializeObject<T>(json, DefaultSettings);
 		}
-		
+
 		public static T DeserializeObject<T>(string json, params JsonConverter[] converters)
 		{
 			var cv = new List<JsonConverter>();
 			cv.AddRange(DefaultSettings.Converters);
 			cv.AddRange(converters);
-			
-			return JsonConvert.DeserializeObject<T>(json, new JsonSerializerSettings()
-			{
-				Converters = cv,
-				ContractResolver = DefaultSettings.ContractResolver,
-				NullValueHandling = DefaultSettings.NullValueHandling,
-				PreserveReferencesHandling = DefaultSettings.PreserveReferencesHandling
-			});
+
+			return JsonConvert.DeserializeObject<T>(
+				json,
+				new JsonSerializerSettings()
+				{
+					Converters = cv,
+					ContractResolver = DefaultSettings.ContractResolver,
+					NullValueHandling = DefaultSettings.NullValueHandling,
+					PreserveReferencesHandling = DefaultSettings.PreserveReferencesHandling
+				});
 		}
 
 		public static object DeserializeObject(string json)
@@ -85,14 +85,15 @@ namespace Alex.ResourcePackLib.Json
 		{
 			var clone = DeserializeObject<TOutput>(SerializeObject(output));
 			JsonConvert.PopulateObject(json, clone, DefaultSettings);
+
 			return clone;
 		}
 
 		public static TOutput PopulateObject<TOutput, TInput>(TOutput output, TInput input)
 		{
 			var clone = PopulateObject(output, SerializeObject(input));
+
 			return clone;
 		}
-
 	}
 }

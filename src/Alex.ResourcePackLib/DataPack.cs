@@ -13,23 +13,24 @@ namespace Alex.ResourcePackLib
 		private readonly Dictionary<string, Tag> _itemTags = new Dictionary<string, Tag>();
 
 		private IFilesystem _archive;
-	    public DataPack(IFilesystem archive)
-	    {
-		    _archive = archive;
 
-		    Load();
-	    }
+		public DataPack(IFilesystem archive)
+		{
+			_archive = archive;
 
-	    private void Load()
-	    {
-		    LoadBlockTags();
-		    LoadItemTags();
-	    }
+			Load();
+		}
+
+		private void Load()
+		{
+			LoadBlockTags();
+			LoadItemTags();
+		}
 
 		private void LoadItemTags()
 		{
-			var jsonFiles = _archive.Entries
-				.Where(e => e.FullName.StartsWith("data/minecraft/tags/items/") && e.FullName.EndsWith(".json")).ToArray();
+			var jsonFiles = _archive.Entries.Where(
+				e => e.FullName.StartsWith("data/minecraft/tags/items/") && e.FullName.EndsWith(".json")).ToArray();
 
 			foreach (var jsonFile in jsonFiles)
 			{
@@ -38,22 +39,23 @@ namespace Alex.ResourcePackLib
 			}
 		}
 
-	    private void LoadBlockTags()
-	    {
-		    var jsonFiles = _archive.Entries
-			    .Where(e => e.FullName.StartsWith("data/minecraft/tags/block/") && e.FullName.EndsWith(".json")).ToArray();
+		private void LoadBlockTags()
+		{
+			var jsonFiles = _archive.Entries.Where(
+				e => e.FullName.StartsWith("data/minecraft/tags/block/") && e.FullName.EndsWith(".json")).ToArray();
 
-		    foreach (var jsonFile in jsonFiles)
-		    {
-			    var tag = LoadTag(jsonFile);
-			    _blockTags[$"{tag.Namespace}:{tag.Name}"] = tag;
+			foreach (var jsonFile in jsonFiles)
+			{
+				var tag = LoadTag(jsonFile);
+				_blockTags[$"{tag.Namespace}:{tag.Name}"] = tag;
 			}
-	    }
+		}
 
 		private Tag LoadTag(IFile entry)
 		{
 			string nameSpace = entry.FullName.Split('/')[1];
 			string name = Path.GetFileNameWithoutExtension(entry.FullName);
+
 			using (var r = new StreamReader(entry.Open()))
 			{
 				var blockModel = MCJsonConvert.DeserializeObject<Tag>(r.ReadToEnd());
@@ -61,13 +63,13 @@ namespace Alex.ResourcePackLib
 				blockModel.Namespace = nameSpace;
 
 				blockModel = ProcessTag(blockModel);
+
 				return blockModel;
 			}
 		}
 
 		private Tag ProcessTag(Tag tag)
 		{
-
 			return tag;
 		}
 	}

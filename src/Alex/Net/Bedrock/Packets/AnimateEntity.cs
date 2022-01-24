@@ -26,7 +26,7 @@ namespace Alex.Net.Bedrock.Packets
 			StopCondition = ReadString();
 			Controller = ReadString();
 			BlendOutTime = ReadFloat();
-			
+
 			var count = ReadUnsignedVarInt();
 			EntityRuntimeIds = new long[count];
 

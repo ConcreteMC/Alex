@@ -5,7 +5,7 @@ namespace Alex.Gui.Elements.Scoreboard
 {
 	public class ScoreboardEntry : Container
 	{
-		private uint   _score;
+		private uint _score;
 		private string _displayName;
 
 		public string EntryId { get; set; }
@@ -37,6 +37,7 @@ namespace Alex.Gui.Elements.Scoreboard
 		}
 
 		private bool _showScore = true;
+
 		public bool ShowScore
 		{
 			get => _showScore;
@@ -48,36 +49,29 @@ namespace Alex.Gui.Elements.Scoreboard
 			}
 		}
 
-		private TextElement Left      { get; }
-		private Container   Right     { get; }
+		private TextElement Left { get; }
+		private Container Right { get; }
 		private TextElement RightText { get; }
+
 		public ScoreboardEntry(string entryId, uint score, string displayName = "")
 		{
 			Padding = Thickness.One;
 			EntryId = entryId;
 
-			Left = new TextElement()
-			{
-				Anchor = Alignment.TopLeft
-			};
-			
-			Right = new Container()
-			{
-				Padding = new Thickness(2, 0, 0, 0),
-				Anchor = Alignment.TopRight
-			};
-			
-			Right.AddChild(RightText = new TextElement()
-			{
-				Anchor = Alignment.TopRight,
-				Text = score.ToString(),
-				TextColor = TextColor.Red.ForegroundColor
-				//ParentElement = this
-			});
-			
+			Left = new TextElement() { Anchor = Alignment.TopLeft };
+
+			Right = new Container() { Padding = new Thickness(2, 0, 0, 0), Anchor = Alignment.TopRight };
+
+			Right.AddChild(
+				RightText = new TextElement()
+				{
+					Anchor = Alignment.TopRight, Text = score.ToString(), TextColor = TextColor.Red.ForegroundColor
+					//ParentElement = this
+				});
+
 			Score = score;
 			DisplayName = displayName;
-			
+
 			AddChild(Left);
 			AddChild(Right);
 		}

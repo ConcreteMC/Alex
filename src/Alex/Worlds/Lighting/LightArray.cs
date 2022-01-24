@@ -11,7 +11,7 @@ namespace Alex.Worlds.Lighting
 		{
 			Data = new NibbleArray(new byte[2048]);
 		}
-		
+
 		public LightArray(byte[] data)
 		{
 			Data = new NibbleArray(data);
@@ -21,7 +21,7 @@ namespace Alex.Worlds.Lighting
 		{
 			return Data[ChunkSection.GetCoordinateIndex(x, y, z)];
 		}
-		
+
 		public void Set(int x, int y, int z, byte value)
 		{
 			Data[ChunkSection.GetCoordinateIndex(x, y, z)] = value;

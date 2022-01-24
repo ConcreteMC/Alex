@@ -13,36 +13,46 @@ namespace Alex.Networking.Java.Packets.Play
 		public BossBarColor Color;
 		public BossBarDivisions Divisions;
 		public byte Flags;
-		
+
 		/// <inheritdoc />
 		public override void Decode(MinecraftStream stream)
 		{
 			Uuid = stream.ReadUuid();
-			Action = (BossBarAction) stream.ReadVarInt();
+			Action = (BossBarAction)stream.ReadVarInt();
 
 			switch (Action)
 			{
 				case BossBarAction.Add:
 					Title = stream.ReadChatObject();
 					Health = stream.ReadFloat();
-					Color = (BossBarColor) stream.ReadVarInt();
-					Divisions = (BossBarDivisions) stream.ReadVarInt();
-					Flags = (byte) stream.ReadByte();
+					Color = (BossBarColor)stream.ReadVarInt();
+					Divisions = (BossBarDivisions)stream.ReadVarInt();
+					Flags = (byte)stream.ReadByte();
+
 					break;
+
 				case BossBarAction.Remove:
 					break;
+
 				case BossBarAction.UpdateHealth:
 					Health = stream.ReadFloat();
+
 					break;
+
 				case BossBarAction.UpdateTitle:
 					Title = stream.ReadChatObject();
+
 					break;
+
 				case BossBarAction.UpdateStyle:
-					Color = (BossBarColor) stream.ReadVarInt();
-					Divisions = (BossBarDivisions) stream.ReadVarInt();
+					Color = (BossBarColor)stream.ReadVarInt();
+					Divisions = (BossBarDivisions)stream.ReadVarInt();
+
 					break;
+
 				case BossBarAction.UpdateFlags:
-					Flags = (byte) stream.ReadByte();
+					Flags = (byte)stream.ReadByte();
+
 					break;
 			}
 		}
@@ -62,7 +72,7 @@ namespace Alex.Networking.Java.Packets.Play
 			UpdateStyle = 4,
 			UpdateFlags = 5
 		}
-		
+
 		public enum BossBarColor
 		{
 			Pink = 0,
@@ -73,7 +83,7 @@ namespace Alex.Networking.Java.Packets.Play
 			Purple = 5,
 			White = 6
 		}
-	
+
 		public enum BossBarDivisions
 		{
 			None = 0,

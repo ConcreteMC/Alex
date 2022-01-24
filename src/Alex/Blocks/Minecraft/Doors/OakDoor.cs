@@ -9,7 +9,7 @@ namespace Alex.Blocks.Minecraft.Doors
 			Solid = true;
 			Transparent = true;
 			IsFullCube = false;
-			
+
 			BlockMaterial = Material.Wood;
 		}
 	}

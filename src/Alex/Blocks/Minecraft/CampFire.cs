@@ -8,7 +8,7 @@ namespace Alex.Blocks.Minecraft
 		public CampFire()
 		{
 			Luminance = 15;
-			
+
 			base.BlockMaterial = Material.Wood.Clone().WithMapColor(MapColor.Fire);
 		}
 	}

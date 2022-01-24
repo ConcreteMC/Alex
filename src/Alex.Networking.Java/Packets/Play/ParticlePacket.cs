@@ -8,7 +8,7 @@ namespace Alex.Networking.Java.Packets.Play
 	public class ParticlePacket : Packet<ParticlePacket>
 	{
 		public static Func<int, string> RegistryLookup = null;
-		
+
 		public int ParticleId;
 		public bool LongDistance;
 		public double X;
@@ -26,7 +26,7 @@ namespace Alex.Networking.Java.Packets.Play
 		public SlotData SlotData = null;
 
 		public int? BlockStateId = null;
-		
+
 		public override void Decode(MinecraftStream stream)
 		{
 			ParticleId = stream.ReadInt();
@@ -53,12 +53,17 @@ namespace Alex.Networking.Java.Packets.Play
 					var b = stream.ReadFloat();
 					Color = new Color(r, g, b);
 					Scale = stream.ReadFloat();
+
 					break;
+
 				case "minecraft:item":
 					SlotData = stream.ReadSlot();
+
 					break;
+
 				case "minecraft:block":
 					BlockStateId = stream.ReadVarInt();
+
 					break;
 			}
 			//TODO: Read data, varies per particle tho...
@@ -73,7 +78,7 @@ namespace Alex.Networking.Java.Packets.Play
 		protected override void ResetPacket()
 		{
 			base.ResetPacket();
-			
+
 			Color = null;
 			Scale = 1f;
 			SlotData = null;

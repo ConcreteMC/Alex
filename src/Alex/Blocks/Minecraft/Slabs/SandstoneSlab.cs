@@ -7,7 +7,8 @@ namespace Alex.Blocks.Minecraft.Slabs
 	{
 		public SandstoneSlab() : base()
 		{
-			base.BlockMaterial = Material.Stone.Clone().WithMapColor(MapColor.Sand);;
+			base.BlockMaterial = Material.Stone.Clone().WithMapColor(MapColor.Sand);
+			;
 		}
 	}
 }

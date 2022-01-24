@@ -21,10 +21,10 @@ namespace Alex.Networking.Java.Packets.Play
 		public override void Decode(MinecraftStream stream)
 		{
 			Locale = stream.ReadString();
-			ViewDistance = (byte) stream.ReadByte();
+			ViewDistance = (byte)stream.ReadByte();
 			ChatMode = stream.ReadVarInt();
 			ChatColors = stream.ReadBool();
-			SkinParts = (byte) stream.ReadByte();
+			SkinParts = (byte)stream.ReadByte();
 			MainHand = stream.ReadVarInt();
 			EnableTextFiltering = stream.ReadBool();
 			AllowServerListings = stream.ReadBool();

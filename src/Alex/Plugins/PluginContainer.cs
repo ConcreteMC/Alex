@@ -5,266 +5,269 @@ using System.Reflection;
 
 namespace Alex.Plugins
 {
-    /// <summary>
-    ///     A dependency injection container
-    /// </summary>
-    public class PluginContainer
-    {
-        private ConcurrentDictionary<Type, ServiceItem> Services { get; set; }
+	/// <summary>
+	///     A dependency injection container
+	/// </summary>
+	public class PluginContainer
+	{
+		private ConcurrentDictionary<Type, ServiceItem> Services { get; set; }
 
-        public PluginContainer()
-        {
-            Services = new ConcurrentDictionary<Type, ServiceItem>();
-        }
+		public PluginContainer()
+		{
+			Services = new ConcurrentDictionary<Type, ServiceItem>();
+		}
 
-        /// <summary>
-        ///     Tries to resolve a service
-        /// </summary>
-        /// <param name="dependency">The resolved service.</param>
-        /// <typeparam name="TType">The type of service to resolve</typeparam>
-        /// <returns>Whether the service was able to be resolved or not</returns>
-        public bool TryResolve<TType>(out TType dependency)
-        {
-            var resolved = Resolve<TType>();
-            if (resolved.Equals(default(TType)))
-            {
-                dependency = default;
-                return false;
-            }
+		/// <summary>
+		///     Tries to resolve a service
+		/// </summary>
+		/// <param name="dependency">The resolved service.</param>
+		/// <typeparam name="TType">The type of service to resolve</typeparam>
+		/// <returns>Whether the service was able to be resolved or not</returns>
+		public bool TryResolve<TType>(out TType dependency)
+		{
+			var resolved = Resolve<TType>();
 
-            dependency = (TType) resolved;
+			if (resolved.Equals(default(TType)))
+			{
+				dependency = default;
 
-            return true;
-        }
+				return false;
+			}
 
-        /// <summary>
-        ///     Tries to resolve a service
-        /// </summary>
-        /// <param name="dependency">The resolved service.</param>
-        /// <param name="type">The type of service to resolve</param>
-        /// <returns>Whether the service was able to be resolved or not</returns>
-        public bool TryResolve(Type type, out object dependency)
-        {
-            var resolved = Resolve(type);
-            if (resolved == null)
-            {
-                dependency = null;
-                return false;
-            }
+			dependency = (TType)resolved;
 
-            dependency = resolved;
+			return true;
+		}
 
-            return true;
-        }
+		/// <summary>
+		///     Tries to resolve a service
+		/// </summary>
+		/// <param name="dependency">The resolved service.</param>
+		/// <param name="type">The type of service to resolve</param>
+		/// <returns>Whether the service was able to be resolved or not</returns>
+		public bool TryResolve(Type type, out object dependency)
+		{
+			var resolved = Resolve(type);
 
-        /// <summary>
-        ///     Resolve a service
-        /// </summary>
-        /// <typeparam name="TType">The type to resolve.</typeparam>
-        /// <returns>The resolved service</returns>
-        public TType Resolve<TType>()
-        {
-            if (Services.TryGetValue(typeof(TType), out var value))
-            {
-                return (TType) value.GetInstance();
-            }
+			if (resolved == null)
+			{
+				dependency = null;
 
-            return default;
-        }
+				return false;
+			}
 
-        /// <summary>
-        ///     Resolve a service
-        /// </summary>
-        /// <returns>The resolved service</returns>
-        public object Resolve(Type type)
-        {
-            if (Services.TryGetValue(type, out var value))
-            {
-                return value.GetInstance();
-            }
+			dependency = resolved;
 
-            return null;
-        }
+			return true;
+		}
 
-        /// <summary>
-        ///     Remove a service from dependency injection
-        /// </summary>
-        /// <param name="type"></param>
-        /// <returns></returns>
-        public void Remove(Type type)
-        {
-            if (Services.TryRemove(type, out var serviceItem))
-            {
-                serviceItem.Dispose();
-            }
-        }
+		/// <summary>
+		///     Resolve a service
+		/// </summary>
+		/// <typeparam name="TType">The type to resolve.</typeparam>
+		/// <returns>The resolved service</returns>
+		public TType Resolve<TType>()
+		{
+			if (Services.TryGetValue(typeof(TType), out var value))
+			{
+				return (TType)value.GetInstance();
+			}
 
-        /// <summary>
-        ///     Remove a service from dependency injection
-        /// </summary>
-        public void Remove<TType>()
-        {
-            Remove(typeof(TType));
-        }
+			return default;
+		}
 
-        /// <summary>
-        ///     Registers a new service
-        /// </summary>
-        /// <param name="lifetime">How long to keep the service alive for</param>
-        /// <typeparam name="TType">The type of service to register</typeparam>
-        /// <exception cref="DuplicateTypeException">Thrown when a service of the same type has already been registered</exception>
-        public void Register<TType>(DependencyLifetime lifetime = DependencyLifetime.Singleton)
-        {
-            throw new NotImplementedException("Please use RegisterSingleton instead.");
-        }
+		/// <summary>
+		///     Resolve a service
+		/// </summary>
+		/// <returns>The resolved service</returns>
+		public object Resolve(Type type)
+		{
+			if (Services.TryGetValue(type, out var value))
+			{
+				return value.GetInstance();
+			}
 
-        /// <summary>
-        ///     Registers a new singleton service
-        /// </summary>
-        /// <param name="value">The instance to use for dependency injection</param>
-        /// <typeparam name="TType">The type of service to register</typeparam>
-        /// <exception cref="DuplicateTypeException">Thrown when a service of the same type has already been registered</exception>
-        public void RegisterSingleton<TType>(TType value)
-        {
-            var type = typeof(TType);
-            if (!Services.TryAdd(type, new ServiceItem(this, type, value)))
-            {
-                throw new Exception();
-            }
-        }
+			return null;
+		}
 
-        /// <summary>
-        ///     Registers a new singleton service
-        /// </summary>
-        /// <param name="type"></param>
-        /// <param name="value"></param>
-        public void RegisterSingleton(Type type, object value)
-        {
-            if (!Services.TryAdd(type, new ServiceItem(this, type, value)))
-            {
-                throw new Exception();
-            }
-        }
+		/// <summary>
+		///     Remove a service from dependency injection
+		/// </summary>
+		/// <param name="type"></param>
+		/// <returns></returns>
+		public void Remove(Type type)
+		{
+			if (Services.TryRemove(type, out var serviceItem))
+			{
+				serviceItem.Dispose();
+			}
+		}
 
-        /// <summary>
-        ///     Use the DependencyContainer to create an instance for any type with a public constructor.
-        /// </summary>
-        /// <param name="type">The type of the instance to create</param>
-        /// <returns>An instance of <paramref name="type"/></returns>
-        /// <exception cref="MissingMethodException">No public constructors were found</exception>
-        /// <exception cref="Exception">Could not resolve all required parameters</exception>
-        public object CreateInstanceOf(Type type)
-        {
-            var constructors = type.GetConstructors(BindingFlags.Instance | BindingFlags.Public);
+		/// <summary>
+		///     Remove a service from dependency injection
+		/// </summary>
+		public void Remove<TType>()
+		{
+			Remove(typeof(TType));
+		}
 
-            if (constructors.Length == 0)
-                throw new MissingMethodException($"Could not find a public constructor");
+		/// <summary>
+		///     Registers a new service
+		/// </summary>
+		/// <param name="lifetime">How long to keep the service alive for</param>
+		/// <typeparam name="TType">The type of service to register</typeparam>
+		/// <exception cref="DuplicateTypeException">Thrown when a service of the same type has already been registered</exception>
+		public void Register<TType>(DependencyLifetime lifetime = DependencyLifetime.Singleton)
+		{
+			throw new NotImplementedException("Please use RegisterSingleton instead.");
+		}
 
-            List<object> parameters = new List<object>();
+		/// <summary>
+		///     Registers a new singleton service
+		/// </summary>
+		/// <param name="value">The instance to use for dependency injection</param>
+		/// <typeparam name="TType">The type of service to register</typeparam>
+		/// <exception cref="DuplicateTypeException">Thrown when a service of the same type has already been registered</exception>
+		public void RegisterSingleton<TType>(TType value)
+		{
+			var type = typeof(TType);
 
-            ConstructorInfo resultingConstructor = null;
-            foreach (var constructor in constructors)
-            {
-                var requiredParams = constructor.GetParameters();
+			if (!Services.TryAdd(type, new ServiceItem(this, type, value)))
+			{
+				throw new Exception();
+			}
+		}
 
-                foreach (var param in requiredParams)
-                {
-                    if (!TryResolve(param.ParameterType, out var obj))
-                        break;
+		/// <summary>
+		///     Registers a new singleton service
+		/// </summary>
+		/// <param name="type"></param>
+		/// <param name="value"></param>
+		public void RegisterSingleton(Type type, object value)
+		{
+			if (!Services.TryAdd(type, new ServiceItem(this, type, value)))
+			{
+				throw new Exception();
+			}
+		}
 
-                    parameters.Add(obj);
-                }
+		/// <summary>
+		///     Use the DependencyContainer to create an instance for any type with a public constructor.
+		/// </summary>
+		/// <param name="type">The type of the instance to create</param>
+		/// <returns>An instance of <paramref name="type"/></returns>
+		/// <exception cref="MissingMethodException">No public constructors were found</exception>
+		/// <exception cref="Exception">Could not resolve all required parameters</exception>
+		public object CreateInstanceOf(Type type)
+		{
+			var constructors = type.GetConstructors(BindingFlags.Instance | BindingFlags.Public);
 
-                if (parameters.Count == requiredParams.Length)
-                {
-                    resultingConstructor = constructor;
-                    break;
-                }
+			if (constructors.Length == 0)
+				throw new MissingMethodException($"Could not find a public constructor");
 
-                parameters.Clear();
-            }
+			List<object> parameters = new List<object>();
 
-            if (resultingConstructor == null)
-                throw new Exception("Could not find suitable constructor.");
+			ConstructorInfo resultingConstructor = null;
 
-            var instance = resultingConstructor.Invoke(parameters.ToArray());
-            return instance;
-        }
+			foreach (var constructor in constructors)
+			{
+				var requiredParams = constructor.GetParameters();
 
-        /// <summary>
-        ///     Use the DependencyContainer to create an instance for any type with a public constructor.
-        /// </summary>
-        /// <exception cref="MissingMethodException">No public constructors were found</exception>
-        /// <exception cref="Exception">Could not resolve all required parameters</exception>
-        public TType CreateInstanceOf<TType>()
-        {
-            return (TType) CreateInstanceOf(typeof(TType));
-        }
+				foreach (var param in requiredParams)
+				{
+					if (!TryResolve(param.ParameterType, out var obj))
+						break;
 
-        private class ServiceItem : IDisposable
-        {
-            private PluginContainer Parent { get; }
+					parameters.Add(obj);
+				}
 
-            public Type Type { get; }
-            public DependencyLifetime Lifetime { get; }
+				if (parameters.Count == requiredParams.Length)
+				{
+					resultingConstructor = constructor;
 
-            private object _value = null;
+					break;
+				}
 
-            public ServiceItem(PluginContainer parent, Type type, DependencyLifetime lifetime)
-            {
-                Parent = parent;
-                Type = type;
-                Lifetime = lifetime;
-            }
+				parameters.Clear();
+			}
 
-            public ServiceItem(PluginContainer parent, Type type, object value)
-            {
-                Parent = parent;
-                Type = type;
-                Lifetime = DependencyLifetime.Singleton;
-                _value = value;
-            }
+			if (resultingConstructor == null)
+				throw new Exception("Could not find suitable constructor.");
 
-            public void Initiate()
-            {
+			var instance = resultingConstructor.Invoke(parameters.ToArray());
 
-            }
+			return instance;
+		}
 
-            public object GetInstance()
-            {
-                if (Lifetime == DependencyLifetime.Singleton)
-                {
-                    return _value;
-                }
+		/// <summary>
+		///     Use the DependencyContainer to create an instance for any type with a public constructor.
+		/// </summary>
+		/// <exception cref="MissingMethodException">No public constructors were found</exception>
+		/// <exception cref="Exception">Could not resolve all required parameters</exception>
+		public TType CreateInstanceOf<TType>()
+		{
+			return (TType)CreateInstanceOf(typeof(TType));
+		}
 
-                return Construct();
-            }
+		private class ServiceItem : IDisposable
+		{
+			private PluginContainer Parent { get; }
 
-            private object Construct()
-            {
-                throw new NotImplementedException();
-            }
+			public Type Type { get; }
+			public DependencyLifetime Lifetime { get; }
 
-            /// <summary>Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.</summary>
-            public void Dispose()
-            {
-            }
-        }
-    }
+			private object _value = null;
 
-    /// <summary>
-    ///     Used to determine a services lifetime
-    /// </summary>
-    public enum DependencyLifetime
-    {
-        /// <summary>
-        ///     Keep 1 instance throughout the service lifetime
-        /// </summary>
-        Singleton,
+			public ServiceItem(PluginContainer parent, Type type, DependencyLifetime lifetime)
+			{
+				Parent = parent;
+				Type = type;
+				Lifetime = lifetime;
+			}
 
-        /// <summary>
-        ///     Create a new instance everytime it is requested
-        /// </summary>
-        Transient
-    }
+			public ServiceItem(PluginContainer parent, Type type, object value)
+			{
+				Parent = parent;
+				Type = type;
+				Lifetime = DependencyLifetime.Singleton;
+				_value = value;
+			}
+
+			public void Initiate() { }
+
+			public object GetInstance()
+			{
+				if (Lifetime == DependencyLifetime.Singleton)
+				{
+					return _value;
+				}
+
+				return Construct();
+			}
+
+			private object Construct()
+			{
+				throw new NotImplementedException();
+			}
+
+			/// <summary>Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.</summary>
+			public void Dispose() { }
+		}
+	}
+
+	/// <summary>
+	///     Used to determine a services lifetime
+	/// </summary>
+	public enum DependencyLifetime
+	{
+		/// <summary>
+		///     Keep 1 instance throughout the service lifetime
+		/// </summary>
+		Singleton,
+
+		/// <summary>
+		///     Create a new instance everytime it is requested
+		/// </summary>
+		Transient
+	}
 }

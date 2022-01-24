@@ -24,18 +24,20 @@ namespace Alex.Particles
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(ParticleEmitter));
 		private ThreadSafeList<ParticleInstance> _instances = new ThreadSafeList<ParticleInstance>();
 		private ParticleInstance[] _activeInstances = new ParticleInstance[0];
-		
+
 		private Texture2D Texture { get; }
 
 		private AppearanceComponent AppearanceComponent { get; }
 		public int MaxParticles { get; set; } = 500;
 		public ParticleDefinition Definition { get; }
+
 		public ParticleEmitter(Texture2D texture, ParticleDefinition definition)
 		{
 			Texture = texture;
 			Definition = definition;
 
 			MaxParticles = definition.MaxParticles;
+
 			if (definition.Components.TryGetValue("minecraft:particle_appearance_billboard", out var value)
 			    && value is AppearanceComponent apc)
 			{
@@ -45,7 +47,6 @@ namespace Alex.Particles
 			{
 				AppearanceComponent = null;
 			}
-
 		}
 
 		public void Reset()
@@ -58,12 +59,14 @@ namespace Alex.Particles
 			if (AppearanceComponent == null)
 			{
 				instance = null;
+
 				return false;
 			}
 
 			var firstInvalid = _instances.FirstOrDefault(x => !x.Valid);
 
 			bool isNew = false;
+
 			if (firstInvalid != null)
 			{
 				instance = firstInvalid;
@@ -71,11 +74,13 @@ namespace Alex.Particles
 			else
 			{
 				instance = new ParticleInstance(position);
+
 				if (Definition.TryGetComponent(out AppearanceTintingComponent atc))
 				{
 					if (atc.Color != null)
 						instance.Color = atc.Color.GetValue(instance.Runtime);
 				}
+
 				isNew = true;
 			}
 
@@ -87,17 +92,18 @@ namespace Alex.Particles
 			}
 
 			instance.Valid = true;
-			
+
 			if (isNew)
 				_instances.Add(instance);
 
 			return true;
 		}
-		
+
 		private static readonly MoPath _emitterRnd1 = new MoPath("emitter_random_1");
 		private static readonly MoPath _emitterRnd2 = new MoPath("emitter_random_2");
 		private static readonly MoPath _emitterRnd3 = new MoPath("emitter_random_3");
 		private static readonly MoPath _emitterRnd4 = new MoPath("emitter_random_4");
+
 		public void Tick(ICamera camera)
 		{
 			if (_instances.Count == 0)
@@ -114,10 +120,10 @@ namespace Alex.Particles
 			{
 				if (instance == null)
 					continue;
-				
+
 				if (!instance.Valid)
 					continue;
-				
+
 				if (instance.Lifetime >= instance.MaxLifetime)
 				{
 					instance.Valid = false;
@@ -153,15 +159,16 @@ namespace Alex.Particles
 
 			_activeInstances = _instances.Where(x => x.Valid).ToArray();
 		}
-		
+
 		public void Update(GameTime gameTime)
 		{
 			var instances = _activeInstances;
+
 			foreach (var instance in instances)
 			{
 				if (instance == null || !instance.Valid)
 					continue;
-				
+
 				instance?.Update(gameTime);
 			}
 		}
@@ -171,39 +178,40 @@ namespace Alex.Particles
 			int count = 0;
 
 			var instances = _activeInstances;
+
 			foreach (var instance in instances)
 			{
-				if (instance  == null || !instance.Valid || count >= MaxParticles)
+				if (instance == null || !instance.Valid || count >= MaxParticles)
 					continue;
 
 				var pos = instance.Position;
-				
+
 				var screenSpace = spriteBatch.GraphicsDevice.Viewport.Project(
 					pos, camera.ProjectionMatrix, camera.ViewMatrix, Matrix.Identity);
-				
-				bool isOnScreen = spriteBatch.GraphicsDevice.Viewport.Bounds.Contains((int) screenSpace.X, (int) screenSpace.Y);
+
+				bool isOnScreen = spriteBatch.GraphicsDevice.Viewport.Bounds.Contains(
+					(int)screenSpace.X, (int)screenSpace.Y);
 
 				if (!isOnScreen) continue;
-				
+
 				float depth = screenSpace.Z;
-				float scale =  instance.RenderScale;
+				float scale = instance.RenderScale;
+
 				if (scale <= 0f)
 					continue;
 
 				if (scale > 1f)
 					scale = 1f;
-				
+
 				Vector2 textPosition;
 				textPosition.X = screenSpace.X;
 				textPosition.Y = screenSpace.Y;
 
 				spriteBatch.Draw(
-					Texture, textPosition, instance.Rectangle,
-					instance.Color, 0f, Vector2.Zero,
+					Texture, textPosition, instance.Rectangle, instance.Color, 0f, Vector2.Zero,
 					//2f * ((scale)),
-					new Vector2( scale * instance.Size.X, scale * instance.Size.Y) * 16f,
-					SpriteEffects.None, depth);
-				
+					new Vector2(scale * instance.Size.X, scale * instance.Size.Y) * 16f, SpriteEffects.None, depth);
+
 				count++;
 
 				if (count >= MaxParticles)
@@ -217,11 +225,11 @@ namespace Alex.Particles
 		public void Dispose()
 		{
 			Reset();
-			
+
 			//if (Texture != null)
 			//{
 			//	if (!Texture.IsDisposed)
-				//	Texture.Dispose();
+			//	Texture.Dispose();
 			//}
 		}
 	}

@@ -10,7 +10,7 @@ namespace Alex.Entities.Passive
 			Height = 1.4;
 			Width = 0.9;
 		}
-		
+
 		protected override void HandleJavaMeta(MetaDataEntry entry)
 		{
 			base.HandleJavaMeta(entry);

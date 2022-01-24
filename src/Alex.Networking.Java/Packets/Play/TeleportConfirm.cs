@@ -2,30 +2,30 @@
 
 namespace Alex.Networking.Java.Packets.Play
 {
-    public class TeleportConfirm : Packet<TeleportConfirm>
-    {
-	    public TeleportConfirm()
-	    {
-		    PacketId = 0x00;
-	    }
+	public class TeleportConfirm : Packet<TeleportConfirm>
+	{
+		public TeleportConfirm()
+		{
+			PacketId = 0x00;
+		}
 
-	    public int TeleportId = 1;
+		public int TeleportId = 1;
 
-	    public override void Decode(MinecraftStream stream)
-	    {
-		    TeleportId = stream.ReadVarInt();
-	    }
+		public override void Decode(MinecraftStream stream)
+		{
+			TeleportId = stream.ReadVarInt();
+		}
 
-	    public override void Encode(MinecraftStream stream)
-	    {
-		    stream.WriteVarInt(TeleportId);
-	    }
+		public override void Encode(MinecraftStream stream)
+		{
+			stream.WriteVarInt(TeleportId);
+		}
 
-	    /// <inheritdoc />
-	    protected override void ResetPacket()
-	    {
-		    base.ResetPacket();
-		    TeleportId = 1;
-	    }
-    }
+		/// <inheritdoc />
+		protected override void ResetPacket()
+		{
+			base.ResetPacket();
+			TeleportId = 1;
+		}
+	}
 }

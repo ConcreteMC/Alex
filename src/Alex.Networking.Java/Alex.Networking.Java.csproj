@@ -1,35 +1,35 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk" ToolsVersion="15.0">
-  <PropertyGroup>
-    <OldToolsVersion>2.0</OldToolsVersion>
-    <Configurations>Release;Debug;Appveyor;DirectX</Configurations>
-    <Platforms>x64;AnyCPU</Platforms>
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <Description>Provides the MC:Java networking implementation in Alex</Description>
-    <Copyright>Kenny van Vulpen - 2020</Copyright>
-    <PackageProjectUrl>https://github.com/kennyvv/Alex</PackageProjectUrl>
-    <PackageLicenseUrl>https://github.com/kennyvv/Alex/blob/master/LICENSE</PackageLicenseUrl>
-    <RepositoryUrl>https://github.com/kennyvv/Alex</RepositoryUrl>
-    <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
-  </PropertyGroup>
-  <ItemGroup>
-    <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
-    <PackageReference Include="NLog" Version="4.7.12" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\Alex.Common\Alex.Common.csproj" />
-  </ItemGroup>
-  <ItemGroup>
-    <Compile Update="Properties\Resources.Designer.cs">
-      <DesignTime>True</DesignTime>
-      <AutoGen>True</AutoGen>
-      <DependentUpon>Resources.resx</DependentUpon>
-    </Compile>
-  </ItemGroup>
-  <ItemGroup>
-    <EmbeddedResource Update="Properties\Resources.resx">
-      <Generator>ResXFileCodeGenerator</Generator>
-      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
-    </EmbeddedResource>
-  </ItemGroup>
+    <PropertyGroup>
+        <OldToolsVersion>2.0</OldToolsVersion>
+        <Configurations>Release;Debug;Appveyor;DirectX</Configurations>
+        <Platforms>x64;AnyCPU</Platforms>
+        <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+        <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+        <Description>Provides the MC:Java networking implementation in Alex</Description>
+        <Copyright>Kenny van Vulpen - 2020</Copyright>
+        <PackageProjectUrl>https://github.com/kennyvv/Alex</PackageProjectUrl>
+        <PackageLicenseUrl>https://github.com/kennyvv/Alex/blob/master/LICENSE</PackageLicenseUrl>
+        <RepositoryUrl>https://github.com/kennyvv/Alex</RepositoryUrl>
+        <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
+    </PropertyGroup>
+    <ItemGroup>
+        <PackageReference Include="Newtonsoft.Json" Version="13.0.1"/>
+        <PackageReference Include="NLog" Version="4.7.12"/>
+    </ItemGroup>
+    <ItemGroup>
+        <ProjectReference Include="..\Alex.Common\Alex.Common.csproj"/>
+    </ItemGroup>
+    <ItemGroup>
+        <Compile Update="Properties\Resources.Designer.cs">
+            <DesignTime>True</DesignTime>
+            <AutoGen>True</AutoGen>
+            <DependentUpon>Resources.resx</DependentUpon>
+        </Compile>
+    </ItemGroup>
+    <ItemGroup>
+        <EmbeddedResource Update="Properties\Resources.resx">
+            <Generator>ResXFileCodeGenerator</Generator>
+            <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+        </EmbeddedResource>
+    </ItemGroup>
 </Project>

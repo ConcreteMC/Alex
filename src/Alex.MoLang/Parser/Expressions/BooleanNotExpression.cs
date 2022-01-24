@@ -12,11 +12,12 @@ namespace Alex.MoLang.Parser.Expressions
 			_value = value;
 			//Value = value;
 		}
-		
+
 		/// <inheritdoc />
 		public override IMoValue Evaluate(MoScope scope, MoLangEnvironment environment)
 		{
-			return _value.Evaluate(scope, environment).AsBool() ? DoubleValue.Zero : DoubleValue.One;// .Equals(DoubleValue.One) ? DoubleValue.Zero : DoubleValue.One;
+			return _value.Evaluate(scope, environment).AsBool() ? DoubleValue.Zero :
+				DoubleValue.One; // .Equals(DoubleValue.One) ? DoubleValue.Zero : DoubleValue.One;
 		}
 	}
 }

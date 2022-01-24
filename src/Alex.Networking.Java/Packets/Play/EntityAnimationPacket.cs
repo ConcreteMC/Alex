@@ -4,17 +4,16 @@ namespace Alex.Networking.Java.Packets.Play
 {
 	public class EntityAnimationPacket : Packet<EntityAnimationPacket>
 	{
-		public EntityAnimationPacket()
-		{ }
-		
+		public EntityAnimationPacket() { }
+
 		public int EntityId { get; set; }
 		public Animations Animation { get; set; }
-		
+
 		/// <inheritdoc />
 		public override void Decode(MinecraftStream stream)
 		{
 			EntityId = stream.ReadVarInt();
-			Animation = (Animations) stream.ReadByte();
+			Animation = (Animations)stream.ReadByte();
 		}
 
 		/// <inheritdoc />

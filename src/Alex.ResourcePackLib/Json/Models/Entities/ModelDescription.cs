@@ -34,7 +34,7 @@ namespace Alex.ResourcePackLib.Json.Models.Entities
 		/// </summary>
 		[JsonProperty("visible_bounds_width")]
 		public double VisibleBoundsWidth { get; set; }
-	    
+
 		/// <summary>
 		/// Height of the visible bounding box (in model space units).
 		/// </summary>

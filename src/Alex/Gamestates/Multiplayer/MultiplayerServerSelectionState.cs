@@ -23,122 +23,135 @@ using RocketUI;
 
 namespace Alex.Gamestates.Multiplayer
 {
-    public class MultiplayerServerSelectionState : ListSelectionStateBase<GuiServerListEntryElement>
-    {
-	    private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(MultiplayerServerSelectionState));
-	    
-	    private Button _directConnectButton;
-	    private Button _joinServerButton;
-	    private Button _addServerButton;
-	    private Button _editServerButton;
-	    private Button _deleteServerButton;
-	    private Button _refreshButton;
+	public class MultiplayerServerSelectionState : ListSelectionStateBase<GuiServerListEntryElement>
+	{
+		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(MultiplayerServerSelectionState));
 
-	   // private readonly IListStorageProvider<SavedServerEntry> _listProvider;
+		private Button _directConnectButton;
+		private Button _joinServerButton;
+		private Button _addServerButton;
+		private Button _editServerButton;
+		private Button _deleteServerButton;
+		private Button _refreshButton;
 
-	    private readonly GuiPanoramaSkyBox       _skyBox;
-	    private CancellationTokenSource CancellationTokenSource { get; }
-	    private StackContainer TabItemContainer { get; }
-	    
-	    private ServerTypeImplementation _serverType;
+		// private readonly IListStorageProvider<SavedServerEntry> _listProvider;
+
+		private readonly GuiPanoramaSkyBox _skyBox;
+		private CancellationTokenSource CancellationTokenSource { get; }
+		private StackContainer TabItemContainer { get; }
+
+		private ServerTypeImplementation _serverType;
+
 		public MultiplayerServerSelectionState() : base()
 		{
 			_cancellationTokenSource = new CancellationTokenSource();
 			var alex = GetService<Alex>();
 			_skyBox = GetService<GuiPanoramaSkyBox>();
 			CancellationTokenSource = new CancellationTokenSource();
-			
+
 			//_listProvider = GetService<IListStorageProvider<SavedServerEntry>>();
 
-		    Title = "Multiplayer";
-		    TitleTranslationKey = "multiplayer.title";
+			Title = "Multiplayer";
+			TitleTranslationKey = "multiplayer.title";
 
-		    Header.Height = 44;
-		    Header.Padding = new Thickness(3, 3, 3, 0);
-		    Header.Margin = new Thickness(3, 3, 3, 0);
+			Header.Height = 44;
+			Header.Padding = new Thickness(3, 3, 3, 0);
+			Header.Margin = new Thickness(3, 3, 3, 0);
 
-		    StackContainer stackedStack = new StackContainer()
-		    {
-			    Orientation = Orientation.Horizontal, 
-			    ChildAnchor = Alignment.BottomLeft,
-			    MinWidth = BodyMinWidth,
-			    Width = BodyMinWidth,
-			    
-		    };
-		    
-		    stackedStack.AddChild(TabItemContainer = new StackContainer()
-		    {
-			    Orientation = Orientation.Horizontal,
-			    ChildAnchor = Alignment.BottomLeft,
-			    BackgroundOverlay = new Color(Color.Black, 0.20f)
-		    });
-		    
-		    Header.AddChild(stackedStack);
+			StackContainer stackedStack = new StackContainer()
+			{
+				Orientation = Orientation.Horizontal,
+				ChildAnchor = Alignment.BottomLeft,
+				MinWidth = BodyMinWidth,
+				Width = BodyMinWidth,
+			};
 
-		    foreach (var serverType in alex.ServerTypeManager.GetAll())
-		    {
-			    serverType.ServerStorageProvider.Load();
-			    var button = AddTabButton(serverType.DisplayName, () =>
-			    {
-				    _serverType = serverType;
-				    this.Reload();
-			    });
+			stackedStack.AddChild(
+				TabItemContainer = new StackContainer()
+				{
+					Orientation = Orientation.Horizontal,
+					ChildAnchor = Alignment.BottomLeft,
+					BackgroundOverlay = new Color(Color.Black, 0.20f)
+				});
 
-			    if (ActiveTabBtn == null)
-			    {
-				    ActiveTabBtn = button;
-				    _serverType = serverType;
-			    }
-		    }
+			Header.AddChild(stackedStack);
 
-		    Footer.AddRow(row =>
-		    {
-			    row.AddChild(_joinServerButton = new AlexButton("Join Server",
-				    OnJoinServerButtonPressed)
-			    {
-				    TranslationKey = "selectServer.select",
-				    Enabled = false
-			    });
-			    row.AddChild(_directConnectButton = new AlexButton("Direct Connect",
-				    () => Alex.GameStateManager.SetActiveState<MultiplayerConnectState>(true, false))
-			    {
-				    TranslationKey = "selectServer.direct",
-				    Enabled = false
-			    });
-			    row.AddChild(_addServerButton = new AlexButton("Add Server",
-				    OnAddItemButtonPressed)
-			    {
-				    TranslationKey = "selectServer.add"
-			    });
-		    });
-		    Footer.AddRow(row =>
-		    {
-			    row.AddChild(_editServerButton = new AlexButton("Edit", OnEditItemButtonPressed)
-			    {
-				    TranslationKey = "selectServer.edit",
-				    Enabled = false
-			    });
-			    row.AddChild(_deleteServerButton = new AlexButton("Delete", OnDeleteItemButtonPressed)
-			    {
-				    TranslationKey = "selectServer.delete",
-				    Enabled = false
-			    });
-			    row.AddChild(_refreshButton = new AlexButton("Refresh", OnRefreshButtonPressed)
-			    {
-				    TranslationKey = "selectServer.refresh"
-			    });
-			    row.AddChild(new GuiBackButton()
-			    {
-				    TranslationKey = "gui.cancel"
-			    });
-		    });
+			foreach (var serverType in alex.ServerTypeManager.GetAll())
+			{
+				serverType.ServerStorageProvider.Load();
 
-		    Background = new GuiTexture2D(_skyBox, TextureRepeatMode.Stretch);
-		    
-		    Body.Margin = new Thickness(0, Header.Height, 0, Footer.Height);
+				var button = AddTabButton(
+					serverType.DisplayName, () =>
+					{
+						_serverType = serverType;
+						this.Reload();
+					});
+
+				if (ActiveTabBtn == null)
+				{
+					ActiveTabBtn = button;
+					_serverType = serverType;
+				}
+			}
+
+			Footer.AddRow(
+				row =>
+				{
+					row.AddChild(
+						_joinServerButton = new AlexButton("Join Server", OnJoinServerButtonPressed)
+						{
+							TranslationKey = "selectServer.select", Enabled = false
+						});
+
+					row.AddChild(
+						_directConnectButton =
+							new AlexButton(
+								"Direct Connect",
+								() => Alex.GameStateManager.SetActiveState<MultiplayerConnectState>(true, false))
+							{
+								TranslationKey = "selectServer.direct", Enabled = false
+							});
+
+					row.AddChild(
+						_addServerButton =
+							new AlexButton("Add Server", OnAddItemButtonPressed)
+							{
+								TranslationKey = "selectServer.add"
+							});
+				});
+
+			Footer.AddRow(
+				row =>
+				{
+					row.AddChild(
+						_editServerButton = new AlexButton("Edit", OnEditItemButtonPressed)
+						{
+							TranslationKey = "selectServer.edit", Enabled = false
+						});
+
+					row.AddChild(
+						_deleteServerButton = new AlexButton("Delete", OnDeleteItemButtonPressed)
+						{
+							TranslationKey = "selectServer.delete", Enabled = false
+						});
+
+					row.AddChild(
+						_refreshButton =
+							new AlexButton("Refresh", OnRefreshButtonPressed)
+							{
+								TranslationKey = "selectServer.refresh"
+							});
+
+					row.AddChild(new GuiBackButton() { TranslationKey = "gui.cancel" });
+				});
+
+			Background = new GuiTexture2D(_skyBox, TextureRepeatMode.Stretch);
+
+			Body.Margin = new Thickness(0, Header.Height, 0, Footer.Height);
 		}
 
 		private Button _activeTabBtn;
+
 		private Button ActiveTabBtn
 		{
 			get => _activeTabBtn;
@@ -149,26 +162,25 @@ namespace Alex.Gamestates.Multiplayer
 				if (oldValue != null)
 				{
 					oldValue.BackgroundOverlay = Color.Transparent;
-					oldValue.DefaultColor = (Color) TextColor.DarkGray;
-					
+					oldValue.DefaultColor = (Color)TextColor.DarkGray;
+
 					oldValue.Enabled = false;
 					oldValue.Enabled = true;
 				}
 
 				value.BackgroundOverlay = new Color(Color.Black, 0.25f);
-				value.DefaultColor = (Color) TextColor.White;
+				value.DefaultColor = (Color)TextColor.White;
 				_activeTabBtn = value;
 			}
 		}
 
 		private Button AddTabButton(string text, Action action)
 		{
-			Button button = new AlexButton(
-				text)
+			Button button = new AlexButton(text)
 			{
 				Margin = Thickness.Zero,
 				BackgroundOverlay = Color.Transparent,
-				DefaultColor = (Color) TextColor.DarkGray
+				DefaultColor = (Color)TextColor.DarkGray
 			};
 
 			button.Action = () =>
@@ -176,340 +188,355 @@ namespace Alex.Gamestates.Multiplayer
 				ActiveTabBtn = button;
 				action?.Invoke();
 			};
-			
+
 			TabItemContainer.AddChild(button);
 
 			return button;
 		}
 
 		private bool _isShown = false;
-	    protected override void OnShow()
-	    {
-		    base.OnShow();
 
-		    if (_isShown)
-			    return;
+		protected override void OnShow()
+		{
+			base.OnShow();
 
-		    _isShown = true;
+			if (_isShown)
+				return;
 
-		    Reload();
-	    }
+			_isShown = true;
 
-	    private CancellationTokenSource _cancellationTokenSource;
+			Reload();
+		}
 
-	    private void Reload()
-	    {
-		    try
-		    {
-			    _cancellationTokenSource?.Cancel();
-			    _cancellationTokenSource = new CancellationTokenSource();
-			    
-			    ClearItems();
+		private CancellationTokenSource _cancellationTokenSource;
 
-			    var serverType = _serverType;
-			    if (serverType == null) 
-				    return;
+		private void Reload()
+		{
+			try
+			{
+				_cancellationTokenSource?.Cancel();
+				_cancellationTokenSource = new CancellationTokenSource();
 
-			    foreach (var entry in serverType.SponsoredServers)
-			    {
-				    var item = CreateItem(serverType, entry);
-				    item.CanDelete = false;
-				    item.SaveEntry = false;
-			    }
+				ClearItems();
 
-			    foreach (var entry in serverType.ServerStorageProvider.Data.ToArray())
-			    {
-				    CreateItem(serverType, entry);
-			    }
-			    
-			    serverType.QueryProvider.StartLanDiscovery(
-				    _cancellationTokenSource.Token, LanDiscoveryCallback).ConfigureAwait(false);
-		    }
-		    finally { }
-	    }
+				var serverType = _serverType;
 
-	    private GuiServerListEntryElement _showStatus = null;
-	    private GuiServerListEntryElement CreateItem(ServerTypeImplementation serverType, SavedServerEntry serverEntry)
-	    {
-		    GuiServerListEntryElement item = null;
+				if (serverType == null)
+					return;
 
-		    void ShowPingCallback(bool show)
-		    {
-			    if (!show)
-			    {
-				    _showStatus = null;
-			    }
-			    else
-			    {
-				    _showStatus = item;
-			    }
-		    }
+				foreach (var entry in serverType.SponsoredServers)
+				{
+					var item = CreateItem(serverType, entry);
+					item.CanDelete = false;
+					item.SaveEntry = false;
+				}
 
-		    item = new GuiServerListEntryElement(serverType, serverEntry, ShowPingCallback);
-		    AddItem(item);
+				foreach (var entry in serverType.ServerStorageProvider.Data.ToArray())
+				{
+					CreateItem(serverType, entry);
+				}
 
-		    return item;
-	    }
+				serverType.QueryProvider.StartLanDiscovery(_cancellationTokenSource.Token, LanDiscoveryCallback)
+				   .ConfigureAwait(false);
+			}
+			finally { }
+		}
 
-	    /// <inheritdoc />
-	    protected override void OnItemDoubleClick(GuiServerListEntryElement item)
-	    {
-		    base.OnItemDoubleClick(item);
-		    
-		    if (SelectedItem != item)
-			    return;
-		    
-		    JoinServer(item);
-	    }
+		private GuiServerListEntryElement _showStatus = null;
 
-	    private Task LanDiscoveryCallback(LanDiscoveryResult r)
-	    {
-		    var serverType = _serverType;
+		private GuiServerListEntryElement CreateItem(ServerTypeImplementation serverType, SavedServerEntry serverEntry)
+		{
+			GuiServerListEntryElement item = null;
 
-		    if (serverType == null)
-			    return Task.CompletedTask;
-		    
-		    if (r.QueryResponse.Success)
-		    {
-			    var entry = CreateItem(
-				    serverType, new SavedServerEntry()
-				    {
-					    ServerType = serverType.Id,
-					    Host = r.QueryResponse.Status.Address,
-					    Port = r.QueryResponse.Status.Port,
-					    Name = $"[LAN] {r.EndPoint}",
-					    InternalIdentifier = Guid.NewGuid()
-				    });
+			void ShowPingCallback(bool show)
+			{
+				if (!show)
+				{
+					_showStatus = null;
+				}
+				else
+				{
+					_showStatus = item;
+				}
+			}
 
-			    entry.SaveEntry = false;
-			    entry.CanDelete = false;
+			item = new GuiServerListEntryElement(serverType, serverEntry, ShowPingCallback);
+			AddItem(item);
 
-			    entry.ConnectionEndpoint = r.EndPoint;
+			return item;
+		}
 
-			    AddItem(entry);
-		    }
+		/// <inheritdoc />
+		protected override void OnItemDoubleClick(GuiServerListEntryElement item)
+		{
+			base.OnItemDoubleClick(item);
 
-		    return Task.CompletedTask;
-	    }
+			if (SelectedItem != item)
+				return;
 
-	    /// <inheritdoc />
-	    protected override void OnAddItem(GuiServerListEntryElement item)
-	    {
-		    base.OnAddItem(item);
+			JoinServer(item);
+		}
 
-		    var cancellationToken = _cancellationTokenSource.Token;
-		    Task.Run(() => item.PingAsync(false, cancellationToken), cancellationToken);
-		    //item.PingAsync(false, cancellationToken).ConfigureAwait(true);
-		    
-		    //item?.PingAsync(false, _cancellationTokenSource.Token);
-	    }
+		private Task LanDiscoveryCallback(LanDiscoveryResult r)
+		{
+			var serverType = _serverType;
 
-	    protected override void OnSelectedItemChanged(GuiServerListEntryElement newItem)
-	    {
-		    if (newItem != null)
-		    {
-			    _joinServerButton.Enabled = true;
-			    _editServerButton.Enabled = newItem.SaveEntry;
-			    _deleteServerButton.Enabled = newItem.CanDelete;
-		    }
-		    else
-		    {
-			    _joinServerButton.Enabled = false;
-			    _editServerButton.Enabled   = false;
-			    _deleteServerButton.Enabled = false;
-		    }
-	    }
-		
-	    public void OnAddItemButtonPressed()
-	    {
-		    Alex.GameStateManager.SetActiveState(new MultiplayerAddEditServerState(AddEditServerCallbackAction, _skyBox), true, false);
-	    }
+			if (serverType == null)
+				return Task.CompletedTask;
 
-	    private void OnEditItemButtonPressed()
-	    {
-		    Alex.GameStateManager.SetActiveState(
-			    new MultiplayerAddEditServerState(SelectedItem.SavedServerEntry, AddEditServerCallbackAction, _skyBox),
-			    true, false);
-	    }
+			if (r.QueryResponse.Success)
+			{
+				var entry = CreateItem(
+					serverType,
+					new SavedServerEntry()
+					{
+						ServerType = serverType.Id,
+						Host = r.QueryResponse.Status.Address,
+						Port = r.QueryResponse.Status.Port,
+						Name = $"[LAN] {r.EndPoint}",
+						InternalIdentifier = Guid.NewGuid()
+					});
 
-	    private void OnDeleteItemButtonPressed()
-	    {
-		    var toDelete = SelectedItem;
-		    Alex.GameStateManager.SetActiveState(new GuiConfirmState(new GuiConfirmState.GuiConfirmStateOptions()
-		    {
-				MessageTranslationKey = "selectServer.deleteQuestion",
-				ConfirmTranslationKey = "selectServer.deleteButton"
-		    }, confirm =>
-		    {
-			    if (confirm)
-			    {
-				    RemoveItem(toDelete);
+				entry.SaveEntry = false;
+				entry.CanDelete = false;
 
-				    var serverType = _serverType;
-				    if (serverType != null && serverType.ServerStorageProvider.RemoveEntry(toDelete.SavedServerEntry))
-				    {
-					    Reload();
-				    }
-				    else
-				    {
-					    Log.Warn($"Failed to remove item.");
-				    }
-			    }
-		    }), true, false);
-	    }
+				entry.ConnectionEndpoint = r.EndPoint;
 
-	    private async void JoinServer(GuiServerListEntryElement item)
-	    {
-		    if (item == null)
-			    return;
-		    
-		    var serverType = _serverType;
-		    if (serverType == null)
-			    return;
+				AddItem(entry);
+			}
 
-		    JoinServer(Alex, serverType, item.ConnectionEndpoint, item.SavedServerEntry.Host, CancellationTokenSource);
-	    }
-	    
-	    public void JoinServer(Alex alex, ServerTypeImplementation serverType, IPEndPoint endPoint, string host, CancellationTokenSource cancellationTokenSource)
-	    {
-		    if (serverType == null)
-			    return;
+			return Task.CompletedTask;
+		}
 
-		    var skyBox = alex.ServiceContainer.GetRequiredService<GuiPanoramaSkyBox>();
-		    cancellationTokenSource?.Cancel();
-		    var overlay = alex.GuiManager.CreateDialog<GenericLoadingDialog>();
-		    overlay.Show();
-			
-		    try
-		    {
-			    async void OnProfileSelected(PlayerProfile profile)
-			    {
-				    if (profile == null || !profile.Authenticated)
-				    {
-					    await serverType.Authenticate(skyBox, OnProfileSelected, profile);
-					    return;
-				    }
-				    
-				    try
-				    {
-					    alex.ConnectToServer(serverType, new ServerConnectionDetails(endPoint, host), profile);
-				    }
-				    finally
-				    {
-					    overlay.Close();
-				    }
-			    }
+		/// <inheritdoc />
+		protected override void OnAddItem(GuiServerListEntryElement item)
+		{
+			base.OnAddItem(item);
 
-			    UserSelectionState pss = new UserSelectionState(serverType, skyBox, OnProfileSelected, () => {});
-			    pss.BackgroundOverlay = BackgroundOverlay;
-			    
-			    alex.GameStateManager.SetActiveState(pss);
-		    }
-		    finally
-		    {
-			    overlay.Close();
-		    }
-	    }
+			var cancellationToken = _cancellationTokenSource.Token;
+			Task.Run(() => item.PingAsync(false, cancellationToken), cancellationToken);
+			//item.PingAsync(false, cancellationToken).ConfigureAwait(true);
 
-	    private void OnJoinServerButtonPressed()
-	    {
-		    JoinServer(SelectedItem);
-	    }
+			//item?.PingAsync(false, _cancellationTokenSource.Token);
+		}
 
-	    private void OnRefreshButtonPressed()
-	    {
-		    Reload();
-	    }
+		protected override void OnSelectedItemChanged(GuiServerListEntryElement newItem)
+		{
+			if (newItem != null)
+			{
+				_joinServerButton.Enabled = true;
+				_editServerButton.Enabled = newItem.SaveEntry;
+				_deleteServerButton.Enabled = newItem.CanDelete;
+			}
+			else
+			{
+				_joinServerButton.Enabled = false;
+				_editServerButton.Enabled = false;
+				_deleteServerButton.Enabled = false;
+			}
+		}
 
-	    private void SaveAll()
-	    {
-		    
-	    }
+		public void OnAddItemButtonPressed()
+		{
+			Alex.GameStateManager.SetActiveState(
+				new MultiplayerAddEditServerState(AddEditServerCallbackAction, _skyBox), true, false);
+		}
 
-	    private void AddEditServerCallbackAction(MultiplayerAddEditServerState.AddOrEditCallback obj)
-	    {
-		    if (obj == null) return; //Cancelled.
-		    
-		    var storageProvider = _serverType?.ServerStorageProvider;
-		    
-		    if (!obj.IsNew)
-		    {
-			    var entry = Items.FirstOrDefault(
-				    x => x.SavedServerEntry.InternalIdentifier.Equals(obj.Entry.InternalIdentifier));
+		private void OnEditItemButtonPressed()
+		{
+			Alex.GameStateManager.SetActiveState(
+				new MultiplayerAddEditServerState(SelectedItem.SavedServerEntry, AddEditServerCallbackAction, _skyBox),
+				true, false);
+		}
 
-			    if (entry != null)
-			    {
-				    storageProvider?.RemoveEntry(entry.SavedServerEntry);
-				    entry.SavedServerEntry = obj.Entry;
-				    storageProvider?.AddEntry(entry.SavedServerEntry);
+		private void OnDeleteItemButtonPressed()
+		{
+			var toDelete = SelectedItem;
 
-				    var cancellationToken = _cancellationTokenSource.Token;
-				    Task.Run(() => entry.PingAsync(false, cancellationToken), cancellationToken);
-			    }
-		    }
-		    else
-		    {
-			    storageProvider?.AddEntry(obj.Entry);
-		    }
+			Alex.GameStateManager.SetActiveState(
+				new GuiConfirmState(
+					new GuiConfirmState.GuiConfirmStateOptions()
+					{
+						MessageTranslationKey = "selectServer.deleteQuestion",
+						ConfirmTranslationKey = "selectServer.deleteButton"
+					}, confirm =>
+					{
+						if (confirm)
+						{
+							RemoveItem(toDelete);
 
-		    SaveAll();
+							var serverType = _serverType;
 
-		    Reload();
-	    }
+							if (serverType != null
+							    && serverType.ServerStorageProvider.RemoveEntry(toDelete.SavedServerEntry))
+							{
+								Reload();
+							}
+							else
+							{
+								Log.Warn($"Failed to remove item.");
+							}
+						}
+					}), true, false);
+		}
 
-	    private Point _cursorPosition = Point.Zero;
-	    protected override void OnUpdate(GameTime gameTime)
-	    {
-			//_skyBox.Update(gameTime);
-		    base.OnUpdate(gameTime);
+		private async void JoinServer(GuiServerListEntryElement item)
+		{
+			if (item == null)
+				return;
 
-		    if (_showStatus != null)
-		    {
-			    var mouseState = Mouse.GetState();
-			    _cursorPosition = GuiRenderer.Unproject(new Vector2(mouseState.X, mouseState.Y)).ToPoint();
-		    }
-	    }
+			var serverType = _serverType;
 
-	    /// <inheritdoc />
-	    protected override void OnDraw(GuiSpriteBatch graphics, GameTime gameTime)
-	    {
-		    base.OnDraw(graphics, gameTime);
-		    
-		    var status = _showStatus;
-		    if (status == null)
-			    return;
-		    
-		    string text = $"{status.Latency}ms";
+			if (serverType == null)
+				return;
 
-		    if (!string.IsNullOrWhiteSpace(status.Version))
-		    {
-			    text = $"Server Ping: {text}\nGame Version: {status.Version.Trim()}";
-		    }
-		            
-		    var size = graphics.Font.MeasureString(text);
-		    var position = _cursorPosition + new Point(5, 5);
-		            
-		    graphics.SpriteBatch.FillRectangle(new Rectangle(position, size.ToPoint()), Color.Black * 0.5f);
-		    graphics.DrawString(graphics.Font, text, position.ToVector2(), TextColor.White, FontStyle.None);
-	    }
+			JoinServer(Alex, serverType, item.ConnectionEndpoint, item.SavedServerEntry.Host, CancellationTokenSource);
+		}
 
-	    protected override void OnDraw(IRenderArgs args)
-	    {
-		    _skyBox.Draw(args);
+		public void JoinServer(Alex alex,
+			ServerTypeImplementation serverType,
+			IPEndPoint endPoint,
+			string host,
+			CancellationTokenSource cancellationTokenSource)
+		{
+			if (serverType == null)
+				return;
 
-		    base.OnDraw(args);
-	    }
+			var skyBox = alex.ServiceContainer.GetRequiredService<GuiPanoramaSkyBox>();
+			cancellationTokenSource?.Cancel();
+			var overlay = alex.GuiManager.CreateDialog<GenericLoadingDialog>();
+			overlay.Show();
 
-	    protected override void OnHide()
-	    {
-		    base.OnHide();
-		    
-		    _cancellationTokenSource?.Cancel();
-		    _cancellationTokenSource = null;
-		    
-		    CancellationTokenSource?.Cancel();
-		    
+			try
+			{
+				async void OnProfileSelected(PlayerProfile profile)
+				{
+					if (profile == null || !profile.Authenticated)
+					{
+						await serverType.Authenticate(skyBox, OnProfileSelected, profile);
+
+						return;
+					}
+
+					try
+					{
+						alex.ConnectToServer(serverType, new ServerConnectionDetails(endPoint, host), profile);
+					}
+					finally
+					{
+						overlay.Close();
+					}
+				}
+
+				UserSelectionState pss = new UserSelectionState(serverType, skyBox, OnProfileSelected, () => { });
+				pss.BackgroundOverlay = BackgroundOverlay;
+
+				alex.GameStateManager.SetActiveState(pss);
+			}
+			finally
+			{
+				overlay.Close();
+			}
+		}
+
+		private void OnJoinServerButtonPressed()
+		{
+			JoinServer(SelectedItem);
+		}
+
+		private void OnRefreshButtonPressed()
+		{
+			Reload();
+		}
+
+		private void SaveAll() { }
+
+		private void AddEditServerCallbackAction(MultiplayerAddEditServerState.AddOrEditCallback obj)
+		{
+			if (obj == null) return; //Cancelled.
+
+			var storageProvider = _serverType?.ServerStorageProvider;
+
+			if (!obj.IsNew)
+			{
+				var entry = Items.FirstOrDefault(
+					x => x.SavedServerEntry.InternalIdentifier.Equals(obj.Entry.InternalIdentifier));
+
+				if (entry != null)
+				{
+					storageProvider?.RemoveEntry(entry.SavedServerEntry);
+					entry.SavedServerEntry = obj.Entry;
+					storageProvider?.AddEntry(entry.SavedServerEntry);
+
+					var cancellationToken = _cancellationTokenSource.Token;
+					Task.Run(() => entry.PingAsync(false, cancellationToken), cancellationToken);
+				}
+			}
+			else
+			{
+				storageProvider?.AddEntry(obj.Entry);
+			}
+
 			SaveAll();
-	    }
-    }
+
+			Reload();
+		}
+
+		private Point _cursorPosition = Point.Zero;
+
+		protected override void OnUpdate(GameTime gameTime)
+		{
+			//_skyBox.Update(gameTime);
+			base.OnUpdate(gameTime);
+
+			if (_showStatus != null)
+			{
+				var mouseState = Mouse.GetState();
+				_cursorPosition = GuiRenderer.Unproject(new Vector2(mouseState.X, mouseState.Y)).ToPoint();
+			}
+		}
+
+		/// <inheritdoc />
+		protected override void OnDraw(GuiSpriteBatch graphics, GameTime gameTime)
+		{
+			base.OnDraw(graphics, gameTime);
+
+			var status = _showStatus;
+
+			if (status == null)
+				return;
+
+			string text = $"{status.Latency}ms";
+
+			if (!string.IsNullOrWhiteSpace(status.Version))
+			{
+				text = $"Server Ping: {text}\nGame Version: {status.Version.Trim()}";
+			}
+
+			var size = graphics.Font.MeasureString(text);
+			var position = _cursorPosition + new Point(5, 5);
+
+			graphics.SpriteBatch.FillRectangle(new Rectangle(position, size.ToPoint()), Color.Black * 0.5f);
+			graphics.DrawString(graphics.Font, text, position.ToVector2(), TextColor.White, FontStyle.None);
+		}
+
+		protected override void OnDraw(IRenderArgs args)
+		{
+			_skyBox.Draw(args);
+
+			base.OnDraw(args);
+		}
+
+		protected override void OnHide()
+		{
+			base.OnHide();
+
+			_cancellationTokenSource?.Cancel();
+			_cancellationTokenSource = null;
+
+			CancellationTokenSource?.Cancel();
+
+			SaveAll();
+		}
+	}
 }

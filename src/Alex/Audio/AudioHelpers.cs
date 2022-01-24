@@ -2283,6 +2283,7 @@ namespace Alex.Audio
 			}
 
 			sound = null;
+
 			return false;
 		}
 	}

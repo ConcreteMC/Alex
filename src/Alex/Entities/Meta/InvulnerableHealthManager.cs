@@ -1,7 +1,4 @@
 namespace Alex.Entities.Meta
 {
-	public class InvulnerableHealthManager
-	{
-		
-	}
+	public class InvulnerableHealthManager { }
 }

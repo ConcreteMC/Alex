@@ -5,23 +5,23 @@ namespace Alex.Networking.Java.Packets.Play
 {
 	public class SoundEffectPacket : Packet<SoundEffectPacket>
 	{
-		public int           SoundId  { get; set; }
+		public int SoundId { get; set; }
 		public SoundCategory Category { get; set; }
-		public Vector3       Position { get; set; }
-		public float         Volume   { get; set; }
-		public float         Pitch    { get; set; }
-		
+		public Vector3 Position { get; set; }
+		public float Volume { get; set; }
+		public float Pitch { get; set; }
+
 		/// <inheritdoc />
 		public override void Decode(MinecraftStream stream)
 		{
 			SoundId = stream.ReadVarInt();
-			Category = (SoundCategory) stream.ReadVarInt();
+			Category = (SoundCategory)stream.ReadVarInt();
 			var x = stream.ReadInt();
 			var y = stream.ReadInt();
 			var z = stream.ReadInt();
 
 			Position = new Vector3(x / 8f, y / 8f, z / 8f);
-			
+
 			Volume = stream.ReadFloat();
 			Pitch = stream.ReadFloat();
 		}

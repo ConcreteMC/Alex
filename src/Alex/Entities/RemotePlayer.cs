@@ -45,25 +45,27 @@ namespace Alex.Entities
 {
 	public class RemotePlayer : LivingEntity
 	{
-		private static readonly Logger   Log = LogManager.GetCurrentClassLogger(typeof(RemotePlayer));
-		public  GameMode Gamemode { get; private set; }
+		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(RemotePlayer));
+		public GameMode Gamemode { get; private set; }
 
 		public PlayerSkinFlags SkinFlags { get; } = PlayerSkinFlags.Default;
 
-		public int Score   { get; set; } = 0;
+		public int Score { get; set; } = 0;
 		public int Latency { get; set; } = 0;
 
 		public BlockCoordinates BedPosition { get; set; } = BlockCoordinates.Zero;
 		public Color PotionColor { get; set; } = Color.White;
-		
+
 		public ActionPermissions ActionPermissions { get; set; }
 		public CommandPermission CommandPermissions { get; set; }
 		public PermissionLevel PermissionLevel { get; set; }
 		public uint CustomStoredPermissions { get; set; }
-		
-		public  bool CanSprint    => HealthManager.Hunger > 6;
+
+		public bool CanSprint => HealthManager.Hunger > 6;
+
 		//private PooledTexture2D _texture;
-		public RemotePlayer(World level, string geometry = "geometry.humanoid.customSlim", Skin skin = null) : base(level)
+		public RemotePlayer(World level, string geometry = "geometry.humanoid.customSlim", Skin skin = null) : base(
+			level)
 		{
 			Type = "minecraft:player";
 			//Name = name;
@@ -76,11 +78,11 @@ namespace Alex.Entities
 			Velocity = Vector3.Zero;
 
 			//GeometryName = geometry;
-			
-			MovementSpeed = 0.1f;//0000000149011612f;//0000000149011612f;
+
+			MovementSpeed = 0.1f; //0000000149011612f;//0000000149011612f;
 			FlyingSpeed = 0.4f;
 			AttackSpeed = 4.0;
-			
+
 			if (skin != null)
 			{
 				Skin = skin;
@@ -90,7 +92,7 @@ namespace Alex.Entities
 				if (geometry != null)
 					_skinDirty = true;
 			}
-			
+
 			base.NoAi = true;
 		}
 
@@ -106,8 +108,9 @@ namespace Alex.Entities
 			MissingMemberHandling = MissingMemberHandling.Ignore
 		};
 
-		private Skin _skin      = null;
+		private Skin _skin = null;
 		private bool _skinDirty = false;
+
 		public Skin Skin
 		{
 			get
@@ -118,7 +121,7 @@ namespace Alex.Entities
 			{
 				if (value == null || value == _skin)
 					return;
-				
+
 				_skin = value;
 
 				OnSkinValueChanged(value);
@@ -152,6 +155,7 @@ namespace Alex.Entities
 			if (!CanFly)
 			{
 				IsFlying = false;
+
 				return;
 			}
 
@@ -189,10 +193,9 @@ namespace Alex.Entities
 			{
 				QueueSkinProcessing(_skin);
 			}
-			
-			if (!AnimationController.Initialized &&
-			    Alex.Instance.Resources.TryGetEntityDefinition(
-				    Type, out var description, out var source))
+
+			if (!AnimationController.Initialized
+			    && Alex.Instance.Resources.TryGetEntityDefinition(Type, out var description, out var source))
 			{
 				Description = description;
 				AnimationController.UpdateEntityDefinition(source, source, description);
@@ -206,11 +209,13 @@ namespace Alex.Entities
 		}
 
 		private int _skinQueuedCount = 0;
+
 		private void QueueSkinProcessing(Skin skin)
 		{
 			if (Interlocked.CompareExchange(ref _skinQueuedCount, 1, 0) != 0)
 			{
 				Log.Warn($"Tried loading skin twice!");
+
 				return;
 			}
 
@@ -233,7 +238,7 @@ namespace Alex.Entities
 							_skinDirty = false;
 						}
 					});
-					
+
 				//	Level.BackgroundWorker.Enqueue(ProcessSkin);
 			}
 		}
@@ -249,7 +254,7 @@ namespace Alex.Entities
 				if (skin != null && model == null)
 				{
 					if (!string.IsNullOrWhiteSpace(skin.GeometryData) && !skin.GeometryData.Equals(
-						"null", StringComparison.InvariantCultureIgnoreCase))
+						    "null", StringComparison.InvariantCultureIgnoreCase))
 					{
 						try
 						{
@@ -266,11 +271,14 @@ namespace Alex.Entities
 								{
 									//if (!Directory.Exists("playerSkins"))
 									//File.WriteAllText(Path.Combine("playerskins", $"{resourcePatch.Geometry.Default}.json"), skin.GeometryData);
-									
-									Dictionary<string, EntityModel> models = new Dictionary<string, EntityModel>(StringComparer.OrdinalIgnoreCase);
+
+									Dictionary<string, EntityModel> models =
+										new Dictionary<string, EntityModel>(StringComparer.OrdinalIgnoreCase);
+
 									MCBedrockResourcePack.LoadEntityModel(skin.GeometryData, models);
 
 									int preProcessed = models.Count;
+
 									models = MCBedrockResourcePack.ProcessEntityModels(
 										models, s =>
 										{
@@ -280,10 +288,12 @@ namespace Alex.Entities
 											}
 
 											Log.Debug($"Failed to resolve model: {s}");
+
 											return null;
 										});
-									
-									if (models == null || !models.TryGetValue(resourcePatch.Geometry.Default, out model))
+
+									if (models == null || !models.TryGetValue(
+										    resourcePatch.Geometry.Default, out model))
 									{
 										Log.Debug(
 											$"Invalid geometry: \'{resourcePatch.Geometry.Default}\' for player \'{nametag.Replace("\n", "")}\'. Pre-Processing: {preProcessed}, post: {models?.Count ?? 0}");
@@ -291,13 +301,16 @@ namespace Alex.Entities
 								}
 								else
 								{
-									Log.Debug($"Resourcepatch geometry was null for player {nametag.Replace("\n", "")}");
+									Log.Debug(
+										$"Resourcepatch geometry was null for player {nametag.Replace("\n", "")}");
 								}
 							}
 						}
 						catch (Exception ex)
 						{
-							Log.Debug(ex, $"Could not create geometry: {ex.ToString()} for player {nametag.Replace("\n", "")}");
+							Log.Debug(
+								ex,
+								$"Could not create geometry: {ex.ToString()} for player {nametag.Replace("\n", "")}");
 						}
 					}
 				}
@@ -310,15 +323,17 @@ namespace Alex.Entities
 				if (model == null)
 				{
 					if (!ModelFactory.TryGetModel(
-						slim ? "geometry.humanoid.customSlim" : "geometry.humanoid.custom", out model))
+						    slim ? "geometry.humanoid.customSlim" : "geometry.humanoid.custom", out model))
 					{
 						Log.Debug($"Invalid model for player {nametag.Replace("\n", "")}");
+
 						return;
 					}
 				}
 
 
 				Image<Rgba32> skinBitmap = null;
+
 				try
 				{
 					if (skin == null || !skin.TryGetBitmap(model, out skinBitmap))
@@ -367,7 +382,6 @@ namespace Alex.Entities
 
 					if (skinBitmap != null)
 					{
-
 						var modelTextureSize = new Point(
 							(int)model.Description.TextureWidth, (int)model.Description.TextureHeight);
 
@@ -390,7 +404,7 @@ namespace Alex.Entities
 
 									return;
 								}
-								
+
 								skinBitmap?.Dispose();
 								Texture = texture2D;
 							});
@@ -414,7 +428,7 @@ namespace Alex.Entities
 			//if (oldValue != renderer)
 			{
 				//if (oldValue != null)
-					//primaryArm?.Remove(oldValue);
+				//primaryArm?.Remove(oldValue);
 			}
 
 			if (renderer == null || renderer.Model == null)
@@ -431,6 +445,7 @@ namespace Alex.Entities
 			{
 				pos = DisplayPosition.ThirdPerson;
 			}
+
 			//if (pos.HasFlag(DisplayPosition.FirstPerson) || pos.HasFlag(DisplayPosition.ThirdPerson))
 			{
 				if (IsLeftHanded)
@@ -470,7 +485,7 @@ namespace Alex.Entities
 				renderer.DisplayPosition = pos;
 			}
 
-		//	if (oldValue != renderer)
+			//	if (oldValue != renderer)
 			{
 				//if (renderer != null)
 				//	primaryArm?.AddChild(renderer);
@@ -512,9 +527,10 @@ namespace Alex.Entities
 			if (flag == MiNET.Entities.Entity.MetadataFlags.BedPosition && entry is MetadataIntCoordinates mic)
 			{
 				BedPosition = new BlockCoordinates(mic.Value.X, mic.Value.Y, mic.Value.Z);
+
 				return true;
 			}
-			
+
 			if (flag == MiNET.Entities.Entity.MetadataFlags.PotionColor && entry is MetadataInt potionColor)
 			{
 				//int a = 255;
@@ -522,8 +538,8 @@ namespace Alex.Entities
 				//int g = 255;
 				//int b = 255;
 
-				PotionColor = new Color((uint) potionColor.Value);
-				
+				PotionColor = new Color((uint)potionColor.Value);
+
 				//PotionColor = 
 				return true;
 			}
@@ -562,9 +578,10 @@ namespace Alex.Entities
 				IsUsingItem = false;
 				IsEating = false;
 				IsBlocking = false;
+
 				return;
 			}
-			
+
 			base.HandleEntityStatus(status);
 		}
 
@@ -589,7 +606,7 @@ namespace Alex.Entities
 
 			if (modelRenderer == null)
 				return null;
-			
+
 			ModelData arm = null;
 
 			if (IsLeftHanded)

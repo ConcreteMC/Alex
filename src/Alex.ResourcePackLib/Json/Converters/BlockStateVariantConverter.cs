@@ -21,16 +21,21 @@ namespace Alex.ResourcePackLib.Json.Converters
 			}
 		}
 
-		public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
+		public override object ReadJson(JsonReader reader,
+			Type objectType,
+			object existingValue,
+			JsonSerializer serializer)
 		{
 			if (reader.TokenType == JsonToken.StartArray)
 			{
 				var v = new BlockStateVariant(serializer.Deserialize<BlockStateModel[]>(reader));
+
 				return v;
 			}
 			else
 			{
 				var v = new BlockStateVariant(serializer.Deserialize<BlockStateModel>(reader));
+
 				return v;
 			}
 		}

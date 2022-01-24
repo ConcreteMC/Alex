@@ -11,10 +11,12 @@ namespace Alex.ResourcePackLib.Json.Sound
 		{
 			if (reader.TokenType == JsonToken.Null) return null;
 			var value = serializer.Deserialize<string>(reader);
+
 			if (value == "event")
 			{
 				return SoundType.Event;
 			}
+
 			throw new Exception("Cannot unmarshal type TypeEnum");
 		}
 
@@ -23,14 +25,19 @@ namespace Alex.ResourcePackLib.Json.Sound
 			if (untypedValue == null)
 			{
 				serializer.Serialize(writer, null);
+
 				return;
 			}
+
 			var value = (SoundType)untypedValue;
+
 			if (value == SoundType.Event)
 			{
 				serializer.Serialize(writer, "event");
+
 				return;
 			}
+
 			throw new Exception("Cannot marshal type TypeEnum");
 		}
 

@@ -3,7 +3,7 @@ using Alex.MoLang.Runtime.Value;
 
 namespace Alex.MoLang.Parser.Expressions.BinaryOp
 {
-	public class EqualExpression :  BinaryOpExpression
+	public class EqualExpression : BinaryOpExpression
 	{
 		/// <inheritdoc />
 		public EqualExpression(IExpression l, IExpression r) : base(l, r) { }
@@ -13,7 +13,7 @@ namespace Alex.MoLang.Parser.Expressions.BinaryOp
 		{
 			var left = Left.Evaluate(scope, environment);
 			var right = Right.Evaluate(scope, environment);
-			
+
 			return new DoubleValue(left.Equals(right));
 		}
 

@@ -7,8 +7,9 @@ namespace Alex.Common.Commands
 	{
 		private List<CommandNode> _nodes;
 		private int _rootIndex = 0;
-		
+
 		public int RootIndex => _rootIndex;
+
 		public CommandTreeBuilder()
 		{
 			_nodes = new List<CommandNode>();

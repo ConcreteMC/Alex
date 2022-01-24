@@ -4,8 +4,7 @@ namespace Alex.ResourcePackLib.Json.Sound
 {
 	public partial class SoundMetadata
 	{
-		[JsonProperty("name")]
-		public string Name { get; set; }
+		[JsonProperty("name")] public string Name { get; set; }
 
 		[JsonProperty("stream", NullValueHandling = NullValueHandling.Ignore)]
 		public bool? Stream { get; set; }

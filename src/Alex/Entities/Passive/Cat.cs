@@ -10,6 +10,7 @@ namespace Alex.Entities.Passive
 	public class Cat : TameableMob
 	{
 		private CatType _variant = CatType.Black;
+
 		public CatType Variant
 		{
 			get
@@ -19,7 +20,7 @@ namespace Alex.Entities.Passive
 			set
 			{
 				_variant = value;
-				
+
 				string stringType = value.ToString().ToLower();
 
 				if (value == CatType.BritishShorthair)
@@ -39,6 +40,7 @@ namespace Alex.Entities.Passive
 				//TryUpdateTexture("minecraft:cat", stringType);
 			}
 		}
+
 		/// <inheritdoc />
 		public Cat(World level) : base(EntityType.Cat, level)
 		{
@@ -53,7 +55,7 @@ namespace Alex.Entities.Passive
 
 			if (entry.Index == 19 && entry is MetadataVarInt varInt)
 			{
-				Variant = (CatType) varInt.Value;
+				Variant = (CatType)varInt.Value;
 			}
 		}
 
@@ -63,9 +65,8 @@ namespace Alex.Entities.Passive
 			base.EntityHurt();
 			Alex.Instance.AudioEngine.PlaySound("mob.cat.hit", RenderLocation, 1f, 1f);
 		}
-		
-		[MoProperty("variant")]
-		public int QueryVariant => (int) Variant;
+
+		[MoProperty("variant")] public int QueryVariant => (int)Variant;
 
 		public enum CatType
 		{

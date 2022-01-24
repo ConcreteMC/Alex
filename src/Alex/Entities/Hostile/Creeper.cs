@@ -38,13 +38,9 @@ namespace Alex.Entities.Hostile
 		{
 			base.HandleJavaMeta(entry);
 
-			if (entry.Index == 16 && entry is MetadataVarInt state)
-			{
-				
-			}
+			if (entry.Index == 16 && entry is MetadataVarInt state) { }
 			else if (entry.Index == 17 && entry is MetadataBool charged)
 			{
-				
 				IsCharged = charged.Value;
 			}
 			else if (entry.Index == 18 && entry is MetadataBool ignited)
@@ -52,6 +48,7 @@ namespace Alex.Entities.Hostile
 				IsIgnited = ignited.Value;
 			}
 		}
+
 		/// <inheritdoc />
 		public override void EntityHurt()
 		{

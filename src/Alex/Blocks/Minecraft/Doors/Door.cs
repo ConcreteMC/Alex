@@ -23,8 +23,9 @@ namespace Alex.Blocks.Minecraft.Doors
 		public bool IsUpper => UPPER.GetValue(BlockState);
 		public bool IsHinchOnTheRight => RIGHTHINCHED.GetValue(BlockState);
 		public BlockFace FacingDirection => FACING.GetValue(BlockState);
-		
+
 		protected bool CanOpen { get; set; } = true;
+
 		public Door(uint blockId) : base()
 		{
 			Transparent = true;
@@ -33,14 +34,18 @@ namespace Alex.Blocks.Minecraft.Doors
 			IsFullCube = true;
 		}
 
-		private BlockState Update(IBlockAccess world, BlockState blockState, BlockCoordinates coordinates, BlockCoordinates updated)
+		private BlockState Update(IBlockAccess world,
+			BlockState blockState,
+			BlockCoordinates coordinates,
+			BlockCoordinates updated)
 		{
 			var updatedBlock = world.GetBlockState(updated);
+
 			if (!(updatedBlock.Block is Door doorBlock))
 				return blockState;
 
 			bool isUpper = IsUpper;
-			
+
 			if (updated == coordinates + BlockCoordinates.Up && !isUpper)
 			{
 				blockState = blockState.WithProperty(RIGHTHINCHED, doorBlock.IsHinchOnTheRight);
@@ -63,7 +68,7 @@ namespace Alex.Blocks.Minecraft.Doors
 
 				return state;
 			}*/
-			
+
 			if (IsUpper)
 			{
 				return Update(world, state, position, position + BlockCoordinates.Down);
@@ -75,6 +80,7 @@ namespace Alex.Blocks.Minecraft.Doors
 		public override void BlockUpdate(World world, BlockCoordinates position, BlockCoordinates updatedBlock)
 		{
 			var newValue = Update(world, BlockState, position, updatedBlock);
+
 			if (newValue.Id != BlockState.Id)
 			{
 				world.SetBlockState(position.X, position.Y, position.Z, newValue);
@@ -82,19 +88,23 @@ namespace Alex.Blocks.Minecraft.Doors
 		}
 
 		/// <inheritdoc />
-		public override bool PlaceBlock(World world, Player player, BlockCoordinates position, BlockFace face, Vector3 cursorPosition)
+		public override bool PlaceBlock(World world,
+			Player player,
+			BlockCoordinates position,
+			BlockFace face,
+			Vector3 cursorPosition)
 		{
 			position += face.GetBlockCoordinates();
 			var blockAbove = world.GetBlockState(position + BlockCoordinates.Up);
 
 			if (!blockAbove.Block.BlockMaterial.IsReplaceable)
 				return true;
-			
+
 			var facing = player.KnownPosition.GetFacing();
 			BlockState state = BlockState;
 			state = state.WithProperty(FACING, facing);
 			state = state.WithProperty(UPPER, false);
-			
+
 			var blockLeft = world.GetBlockState(position + BlockCoordinates.Left);
 			var blockRight = world.GetBlockState(position + BlockCoordinates.Right);
 
@@ -106,7 +116,7 @@ namespace Alex.Blocks.Minecraft.Doors
 			{
 				state = state.WithProperty(RIGHTHINCHED, false);
 			}
-			
+
 			world.SetBlockState(position, state);
 
 			return true;
@@ -117,19 +127,22 @@ namespace Alex.Blocks.Minecraft.Doors
 		{
 			return true;
 		}
-		
+
 		public override bool TryGetStateProperty(string prop, out IStateProperty stateProperty)
 		{
 			switch (prop)
 			{
 				case "half":
 					stateProperty = UPPER;
+
 					return true;
+
 				case "hinge":
 					stateProperty = RIGHTHINCHED;
+
 					return true;
-				
 			}
+
 			return base.TryGetStateProperty(prop, out stateProperty);
 		}
 	}

@@ -14,7 +14,8 @@ namespace Alex.MoLang.Parser.Expressions
 		}
 
 		/// <inheritdoc />
-		public UnaryPlusExpression(IExpression value) : base() {
+		public UnaryPlusExpression(IExpression value) : base()
+		{
 			_value = value;
 		}
 	}

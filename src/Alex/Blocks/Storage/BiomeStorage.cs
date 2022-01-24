@@ -7,6 +7,7 @@ namespace Alex.Blocks.Storage;
 public class BiomeStorage : GenericStorage<Biome>
 {
 	private Biome Air { get; }
+
 	public BiomeStorage() : base(BiomeUtils.Biomes[0], 3, 64)
 	{
 		Air = BiomeUtils.Biomes[0];
@@ -20,7 +21,7 @@ public class BiomeStorage : GenericStorage<Biome>
 	{
 		return Air;
 	}
-	
+
 	/// <inheritdoc />
 	protected override DirectPallete<Biome> GetGlobalPalette()
 	{
@@ -29,7 +30,7 @@ public class BiomeStorage : GenericStorage<Biome>
 
 	private static Biome GlobalLookup(uint arg)
 	{
-		return BiomeUtils.GetBiome(arg);//.GetBlockState(arg);
+		return BiomeUtils.GetBiome(arg); //.GetBlockState(arg);
 	}
 
 	/// <inheritdoc />

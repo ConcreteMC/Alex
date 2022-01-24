@@ -30,18 +30,19 @@ namespace Alex
 		Parent,
 		Children
 	}
-	
+
 	public class MenuItem
 	{
 		public string Title { get; set; }
 		public bool IsTranslatable { get; set; } = false;
-		
+
 		public List<MenuItem> Children { get; set; }
-		
+
 		public EventHandler<MenuItemClickedEventArgs> OnClick;
-		
+
 		public MenuType Type { get; }
 		public bool Visible { get; set; } = true;
+
 		public MenuItem(MenuType type = MenuType.Button)
 		{
 			Type = type;
@@ -69,7 +70,7 @@ namespace Alex
 				{
 					StackMenuItem me = new StackMenuItem();
 					me.ApplyModernStyle(true);
-					
+
 					me.Text = Title;
 
 					if (IsTranslatable)
@@ -100,9 +101,6 @@ namespace Alex
 
 	public class MenuItemClickedEventArgs : EventArgs
 	{
-		public MenuItemClickedEventArgs()
-		{
-			
-		}
+		public MenuItemClickedEventArgs() { }
 	}
 }

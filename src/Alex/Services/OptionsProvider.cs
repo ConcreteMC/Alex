@@ -6,56 +6,57 @@ using NLog;
 
 namespace Alex.Services
 {
-    public class OptionsProvider : IOptionsProvider
-    {
-        private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(OptionsProvider));
-        
-        private const string StorageKey = "gamesettings";
+	public class OptionsProvider : IOptionsProvider
+	{
+		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(OptionsProvider));
 
-        public AlexOptions AlexOptions { get; private set; }
+		private const string StorageKey = "gamesettings";
 
-        private readonly IStorageSystem _storage;
+		public AlexOptions AlexOptions { get; private set; }
 
-        private bool _optionsLoaded = false;
-        public OptionsProvider(IStorageSystem storage)
-        {
-            _storage = storage;
-            AlexOptions = new AlexOptions();
+		private readonly IStorageSystem _storage;
 
-            //Load();
-        }
+		private bool _optionsLoaded = false;
 
-        public void Load()
-        {
-            if (_optionsLoaded)
-                return;
-            
-            if (_storage.TryReadJson(StorageKey, out AlexOptions options))
-            {
-                AlexOptions = options;
-            }
-            else
-            {
-                Log.Warn($"Could not read from storage.");
-            }
-            
-            _optionsLoaded = true;
-        }
+		public OptionsProvider(IStorageSystem storage)
+		{
+			_storage = storage;
+			AlexOptions = new AlexOptions();
 
-        public void Save()
-        {
-            if (!_optionsLoaded)
-                return;
-            
-            if (!_storage.TryWriteJson(StorageKey, AlexOptions))
-            {
-                Log.Warn($"Could not save settings.");
-            }
-        }
+			//Load();
+		}
 
-        public void ResetAllToDefault()
-        {
-            AlexOptions.ResetToDefault();
-        }
-    }
+		public void Load()
+		{
+			if (_optionsLoaded)
+				return;
+
+			if (_storage.TryReadJson(StorageKey, out AlexOptions options))
+			{
+				AlexOptions = options;
+			}
+			else
+			{
+				Log.Warn($"Could not read from storage.");
+			}
+
+			_optionsLoaded = true;
+		}
+
+		public void Save()
+		{
+			if (!_optionsLoaded)
+				return;
+
+			if (!_storage.TryWriteJson(StorageKey, AlexOptions))
+			{
+				Log.Warn($"Could not save settings.");
+			}
+		}
+
+		public void ResetAllToDefault()
+		{
+			AlexOptions.ResetToDefault();
+		}
+	}
 }

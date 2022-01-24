@@ -16,21 +16,21 @@ namespace Alex.ResourcePackLib.Json.Bedrock.Entity
 		[JsonProperty("part_visibility")]
 		public AnnoyingMolangElement[] PartVisibility { get; set; } = new AnnoyingMolangElement[]
 		{
-			new AnnoyingMolangElement(new Dictionary<string, IExpression[]>()
-			{
-				{"*", new IExpression[] {new BooleanExpression(true)}}
-			})
+			new AnnoyingMolangElement(
+				new Dictionary<string, IExpression[]>()
+				{
+					{ "*", new IExpression[] { new BooleanExpression(true) } }
+				})
 		};
 
-		[JsonProperty("materials")] public AnnoyingMolangElement[] Materials { get; set; } = new AnnoyingMolangElement[]
+		[JsonProperty("materials")]
+		public AnnoyingMolangElement[] Materials { get; set; } = new AnnoyingMolangElement[]
 		{
-			new AnnoyingMolangElement(new Dictionary<string, IExpression[]>()
-			{
-				{"*", new IExpression[]
+			new AnnoyingMolangElement(
+				new Dictionary<string, IExpression[]>()
 				{
-					new StringExpression("Material.default")
-				}}
-			})
+					{ "*", new IExpression[] { new StringExpression("Material.default") } }
+				})
 		};
 
 		[JsonProperty("textures")]
@@ -38,18 +38,14 @@ namespace Alex.ResourcePackLib.Json.Bedrock.Entity
 		{
 			new AnnoyingMolangElement("Texture.default")
 		};
-		
-		[JsonProperty("arrays")]
-		public Dictionary<string, IDictionary<string, IExpression[]>> Arrays { get; set; }
+
+		[JsonProperty("arrays")] public Dictionary<string, IDictionary<string, IExpression[]>> Arrays { get; set; }
 	}
 
-	public class PartVisibility : Dictionary<string, List<IExpression>>
-	{
-		
-	}
-	
+	public class PartVisibility : Dictionary<string, List<IExpression>> { }
+
 	//public class Materials : AnnoyingMolangElement
 	//{
-		
+
 	//}
 }

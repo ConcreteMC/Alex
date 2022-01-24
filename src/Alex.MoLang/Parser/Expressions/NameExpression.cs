@@ -7,7 +7,7 @@ namespace Alex.MoLang.Parser.Expressions
 	public class NameExpression : Expression
 	{
 		public MoPath Name { get; set; }
-		
+
 		/// <inheritdoc />
 		public override IMoValue Evaluate(MoScope scope, MoLangEnvironment environment)
 		{

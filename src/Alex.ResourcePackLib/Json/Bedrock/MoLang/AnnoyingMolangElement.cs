@@ -6,7 +6,7 @@ namespace Alex.ResourcePackLib.Json.Bedrock.MoLang
 	public class AnnoyingMolangElement
 	{
 		public Dictionary<string, IExpression[]> Expressions;
-		public string                            StringValue;
+		public string StringValue;
 
 		public AnnoyingMolangElement(Dictionary<string, IExpression[]> expressions)
 		{
@@ -23,7 +23,7 @@ namespace Alex.ResourcePackLib.Json.Bedrock.MoLang
 
 			IsString = true;
 		}
-		
+
 		public bool IsString { get; }
 
 		//	public static implicit operator AnnoyingMolangElement(Dictionary<string, IExpression[]> dictionary) => new AnnoyingMolangElement { Expressions = dictionary };

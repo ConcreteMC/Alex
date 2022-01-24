@@ -43,16 +43,14 @@ namespace Alex.Particles
 			}
 		}
 
-		public UvStruct(Vector2 uv) : this(uv.X, uv.Y)
-		{
-		}
+		public UvStruct(Vector2 uv) : this(uv.X, uv.Y) { }
 
 		public UvStruct(double u, double v)
 		{
 			_u = new DoubleValue(u);
 			_v = new DoubleValue(v);
 		}
-		
+
 		/// <inheritdoc />
 		public void Set(MoPath key, IMoValue value)
 		{
@@ -76,7 +74,7 @@ namespace Alex.Particles
 			{
 				return _v;
 			}
-			
+
 			return DoubleValue.Zero;
 		}
 
@@ -114,7 +112,7 @@ namespace Alex.Particles
 				_r.Value = value;
 			}
 		}
-		
+
 		public byte G
 		{
 			get => (byte)_g.Value;
@@ -123,7 +121,7 @@ namespace Alex.Particles
 				_g.Value = value;
 			}
 		}
-		
+
 		public byte B
 		{
 			get => (byte)_b.Value;
@@ -133,9 +131,7 @@ namespace Alex.Particles
 			}
 		}
 
-		public ColorStruct(Color color) : this(color.R, color.G, color.B, color.A)
-		{
-		}
+		public ColorStruct(Color color) : this(color.R, color.G, color.B, color.A) { }
 
 		public ColorStruct(byte r, byte g, byte b, byte a)
 		{
@@ -144,7 +140,7 @@ namespace Alex.Particles
 			_b = new DoubleValue(b);
 			_a = new DoubleValue(a);
 		}
-		
+
 		/// <inheritdoc />
 		public void Set(MoPath key, IMoValue value)
 		{
@@ -164,14 +160,17 @@ namespace Alex.Particles
 			{
 				case "a":
 					return _a;
+
 				case "r":
 					return _r;
+
 				case "g":
 					return _g;
+
 				case "b":
 					return _b;
 			}
-			
+
 			return DoubleValue.Zero;
 		}
 
@@ -186,37 +185,38 @@ namespace Alex.Particles
 			return new Color(a.R, a.G, a.B, a.A);
 		}
 	}
-	
+
 	public class ParticleInstance : QueryStruct, IParticle
 	{
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(ParticleInstance));
+
 		public ParticleInstance(Vector3 position)
 		{
 			Runtime = new MoLangRuntime();
 			Runtime.Environment.Structs.TryAdd("query", this);
-			
+
 			Position = position;
 			_color = new ColorStruct(Color.White);
-			
+
 			Functions.Add("frame_alpha", mo => _deltaTime.TotalSeconds);
 			Functions.Add("spellcolor", mo => _color);
-			
+
 			var variables = Runtime.Environment.Structs["variable"];
 			variables.Set(new MoPath("particle_random_1"), new DoubleValue(FastRandom.Instance.NextDouble()));
 			variables.Set(new MoPath("particle_random_2"), new DoubleValue(FastRandom.Instance.NextDouble()));
 			variables.Set(new MoPath("particle_random_3"), new DoubleValue(FastRandom.Instance.NextDouble()));
 			variables.Set(new MoPath("particle_random_4"), new DoubleValue(FastRandom.Instance.NextDouble()));
-			
-			variables.Set(new MoPath("emitter_texture_coordinate"), _emitterTextureCoordinate = new UvStruct(0,0));
-			
+
+			variables.Set(new MoPath("emitter_texture_coordinate"), _emitterTextureCoordinate = new UvStruct(0, 0));
+
 			//variables.Set(new MoPath("emitter_texture_coordinate.u"), new DoubleValue(0));
 			//variables.Set(new MoPath("emitter_texture_coordinate.v"), new DoubleValue(0));
-			
+
 			//emitter_texture_size
-			variables.Set(new MoPath("emitter_texture_size"), _emitterTextureSize = new UvStruct(0,0));
+			variables.Set(new MoPath("emitter_texture_size"), _emitterTextureSize = new UvStruct(0, 0));
 			//variables.Set(new MoPath("emitter_texture_size.u"), new DoubleValue(0));
 			//variables.Set(new MoPath("emitter_texture_size.v"), new DoubleValue(0));
-			
+
 			SetVariable("particle_age", _lifeTime = new DoubleValue(0d));
 			SetVariable("particle_lifetime", _maxLifetime = new DoubleValue(0.5d));
 		}
@@ -224,22 +224,22 @@ namespace Alex.Particles
 		private UvStruct _emitterTextureCoordinate;
 		private UvStruct _emitterTextureSize;
 		private ColorStruct _color;
-		
+
 		/// <summary>
 		///		The velocity of the particle
 		/// </summary>
 		public Vector3 Velocity { get; set; } = Vector3.Zero;
-		
+
 		/// <summary>
 		///		The position of the particle
 		/// </summary>
 		public Vector3 Position { get; set; } = Vector3.Zero;
-		
+
 		/// <summary>
 		///		The acceleration applied to the particle
 		/// </summary>
 		public Vector3 Acceleration { get; set; } = Vector3.Zero;
-		
+
 		/// <summary>
 		///		The drag co-efficient applied to the particle
 		/// </summary>
@@ -263,6 +263,7 @@ namespace Alex.Particles
 		}
 
 		private DoubleValue _maxLifetime;
+
 		/// <summary>
 		///		How long this particle can be visible for
 		/// </summary>
@@ -325,21 +326,22 @@ namespace Alex.Particles
 				_color.A = value.A;
 			}
 		}
-		
+
 		public Rectangle Rectangle { get; private set; }
 
 		public MoLangRuntime Runtime { get; }
-		
+
 		private TimeSpan _deltaTime = TimeSpan.Zero;
 		private Vector2 _uvPosition = Vector2.Zero;
 		private Vector2 _uvSize = Vector2.One;
 
 		public bool Valid { get; set; } = true;
+
 		private void UpdateRectangle()
 		{
 			Rectangle = new Rectangle(_uvPosition.ToPoint(), _uvSize.ToPoint());
 		}
-		
+
 		public void Update(GameTime gameTime)
 		{
 			_deltaTime = Alex.DeltaTimeSpan;
@@ -358,11 +360,12 @@ namespace Alex.Particles
 		}
 
 		public float RenderScale { get; set; } = 1f;
+
 		public void OnTick(ICamera camera)
 		{
 			RenderScale = 1f - (Vector3.Distance(camera.Position, Position) / camera.FarDistance);
 		}
-		
+
 		public void SetData(long data, ParticleDataMode dataMode)
 		{
 			if (data == 0) return;
@@ -371,21 +374,25 @@ namespace Alex.Particles
 			{
 				case ParticleDataMode.Color:
 				{
-					var a = (byte)((data >> 24)  & 0xFF);
-					var r = (byte)((data >> 16)  & 0xFF);
-					var g = (byte)((data >> 8)   & 0xFF);
+					var a = (byte)((data >> 24) & 0xFF);
+					var r = (byte)((data >> 16) & 0xFF);
+					var g = (byte)((data >> 8) & 0xFF);
 					var b = (byte)(data & 0xFF);
 					Color = new Color(r, g, b, a);
-				} break;
+				}
+
+					break;
 
 				case ParticleDataMode.Scale:
 				{
 					//Scale = data;
-				} break;
+				}
+
+					break;
 
 				case ParticleDataMode.Item:
 				{
-					if (ItemFactory.ResolveItemName((int) data, out var name))
+					if (ItemFactory.ResolveItemName((int)data, out var name))
 					{
 						if (ItemFactory.TryGetItem(name, out Item item))
 						{
@@ -393,16 +400,17 @@ namespace Alex.Particles
 
 							if (firstTexture.Value == null)
 							{
-								Log.Warn($"Invalid item, Reason=no textures, id={(int) data}, name={name}");
+								Log.Warn($"Invalid item, Reason=no textures, id={(int)data}, name={name}");
+
 								return;
 							}
-					
+
 							var atlasLocation = Alex.Instance.Resources.ItemAtlas.GetAtlasLocation(firstTexture.Value);
 							_emitterTextureCoordinate.U = atlasLocation.Position.X;
 							_emitterTextureCoordinate.V = atlasLocation.Position.Y;
 							//SetVariable("emitter_texture_coordinate.u", new DoubleValue(atlasLocation.Position.X));
 							//SetVariable("emitter_texture_coordinate.v", new DoubleValue(atlasLocation.Position.Y));
-			
+
 							//emitter_texture_size
 							_emitterTextureSize.U = atlasLocation.Width;
 							_emitterTextureSize.V = atlasLocation.Height;
@@ -419,19 +427,20 @@ namespace Alex.Particles
 						Log.Warn($"Invalid item, could not resolve to name. ID={data}");
 					}
 
-				//	BlockFactory.StateIDToRaw((uint) data, out int id, out byte meta);
-				//	if (!ItemFactory.TryGetItem((short) id, (short) meta, out var item))
-				//	{
-				//		Log.Warn($"Invalid item, id={id}, meta={meta}");
+					//	BlockFactory.StateIDToRaw((uint) data, out int id, out byte meta);
+					//	if (!ItemFactory.TryGetItem((short) id, (short) meta, out var item))
+					//	{
+					//		Log.Warn($"Invalid item, id={id}, meta={meta}");
 
-				//		return;
-				//	}
-				
-				} break;
+					//		return;
+					//	}
+				}
+
+					break;
 
 				case ParticleDataMode.BlockRuntimeId:
 				{
-					var bs = BlockFactory.GetBlockState((uint) data);
+					var bs = BlockFactory.GetBlockState((uint)data);
 
 					if (bs == null)
 					{
@@ -441,13 +450,14 @@ namespace Alex.Particles
 					}
 
 					var model = bs.ModelData.FirstOrDefault();
+
 					if (model?.ModelName == null)
 					{
 						Log.Warn($"Blockstate invalid, modelname was null: {bs.ToString()}");
 
 						return;
 					}
-					
+
 					//string texture = nu
 					if (Alex.Instance.Resources.BlockModelRegistry.TryGet(model.ModelName, out var registryEntry))
 					{
@@ -459,27 +469,27 @@ namespace Alex.Particles
 
 							return;
 						}
-						
+
 						var atlasLocation = Alex.Instance.Resources.BlockAtlas.GetAtlasLocation(texture);
 						_emitterTextureCoordinate.U = atlasLocation.Position.X;
 						_emitterTextureCoordinate.V = atlasLocation.Position.Y;
 						//SetVariable("emitter_texture_coordinate.u", new DoubleValue(atlasLocation.Position.X));
 						//SetVariable("emitter_texture_coordinate.v", new DoubleValue(atlasLocation.Position.Y));
-			
+
 						//emitter_texture_size
 						_emitterTextureSize.U = atlasLocation.Width;
 						_emitterTextureSize.V = atlasLocation.Height;
 						//SetVariable("emitter_texture_size.u", new DoubleValue(atlasLocation.Width));
 						//SetVariable("emitter_texture_size.v", new DoubleValue(atlasLocation.Height));
 					}
-				//	if (bs.ModelData[0]. == null)
-				//	{
-				//		Log.Warn($"Got invalid runtime blockstate: {bs.ToString()}");
-				//		return;
-				//	}
-				
-					
-				} break;
+					//	if (bs.ModelData[0]. == null)
+					//	{
+					//		Log.Warn($"Got invalid runtime blockstate: {bs.ToString()}");
+					//		return;
+					//	}
+				}
+
+					break;
 			}
 		}
 	}

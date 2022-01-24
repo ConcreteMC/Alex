@@ -9,7 +9,7 @@ namespace Alex.Networking.Java.Packets.Play
 {
 	public class EntityPropertiesPacket : Packet<EntityPropertiesPacket>
 	{
-		public int                                EntityId { get; set; }
+		public int EntityId { get; set; }
 		public Dictionary<string, EntityProperty> Properties = new Dictionary<string, EntityProperty>();
 
 		public EntityPropertiesPacket() { }
@@ -24,14 +24,14 @@ namespace Alex.Networking.Java.Packets.Play
 				string key = stream.ReadString();
 				double value = stream.ReadDouble();
 
-				int        propCount = stream.ReadVarInt();
+				int propCount = stream.ReadVarInt();
 				Modifier[] modifiers = new Modifier[propCount];
 
 				for (int y = 0; y < modifiers.Length; y++)
 				{
-					var         uuid   = stream.ReadUuid();
-					double       amount = stream.ReadDouble();
-					ModifierMode op     = (ModifierMode) stream.ReadByte();
+					var uuid = stream.ReadUuid();
+					double amount = stream.ReadDouble();
+					ModifierMode op = (ModifierMode)stream.ReadByte();
 
 					modifiers[y] = EntityProperty.Factory.CreateModifier(uuid, amount, op);
 				}
@@ -63,7 +63,7 @@ namespace Alex.Networking.Java.Packets.Play
 
 	public static class EntityProperties
 	{
-		public const string FlyingSpeed   = "generic.flying_speed";
+		public const string FlyingSpeed = "generic.flying_speed";
 		public const string MovementSpeed = "generic.movement_speed";
 		public const string GenericMovementSpeed = "minecraft:generic.movement_speed";
 		public const string AttackSpeed = "generic.attack_speed	";
@@ -73,8 +73,8 @@ namespace Alex.Networking.Java.Packets.Play
 	{
 		public static EntityPropertyFactory Factory { get; set; } = new EntityPropertyFactory();
 
-		public string                  Key       { get; }
-		public double                  Value     { get; set; }
+		public string Key { get; }
+		public double Value { get; set; }
 		private ConcurrentDictionary<MiNET.Utils.UUID, Modifier> Modifiers { get; }
 
 		public EntityProperty(string key, double value, Modifier[] modifiers)
@@ -90,7 +90,7 @@ namespace Alex.Networking.Java.Packets.Play
 					Modifiers.TryAdd(modifier.Uuid, modifier);
 				}
 			}
-				//Modifiers.AddRange(modifiers);
+			//Modifiers.AddRange(modifiers);
 		}
 
 		public void ApplyModifier(Modifier modifier)
@@ -101,19 +101,16 @@ namespace Alex.Networking.Java.Packets.Play
 				{
 					currentModifier.Amount = modifier.Amount;
 					currentModifier.Operation = modifier.Operation;
-				//	currentModifier.Uuid = modifier.Uuid;
+					//	currentModifier.Uuid = modifier.Uuid;
 				}
 			}
 		}
 
 		public void RemoveModifier(MiNET.Utils.UUID key)
 		{
-			if (Modifiers.TryRemove(key, out _))
-			{
-				
-			}
+			if (Modifiers.TryRemove(key, out _)) { }
 		}
-		
+
 		/*protected virtual IEnumerable<Modifier> GetAppliedModifiers()
 		{
 			foreach (var modifier in Modifiers)
@@ -122,16 +119,17 @@ namespace Alex.Networking.Java.Packets.Play
 			}
 			//return Modifiers.Values.ToArray();
 		}*/
-		
+
 		public virtual double Calculate()
 		{
 			if (Modifiers.Count == 0)
 				return Value;
-			
+
 			var modifiers = Modifiers.Values.ToArray();
 			//var modifiers = GetAppliedModifiers().ToArray();
-			
+
 			var baseValue = Value;
+
 			foreach (var modifier in modifiers.Where(modifier => modifier.Operation == ModifierMode.Add))
 			{
 				baseValue += modifier.Amount;

@@ -1,4 +1,3 @@
-
 using System.Collections.Generic;
 
 namespace Alex.MoLang.Parser.Visitors
@@ -7,9 +6,10 @@ namespace Alex.MoLang.Parser.Visitors
 	{
 		//private LinkedList<IExpression> Stack { get; set; } = new LinkedList<IExpression>();
 
-	//	private LinkedList<IExpression> _previousStack = null;
+		//	private LinkedList<IExpression> _previousStack = null;
 
 		private IExpression _last = null;
+
 		/// <inheritdoc />
 		public override void BeforeTraverse(IEnumerable<IExpression> expressions)
 		{
@@ -28,7 +28,7 @@ namespace Alex.MoLang.Parser.Visitors
 			{
 				previous.Meta.Next = expression;
 			}
-			
+
 			//Stack.AddLast(expression);
 		}
 

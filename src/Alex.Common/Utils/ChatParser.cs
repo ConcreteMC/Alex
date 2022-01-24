@@ -26,12 +26,13 @@ namespace Alex.Common.Utils
 		/// <returns>Returns the formatted text according to the given data</returns>
 		private static string TranslateString(string rulename, List<string> using_data)
 		{
-		//	if (!RulesInitialized) { InitRules(); RulesInitialized = true; }
+			//	if (!RulesInitialized) { InitRules(); RulesInitialized = true; }
 			//if (TranslationRules.ContainsKey(rulename))
 			{
-				int           using_idx = 0;
-				string        rule      = Language.GetString(rulename);//[rulename];
-				StringBuilder result    = new StringBuilder();
+				int using_idx = 0;
+				string rule = Language.GetString(rulename); //[rulename];
+				StringBuilder result = new StringBuilder();
+
 				for (int i = 0; i < rule.Length; i++)
 				{
 					if (rule[i] == '%' && i + 1 < rule.Length)
@@ -44,27 +45,31 @@ namespace Alex.Common.Utils
 								result.Append(using_data[using_idx]);
 								using_idx++;
 								i += 1;
+
 								continue;
 							}
 						}
 
 						//Using specified string or int with %1$s, %2$s...
-						else if (char.IsDigit(rule[i + 1])
-							&& i + 3 < rule.Length && rule[i + 2] == '$'
-							&& (rule[i + 3] == 's' || rule[i + 3] == 'd'))
+						else if (char.IsDigit(rule[i + 1]) && i + 3 < rule.Length && rule[i + 2] == '$'
+						         && (rule[i + 3] == 's' || rule[i + 3] == 'd'))
 						{
 							int specified_idx = rule[i + 1] - '1';
+
 							if (using_data.Count > specified_idx)
 							{
 								result.Append(using_data[specified_idx]);
 								using_idx++;
 								i += 3;
+
 								continue;
 							}
 						}
 					}
+
 					result.Append(rule[i]);
 				}
+
 				return result.ToString();
 			}
 			//else return "[" + rulename + "] " + String.Join(" ", using_data);
@@ -80,6 +85,7 @@ namespace Alex.Common.Utils
 		private static string JSONData2String(Json.JSONData data, string colorcode = "")
 		{
 			string extra_result = "";
+
 			switch (data.Type)
 			{
 				case Json.JSONData.DataType.Object:
@@ -87,6 +93,7 @@ namespace Alex.Common.Utils
 					{
 						colorcode = TextColor.Color2tag(JSONData2String(data.Properties["color"], ""));
 					}
+
 					/*if (data.Properties.ContainsKey("clickEvent"))
 					{
 						Utils.Json.JSONData clickEvent = data.Properties["clickEvent"];
@@ -101,9 +108,11 @@ namespace Alex.Common.Utils
 					if (data.Properties.ContainsKey("extra"))
 					{
 						Json.JSONData[] extras = data.Properties["extra"].DataArray.ToArray();
+
 						foreach (Json.JSONData item in extras)
 							extra_result = extra_result + JSONData2String(item, colorcode) + "§r";
 					}
+
 					if (data.Properties.ContainsKey("text"))
 					{
 						return colorcode + JSONData2String(data.Properties["text"], colorcode) + extra_result;
@@ -111,26 +120,33 @@ namespace Alex.Common.Utils
 					else if (data.Properties.ContainsKey("translate"))
 					{
 						List<string> usingData = new List<string>();
+
 						if (data.Properties.ContainsKey("using") && !data.Properties.ContainsKey("with"))
 							data.Properties["with"] = data.Properties["using"];
+
 						if (data.Properties.ContainsKey("with"))
 						{
 							Json.JSONData[] array = data.Properties["with"].DataArray.ToArray();
+
 							for (int i = 0; i < array.Length; i++)
 							{
 								usingData.Add(JSONData2String(array[i], colorcode));
 							}
 						}
-						return colorcode + TranslateString(JSONData2String(data.Properties["translate"]), usingData) + extra_result;
+
+						return colorcode + TranslateString(JSONData2String(data.Properties["translate"]), usingData)
+						                 + extra_result;
 					}
 					else return extra_result;
 
 				case Json.JSONData.DataType.Array:
 					string result = "";
+
 					foreach (Json.JSONData item in data.DataArray)
 					{
 						result += JSONData2String(item, colorcode);
 					}
+
 					return result;
 
 				case Json.JSONData.DataType.String:

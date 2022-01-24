@@ -10,18 +10,15 @@ namespace Alex.Entities.Passive
 	{
 		public bool IsBegging { get; set; } = false;
 
-		[MoProperty("shake_angle")]
-		public double ShakeAngle { get; set; } = 0d;
+		[MoProperty("shake_angle")] public double ShakeAngle { get; set; } = 0d;
 
-		[MoProperty("tail_angle")]
-		public double TailAngle { get; set; } = 0d;
-		
-		[MoProperty("is_shaking_wetness")]
-		public bool IsShakingWetness { get; set; } = false;
-		
+		[MoProperty("tail_angle")] public double TailAngle { get; set; } = 0d;
+
+		[MoProperty("is_shaking_wetness")] public bool IsShakingWetness { get; set; } = false;
+
 		public byte CollarColor { get; set; } = 0;
 		public int AngerTime { get; set; } = 0;
-		
+
 		public Wolf(World level) : base((EntityType)14, level)
 		{
 			Height = 0.85;
@@ -39,7 +36,7 @@ namespace Alex.Entities.Passive
 			}
 			else if (entry.Index == 20 && entry is MetadataVarInt collarColor)
 			{
-				CollarColor = (byte) collarColor.Value;
+				CollarColor = (byte)collarColor.Value;
 			}
 			else if (entry.Index == 21 && entry is MetadataVarInt angerTime)
 			{
@@ -53,9 +50,10 @@ namespace Alex.Entities.Passive
 			if (flag == MiNET.Entities.Entity.MetadataFlags.Color && entry is MiNET.Utils.Metadata.MetadataByte color)
 			{
 				CollarColor = color.Value;
+
 				return true;
 			}
-			
+
 			return base.HandleMetadata(flag, entry);
 		}
 	}

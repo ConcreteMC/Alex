@@ -7,6 +7,7 @@ namespace Alex.Worlds.Abstraction
 	public interface IWorldGenerator
 	{
 		ChunkColumn GenerateChunkColumn(ChunkCoordinates chunkCoordinates);
+
 		Vector3 GetSpawnPoint();
 
 		void Initialize();

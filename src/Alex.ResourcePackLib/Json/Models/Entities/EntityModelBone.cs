@@ -9,7 +9,7 @@ namespace Alex.ResourcePackLib.Json.Models.Entities
 	using R = Newtonsoft.Json.Required;
 	using N = Newtonsoft.Json.NullValueHandling;
 
-    public class EntityModelBone
+	public class EntityModelBone
 	{
 		/// <summary>
 		/// Animation files refer to this bone via this identifier.
@@ -26,42 +26,43 @@ namespace Alex.ResourcePackLib.Json.Models.Entities
 		[J("locators", NullValueHandling = N.Ignore)]
 		public EntityModelLocators Locators { get; set; } = null;
 
-        /// <summary>
-        /// Grow this box by this additive amount in all directions (in model space units)
-        /// </summary>
-        [J("inflate", NullValueHandling = N.Ignore, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate), DefaultValue(0d)]
-        public double Inflate { get; set; } = 0;
+		/// <summary>
+		/// Grow this box by this additive amount in all directions (in model space units)
+		/// </summary>
+		[J("inflate", NullValueHandling = N.Ignore, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate),
+		 DefaultValue(0d)]
+		public double Inflate { get; set; } = 0;
 
-        /// <summary>
-        /// The bone pivots around this point (in model space units).
-        /// </summary>
-        [J("pivot", NullValueHandling = N.Ignore)]
-        public Vector3? Pivot { get; set; }
+		/// <summary>
+		/// The bone pivots around this point (in model space units).
+		/// </summary>
+		[J("pivot", NullValueHandling = N.Ignore)]
+		public Vector3? Pivot { get; set; }
 
-        /// <summary>
-        /// This is the initial rotation of the bone around the pivot, pre-animation (in degrees, x-then-y-then-z order).
-        /// </summary>
-        [J("rotation", NullValueHandling = N.Ignore)]
-        public Vector3? Rotation { get; set; } = null;
+		/// <summary>
+		/// This is the initial rotation of the bone around the pivot, pre-animation (in degrees, x-then-y-then-z order).
+		/// </summary>
+		[J("rotation", NullValueHandling = N.Ignore)]
+		public Vector3? Rotation { get; set; } = null;
 
-        /// <summary>
-        ///		The rotation for the bone (1.8.0 geometry only)
-        /// </summary>
-        [J("bind_pose_rotation", NullValueHandling = N.Ignore)]
-        public Vector3? BindPoseRotation { get; set; }
+		/// <summary>
+		///		The rotation for the bone (1.8.0 geometry only)
+		/// </summary>
+		[J("bind_pose_rotation", NullValueHandling = N.Ignore)]
+		public Vector3? BindPoseRotation { get; set; }
 
-        [J("neverRender", DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate), DefaultValue(false)]
-        public bool NeverRender { get; set; } = false;
-		
+		[J("neverRender", DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate), DefaultValue(false)]
+		public bool NeverRender { get; set; } = false;
+
 		/// <summary>
 		/// Mirrors the UV's of the unrotated cubes along the x axis, also causes the east/west faces to get flipped.
 		/// </summary>
 		[JsonProperty("mirror", DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate), DefaultValue(false)]
 		public bool Mirror { get; set; } = false;
-		
+
 		[JsonProperty("reset", DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate), DefaultValue(false)]
 		public bool Reset { get; set; } = false;
-		
+
 		/// <summary>
 		/// This is the list of cubes associated with this bone.
 		/// </summary>
@@ -85,11 +86,11 @@ namespace Alex.ResourcePackLib.Json.Models.Entities
 				BindPoseRotation = BindPoseRotation
 			};
 		}
-    }
+	}
 
 	public sealed class EntityModelLocators
 	{
 		[J("lead", NullValueHandling = N.Ignore)]
 		public Vector3 Lead { get; set; }
-    }
+	}
 }

@@ -25,31 +25,31 @@ namespace Alex.Worlds
 				containerId, b =>
 				{
 					GuiInventoryBase inv;
+
 					switch (type)
 					{
-					//	case ContainerType.DoubleChest:
-					//		inv = new GuiChestDialog(new InventoryBase(90));
-//
-					//		break;
-					case ContainerType.CraftingTable:
-						inv = new CraftingTableDialog(new InventoryBase(90)
-						{
-							InventoryId = containerId
-						}, playerInventory);
-						break;
-					case ContainerType.Chest:
-							inv = new GuiChestDialog(new InventoryBase(90)
-							{
-								InventoryId = containerId
-							}, playerInventory);
+						//	case ContainerType.DoubleChest:
+						//		inv = new GuiChestDialog(new InventoryBase(90));
+						//
+						//		break;
+						case ContainerType.CraftingTable:
+							inv = new CraftingTableDialog(
+								new InventoryBase(90) { InventoryId = containerId }, playerInventory);
 
 							break;
-						case ContainerType.Furnace:
-							inv = new GuiFurnaceDialog(playerInventory, new InventoryBase(3)
-							{
-								InventoryId = containerId
-							});
+
+						case ContainerType.Chest:
+							inv = new GuiChestDialog(
+								new InventoryBase(90) { InventoryId = containerId }, playerInventory);
+
 							break;
+
+						case ContainerType.Furnace:
+							inv = new GuiFurnaceDialog(
+								playerInventory, new InventoryBase(3) { InventoryId = containerId });
+
+							break;
+
 						default:
 							throw new NotImplementedException();
 					}
@@ -59,17 +59,17 @@ namespace Alex.Worlds
 					inv.OnContainerClose += (sender, args) =>
 					{
 						Containers.TryRemove(b, out _);
-						
+
 						if (ActiveWindow == sender)
 							ActiveWindow = null;
 					};
-					
+
 					return inv;
 				});
 
 			GuiManager.ShowDialog(dialog);
 			ActiveWindow = dialog;
-			
+
 			return dialog;
 		}
 

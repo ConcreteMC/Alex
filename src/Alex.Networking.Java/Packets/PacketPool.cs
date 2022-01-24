@@ -34,6 +34,7 @@ namespace Alex.Networking.Java.Packets
 		public T GetObject()
 		{
 			if (_objects.TryDequeue(out T item)) return item;
+
 			return _objectGenerator();
 		}
 

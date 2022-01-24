@@ -4,18 +4,15 @@ namespace Alex.Items
 {
 	using System;
 	using System.Collections.Generic;
-
 	using System.Globalization;
 	using Newtonsoft.Json;
 	using Newtonsoft.Json.Converters;
 
 	public partial class ItemMapping
 	{
-		[JsonProperty("bedrock_identifier")]
-		public string BedrockId { get; set; }
+		[JsonProperty("bedrock_identifier")] public string BedrockId { get; set; }
 
-		[JsonProperty("bedrock_data")]
-		public int BedrockData { get; set; }
+		[JsonProperty("bedrock_data")] public int BedrockData { get; set; }
 
 		[JsonProperty("blockRuntimeId", NullValueHandling = NullValueHandling.Ignore)]
 		public long? BlockRuntimeId { get; set; }
@@ -29,8 +26,7 @@ namespace Alex.Items
 		[JsonProperty("tool_tier", NullValueHandling = NullValueHandling.Ignore)]
 		public string ToolTier { get; set; }
 
-		[JsonIgnore]
-		public ResourceLocation JavaId { get; set; } = null;
+		[JsonIgnore] public ResourceLocation JavaId { get; set; } = null;
 
 		/// <inheritdoc />
 		public override int GetHashCode()

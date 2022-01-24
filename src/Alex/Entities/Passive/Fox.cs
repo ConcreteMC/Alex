@@ -8,7 +8,7 @@ namespace Alex.Entities.Passive
 		public bool IsPouncing { get; set; }
 		public bool IsFaceplanted { get; set; }
 		public bool IsDefending { get; set; }
-		
+
 		/// <inheritdoc />
 		public Fox(World level) : base(level)
 		{

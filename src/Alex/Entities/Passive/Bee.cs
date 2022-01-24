@@ -11,7 +11,7 @@ namespace Alex.Entities.Passive
 			Width = 0.7;
 			Height = 0.6;
 		}
-		
+
 		public bool HasStung { get; set; }
 		public bool HasNectar { get; set; }
 		public int AngerTime { get; set; }
@@ -33,7 +33,7 @@ namespace Alex.Entities.Passive
 				AngerTime = angerTime.Value;
 			}
 		}
-		
+
 		/// <inheritdoc />
 		public override void EntityDied()
 		{

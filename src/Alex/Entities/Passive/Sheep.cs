@@ -8,23 +8,12 @@ namespace Alex.Entities.Passive
 	public class Sheep : PassiveMob
 	{
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(Sheep));
+
 		private static readonly DyeColor[] SheepColors = new DyeColor[]
 		{
-			DyeColor.WhiteDye,
-			DyeColor.OrangeDye,
-			DyeColor.MagentaDye,
-			DyeColor.LightBlueDye,
-			DyeColor.YellowDye, 
-			DyeColor.LimeDye, 
-			DyeColor.PinkDye,
-			DyeColor.GrayDye,
-			DyeColor.LightGrayDye,
-			DyeColor.CyanDye,
-			DyeColor.PurpleDye,
-			DyeColor.BlueDye, 
-			DyeColor.BrownDye,
-			DyeColor.GreenDye, 
-			DyeColor.RedDye, 
+			DyeColor.WhiteDye, DyeColor.OrangeDye, DyeColor.MagentaDye, DyeColor.LightBlueDye, DyeColor.YellowDye,
+			DyeColor.LimeDye, DyeColor.PinkDye, DyeColor.GrayDye, DyeColor.LightGrayDye, DyeColor.CyanDye,
+			DyeColor.PurpleDye, DyeColor.BlueDye, DyeColor.BrownDye, DyeColor.GreenDye, DyeColor.RedDye,
 			DyeColor.BlackDye
 		};
 
@@ -53,7 +42,7 @@ namespace Alex.Entities.Passive
 			Height = 1.3;
 			Width = 0.9;
 		}
-		
+
 		protected override void HandleJavaMeta(MetaDataEntry entry)
 		{
 			base.HandleJavaMeta(entry);
@@ -70,9 +59,10 @@ namespace Alex.Entities.Passive
 			if (value < 0 || value > 19)
 			{
 				Log.Warn($"Invalid sheep color: {value}");
+
 				return;
 			}
-			
+
 			Color = SheepColors[value % SheepColors.Length];
 		}
 

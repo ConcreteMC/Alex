@@ -20,26 +20,30 @@ namespace Alex.ResourcePackLib.Json.Textures
 			get
 			{
 				var bounds = Bounds;
+
 				if (NineSliceSize != null)
 				{
 					if (NineSliceSize.Length == 4)
 					{
-						return new Rectangle(NineSliceSize[0], NineSliceSize[1],
-							bounds.Width - NineSliceSize[0]  - NineSliceSize[2],
+						return new Rectangle(
+							NineSliceSize[0], NineSliceSize[1], bounds.Width - NineSliceSize[0] - NineSliceSize[2],
 							bounds.Height - NineSliceSize[1] - NineSliceSize[3]);
 					}
 					else if (NineSliceSize.Length == 2)
 					{
-						return new Rectangle(NineSliceSize[0], NineSliceSize[1], bounds.Width - 2 * NineSliceSize[0],
-							bounds.Height                                                     - 2 * NineSliceSize[1]);
+						return new Rectangle(
+							NineSliceSize[0], NineSliceSize[1], bounds.Width - 2 * NineSliceSize[0],
+							bounds.Height - 2 * NineSliceSize[1]);
 					}
 					else if (NineSliceSize.Length == 1)
 					{
-						return new Rectangle(NineSliceSize[0], NineSliceSize[0], bounds.Width - 2 * NineSliceSize[0],
-							bounds.Height                                                     - 2 * NineSliceSize[0]);
+						return new Rectangle(
+							NineSliceSize[0], NineSliceSize[0], bounds.Width - 2 * NineSliceSize[0],
+							bounds.Height - 2 * NineSliceSize[0]);
 					}
 
-					throw new ArgumentOutOfRangeException(nameof(NineSliceSize.Length), NineSliceSize.Length,
+					throw new ArgumentOutOfRangeException(
+						nameof(NineSliceSize.Length), NineSliceSize.Length,
 						$"NineSiceSize value {NineSliceSize.Length} not handled");
 				}
 

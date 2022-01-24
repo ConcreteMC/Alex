@@ -15,12 +15,12 @@ namespace Alex.Blocks.Minecraft
 			Transparent = true;
 			Luminance = 15;
 			CanInteract = true;
-			
+
 			//Hardness = 3;
 
 			BlockMaterial = Material.Glass.Clone().WithHardness(3f);
 		}
-		
+
 		/*
 		/// <inheritdoc />
 		public override BlockState BlockPlaced(IBlockAccess world, BlockState state, BlockCoordinates position)

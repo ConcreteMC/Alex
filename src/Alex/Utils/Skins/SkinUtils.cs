@@ -25,7 +25,7 @@ namespace Alex.Utils.Skins
 		W64H32,
 		W64H64
 	}
-	
+
 	public static class SkinUtils
 	{
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger();
@@ -33,14 +33,14 @@ namespace Alex.Utils.Skins
 		public static Image<Rgba32> ConvertSkin(Image<Rgba32> input, int width, int height)
 		{
 			//return input;
-			SkinSize size       = SkinSize.W64H32;
+			SkinSize size = SkinSize.W64H32;
 			SkinSize sourceSize = SkinSize.W64H32;
-			
+
 			if (width / height == 2)
 				size = SkinSize.W64H64;
 			else if (width / height == 1)
 				size = SkinSize.W64H32;
-			
+
 			if (input.Width / input.Height == 2)
 				sourceSize = SkinSize.W64H64;
 			else if (input.Width / input.Height == 1)
@@ -50,6 +50,7 @@ namespace Alex.Utils.Skins
 				return input;
 
 			Image<Rgba32> output = new Image<Rgba32>(width, height, new Rgba32(255, 255, 255, 0f));
+
 			output.Mutate(
 				m =>
 				{
@@ -58,205 +59,234 @@ namespace Alex.Utils.Skins
 					cloned.Mutate(x => x.Crop(new Rectangle(0, 0, 32, 16)));
 
 					m.DrawImage(cloned, 1f);
-					
+
 					cloned.Dispose();
-					
+
 					//Hat
 					cloned = input.Clone();
 					cloned.Mutate(x => x.Crop(new Rectangle(32, 0, 32, 16)));
-					
+
 					m.DrawImage(cloned, new SixLabors.ImageSharp.Point(32, 0), 1f);
-					
+
 					cloned.Dispose();
-					
+
 					//Body
 					var body = input.Clone();
 					body.Mutate(x => x.Crop(new Rectangle(16, 16, 24, 16)));
 					m.DrawImage(body, new SixLabors.ImageSharp.Point(16, 16), 1f);
-					
+
 					body.Dispose();
-					
+
 					//Legs
 					var leg = input.Clone();
 					leg.Mutate(x => x.Crop(new Rectangle(0, 16, 16, 16)));
-					
+
 					m.DrawImage(leg, new SixLabors.ImageSharp.Point(0, 16), 1f); //Right Leg
 
 					var clonedLeg = leg.Clone();
+
 					leg.Mutate(
 						x =>
 						{
 							var outer = clonedLeg.Clone();
-							outer.Mutate(o =>
-							{
-								o.Crop(new Rectangle(0, 4, 4, 12));
-								o.Flip(FlipMode.Horizontal);
-							});
-							
+
+							outer.Mutate(
+								o =>
+								{
+									o.Crop(new Rectangle(0, 4, 4, 12));
+									o.Flip(FlipMode.Horizontal);
+								});
+
 							x.DrawImage(outer, new SixLabors.ImageSharp.Point(8, 4), 1f);
-							
+
 							outer.Dispose();
-							
+
 							var inner = clonedLeg.Clone();
-							inner.Mutate(o =>
-							{
-								o.Crop(new Rectangle(8, 4, 4, 12));
-								o.Flip(FlipMode.Horizontal);
-							});
+
+							inner.Mutate(
+								o =>
+								{
+									o.Crop(new Rectangle(8, 4, 4, 12));
+									o.Flip(FlipMode.Horizontal);
+								});
 
 							x.DrawImage(inner, new SixLabors.ImageSharp.Point(0, 4), 1f);
-							
+
 							inner.Dispose();
-							
+
 							var front = clonedLeg.Clone();
-							front.Mutate(o =>
-							{
-								o.Crop(new Rectangle(4, 4, 4, 12));
-								o.Flip(FlipMode.Horizontal);
-							});
+
+							front.Mutate(
+								o =>
+								{
+									o.Crop(new Rectangle(4, 4, 4, 12));
+									o.Flip(FlipMode.Horizontal);
+								});
 
 							x.DrawImage(front, new SixLabors.ImageSharp.Point(4, 4), 1f);
-							
+
 							front.Dispose();
-							
+
 							var back = clonedLeg.Clone();
-							back.Mutate(o =>
-							{
-								o.Crop(new Rectangle(12, 4, 4, 12));
-								o.Flip(FlipMode.Horizontal);
-							});
+
+							back.Mutate(
+								o =>
+								{
+									o.Crop(new Rectangle(12, 4, 4, 12));
+									o.Flip(FlipMode.Horizontal);
+								});
 
 							x.DrawImage(back, new SixLabors.ImageSharp.Point(12, 4), 1f);
 
 							back.Dispose();
-							
+
 							var top = clonedLeg.Clone();
-							top.Mutate(o =>
-							{
-								o.Crop(new Rectangle(4, 0, 4, 4));
-								o.Flip(FlipMode.Horizontal);
-							});
+
+							top.Mutate(
+								o =>
+								{
+									o.Crop(new Rectangle(4, 0, 4, 4));
+									o.Flip(FlipMode.Horizontal);
+								});
 
 							x.DrawImage(top, new SixLabors.ImageSharp.Point(4, 0), 1f);
-							
+
 							top.Dispose();
-							
+
 							var bottom = clonedLeg.Clone();
-							bottom.Mutate(o =>
-							{
-								o.Crop(new Rectangle(8, 0, 4, 4));
-								o.Flip(FlipMode.Horizontal);
-							});
+
+							bottom.Mutate(
+								o =>
+								{
+									o.Crop(new Rectangle(8, 0, 4, 4));
+									o.Flip(FlipMode.Horizontal);
+								});
 
 							x.DrawImage(bottom, new SixLabors.ImageSharp.Point(8, 0), 1f);
-							
+
 							bottom.Dispose();
 						});
-					
+
 					clonedLeg.Dispose();
-					
+
 					m.DrawImage(leg, new SixLabors.ImageSharp.Point(16, 48), 1f); //Left Leg
-					
+
 					leg.Dispose();
-					
+
 					//Arms
 					var arm = input.Clone();
 					arm.Mutate(x => x.Crop(new Rectangle(40, 16, 16, 16)));
 					m.DrawImage(arm, new SixLabors.ImageSharp.Point(40, 16), 1f); //Right Arm
-					
+
 					var clonedArm = arm.Clone();
+
 					arm.Mutate(
 						x =>
 						{
 							var outer = clonedArm.Clone();
-							outer.Mutate(o =>
-							{
-								o.Crop(new Rectangle(0, 4, 4, 12));
-								o.Flip(FlipMode.Horizontal);
-							});
-							
+
+							outer.Mutate(
+								o =>
+								{
+									o.Crop(new Rectangle(0, 4, 4, 12));
+									o.Flip(FlipMode.Horizontal);
+								});
+
 							x.DrawImage(outer, new SixLabors.ImageSharp.Point(8, 4), 1f);
-							
+
 							outer.Dispose();
-							
+
 							var inner = clonedArm.Clone();
-							inner.Mutate(o =>
-							{
-								o.Crop(new Rectangle(8, 4, 4, 12));
-								o.Flip(FlipMode.Horizontal);
-							});
+
+							inner.Mutate(
+								o =>
+								{
+									o.Crop(new Rectangle(8, 4, 4, 12));
+									o.Flip(FlipMode.Horizontal);
+								});
 
 							x.DrawImage(inner, new SixLabors.ImageSharp.Point(0, 4), 1f);
-							
+
 							inner.Dispose();
-							
+
 							var front = clonedArm.Clone();
-							front.Mutate(o =>
-							{
-								o.Crop(new Rectangle(4, 4, 4, 12));
-								o.Flip(FlipMode.Horizontal);
-							});
+
+							front.Mutate(
+								o =>
+								{
+									o.Crop(new Rectangle(4, 4, 4, 12));
+									o.Flip(FlipMode.Horizontal);
+								});
 
 							x.DrawImage(front, new SixLabors.ImageSharp.Point(4, 4), 1f);
-							
+
 							front.Dispose();
-							
+
 							var back = clonedArm.Clone();
-							back.Mutate(o =>
-							{
-								o.Crop(new Rectangle(12, 4, 4, 12));
-								o.Flip(FlipMode.Horizontal);
-							});
+
+							back.Mutate(
+								o =>
+								{
+									o.Crop(new Rectangle(12, 4, 4, 12));
+									o.Flip(FlipMode.Horizontal);
+								});
 
 							x.DrawImage(back, new SixLabors.ImageSharp.Point(12, 4), 1f);
-							
+
 							back.Dispose();
-							
+
 							var top = clonedArm.Clone();
-							top.Mutate(o =>
-							{
-								o.Crop(new Rectangle(4, 0, 4, 4));
-								o.Flip(FlipMode.Horizontal);
-							});
+
+							top.Mutate(
+								o =>
+								{
+									o.Crop(new Rectangle(4, 0, 4, 4));
+									o.Flip(FlipMode.Horizontal);
+								});
 
 							x.DrawImage(top, new SixLabors.ImageSharp.Point(4, 0), 1f);
-							
+
 							top.Dispose();
-							
+
 							var bottom = clonedArm.Clone();
-							bottom.Mutate(o =>
-							{
-								o.Crop(new Rectangle(8, 0, 4, 4));
-								o.Flip(FlipMode.Horizontal);
-							});
+
+							bottom.Mutate(
+								o =>
+								{
+									o.Crop(new Rectangle(8, 0, 4, 4));
+									o.Flip(FlipMode.Horizontal);
+								});
 
 							x.DrawImage(bottom, new SixLabors.ImageSharp.Point(8, 0), 1f);
-							
+
 							bottom.Dispose();
 						});
-					
+
 					clonedArm.Dispose();
-				//	arm.Mutate(x => x.Flip(FlipMode.Horizontal));
+					//	arm.Mutate(x => x.Flip(FlipMode.Horizontal));
 					m.DrawImage(arm, new SixLabors.ImageSharp.Point(32, 48), 1f); //Left Arm
-					
+
 					arm.Dispose();
 				});
 
 			return output;
 		}
-		
+
 		public static void TryGetSkin(object owner, string json, Action<Image<Rgba32>, bool> onComplete)
 		{
 			//isSlim = false;
 			try
 			{
 				TexturesResponse r = JsonConvert.DeserializeObject<TexturesResponse>(json);
+
 				if (r != null)
 				{
 					string url = r.textures?.SKIN?.url;
+
 					if (url != null)
 					{
 						byte[] data;
+
 						using (WebClient wc = new WebClient())
 						{
 							data = wc.DownloadData(url);
@@ -273,7 +303,7 @@ namespace Alex.Utils.Skins
 					}
 				}
 			}
-			catch(Exception ex)
+			catch (Exception ex)
 			{
 				Log.Warn(ex, $"Could not retrieve skin: {ex.ToString()}");
 			}
@@ -297,14 +327,15 @@ namespace Alex.Utils.Skins
 				{
 					if (model.Description.TextureWidth * model.Description.TextureHeight * 4 == bytes.Length)
 					{
-						width = (int) model.Description.TextureWidth;
-						height = (int) model.Description.TextureHeight;
+						width = (int)model.Description.TextureWidth;
+						height = (int)model.Description.TextureHeight;
 					}
 				}
-				
+
 				Image<Rgba32> bitmap = new Image<Rgba32>(width, height);
 
 				int i = 0;
+
 				for (int y = 0; y < bitmap.Height; y++)
 				{
 					for (int x = 0; x < bitmap.Width; x++)
@@ -314,18 +345,20 @@ namespace Alex.Utils.Skins
 						byte b = bytes[i++];
 						byte a = bytes[i++];
 
-                        bitmap[x, y] = new Rgba32(r, g, b, a);
-                        //Color color = Color.FromArgb(a, r, g, b);
-                        //bitmap.SetPixel(x, y, color);
-                    }
+						bitmap[x, y] = new Rgba32(r, g, b, a);
+						//Color color = Color.FromArgb(a, r, g, b);
+						//bitmap.SetPixel(x, y, color);
+					}
 				}
 
 				result = bitmap;
+
 				return true;
 			}
 			catch
 			{
 				result = null;
+
 				return false;
 			}
 		}
@@ -338,24 +371,26 @@ namespace Alex.Utils.Skins
 			settings.MissingMemberHandling = MissingMemberHandling.Ignore;
 			//settings.Formatting = Formatting.Indented;
 			settings.ContractResolver = new CamelCasePropertyNamesContractResolver();
-			settings.Converters.Add(new StringEnumConverter {NamingStrategy = new CamelCaseNamingStrategy()});
+			settings.Converters.Add(new StringEnumConverter { NamingStrategy = new CamelCaseNamingStrategy() });
 
-			MiNET.Utils.Skins.Skin skin     = null;
-			Geometry               geometry = new Geometry();
+			MiNET.Utils.Skins.Skin skin = null;
+			Geometry geometry = new Geometry();
 
 			geometry.Bones = new List<Bone>();
 
 			foreach (var bone in model.Bones)
 			{
 				var a = new ExtendedBone();
+
 				//a.BoneType = bone.Name;
 				//if (Enum.TryParse<BoneName>(bone.Name, true, out var boneName))
 				{
 					a.Name = bone.Name;
 				}
+
 				//else
 				{
-				//	a.Name = BoneName.Unknown;
+					//	a.Name = BoneName.Unknown;
 				}
 
 				if (!string.IsNullOrWhiteSpace(bone.Parent))
@@ -368,12 +403,12 @@ namespace Alex.Utils.Skins
 
 				if (bone.Pivot.HasValue)
 				{
-					a.Pivot = new float[] {bone.Pivot.Value.X, bone.Pivot.Value.Y, bone.Pivot.Value.Z};
+					a.Pivot = new float[] { bone.Pivot.Value.X, bone.Pivot.Value.Y, bone.Pivot.Value.Z };
 				}
 
 				if (bone.Rotation.HasValue)
 				{
-					a.Rotation = new float[] {bone.Rotation.Value.X, bone.Rotation.Value.Y, bone.Rotation.Value.Z};
+					a.Rotation = new float[] { bone.Rotation.Value.X, bone.Rotation.Value.Y, bone.Rotation.Value.Z };
 				}
 
 				/*if (bone.BindPoseRotation.HasValue)
@@ -385,7 +420,7 @@ namespace Alex.Utils.Skins
 					a.Rotation[1] += bone.BindPoseRotation.Value.Y;
 					a.Rotation[2] += bone.BindPoseRotation.Value.Z;
 				}*/
-				
+
 				if (bone.Cubes != null)
 				{
 					a.Cubes = new List<Cube>();
@@ -394,20 +429,23 @@ namespace Alex.Utils.Skins
 					{
 						var newCube = new ExtendedCube()
 						{
-							Inflate = (float) (c.Inflate.HasValue ? c.Inflate.Value : 0f),
-							Origin = new float[] {c.Origin.X, c.Origin.Y, c.Origin.Z},
-							Size = new float[] {c.Size.X, c.Size.Y, c.Size.Z},
-							Uv = new float[] {c.Uv.South.Origin.X, c.Uv.South.Origin.Y}
+							Inflate = (float)(c.Inflate.HasValue ? c.Inflate.Value : 0f),
+							Origin = new float[] { c.Origin.X, c.Origin.Y, c.Origin.Z },
+							Size = new float[] { c.Size.X, c.Size.Y, c.Size.Z },
+							Uv = new float[] { c.Uv.South.Origin.X, c.Uv.South.Origin.Y }
 						};
 
 						if (c.Mirror.HasValue)
 							newCube.Mirror = c.Mirror.Value;
 
 						if (c.Rotation.HasValue)
-							newCube.Rotation = new float[] {c.Rotation.Value.X, c.Rotation.Value.Y, c.Rotation.Value.Z};
+							newCube.Rotation = new float[]
+							{
+								c.Rotation.Value.X, c.Rotation.Value.Y, c.Rotation.Value.Z
+							};
 
 						if (c.Pivot.HasValue)
-							newCube.Pivot = new float[] {c.Pivot.Value.X, c.Pivot.Value.Y, c.Pivot.Value.Z};
+							newCube.Pivot = new float[] { c.Pivot.Value.X, c.Pivot.Value.Y, c.Pivot.Value.Z };
 
 						a.Cubes.Add(newCube);
 					}
@@ -425,14 +463,14 @@ namespace Alex.Utils.Skins
 			geometry.Description = new Description()
 			{
 				Identifier = $"geometry.humanoid.customSlim",
-				TextureHeight = (int) model.Description.TextureHeight,
-				TextureWidth = (int) model.Description.TextureWidth,
-				VisibleBoundsHeight = (int) model.Description.VisibleBoundsHeight,
-				VisibleBoundsWidth = (int) model.Description.VisibleBoundsWidth,
+				TextureHeight = (int)model.Description.TextureHeight,
+				TextureWidth = (int)model.Description.TextureWidth,
+				VisibleBoundsHeight = (int)model.Description.VisibleBoundsHeight,
+				VisibleBoundsWidth = (int)model.Description.VisibleBoundsWidth,
 				VisibleBoundsOffset = new int[]
 				{
-					(int) model.Description.VisibleBoundsOffset.X,
-					(int) model.Description.VisibleBoundsOffset.Y, (int) model.Description.VisibleBoundsOffset.Z
+					(int)model.Description.VisibleBoundsOffset.X, (int)model.Description.VisibleBoundsOffset.Y,
+					(int)model.Description.VisibleBoundsOffset.Z
 				}
 			};
 
@@ -452,7 +490,7 @@ namespace Alex.Utils.Skins
 				GeometryData = JsonConvert.SerializeObject(
 					new Dictionary<string, object>()
 					{
-						{"format_version", "1.12.0"}, {"minecraft:geometry", new[] {geometry}},
+						{ "format_version", "1.12.0" }, { "minecraft:geometry", new[] { geometry } },
 					}, Formatting.None, settings),
 				SkinColor = "#0",
 				ArmSize = "slim",
@@ -473,8 +511,9 @@ namespace Alex.Utils.Skins
 
 				skinTexture = Image.Load(ms, new PngDecoder()).CloneAs<Rgba32>();
 			}*/
-			    
+
 			byte[] skinData;
+
 			using (MemoryStream ms = new MemoryStream())
 			{
 				if (skinTexture.TryGetSinglePixelSpan(out var span))
@@ -506,7 +545,7 @@ namespace Alex.Utils.Skins
 			/// </summary>
 			[JsonProperty("pivot", NullValueHandling = NullValueHandling.Ignore)]
 			public float[] Pivot { get; set; } = null;
-			
+
 			/// <summary>
 			/// The cube is rotated by this amount (in degrees, x-then-y-then-z order) around the pivot.
 			/// </summary>
@@ -514,11 +553,8 @@ namespace Alex.Utils.Skins
 			public float[] Rotation { get; set; } = null;
 		}
 
-		public class ExtendedBone : MiNET.Utils.Skins.Bone
-		{
-			
-		}
-		
+		public class ExtendedBone : MiNET.Utils.Skins.Bone { }
+
 		public class SkinMetadata
 		{
 			public string model { get; set; }

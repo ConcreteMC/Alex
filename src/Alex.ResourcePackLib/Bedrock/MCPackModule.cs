@@ -13,6 +13,7 @@ namespace Alex.ResourcePackLib.Bedrock
 		}
 
 		protected IFilesystem Entry { get; }
+
 		protected MCPackModule(IFilesystem entry)
 		{
 			Entry = entry;

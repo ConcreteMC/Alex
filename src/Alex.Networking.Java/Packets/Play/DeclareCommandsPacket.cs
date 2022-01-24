@@ -32,8 +32,8 @@ namespace Alex.Networking.Java.Packets.Play
 
 			for (int i = 0; i < count; i++)
 			{
-				var flags = (byte) stream.ReadByte();
-				var nodeType = (CommandNodeType) (flags & 0x03);
+				var flags = (byte)stream.ReadByte();
+				var nodeType = (CommandNodeType)(flags & 0x03);
 
 				var childCount = stream.ReadVarInt();
 				int[] children = new int[childCount];
@@ -58,6 +58,7 @@ namespace Alex.Networking.Java.Packets.Play
 				}
 
 				CommandNode node;
+
 				switch (nodeType)
 				{
 					case CommandNodeType.Root:
@@ -71,10 +72,7 @@ namespace Alex.Networking.Java.Packets.Play
 						break;
 
 					case CommandNodeType.Argument:
-						var acn = new ArgumentCommandNode(name)
-						{
-							Parser = GetParser(stream)
-						};
+						var acn = new ArgumentCommandNode(name) { Parser = GetParser(stream) };
 
 						acn.Parser.Parent = acn;
 
@@ -82,7 +80,7 @@ namespace Alex.Networking.Java.Packets.Play
 						{
 							acn.SuggestionType = stream.ReadString();
 						}
-						
+
 						node = acn;
 
 						break;
@@ -115,28 +113,44 @@ namespace Alex.Networking.Java.Packets.Play
 				case "minecraft:resource_location":
 				{
 					return new ResourceLocationArgumentParser(parser);
-				} break;
+				}
+
+					break;
+
 				case "minecraft:block_pos":
 				{
 					return new BlockPositionArgumentParser(parser);
-				} break;
+				}
+
+					break;
+
 				case "minecraft:vec2":
 				{
 					return new Vector2ArgumentParser(parser);
-				} break;
+				}
+
+					break;
+
 				case "minecraft:vec3":
 				{
 					return new Vector3ArgumentParser(parser);
-				} break;
+				}
+
+					break;
+
 				case "minecraft:column_pos":
 				{
 					return new ColumnPositionArgumentParser(parser);
-				} break;
-				
+				}
+
+					break;
+
 				case "brigadier:bool":
 				{
 					return new BoolArgumentParser(parser);
-				} break;
+				}
+
+					break;
 
 				case "brigadier:double":
 				{

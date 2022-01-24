@@ -19,10 +19,7 @@ namespace Alex.Networking.Java.Packets.Play
 		public byte[][] SkyLight;
 		public byte[][] BlockLight;
 
-		public LightingData()
-		{
-			
-		}
+		public LightingData() { }
 
 		public async Task DecodeAsync(MinecraftStream stream)
 		{
@@ -34,14 +31,16 @@ namespace Alex.Networking.Java.Packets.Play
 
 			int skyLightArrayCount = await stream.ReadVarIntAsync();
 			SkyLight = new byte[skyLightArrayCount][];
+
 			for (int idx = 0; idx < SkyLight.Length; idx++)
 			{
 				int length = await stream.ReadVarIntAsync();
 				SkyLight[idx] = await stream.ReadAsync(length);
 			}
-			
+
 			int blockLightArrayCount = await stream.ReadVarIntAsync();
 			BlockLight = new byte[blockLightArrayCount][];
+
 			for (int idx = 0; idx < BlockLight.Length; idx++)
 			{
 				int length = await stream.ReadVarIntAsync();
@@ -57,34 +56,32 @@ namespace Alex.Networking.Java.Packets.Play
 			return data;
 		}
 	}
-    public class UpdateLightPacket : Packet<UpdateLightPacket>
-    {
-	    public int ChunkX, ChunkZ;
-	    public LightingData Data;
 
-        public UpdateLightPacket()
-	    {
+	public class UpdateLightPacket : Packet<UpdateLightPacket>
+	{
+		public int ChunkX, ChunkZ;
+		public LightingData Data;
 
-	    }
+		public UpdateLightPacket() { }
 
-        /// <inheritdoc />
-        public override async Task DecodeAsync(MinecraftStream stream)
-        {
-	        ChunkX = await stream.ReadVarIntAsync();
-	        ChunkZ = await stream.ReadVarIntAsync();
-	        Data = await LightingData.FromStreamAsync(stream);
-        }
+		/// <inheritdoc />
+		public override async Task DecodeAsync(MinecraftStream stream)
+		{
+			ChunkX = await stream.ReadVarIntAsync();
+			ChunkZ = await stream.ReadVarIntAsync();
+			Data = await LightingData.FromStreamAsync(stream);
+		}
 
-        public override void Encode(MinecraftStream stream)
-	    {
-		    throw new NotImplementedException();
-	    }
+		public override void Encode(MinecraftStream stream)
+		{
+			throw new NotImplementedException();
+		}
 
-        /// <inheritdoc />
-        protected override void ResetPacket()
-        {
-	        base.ResetPacket();
-	        Data = null;
-        }
-    }
+		/// <inheritdoc />
+		protected override void ResetPacket()
+		{
+			base.ResetPacket();
+			Data = null;
+		}
+	}
 }

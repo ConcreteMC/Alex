@@ -12,9 +12,5 @@ namespace Alex.Blocks.Minecraft
 		}
 	}
 
-	public class PolishedBasalt : Basalt
-	{
-		
-	}
-
+	public class PolishedBasalt : Basalt { }
 }

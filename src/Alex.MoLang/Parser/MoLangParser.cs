@@ -13,7 +13,7 @@ namespace Alex.MoLang.Parser
 	public class MoLangParser
 	{
 		public static TimeSpan TotalTimeSpent { get; private set; } = TimeSpan.Zero;
-		
+
 		private static readonly Dictionary<TokenType, PrefixParselet> PrefixParselets =
 			new Dictionary<TokenType, PrefixParselet>();
 
@@ -21,8 +21,10 @@ namespace Alex.MoLang.Parser
 			new Dictionary<TokenType, InfixParselet>();
 
 		private readonly TokenIterator _tokenIterator;
-		private readonly List<Token>   _readTokens = new List<Token>();
-	//	private static readonly ExprTraverser ExprTraverser;
+
+		private readonly List<Token> _readTokens = new List<Token>();
+
+		//	private static readonly ExprTraverser ExprTraverser;
 		static MoLangParser()
 		{
 			PrefixParselets.Add(TokenType.Name, new NameParselet());
@@ -60,7 +62,7 @@ namespace Alex.MoLang.Parser
 			InfixParselets.Add(TokenType.Coalesce, new GenericBinaryOpParselet(Precedence.Coalesce));
 			InfixParselets.Add(TokenType.Arrow, new GenericBinaryOpParselet(Precedence.Arrow));
 			InfixParselets.Add(TokenType.Assign, new AssignParselet());
-			
+
 			//ExprTraverser = new ExprTraverser();
 			//ExprTraverser.Visitors.Add(new ExprConnectingVisitor());
 		}
@@ -72,9 +74,9 @@ namespace Alex.MoLang.Parser
 
 		public IExpression[] Parse()
 		{
-		//	var traverser = new ExprTraverser();
-		//	traverser.Visitors.Add(new ExprConnectingVisitor());
-			
+			//	var traverser = new ExprTraverser();
+			//	traverser.Visitors.Add(new ExprConnectingVisitor());
+
 			Stopwatch sw = Stopwatch.StartNew();
 
 			try
@@ -95,7 +97,7 @@ namespace Alex.MoLang.Parser
 					}
 				} while (MatchToken(TokenType.Semicolon));
 
-				return exprs.ToArray();// traverser.Traverse(exprs.ToArray());
+				return exprs.ToArray(); // traverser.Traverse(exprs.ToArray());
 			}
 			catch (Exception ex)
 			{
@@ -163,14 +165,14 @@ namespace Alex.MoLang.Parser
 			{
 				//if (token.Type == TokenType.Eof)
 				//	return Precedence.Product;
-			//	InfixParselet parselet = InfixParselets[token.Type];
+				//	InfixParselet parselet = InfixParselets[token.Type];
 
-				if ( InfixParselets.TryGetValue(token.Type, out var parselet))
+				if (InfixParselets.TryGetValue(token.Type, out var parselet))
 				{
 					return parselet.Precedence;
 				}
 				else
-				{ 
+				{
 					//throw new MoLangParserException($"Invalid precedence token of type '{token.Type.TypeName}' and text '{token.Text}' at {token.Position.LineNumber}:{token.Position.Index}");
 				}
 			}
@@ -208,7 +210,7 @@ namespace Alex.MoLang.Parser
 			{
 				return name;
 			}
-			
+
 			var first = name.Substring(0, index);
 
 			switch (first)
@@ -234,12 +236,12 @@ namespace Alex.MoLang.Parser
 					break;
 			}
 
-			return name.Remove(0, index).Insert(0, first);// String.Join(".", splits);
+			return name.Remove(0, index).Insert(0, first); // String.Join(".", splits);
 		}
 
 		public static string GetNameHead(string name)
 		{
-			return name.Substring(0, name.IndexOf('.'));// name.Split(".")[0];
+			return name.Substring(0, name.IndexOf('.')); // name.Split(".")[0];
 		}
 
 		public Token ConsumeToken()
@@ -267,7 +269,7 @@ namespace Alex.MoLang.Parser
 
 				return token;
 			}
-			
+
 			return null;
 		}
 

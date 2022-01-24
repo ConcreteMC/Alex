@@ -12,17 +12,17 @@ namespace Alex.Graphics.Packing
 	public class TextureInfo : IComparable<TextureInfo>
 	{
 		public ResourceLocation ResourceLocation;
-        
+
 		/// <summary>
 		/// Source image
 		/// </summary>
 		public Image<Rgba32> Source;
-        
+
 		/// <summary>
 		/// Width in Pixels
 		/// </summary>
 		public int Width;
-        
+
 		/// <summary>
 		/// Height in Pixels
 		/// </summary>

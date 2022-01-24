@@ -258,7 +258,6 @@ namespace Alex.Common.Utils.Collections
 		}
 
 
-
 		/// <summary>
 		///     Inserts an item at a given index
 		/// </summary>
@@ -440,7 +439,7 @@ namespace Alex.Common.Utils.Collections
 		{
 			return Remove(item);
 		}
-		
+
 		/// <summary>
 		///     Removes an item
 		/// </summary>
@@ -608,10 +607,15 @@ namespace Alex.Common.Utils.Collections
 		public static T GetValue<T>(this WeakReference<T> wr) where T : class
 		{
 			T val;
-			if (wr.TryGetTarget(out val)) { return val; }
+
+			if (wr.TryGetTarget(out val))
+			{
+				return val;
+			}
+
 			return null;
 		}
-		
+
 		/// <summary>
 		///     Adds an object to a collection of weak references
 		///     (will not add if object is null or not of right type)
@@ -622,7 +626,11 @@ namespace Alex.Common.Utils.Collections
 		public static void Add<T>(this ICollection<WeakReference<T>> l, object val) where T : class
 		{
 			var v = val as T;
-			if (v != null) { l.Add(new WeakReference<T>(v)); }
+
+			if (v != null)
+			{
+				l.Add(new WeakReference<T>(v));
+			}
 		}
 	}
 }

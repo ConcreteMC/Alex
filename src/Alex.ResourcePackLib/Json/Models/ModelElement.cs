@@ -29,12 +29,13 @@ namespace Alex.ResourcePackLib.Json.Models
 		/// <summary>
 		/// Holds all the faces of the cube. If a face is left out, it will not be rendered.
 		/// </summary>
-		public Dictionary<BlockFace, ModelElementFace> Faces { get; set; }// = new Dictionary<BlockFace, BlockModelElementFace>();
+		public Dictionary<BlockFace, ModelElementFace>
+			Faces { get; set; } // = new Dictionary<BlockFace, BlockModelElementFace>();
 
 		public ModelElement Clone()
 		{
 			Dictionary<BlockFace, ModelElementFace> faces = new Dictionary<BlockFace, ModelElementFace>();
-			
+
 			var clone = new ModelElement()
 			{
 				From = new Vector3(From.X, From.Y, From.Z),

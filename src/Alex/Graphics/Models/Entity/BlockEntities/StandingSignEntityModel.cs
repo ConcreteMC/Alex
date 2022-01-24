@@ -38,7 +38,7 @@ namespace Alex.Graphics.Models.Entity.BlockEntities
 			};
 		}
 	}
-	
+
 	public class WallSignEntityModel : EntityModel
 	{
 		public WallSignEntityModel()

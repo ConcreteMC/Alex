@@ -10,7 +10,9 @@ namespace Alex.Gui.Dialogs.Containers
 	public class GuiPlayerCreativeInventoryDialog : GuiInventoryBase
 	{
 		private ScrollableMultiStackContainer MultiStackContainer { get; set; }
-		public GuiPlayerCreativeInventoryDialog(Item[] items) : base(new InventoryBase(items.Length), AlexGuiTextures.InventoryCreativeItemSearch, 194, 135)
+
+		public GuiPlayerCreativeInventoryDialog(Item[] items) : base(
+			new InventoryBase(items.Length), AlexGuiTextures.InventoryCreativeItemSearch, 194, 135)
 		{
 			MultiStackContainer = new ScrollableMultiStackContainer()
 			{
@@ -23,20 +25,21 @@ namespace Alex.Gui.Dialogs.Containers
 				MaxWidth = 162,
 				Width = 162
 			};
-			
+
 			ContentContainer.AddChild(MultiStackContainer);
-			
+
 			StackContainer stackContainer = MultiStackContainer.AddRow(RowBuilder);
 			int itemsX = 0;
+
 			for (int i = 0; i < items.Length; i++)
 			{
 				var slot = CreateSlot(0, 0, i, 0);
-				
+
 				stackContainer.AddChild(slot);
-				
+
 				//x += InventoryContainerItem.ItemWidth;
 				itemsX++;
-				
+
 				if (itemsX == 9)
 				{
 					itemsX = 0;
@@ -49,7 +52,7 @@ namespace Alex.Gui.Dialogs.Containers
 		{
 			obj.Margin = Thickness.Zero;
 			obj.Padding = Thickness.Zero;
-			
+
 			obj.Orientation = Orientation.Horizontal;
 		}
 	}

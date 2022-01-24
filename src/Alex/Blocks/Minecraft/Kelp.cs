@@ -3,16 +3,16 @@
 namespace Alex.Blocks.Minecraft
 {
 	public class Kelp : Block
-    {
-	    public Kelp() : base()
-	    {
-		    //IsWater = true;
+	{
+		public Kelp() : base()
+		{
+			//IsWater = true;
 
-		    Transparent = true;
-		    Solid = false;
+			Transparent = true;
+			Solid = false;
 
-		    BlockMaterial = Material.WaterPlant;
-		    //  BlockMaterial = Material.Water;
-	    }
-    }
+			BlockMaterial = Material.WaterPlant;
+			//  BlockMaterial = Material.Water;
+		}
+	}
 }

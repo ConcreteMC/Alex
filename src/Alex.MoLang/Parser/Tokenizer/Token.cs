@@ -2,11 +2,12 @@ namespace Alex.MoLang.Parser.Tokenizer
 {
 	public class Token
 	{
-		public TokenType     Type;
-		public string        Text;
+		public TokenType Type;
+		public string Text;
 		public TokenPosition Position;
-		
-		public Token(TokenType tokenType, TokenPosition position) {
+
+		public Token(TokenType tokenType, TokenPosition position)
+		{
 			this.Type = tokenType;
 			this.Text = tokenType.Symbol;
 			this.Position = position;

@@ -15,10 +15,10 @@ namespace Alex.ResourcePackLib
 	public class MCPack
 	{
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(MCPack));
-		
+
 		public McPackManifest Manifest { get; private set; }
 		public MCPackModule[] Modules { get; private set; }
-		
+
 		public MCPack(IFilesystem archive)
 		{
 			Load(archive);
@@ -28,7 +28,7 @@ namespace Alex.ResourcePackLib
 		{
 			var manifestEntry = archive.GetEntry("manifest.json");
 			//var contentEntry  = archive.GetEntry("content.zipe");
-			
+
 			if (manifestEntry == null)
 			{
 				throw new InvalidMCPackException("No manifest found!");
@@ -40,9 +40,9 @@ namespace Alex.ResourcePackLib
 			//{
 			//	throw new InvalidMCPackException($"No content found for MCPack: {Manifest.Header.Name}");
 			//}
-			
+
 			List<MCPackModule> modules = new List<MCPackModule>();
-			
+
 			foreach (var module in Manifest.Modules)
 			{
 				switch (module.Type.ToLower())
@@ -55,28 +55,31 @@ namespace Alex.ResourcePackLib
 						{
 							modules.Add(new SkinModule(archive));
 						}
-						catch
-						{
-							
-						}
+						catch { }
+
 						break;
+
 					default:
-						Log.Warn($"Unknown resourcepack module type found in pack! Found '{module.Type}' in manifest '{Manifest.Header.Name}'");
+						Log.Warn(
+							$"Unknown resourcepack module type found in pack! Found '{module.Type}' in manifest '{Manifest.Header.Name}'");
+
 						break;
 				}
 			}
 
 			List<MCPackModule> toRemove = new List<MCPackModule>();
+
 			foreach (var module in modules)
 			{
 				bool loaded = false;
+
 				try
 				{
 					loaded = module.Load();
 				}
 				catch (Exception ex)
 				{
-					Log.Error(ex,$"Failed to load MCPack module: {module.Name} from {Manifest.Header.Name}: {ex}");
+					Log.Error(ex, $"Failed to load MCPack module: {module.Name} from {Manifest.Header.Name}: {ex}");
 					loaded = false;
 					//toRemove.Add(module);
 				}
@@ -92,7 +95,7 @@ namespace Alex.ResourcePackLib
 			{
 				modules.Remove(rm);
 			}
-			
+
 			Modules = modules.ToArray();
 		}
 	}

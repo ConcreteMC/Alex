@@ -23,8 +23,10 @@ namespace Alex.Blocks.Minecraft
 			{
 				case "age":
 					stateProperty = new PropertyInt("age");
+
 					return true;
 			}
+
 			return base.TryGetStateProperty(prop, out stateProperty);
 		}
 	}

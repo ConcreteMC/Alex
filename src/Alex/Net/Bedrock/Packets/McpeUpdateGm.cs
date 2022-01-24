@@ -7,11 +7,8 @@ namespace Alex.Net.Bedrock.Packets
 	{
 		public GameMode GameMode;
 		public long PlayerEntityUniqueId;
-		
-		public McpeUpdateGm()
-		{
-			
-		}
+
+		public McpeUpdateGm() { }
 
 		/// <inheritdoc />
 		protected override void DecodePacket()

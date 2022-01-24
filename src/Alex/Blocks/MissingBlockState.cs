@@ -15,7 +15,7 @@ namespace Alex.Blocks
 		public MissingBlockState(string name)
 		{
 			Name = name;
-			
+
 			Block = new MissingBlock();
 			Block.BlockState = this;
 
@@ -30,23 +30,19 @@ namespace Alex.Blocks
 					ModelName = new ResourceLocation("minecraft:block/cube")
 				}
 			};
-			
-			VariantMapper =
-				new BlockStateVariantMapper(new List<BlockState>()
-				{
-					this
-				});
+
+			VariantMapper = new BlockStateVariantMapper(new List<BlockState>() { this });
 
 			VariantMapper.Model = new ResourcePackBlockModel(Alex.Instance.Resources);
 		}
 	}
-	
+
 	public class ItemFrameBlockState : BlockState
 	{
 		private ItemFrameBlockState(bool map, BlockFace facing)
 		{
 			Name = "minecraft:item_frame";
-			
+
 			Block = new ItemFrame();
 			Block.BlockState = this;
 
@@ -59,26 +55,31 @@ namespace Alex.Blocks
 			{
 				case BlockFace.East:
 					y = 90;
+
 					break;
 
 				case BlockFace.West:
 					y = 270;
+
 					break;
 
 				case BlockFace.North:
 					y = 0;
+
 					break;
 
 				case BlockFace.South:
 					y = 180;
+
 					break;
 			}
-			
+
 			ModelData = new BlockStateVariant()
 			{
 				new BlockStateModel()
 				{
-					ModelName = new ResourceLocation(map ? "minecraft:block/item_frame_map" : "minecraft:block/item_frame"),
+					ModelName = new ResourceLocation(
+						map ? "minecraft:block/item_frame_map" : "minecraft:block/item_frame"),
 					Y = y
 				}
 			};
@@ -88,22 +89,16 @@ namespace Alex.Blocks
 		{
 			var blockStates = new List<BlockState>()
 			{
-				new ItemFrameBlockState(false, BlockFace.North)
-				{
-					Default = true,
-				},
+				new ItemFrameBlockState(false, BlockFace.North) { Default = true, },
 				new ItemFrameBlockState(true, BlockFace.North),
-				
 				new ItemFrameBlockState(false, BlockFace.East),
 				new ItemFrameBlockState(true, BlockFace.East),
-				
 				new ItemFrameBlockState(false, BlockFace.South),
 				new ItemFrameBlockState(true, BlockFace.South),
-				
 				new ItemFrameBlockState(false, BlockFace.West),
 				new ItemFrameBlockState(true, BlockFace.West),
 			};
-			
+
 			var mapper = new BlockStateVariantMapper(blockStates);
 			mapper.Model = new ResourcePackBlockModel(Alex.Instance.Resources);
 

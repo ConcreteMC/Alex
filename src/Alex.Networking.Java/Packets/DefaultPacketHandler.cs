@@ -13,7 +13,7 @@ namespace Alex.Networking.Java.Packets
 
 			return Task.CompletedTask;
 		}
-		
+
 		/// <inheritdoc />
 		public Task HandleHandshake(Packet packet)
 		{

@@ -4,9 +4,6 @@ namespace Alex.ResourcePackLib.Exceptions
 {
 	public class UnknownModuleException : Exception
 	{
-		public UnknownModuleException(string message) : base(message)
-		{
-			
-		}
+		public UnknownModuleException(string message) : base(message) { }
 	}
 }

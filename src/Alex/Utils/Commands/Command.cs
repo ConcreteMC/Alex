@@ -26,20 +26,17 @@ namespace Alex.Utils.Commands
 
 		public bool IsMatch(string input)
 		{
-			return Aliases.Any(x => x.StartsWith(input, StringComparison.InvariantCultureIgnoreCase));// Alias.StartsWith(input, StringComparison.InvariantCultureIgnoreCase);
+			return Aliases.Any(
+				x => x.StartsWith(
+					input,
+					StringComparison
+					   .InvariantCultureIgnoreCase)); // Alias.StartsWith(input, StringComparison.InvariantCultureIgnoreCase);
 		}
 
 		public TabCompleteMatch[] GetMatches(string input)
 		{
 			return Aliases.Where(x => x.StartsWith(input, StringComparison.InvariantCultureIgnoreCase)).Select(
-				x =>
-				{
-					return new TabCompleteMatch()
-					{
-						Match = x,
-						Description = Description
-					};
-				}).ToArray();
+				x => { return new TabCompleteMatch() { Match = x, Description = Description }; }).ToArray();
 		}
 
 		public IEnumerable<string> Describe()
@@ -49,7 +46,7 @@ namespace Alex.Utils.Commands
 			foreach (var alias in Aliases)
 			{
 				sb.Clear();
-				
+
 				sb.Append('/');
 				sb.Append(alias);
 

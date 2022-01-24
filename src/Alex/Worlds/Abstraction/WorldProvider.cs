@@ -14,15 +14,13 @@ namespace Alex.Worlds.Abstraction
 	{
 		public delegate void ProgressReport(LoadingState state, int percentage, string subTitle = null);
 
-		protected World           World          { get; set; }
-		public    ITitleComponent TitleComponent { get; set; }
-		public    IChatRecipient  ChatRecipient  { get; set; }
-		public    ScoreboardView  ScoreboardView { get; set; }
-		public    BossBarContainer  BossBarContainer { get; set; }
-		protected WorldProvider()
-		{
-			
-		}
+		protected World World { get; set; }
+		public ITitleComponent TitleComponent { get; set; }
+		public IChatRecipient ChatRecipient { get; set; }
+		public ScoreboardView ScoreboardView { get; set; }
+		public BossBarContainer BossBarContainer { get; set; }
+
+		protected WorldProvider() { }
 
 		public abstract Vector3 GetSpawnPoint();
 
@@ -37,16 +35,13 @@ namespace Alex.Worlds.Abstraction
 
 		public abstract LoadResult Load(ProgressReport progressReport);
 
-		public virtual void Dispose()
-		{
-
-		}
+		public virtual void Dispose() { }
 
 		/// <inheritdoc />
 		public abstract void OnTick();
 	}
 
-	public enum LoadResult 
+	public enum LoadResult
 	{
 		Done,
 		Failed,
@@ -56,7 +51,7 @@ namespace Alex.Worlds.Abstraction
 		Aborted,
 		Kicked,
 		VersionMismatch,
-		
+
 		Unknown
 	}
 }

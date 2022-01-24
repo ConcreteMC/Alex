@@ -5,24 +5,25 @@ namespace Alex.Utils
 {
 	internal static class VersionUtils
 	{
-		#if RELEASE || DirectX
-		
+#if RELEASE || DirectX
 		public const bool IsReleaseBuild = true;
-		
-		#else
-		
+
+#else
+
 		public const bool IsReleaseBuild = false;
-		
-		#endif
-		
+
+#endif
+
 		public static string GetVersion()
 		{
 			try
 			{
-				 var assembly = Assembly.GetExecutingAssembly();
-				 var informationVersion = assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>().InformationalVersion;
+				var assembly = Assembly.GetExecutingAssembly();
 
-				 return informationVersion;
+				var informationVersion = assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()
+				   .InformationalVersion;
+
+				return informationVersion;
 			}
 			catch
 			{

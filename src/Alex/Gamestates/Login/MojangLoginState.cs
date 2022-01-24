@@ -23,24 +23,25 @@ namespace Alex.Gamestates.Login
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(MojangLoginState));
 
 		private readonly JavaServerType _serverType;
-		private UserSelectionState.ProfileSelected  _loginSuccesAction;
+		private UserSelectionState.ProfileSelected _loginSuccesAction;
 		private PlayerProfile _activeProfile;
-		public MojangLoginState(JavaServerType serverType, GuiPanoramaSkyBox skyBox, UserSelectionState.ProfileSelected loginSuccesAction, PlayerProfile activeProfile = null) : base("Minecraft Login", skyBox)
+
+		public MojangLoginState(JavaServerType serverType,
+			GuiPanoramaSkyBox skyBox,
+			UserSelectionState.ProfileSelected loginSuccesAction,
+			PlayerProfile activeProfile = null) : base("Minecraft Login", skyBox)
 		{
 			_serverType = serverType;
 			_loginSuccesAction = loginSuccesAction;
 			_activeProfile = activeProfile;
-			
+
 			if (activeProfile != null)
 			{
 				NameInput.Value = activeProfile.Username;
 			}
 		}
 
-		protected override void Initialized()
-		{
-			
-		}
+		protected override void Initialized() { }
 
 		protected override void LoginButtonPressed(string username, string password)
 		{
@@ -90,24 +91,27 @@ namespace Alex.Gamestates.Login
 					playerProfile.Add(JavaServerType.AuthTypeIdentifier, false);
 
 					var updateResult = await _serverType.UpdateProfile(playerProfile);
+
 					if (!updateResult.Success)
 					{
 						LoginFailed(
 							new PlayerProfileAuthenticateEventArgs(
 								updateResult.ErrorMessage, MojangAuthResult.UnknownError));
+
 						return false;
 					}
-					
+
 					_activeProfile = playerProfile = updateResult.Profile;
 					_loginSuccesAction?.Invoke(playerProfile);
+
 					return true;
 				});
 		}
 
 		public void LoginFailed(string error)
 		{
-			ErrorMessage.Text      = error;
-			ErrorMessage.TextColor = (Color) TextColor.Red;
+			ErrorMessage.Text = error;
+			ErrorMessage.TextColor = (Color)TextColor.Red;
 
 			EnableInput();
 		}

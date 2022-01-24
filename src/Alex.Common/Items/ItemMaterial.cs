@@ -9,7 +9,7 @@ namespace Alex.Common.Items
 		AnyMaterial = Wood | Stone | Gold | Iron | Diamond,
 		//Leather = -2, // 0xFFFFFFFE
 		//Chain = -1, // 0xFFFFFFFF
-		
+
 		None = 1 << 0,
 		Wood = 1 << 1,
 		Stone = 1 << 2,

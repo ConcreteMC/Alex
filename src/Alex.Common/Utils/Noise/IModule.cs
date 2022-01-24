@@ -18,9 +18,7 @@ namespace Alex.Common.Utils.Noise
 	/// - Combining the output values from two noise modules in various ways.
 	///
 	/// </summary>
-	public interface IModule
-	{
-	}
+	public interface IModule { }
 
 	/// <summary>
 	/// Abstract interface for noise modules that calculates and outputs a value
@@ -218,6 +216,7 @@ namespace Alex.Common.Utils.Noise
 			float q = (n0 - n1) - p;
 			float r = n2 - n0;
 			float s = n1;
+
 			return p * a * a * a + q * a * a + r * a + s;
 		}
 
@@ -274,8 +273,10 @@ namespace Alex.Common.Utils.Noise
 		{
 			if (value < lowerBound)
 				return lowerBound;
+
 			if (value > upperBound)
 				return upperBound;
+
 			return value;
 		}
 
@@ -283,8 +284,10 @@ namespace Alex.Common.Utils.Noise
 		{
 			if (value < lowerBound)
 				return lowerBound;
+
 			if (value > upperBound)
 				return upperBound;
+
 			return value;
 		}
 
@@ -292,8 +295,10 @@ namespace Alex.Common.Utils.Noise
 		{
 			if (value < lowerBound)
 				return lowerBound;
+
 			if (value > upperBound)
 				return upperBound;
+
 			return value;
 		}
 
@@ -360,8 +365,10 @@ namespace Alex.Common.Utils.Noise
 		{
 			if (value >= 1073741824.0)
 				return (2.0 * Math.IEEERemainder(value, 1073741824.0)) - 1073741824.0;
+
 			if (value <= -1073741824.0)
 				return (2.0 * Math.IEEERemainder(value, 1073741824.0)) + 1073741824.0;
+
 			return value;
 		}
 

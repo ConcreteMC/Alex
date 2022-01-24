@@ -9,9 +9,10 @@ namespace Alex.Utils
 	public class SeekableTextReader : TextReader
 	{
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(SeekableTextReader));
-		
+
 		private string _text;
 		private int _position = 0;
+
 		public SeekableTextReader(string text) : base()
 		{
 			_text = text;
@@ -39,7 +40,7 @@ namespace Alex.Utils
 
 			return c;
 		}
-		
+
 		public int Position
 		{
 			get => _position;
@@ -47,7 +48,7 @@ namespace Alex.Utils
 			{
 				if (value >= _text.Length || value < 0)
 					throw new IndexOutOfRangeException();
-				
+
 				_position = value;
 			}
 		}
@@ -60,6 +61,7 @@ namespace Alex.Utils
 
 			char readCharacter;
 			int read = -1;
+
 			do
 			{
 				read = Read();
@@ -67,15 +69,16 @@ namespace Alex.Utils
 				if (read == -1)
 					break;
 
-				readCharacter = (char) read;
+				readCharacter = (char)read;
 				sb.Append(readCharacter);
 			} while (readCharacter != c);
 
 			result = sb.ToString();
 			Log.Info($"ReadUntil: {sb.ToString()}");
+
 			return sb.Length;
 		}
-		
+
 		public int ReadSingleWord(out string result)
 		{
 			return ReadUntil(' ', out result);
@@ -84,6 +87,7 @@ namespace Alex.Utils
 		public int ReadQuoted(out string result)
 		{
 			result = string.Empty;
+
 			if (Peek() != '"')
 				return -1;
 

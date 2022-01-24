@@ -8,6 +8,7 @@ namespace Alex.Worlds
 		public int MinY { get; set; }
 
 		public int TotalHeight { get; }
+
 		public WorldSettings(int worldHeight, int minY)
 		{
 			WorldHeight = worldHeight;
@@ -15,7 +16,7 @@ namespace Alex.Worlds
 
 			TotalHeight = Math.Abs(minY) + worldHeight;
 		}
-		
+
 		public static readonly WorldSettings Default = new WorldSettings(256, 0);
 	}
 }

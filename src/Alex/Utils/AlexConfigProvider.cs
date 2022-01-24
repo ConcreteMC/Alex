@@ -9,6 +9,7 @@ public class AlexConfigProvider : ConfigProvider
 	public static AlexConfigProvider Instance { get; set; } = new AlexConfigProvider();
 
 	private ConcurrentDictionary<string, string> KeyValues { get; } = new ConcurrentDictionary<string, string>();
+
 	public AlexConfigProvider()
 	{
 		Set("PluginDisabled", "true");
@@ -29,12 +30,9 @@ public class AlexConfigProvider : ConfigProvider
 	{
 		KeyValues.AddOrUpdate(key.ToLower(), value, (s, s1) => value);
 	}
-	
+
 	/// <inheritdoc />
-	protected override void OnInitialize()
-	{
-		
-	}
+	protected override void OnInitialize() { }
 
 	/// <inheritdoc />
 	public override string ReadString(string property)

@@ -6,31 +6,31 @@ using Alex.Worlds.Multiplayer.Java;
 
 namespace Alex.Blocks.Minecraft
 {
-    public class SeaGrass : Block
-    {
-        public SeaGrass()
-        {
-            //IsWater = true;
-            Transparent = true;
-            Solid = false;
+	public class SeaGrass : Block
+	{
+		public SeaGrass()
+		{
+			//IsWater = true;
+			Transparent = true;
+			Solid = false;
 
-            IsFullCube = false;
+			IsFullCube = false;
 
-            BlockMaterial = Material.ReplaceableWaterPlant;
-        }
-    }
-    
-    public class SeaPickle : Block
-    {
-        public SeaPickle()
-        {
-            //IsWater = true;
-            Transparent = true;
-            Solid = false;
+			BlockMaterial = Material.ReplaceableWaterPlant;
+		}
+	}
 
-            IsFullCube = false;
+	public class SeaPickle : Block
+	{
+		public SeaPickle()
+		{
+			//IsWater = true;
+			Transparent = true;
+			Solid = false;
 
-            BlockMaterial = Material.ReplaceableWaterPlant;
-        }
-    }
+			IsFullCube = false;
+
+			BlockMaterial = Material.ReplaceableWaterPlant;
+		}
+	}
 }

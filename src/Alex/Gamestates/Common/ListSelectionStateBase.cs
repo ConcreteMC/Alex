@@ -12,12 +12,10 @@ namespace Alex.Gamestates.Common
 	{
 		public EventHandler CursorDoubleClick;
 
-		protected ListItem()
-		{
-			
-		}
-		
+		protected ListItem() { }
+
 		private DateTime _lastClick = DateTime.MinValue;
+
 		/// <inheritdoc />
 		protected override void OnCursorPressed(Point cursorPosition, MouseButton button)
 		{
@@ -25,7 +23,7 @@ namespace Alex.Gamestates.Common
 
 			if (!Focused)
 				return;
-            
+
 			if (button == MouseButton.Left)
 			{
 				var currentTime = DateTime.UtcNow;
@@ -40,130 +38,130 @@ namespace Alex.Gamestates.Common
 			}
 		}
 	}
-	
-    public class ListSelectionStateBase<TGuiListItemContainer> : GuiMenuStateBase 
-		where TGuiListItemContainer : ListItem
-    {
-	    public override int BodyMinWidth => 356;
 
-        protected TGuiListItemContainer[] Items => _items.ToArray();
-        private List<TGuiListItemContainer> _items { get; } = new List<TGuiListItemContainer>();
+	public class ListSelectionStateBase<TGuiListItemContainer> : GuiMenuStateBase where TGuiListItemContainer : ListItem
+	{
+		public override int BodyMinWidth => 356;
 
-        private TGuiListItemContainer _selectedItem;
-        public TGuiListItemContainer SelectedItem
-        {
-	        get => _selectedItem;
-	        set
-	        {
-		        if (_selectedItem == value) return;
-		        _selectedItem = value;
+		protected TGuiListItemContainer[] Items => _items.ToArray();
+		private List<TGuiListItemContainer> _items { get; } = new List<TGuiListItemContainer>();
 
-		        OnSelectedItemChanged(value);
-	        }
-        }
-        public ListSelectionStateBase() : base()
-        {
-	        Body.BackgroundOverlay = new Color(Color.Black, 0.35f);
-        }
+		private TGuiListItemContainer _selectedItem;
 
-        public TGuiListItemContainer this[int index]
-        {
-	        get
-	        {
-		        return _items[index];
-	        }
-	        set
-	        {
-		        _items[index] = value;
-	        }
-        }
+		public TGuiListItemContainer SelectedItem
+		{
+			get => _selectedItem;
+			set
+			{
+				if (_selectedItem == value) return;
+				_selectedItem = value;
 
-        /// <inheritdoc />
-        protected override void OnInit(IGuiRenderer renderer)
-        {
-	        base.OnInit(renderer);
-	        GuiManager.FocusManager.FocusChanged += OnFocusChanged;
-        }
+				OnSelectedItemChanged(value);
+			}
+		}
 
-        private void OnFocusChanged(object? sender, GuiFocusChangedEventArgs e)
-        {
-	        if (e.FocusedElement == null || !(e.FocusedElement is TGuiListItemContainer listItem))
-		        return;
+		public ListSelectionStateBase() : base()
+		{
+			Body.BackgroundOverlay = new Color(Color.Black, 0.35f);
+		}
 
-	        if (!_items.Contains(listItem))
-		        return;
-	        
-	        SetSelectedItem(listItem);
-        }
+		public TGuiListItemContainer this[int index]
+		{
+			get
+			{
+				return _items[index];
+			}
+			set
+			{
+				_items[index] = value;
+			}
+		}
 
-        protected override void OnUpdate(GameTime gameTime)
-	    {
-		    base.OnUpdate(gameTime);
-	    }
-        
-        private void CursorDoubleClick(object sender, EventArgs e)
-        {
-	        if (sender is not TGuiListItemContainer item)
-		        return;
+		/// <inheritdoc />
+		protected override void OnInit(IGuiRenderer renderer)
+		{
+			base.OnInit(renderer);
+			GuiManager.FocusManager.FocusChanged += OnFocusChanged;
+		}
 
-	        OnItemDoubleClick(item);
-        }
+		private void OnFocusChanged(object? sender, GuiFocusChangedEventArgs e)
+		{
+			if (e.FocusedElement == null || !(e.FocusedElement is TGuiListItemContainer listItem))
+				return;
 
-        protected virtual void OnItemDoubleClick(TGuiListItemContainer item){}
-        
-	    public void AddItem(TGuiListItemContainer item)
-        {
-	        item.CursorDoubleClick += CursorDoubleClick;
-	        
-            _items.Add(item);
-            Body.AddChild(item);
-            
-            OnAddItem(item);
-        }
+			if (!_items.Contains(listItem))
+				return;
 
-	    protected virtual void OnAddItem(TGuiListItemContainer item){}
-	    
-        public void RemoveItem(TGuiListItemContainer item)
-        {
-	        item.CursorDoubleClick -= CursorDoubleClick;
-	        
-            Body.RemoveChild(item);
-            _items.Remove(item);
+			SetSelectedItem(listItem);
+		}
 
-            if (SelectedItem == item)
-	            SelectedItem = null;
-            
-            OnRemoveItem(item);
-        }
-        
-        protected virtual void OnRemoveItem(TGuiListItemContainer item){}
-        
-        public void UnsetSelectedItem(TGuiListItemContainer selected)
-        {
-	        if (SelectedItem == selected)
-	        {
-		        SelectedItem = null;
-	        }
-        }
+		protected override void OnUpdate(GameTime gameTime)
+		{
+			base.OnUpdate(gameTime);
+		}
 
-        public void SetSelectedItem(TGuiListItemContainer selected)
-        {
-	        SelectedItem = selected;
-        }
+		private void CursorDoubleClick(object sender, EventArgs e)
+		{
+			if (sender is not TGuiListItemContainer item)
+				return;
 
-        protected virtual void OnSelectedItemChanged(TGuiListItemContainer newItem)
-	    {
+			OnItemDoubleClick(item);
+		}
 
-	    }
+		protected virtual void OnItemDoubleClick(TGuiListItemContainer item) { }
 
-	    public void ClearItems()
-	    {
-		    SelectedItem = null;
-		    foreach (var item in _items)
-		    {
-			    Body.RemoveChild(item);
-		    }
+		public void AddItem(TGuiListItemContainer item)
+		{
+			item.CursorDoubleClick += CursorDoubleClick;
+
+			_items.Add(item);
+			Body.AddChild(item);
+
+			OnAddItem(item);
+		}
+
+		protected virtual void OnAddItem(TGuiListItemContainer item) { }
+
+		public void RemoveItem(TGuiListItemContainer item)
+		{
+			item.CursorDoubleClick -= CursorDoubleClick;
+
+			Body.RemoveChild(item);
+			_items.Remove(item);
+
+			if (SelectedItem == item)
+				SelectedItem = null;
+
+			OnRemoveItem(item);
+		}
+
+		protected virtual void OnRemoveItem(TGuiListItemContainer item) { }
+
+		public void UnsetSelectedItem(TGuiListItemContainer selected)
+		{
+			if (SelectedItem == selected)
+			{
+				SelectedItem = null;
+			}
+		}
+
+		public void SetSelectedItem(TGuiListItemContainer selected)
+		{
+			SelectedItem = selected;
+		}
+
+		protected virtual void OnSelectedItemChanged(TGuiListItemContainer newItem) { }
+
+		public void ClearItems()
+		{
+			SelectedItem = null;
+
+			foreach (var item in _items)
+			{
+				Body.RemoveChild(item);
+			}
+
 			_items.Clear();
-	    }
-    }
+		}
+	}
 }

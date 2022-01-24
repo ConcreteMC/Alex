@@ -8,7 +8,8 @@ namespace Alex.Gui.Elements.Scoreboard
 	public class ScoreboardView : StackContainer
 	{
 		//private ConcurrentDictionary<string, EntryData> Rows { get; set; } = new ConcurrentDictionary<string, EntryData>();
-		private ConcurrentDictionary<string, ScoreboardObjective> Objectives { get; set; } = new ConcurrentDictionary<string, ScoreboardObjective>(StringComparer.OrdinalIgnoreCase);
+		private ConcurrentDictionary<string, ScoreboardObjective> Objectives { get; set; } =
+			new ConcurrentDictionary<string, ScoreboardObjective>(StringComparer.OrdinalIgnoreCase);
 
 		private ConcurrentDictionary<string, string> EntityObjectives { get; set; } =
 			new ConcurrentDictionary<string, string>(StringComparer.OrdinalIgnoreCase);
@@ -27,7 +28,7 @@ namespace Alex.Gui.Elements.Scoreboard
 				RemoveChild(objective);
 			}
 		}
-		
+
 		public void AddObjective(ScoreboardObjective objective)
 		{
 			if (Objectives.TryAdd(objective.Name, objective))
@@ -62,9 +63,10 @@ namespace Alex.Gui.Elements.Scoreboard
 			}
 
 			objective = null;
+
 			return false;
 		}
-		
+
 		public bool TryGetObjective(string name, out ScoreboardObjective objective)
 		{
 			return Objectives.TryGetValue(name, out objective);
@@ -74,6 +76,7 @@ namespace Alex.Gui.Elements.Scoreboard
 		{
 			//Rows.Clear();
 			Objectives.Clear();
+
 			foreach (var child in ChildElements)
 			{
 				RemoveChild(child);
@@ -81,6 +84,7 @@ namespace Alex.Gui.Elements.Scoreboard
 		}
 
 		private double _elapsed = 0d;
+
 		/// <inheritdoc />
 		protected override void OnUpdate(GameTime gameTime)
 		{

@@ -15,6 +15,7 @@ namespace Alex.Utils.Auth
 		public int StatusCode { get; set; }
 
 		public bool IsSuccess => Result == MojangAuthResult.Success;
+
 		public MojangAuthResponse(MojangAuthResult result)
 		{
 			Result = result;
@@ -28,10 +29,9 @@ namespace Alex.Utils.Auth
 			Error = response.Error;
 			//IsSuccess = response.IsSuccess;
 			Result = response.Result;
-			
+
 			if (response.Session != null)
 				Session = new JavaSession(response.Session);
-			
 		}
 	}
 }

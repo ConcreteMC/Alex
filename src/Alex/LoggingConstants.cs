@@ -6,17 +6,17 @@ namespace Alex
 		///		If true, logs unimplemented entity flags to the console
 		/// </summary>
 		public const bool LogUnimplementedEntityFlags = false;
-		
+
 		/// <summary>
 		///		If true, reports bedrock network statistics to console every second
 		/// </summary>
 		/// 
-		#if DEBUG
+#if DEBUG
 		public const bool LogNetworkStatistics = true;
-		#else
+#else
 		public const bool LogNetworkStatistics = false;
-		#endif
-		
+#endif
+
 		/// <summary>
 		///		If true, report invalid blockstate properties in debug console
 		/// </summary>

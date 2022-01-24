@@ -10,22 +10,20 @@ namespace Alex.Entities.Components
 	/// <summary>
 	///		Handles entity physics
 	/// </summary>
-    public class PhysicsComponent : FixedRateEntityComponent
-    {
-	    private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(PhysicsComponent));
-	    public PhysicsComponent(Entity entity) : base(entity, 20)
-	    {
-		    
-	    }
+	public class PhysicsComponent : FixedRateEntityComponent
+	{
+		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(PhysicsComponent));
+
+		public PhysicsComponent(Entity entity) : base(entity, 20) { }
 
 		private Vector3 TruncateVelocity(Vector3 velocity)
 		{
 			if (Math.Abs(velocity.X) < 0.005f)
 				velocity = new Vector3(0, velocity.Y, velocity.Z);
-			
+
 			if (Math.Abs(velocity.Y) < 0.005f)
 				velocity = new Vector3(velocity.X, 0, velocity.Z);
-			
+
 			if (Math.Abs(velocity.Z) < 0.005f)
 				velocity = new Vector3(velocity.X, velocity.Y, 0);
 
@@ -43,7 +41,7 @@ namespace Alex.Entities.Components
 			var onGround = e.KnownPosition.OnGround;
 
 			var slipperiness = 0.91f;
-			var movementFactor = (float) e.CalculateMovementFactor();
+			var movementFactor = (float)e.CalculateMovementFactor();
 
 			if (e.FeetInWater && !e.IsFlying)
 			{
@@ -94,7 +92,7 @@ namespace Alex.Entities.Components
 				movementFactor);
 
 			e.Velocity += heading;
-			
+
 			//var momentum     = e.Velocity * e.Slipperines * 0.91f;
 			//var acceleration = (ConvertMovementIntoVelocity(e, out var slipperiness));
 
@@ -107,7 +105,7 @@ namespace Alex.Entities.Components
 
 				if (e.FeetInWater)
 					gravity /= 4f;
-				
+
 				e.Velocity -= new Vector3(0f, gravity, 0f);
 			}
 
@@ -132,16 +130,17 @@ namespace Alex.Entities.Components
 			{
 				blockcoords -= new BlockCoordinates(0, 1, 0);
 			}
-				
+
 			var block = Entity?.Level?.GetBlockState(blockcoords.X, blockcoords.Y, blockcoords.Z);
-			var slipperiness = (float) block.Block.BlockMaterial.Slipperiness;
+			var slipperiness = (float)block.Block.BlockMaterial.Slipperiness;
 
 			return slipperiness;
 		}
 
 		private Vector3 ConvertHeading(float yaw, float strafe, float forward, float vertical, float multiplier)
 		{
-			var speed    = MathF.Sqrt(strafe * strafe + forward * forward + vertical * vertical);
+			var speed = MathF.Sqrt(strafe * strafe + forward * forward + vertical * vertical);
+
 			if (speed < 0.01f)
 				return Vector3.Zero;
 
@@ -157,5 +156,5 @@ namespace Alex.Entities.Components
 
 			return new Vector3(strafe * cosYaw - forward * sinYaw, vertical, forward * cosYaw + strafe * sinYaw);
 		}
-    }
+	}
 }

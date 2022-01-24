@@ -26,10 +26,7 @@ namespace Alex.ResourcePackLib.Json.Bedrock.Entity
 		///		Determines whether the animation should go back to T0 when finished.
 		/// </summary>
 		[JsonProperty("loop")]
-		public IExpression[] Loop { get; set; } = new IExpression[]
-		{
-			new BooleanExpression(false)
-		};
+		public IExpression[] Loop { get; set; } = new IExpression[] { new BooleanExpression(false) };
 
 		/// <summary>
 		///		How does time pass when playing the animation.
@@ -43,11 +40,8 @@ namespace Alex.ResourcePackLib.Json.Bedrock.Entity
 		///		0.0 = off.  1.0 = fully apply all transforms.
 		/// </summary>
 		[JsonProperty("blend_weight")]
-		public IExpression[] BlendWeight { get; set; } = new IExpression[]
-		{
-			new NumberExpression(1d)
-		};
-		
+		public IExpression[] BlendWeight { get; set; } = new IExpression[] { new NumberExpression(1d) };
+
 		/// <summary>
 		///		At what time does the system consider this animation finished
 		/// </summary>
@@ -60,7 +54,7 @@ namespace Alex.ResourcePackLib.Json.Bedrock.Entity
 		/// </summary>
 		[JsonProperty("override_previous_animation")]
 		public bool OverridePreviousAnimation { get; set; } = false;
-		
+
 		/// <summary>
 		///		Hold all the actual animation values for animated bones.
 		///		The key has to match the name of the bone as specified in the geometry.

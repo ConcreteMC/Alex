@@ -8,94 +8,95 @@ using RocketUI;
 
 namespace Alex.Gamestates.MainMenu.Options
 {
-    public class LanguageOptionsState : OptionsStateBase
-    {
-        private Dictionary<CultureLanguage, Button> _languageButtons = new Dictionary<CultureLanguage, Button>();
-        private (Button button, CultureLanguage culture) _activeBtn;
-        public LanguageOptionsState(GuiPanoramaSkyBox skyBox) : base(skyBox)
-        {
-            TitleTranslationKey = "options.language";
-        }
-        
-        private static string GetTitleCaseNativeLanguage(CultureInfo culture)
-        {
-            string nativeName = culture.IsNeutralCulture
-                ? culture.NativeName
-                : culture.Parent.NativeName;
+	public class LanguageOptionsState : OptionsStateBase
+	{
+		private Dictionary<CultureLanguage, Button> _languageButtons = new Dictionary<CultureLanguage, Button>();
+		private (Button button, CultureLanguage culture) _activeBtn;
 
-            return CultureInfo.CurrentCulture.TextInfo.ToTitleCase(nativeName);
-        }
+		public LanguageOptionsState(GuiPanoramaSkyBox skyBox) : base(skyBox)
+		{
+			TitleTranslationKey = "options.language";
+		}
 
-        private string GetButtonText(CultureLanguage culture, bool active)
-        {
-            string displayName = culture.DisplayName;
-            if (string.IsNullOrWhiteSpace(displayName))
-            {
-                displayName = culture.Name;
-            }
+		private static string GetTitleCaseNativeLanguage(CultureInfo culture)
+		{
+			string nativeName = culture.IsNeutralCulture ? culture.NativeName : culture.Parent.NativeName;
 
-            return active ? $"[Active] {displayName}" : displayName;
-        }
+			return CultureInfo.CurrentCulture.TextInfo.ToTitleCase(nativeName);
+		}
 
-        private void SetLanguage(CultureLanguage culture)
-        {
-            if (_activeBtn.button != null && _activeBtn.culture != null)
-            {
-                _activeBtn.button.Text = GetButtonText(_activeBtn.culture, false);
-            }
+		private string GetButtonText(CultureLanguage culture, bool active)
+		{
+			string displayName = culture.DisplayName;
 
-            if (_languageButtons.TryGetValue(culture, out Button btn))
-            {
-                btn.Text = GetButtonText(culture, true);
-                //Alex.GuiManager.FocusManager.FocusedElement = btn;
-                //FocusContext?.Focus(_activeBtn.button);
-                
-                _activeBtn = (btn, culture);
-            }
+			if (string.IsNullOrWhiteSpace(displayName))
+			{
+				displayName = culture.Name;
+			}
 
-            Options.MiscelaneousOptions.Language.Value = culture.Code;
-            //Alex.GuiRenderer.SetLanguage(culture.CultureInfo.Name);
-        }
-        
-        private bool _didInit = false;
-        protected override void Initialize(IGuiRenderer renderer)
-        {
-            if (!_didInit)
-            {
-                _didInit = true;
-                var activeLang = Alex.GuiRenderer.Language;
+			return active ? $"[Active] {displayName}" : displayName;
+		}
 
-                foreach (var lng in Alex.GuiRenderer.Languages.OrderBy(x => x.Key))
-                {
-                    if (System.Text.Encoding.UTF8.GetByteCount(lng.Value.DisplayName) != lng.Value.DisplayName.Length
-                    ) //Filter-out non-ascii languages
-                        continue;
+		private void SetLanguage(CultureLanguage culture)
+		{
+			if (_activeBtn.button != null && _activeBtn.culture != null)
+			{
+				_activeBtn.button.Text = GetButtonText(_activeBtn.culture, false);
+			}
 
-                    bool active = lng.Value.Code.Equals(activeLang.Code);
+			if (_languageButtons.TryGetValue(culture, out Button btn))
+			{
+				btn.Text = GetButtonText(culture, true);
+				//Alex.GuiManager.FocusManager.FocusedElement = btn;
+				//FocusContext?.Focus(_activeBtn.button);
 
-                    Button btn = new AlexButton(GetButtonText(lng.Value, active), () => { SetLanguage(lng.Value); })
-                       .ApplyModernStyle(false);
+				_activeBtn = (btn, culture);
+			}
 
-                    _languageButtons.Add(lng.Value, btn);
+			Options.MiscelaneousOptions.Language.Value = culture.Code;
+			//Alex.GuiRenderer.SetLanguage(culture.CultureInfo.Name);
+		}
 
-                    AddGuiRow(btn);
+		private bool _didInit = false;
 
-                    if (active)
-                    {
-                        Alex.GuiManager.FocusManager.FocusedElement = btn;
-                        _activeBtn = (btn, lng.Value);
-                    }
-                }
-            }
+		protected override void Initialize(IGuiRenderer renderer)
+		{
+			if (!_didInit)
+			{
+				_didInit = true;
+				var activeLang = Alex.GuiRenderer.Language;
 
-            base.Initialize(renderer);
-        }
+				foreach (var lng in Alex.GuiRenderer.Languages.OrderBy(x => x.Key))
+				{
+					if (System.Text.Encoding.UTF8.GetByteCount(lng.Value.DisplayName)
+					    != lng.Value.DisplayName.Length) //Filter-out non-ascii languages
+						continue;
 
-        protected override void OnShow()
-        {
-            FocusContext?.Focus(_activeBtn.button);
-            
-            base.OnShow();
-        }
-    }
+					bool active = lng.Value.Code.Equals(activeLang.Code);
+
+					Button btn = new AlexButton(GetButtonText(lng.Value, active), () => { SetLanguage(lng.Value); })
+					   .ApplyModernStyle(false);
+
+					_languageButtons.Add(lng.Value, btn);
+
+					AddGuiRow(btn);
+
+					if (active)
+					{
+						Alex.GuiManager.FocusManager.FocusedElement = btn;
+						_activeBtn = (btn, lng.Value);
+					}
+				}
+			}
+
+			base.Initialize(renderer);
+		}
+
+		protected override void OnShow()
+		{
+			FocusContext?.Focus(_activeBtn.button);
+
+			base.OnShow();
+		}
+	}
 }

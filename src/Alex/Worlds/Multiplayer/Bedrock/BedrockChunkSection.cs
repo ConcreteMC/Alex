@@ -4,9 +4,6 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 {
 	public class BedrockChunkSection : ChunkSection
 	{
-		public BedrockChunkSection(int blockStorages) : base(blockStorages)
-		{
-			
-		}
+		public BedrockChunkSection(int blockStorages) : base(blockStorages) { }
 	}
 }

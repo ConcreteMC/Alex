@@ -10,7 +10,7 @@ namespace Alex.Blocks.Minecraft
 			Solid = true;
 			Transparent = false;
 			IsFullCube = true;
-			
+
 			base.BlockMaterial = Material.Wood.Clone().WithMapColor(MapColor.Nether);
 		}
 	}

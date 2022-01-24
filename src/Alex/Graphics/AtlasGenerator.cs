@@ -44,218 +44,236 @@ namespace Alex.Graphics
 			Texture = texture;
 		}
 	}
-	
-    public class AtlasGenerator
-    {
+
+	public class AtlasGenerator
+	{
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(SPWorldProvider));
 
-	    private Dictionary<ResourceLocation,  Utils.TextureInfo> _atlasLocations = new Dictionary<ResourceLocation,  Utils.TextureInfo>();
-	    private Texture2D _textureAtlas;
-	    
-        public Vector2 AtlasSize { get; private set; }
-        public string Selector { get; }
+		private Dictionary<ResourceLocation, Utils.TextureInfo> _atlasLocations =
+			new Dictionary<ResourceLocation, Utils.TextureInfo>();
 
-        public EventHandler<AtlasTexturesGeneratedEventArgs> AtlasGenerated;
-        public AtlasGenerator(string selector)
-        {
-	        Selector = selector;
-        }
+		private Texture2D _textureAtlas;
 
-	    public void Reset()
-	    {
-		   // _textureAtlas?.Dispose();
-		    _atlasLocations = new Dictionary<ResourceLocation,  Utils.TextureInfo>();
+		public Vector2 AtlasSize { get; private set; }
+		public string Selector { get; }
 
-		    AtlasSize = default;
-		  //  _textureAtlas = default;
-	    }
+		public EventHandler<AtlasTexturesGeneratedEventArgs> AtlasGenerated;
 
-	    public class ImageEntry
-	    {
-		    public Image<Rgba32> Image { get; set; }
-		    public TextureMeta         Meta  { get; set; }
+		public AtlasGenerator(string selector)
+		{
+			Selector = selector;
+		}
 
-		    public int Width  => Image.Width;
-		    public int Height => Image.Height;
+		public void Reset()
+		{
+			// _textureAtlas?.Dispose();
+			_atlasLocations = new Dictionary<ResourceLocation, Utils.TextureInfo>();
 
-		    public ImageEntry(Image<Rgba32> image, TextureMeta meta)
-		    {
-			    Image = image;
-			    Meta = meta;
-		    }
-	    }
+			AtlasSize = default;
+			//  _textureAtlas = default;
+		}
 
-	    private void GenerateAtlas(GraphicsDevice device,
-		    IDictionary<ResourceLocation, ImageEntry> blockTextures,
-		    IProgressReceiver progressReceiver)
-	    {
-		    Stopwatch sw = Stopwatch.StartNew();
+		public class ImageEntry
+		{
+			public Image<Rgba32> Image { get; set; }
+			public TextureMeta Meta { get; set; }
 
-		    Log.Debug($"Generating texture atlas out of {(blockTextures.Count)} bitmaps...");
+			public int Width => Image.Width;
+			public int Height => Image.Height;
 
-		    long totalSize = 0;
+			public ImageEntry(Image<Rgba32> image, TextureMeta meta)
+			{
+				Image = image;
+				Meta = meta;
+			}
+		}
 
-		    Image<Rgba32> no = new Image<Rgba32>(TextureWidth, TextureHeight);
+		private void GenerateAtlas(GraphicsDevice device,
+			IDictionary<ResourceLocation, ImageEntry> blockTextures,
+			IProgressReceiver progressReceiver)
+		{
+			Stopwatch sw = Stopwatch.StartNew();
 
-		    for (int x = 0; x < no.Width; x++)
-		    {
-			    var xCheck = x < no.Width / 2;
-			    
-			    for (int y = 0; y < no.Height; y++)
-			    {
-				    var yCheck = y < no.Height / 2;
-				    
-				    if ((xCheck && yCheck) || (!xCheck && !yCheck))
-				    {
-					    no[x, y] = Color.Purple;
-				    }
-				    else
-				    {
-					    no[x, y] = Color.Black;
-				    }
-			    }
-		    }
-		    
-		    List<TextureInfo> textures = new List<TextureInfo>();
-		    textures.Add(new TextureInfo()
-		    {
-			    Height = no.Height,
-			    Source = no,
-			    Width = no.Width,
-			    ResourceLocation = new ResourceLocation("minecraft", "no_texture")
-		    });
-		    
-		    foreach (var texture in blockTextures)
-		    {
-			    textures.Add(new TextureInfo()
-			    {
-				    ResourceLocation = texture.Key,
-				    Height = texture.Value.Height,
-				    Width = texture.Value.Width,
-				    Source = texture.Value.Image,
-				    Meta = texture.Value.Meta
-			    });
-		    }
+			Log.Debug($"Generating texture atlas out of {(blockTextures.Count)} bitmaps...");
 
-		    //var size = textures.Sum(x => Math.Max(x.Width, x.Height)) / TextureWidth;
-		   // size *= 2;
+			long totalSize = 0;
 
-		  //  while (size % TextureWidth != 0)
-		    //{
+			Image<Rgba32> no = new Image<Rgba32>(TextureWidth, TextureHeight);
+
+			for (int x = 0; x < no.Width; x++)
+			{
+				var xCheck = x < no.Width / 2;
+
+				for (int y = 0; y < no.Height; y++)
+				{
+					var yCheck = y < no.Height / 2;
+
+					if ((xCheck && yCheck) || (!xCheck && !yCheck))
+					{
+						no[x, y] = Color.Purple;
+					}
+					else
+					{
+						no[x, y] = Color.Black;
+					}
+				}
+			}
+
+			List<TextureInfo> textures = new List<TextureInfo>();
+
+			textures.Add(
+				new TextureInfo()
+				{
+					Height = no.Height,
+					Source = no,
+					Width = no.Width,
+					ResourceLocation = new ResourceLocation("minecraft", "no_texture")
+				});
+
+			foreach (var texture in blockTextures)
+			{
+				textures.Add(
+					new TextureInfo()
+					{
+						ResourceLocation = texture.Key,
+						Height = texture.Value.Height,
+						Width = texture.Value.Width,
+						Source = texture.Value.Image,
+						Meta = texture.Value.Meta
+					});
+			}
+
+			//var size = textures.Sum(x => Math.Max(x.Width, x.Height)) / TextureWidth;
+			// size *= 2;
+
+			//  while (size % TextureWidth != 0)
+			//{
 			//    size++;
-		   // }
+			// }
 
-		   ImagePacker packer = new ImagePacker();
-		   
-		   Dictionary<ResourceLocation, Utils.TextureInfo> textureInfos = new Dictionary<ResourceLocation, Utils.TextureInfo>();
-		   packer.PackImage(progressReceiver,
-			   textures, false, true, TextureWidth * textures.Count, TextureHeight * textures.Count, 4, true,
-			   out var img, out var resultingMap);
+			ImagePacker packer = new ImagePacker();
 
-		   var widthScale = TextureWidth / 16;
-		   var heightScale = TextureHeight / 16;
-		   
-		   foreach (var node in resultingMap)
-		   {
-			   textureInfos[node.Key] = new Utils.TextureInfo(
-				   new Vector2(img.Width, img.Height), new Vector2(node.Value.Source.X, node.Value.Source.Y),
-				   node.Value.Source.Width, node.Value.Source.Height,
-				   node.Value.Source.Height != node.Value.Source.Width, node.Value.Source.Width / TextureWidth,
-				   node.Value.Source.Height / node.Value.Source.Width);
-		   }
-		   
-		   var oldAtlas = _textureAtlas;
-		   
-		   progressReceiver?.UpdateProgress(99, "Finalizing texture...");
-		   
-		   _textureAtlas = GetMipMappedTexture2D(device, img);
-		   _atlasLocations = textureInfos;
-			    
-		   int count = 0;
-		   Log.Debug($"Atlas size: W={_textureAtlas.Width},H={_textureAtlas.Height} | TW: {TextureWidth} TH: {TextureHeight}");
-		  // img.SaveAsPng($"/home/kenny/Documents/{Selector}/{count}.png");
-		   img?.Dispose();
-		    
-		    oldAtlas?.Dispose();
-		    
-		    AtlasSize = new Vector2(_textureAtlas.Width, _textureAtlas.Height);
-		    totalSize += _textureAtlas.MemoryUsage();
-		    sw.Stop();
-		    
-		    Log.Info(
-			    $"TextureAtlas '{Selector}' generated in {sw.ElapsedMilliseconds}ms! ({FormattingUtils.GetBytesReadable(totalSize, 2)})");
+			Dictionary<ResourceLocation, Utils.TextureInfo> textureInfos =
+				new Dictionary<ResourceLocation, Utils.TextureInfo>();
 
-		    AtlasGenerated?.Invoke(this, new AtlasTexturesGeneratedEventArgs(_textureAtlas));
-	    }
+			packer.PackImage(
+				progressReceiver, textures, false, true, TextureWidth * textures.Count, TextureHeight * textures.Count,
+				4, true, out var img, out var resultingMap);
 
-	    private Texture2D GetMipMappedTexture2D(GraphicsDevice device, Image image)
-	    {
-		    Texture2D texture = new Texture2D(device, image.Width, image.Height, true, SurfaceFormat.Color);
-		    for (int level = 0; level < Alex.MipMapLevel; level++)
-		    {
-			    int mipWidth  = (int) System.Math.Max(1, image.Width >> level);
-			    int mipHeight = (int) System.Math.Max(1, image.Height >> level);
+			var widthScale = TextureWidth / 16;
+			var heightScale = TextureHeight / 16;
 
-			    if (mipWidth < TextureWidth || mipHeight < TextureHeight)
-			    {
-				    Alex.MipMapLevel = level - 1;
-				    break;
-			    }
-			    
-			    var bmp = image.CloneAs<Rgba32>(); //.CloneAs<Rgba32>();
+			foreach (var node in resultingMap)
+			{
+				textureInfos[node.Key] = new Utils.TextureInfo(
+					new Vector2(img.Width, img.Height), new Vector2(node.Value.Source.X, node.Value.Source.Y),
+					node.Value.Source.Width, node.Value.Source.Height,
+					node.Value.Source.Height != node.Value.Source.Width, node.Value.Source.Width / TextureWidth,
+					node.Value.Source.Height / node.Value.Source.Width);
+			}
 
-			    try
-			    {
-				    bmp.Mutate(x => x.Resize(mipWidth, mipHeight, KnownResamplers.NearestNeighbor, true));
+			var oldAtlas = _textureAtlas;
 
-				    uint[] colorData = new uint[bmp.Height * bmp.Width];
+			progressReceiver?.UpdateProgress(99, "Finalizing texture...");
 
-				    int idx = 0;
-				    for (int row = 0; row < bmp.Height; row++)
-				    {
-					    var rowSpan = bmp.GetPixelRowSpan(row);
+			_textureAtlas = GetMipMappedTexture2D(device, img);
+			_atlasLocations = textureInfos;
 
-					    for (int col = 0; col < rowSpan.Length; col++)
-					    {
-						    colorData[idx] = rowSpan[col].Rgba;
-						    idx++;
-					    }
-				    }
-				    /*if (bmp.TryGetSinglePixelSpan(out var pixelSpan))
-				    {
+			int count = 0;
+
+			Log.Debug(
+				$"Atlas size: W={_textureAtlas.Width},H={_textureAtlas.Height} | TW: {TextureWidth} TH: {TextureHeight}");
+
+			// img.SaveAsPng($"/home/kenny/Documents/{Selector}/{count}.png");
+			img?.Dispose();
+
+			oldAtlas?.Dispose();
+
+			AtlasSize = new Vector2(_textureAtlas.Width, _textureAtlas.Height);
+			totalSize += _textureAtlas.MemoryUsage();
+			sw.Stop();
+
+			Log.Info(
+				$"TextureAtlas '{Selector}' generated in {sw.ElapsedMilliseconds}ms! ({FormattingUtils.GetBytesReadable(totalSize, 2)})");
+
+			AtlasGenerated?.Invoke(this, new AtlasTexturesGeneratedEventArgs(_textureAtlas));
+		}
+
+		private Texture2D GetMipMappedTexture2D(GraphicsDevice device, Image image)
+		{
+			Texture2D texture = new Texture2D(device, image.Width, image.Height, true, SurfaceFormat.Color);
+
+			for (int level = 0; level < Alex.MipMapLevel; level++)
+			{
+				int mipWidth = (int)System.Math.Max(1, image.Width >> level);
+				int mipHeight = (int)System.Math.Max(1, image.Height >> level);
+
+				if (mipWidth < TextureWidth || mipHeight < TextureHeight)
+				{
+					Alex.MipMapLevel = level - 1;
+
+					break;
+				}
+
+				var bmp = image.CloneAs<Rgba32>(); //.CloneAs<Rgba32>();
+
+				try
+				{
+					bmp.Mutate(x => x.Resize(mipWidth, mipHeight, KnownResamplers.NearestNeighbor, true));
+
+					uint[] colorData = new uint[bmp.Height * bmp.Width];
+
+					int idx = 0;
+
+					for (int row = 0; row < bmp.Height; row++)
+					{
+						var rowSpan = bmp.GetPixelRowSpan(row);
+
+						for (int col = 0; col < rowSpan.Length; col++)
+						{
+							colorData[idx] = rowSpan[col].Rgba;
+							idx++;
+						}
+					}
+					/*if (bmp.TryGetSinglePixelSpan(out var pixelSpan))
+					{
 					   // colorData = new uint[pixelSpan.Length];
 
-					    for (int i = 0; i < pixelSpan.Length; i++)
-					    {
-						    colorData[i] = pixelSpan[i].Rgba;
-					    }
-				    }
-				    else
-				    {
-					    throw new Exception("Could not get image data!");
-				    }*/
+						for (int i = 0; i < pixelSpan.Length; i++)
+						{
+							colorData[i] = pixelSpan[i].Rgba;
+						}
+					}
+					else
+					{
+						throw new Exception("Could not get image data!");
+					}*/
 
-				    //TODO: Resample per texture instead of whole texture map.
+					//TODO: Resample per texture instead of whole texture map.
 
-				    texture.SetData(level, null, colorData, 0, colorData.Length);
-				  //  if (save)
+					texture.SetData(level, null, colorData, 0, colorData.Length);
+					//  if (save)
 					//	bmp.SaveAsPng(Path.Combine("atlas", $"{name}-{level}.png"));
+				}
+				finally
+				{
+					bmp.Dispose();
+				}
+			}
 
-			    }
-			    finally
-			    {
-				    bmp.Dispose();
-			    }
-		    }
+			texture.Tag = Tag;
 
-		    texture.Tag = Tag;
-		    return texture;
-	    }
-	    
-	    public int TextureWidth { get; private set; } = 16;
-	    public int TextureHeight { get; private set; }= 16;
+			return texture;
+		}
 
-        public void LoadResources(GraphicsDevice device, Dictionary<ResourceLocation, ImageEntry> loadedTextures, ResourceManager resources, IProgressReceiver progressReceiver, bool build)
+		public int TextureWidth { get; private set; } = 16;
+		public int TextureHeight { get; private set; } = 16;
+
+		public void LoadResources(GraphicsDevice device,
+			Dictionary<ResourceLocation, ImageEntry> loadedTextures,
+			ResourceManager resources,
+			IProgressReceiver progressReceiver,
+			bool build)
 		{
 			Reset();
 			int textureWidth = TextureWidth, textureHeight = TextureHeight;
@@ -277,20 +295,20 @@ namespace Alex.Graphics
 				}
 			}
 
-            TextureHeight = textureHeight;
-            TextureWidth = textureWidth;
+			TextureHeight = textureHeight;
+			TextureWidth = textureWidth;
 
-            if (build) GenerateAtlas(device, loadedTextures, progressReceiver);
+			if (build) GenerateAtlas(device, loadedTextures, progressReceiver);
 		}
 
-        public static readonly object Tag = "AtlasGeneratorTag!";
-        public Texture2D GetAtlas(bool clone = true)
+		public static readonly object Tag = "AtlasGeneratorTag!";
+
+		public Texture2D GetAtlas(bool clone = true)
 		{
 			return _textureAtlas;
 		}
 
-        public  Utils.TextureInfo GetAtlasLocation(
-			ResourceLocation file)
+		public Utils.TextureInfo GetAtlasLocation(ResourceLocation file)
 		{
 			if (_atlasLocations.TryGetValue(file, out var atlasInfo))
 			{
@@ -300,5 +318,5 @@ namespace Alex.Graphics
 			return _atlasLocations
 				["no_texture"]; // new TextureInfo(AtlasSize, Vector2.Zero, TextureWidth, TextureHeight, false, false);
 		}
-    }
+	}
 }

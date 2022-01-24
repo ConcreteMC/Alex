@@ -7,7 +7,7 @@ namespace Alex.Networking.Java.Packets.Play
 		public float ExperienceBar { get; set; }
 		public int Level { get; set; }
 		public int TotalExperience { get; set; }
-		
+
 		/// <inheritdoc />
 		public override void Decode(MinecraftStream stream)
 		{

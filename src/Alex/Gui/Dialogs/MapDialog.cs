@@ -20,13 +20,14 @@ namespace Alex.Gui.Dialogs
 		private AlexButton _zoomInBtn, _zoomOutBtn, _undoButton, _redoButton;
 		private IMap _map;
 		private MapMarker _selectedMarker = MapMarker.None;
+
 		public MapDialog(IMap world)
 		{
 			_map = world;
-			
+
 			Anchor = Alignment.Fill;
 			ContentContainer.Anchor = Alignment.Fill;
-			
+
 			_mapRenderer = new MapRenderElement(_map)
 			{
 				AutoSizeMode = AutoSizeMode.GrowOnly,
@@ -37,21 +38,21 @@ namespace Alex.Gui.Dialogs
 				AutoZoomLevel = true,
 				Rotation = 0f
 			};
+
 			_mapRenderer.OnClick += OnMapClicked;
 
 			Container mapContainer = new Container()
 			{
-				Anchor = Alignment.Fill,
-				Padding = new Thickness(5, 5, 5, 15),
-				Name = "MapContainer"
+				Anchor = Alignment.Fill, Padding = new Thickness(5, 5, 5, 15), Name = "MapContainer"
 			};
+
 			mapContainer.AddChild(_mapRenderer);
-			
+
 			ContentContainer.AddChild(mapContainer);
-			
+
 			var leftContainer = new StackContainer
 			{
-				Orientation = Orientation.Vertical, 
+				Orientation = Orientation.Vertical,
 				Anchor = Alignment.TopLeft,
 				BackgroundOverlay = new Color(Color.Black, 0.3f),
 				ChildAnchor = Alignment.TopLeft,
@@ -65,27 +66,29 @@ namespace Alex.Gui.Dialogs
 					() =>
 					{
 						if (_map?.Center == null) return string.Empty;
+
 						return $"Coordinates: X={_map.Center.X:F2} Y={_map.Center.Y:F2} Z={_map.Center.Z:F2}";
 					}));
-			
+
 			leftContainer.AddChild(
 				new AutoUpdatingTextElement(
 					() =>
 					{
 						if (_mapRenderer == null) return string.Empty;
-						
+
 						var cwp = _mapRenderer?.CursorWorldPosition ?? Vector3.Zero;
+
 						return $"Cursor: X={cwp.X:F2} Y={cwp.Y:F2} Z={cwp.Z:F2}";
 					}));
-			
+
 			leftContainer.AddChild(new AutoUpdatingTextElement(() => $"Zoom Level: {_mapRenderer.ZoomLevel}"));
 			leftContainer.AddChild(new AutoUpdatingTextElement(() => $"Marker: {_selectedMarker}"));
 
 			ContentContainer.AddChild(leftContainer);
-			
+
 			var rightContainer = new StackContainer
 			{
-				Orientation = Orientation.Vertical, 
+				Orientation = Orientation.Vertical,
 				Anchor = Alignment.MiddleRight,
 				BackgroundOverlay = new Color(Color.Black, 0.3f),
 				ChildAnchor = Alignment.TopRight,
@@ -98,18 +101,20 @@ namespace Alex.Gui.Dialogs
 			{
 				if (marker == MapMarker.None) continue;
 				var textureResource = marker.ToTexture()?.TextureResource;
+
 				if (!textureResource.HasValue)
 					continue;
-				
-				var button = new AlexButton(" ",
-					() =>
+
+				var button = new AlexButton(
+					" ", () =>
 					{
 						if (_selectedMarker == marker)
 						{
 							_selectedMarker = MapMarker.None;
+
 							return;
 						}
-						
+
 						_selectedMarker = marker;
 					});
 
@@ -117,81 +122,70 @@ namespace Alex.Gui.Dialogs
 				button.CanFocus = true;
 				button.CanHighlight = true;
 				button.Padding = new Thickness(2);
-				
-				button.AddChild(new Image(textureResource.Value)
-				{
-					Anchor = Alignment.MiddleCenter,
-					Margin = new Thickness(2),
-					
-				});
+
+				button.AddChild(
+					new Image(textureResource.Value) { Anchor = Alignment.MiddleCenter, Margin = new Thickness(2), });
+
 				rightContainer.AddChild(button);
 			}
-			
+
 			mapContainer.AddChild(rightContainer);
-			
+
 			var bottomContainer = new StackContainer
 			{
-				Orientation = Orientation.Horizontal, 
+				Orientation = Orientation.Horizontal,
 				Anchor = Alignment.BottomFill,
 				ChildAnchor = Alignment.MiddleLeft,
 				BackgroundOverlay = new Color(Color.Black, 0.3f),
 				Name = "Bottom Menu"
 			};
 
-			bottomContainer.AddChild(new AlexButton("Close", () =>
-			{
-				GuiManager.HideDialog(this);
-			}));
-			bottomContainer.AddChild(new AlexButton("Reset", () =>
-			{
-				_mapRenderer.Reset();
-			}));
+			bottomContainer.AddChild(new AlexButton("Close", () => { GuiManager.HideDialog(this); }));
+			bottomContainer.AddChild(new AlexButton("Reset", () => { _mapRenderer.Reset(); }));
 			bottomContainer.AddChild(_zoomInBtn = new AlexButton("Zoom In", ZoomIn));
 			bottomContainer.AddChild(_zoomOutBtn = new AlexButton("Zoom Out", ZoomOut));
-			
-			bottomContainer.AddChild(_undoButton = new AlexButton("Undo", UndoAction)
-			{
-				Enabled = false
-			});
-			bottomContainer.AddChild(_redoButton = new AlexButton("Redo", RedoAction)
-			{
-				Enabled = false
-			});
+
+			bottomContainer.AddChild(_undoButton = new AlexButton("Undo", UndoAction) { Enabled = false });
+			bottomContainer.AddChild(_redoButton = new AlexButton("Redo", RedoAction) { Enabled = false });
 			ContentContainer.AddChild(bottomContainer);
 		}
 
 		private LinkedList<MapIconAction> _undoActions = new LinkedList<MapIconAction>();
 		private LinkedList<MapIconAction> _redoActions = new LinkedList<MapIconAction>();
+
 		private void UpdateActionButtons()
 		{
 			_undoButton.Enabled = _undoActions.Count > 0;
 			_redoButton.Enabled = _redoActions.Count > 0;
 		}
+
 		private void RedoAction()
 		{
 			var last = _redoActions.Last;
+
 			if (last != null)
 			{
 				_redoActions.RemoveLast();
-				
+
 				var icon = last.Value;
 				icon.Apply(_map);
 			}
-			
+
 			UpdateActionButtons();
 		}
 
 		private void UndoAction()
 		{
 			var last = _undoActions.Last;
+
 			if (last != null)
 			{
 				_undoActions.RemoveLast();
-				
+
 				var icon = last.Value;
 				icon.Apply(_map);
 			}
-			
+
 			UpdateActionButtons();
 		}
 
@@ -201,15 +195,11 @@ namespace Alex.Gui.Dialogs
 			{
 				if (_selectedMarker != MapMarker.None)
 				{
-					var mapIcon = new UserMapIcon(_selectedMarker)
-					{
-						Position = e.WorldPosition,
-						Label = "Waypoint"
-					};
-					
+					var mapIcon = new UserMapIcon(_selectedMarker) { Position = e.WorldPosition, Label = "Waypoint" };
+
 					_map.Add(mapIcon);
 					_undoActions.AddLast(new AddIconAction(mapIcon));
-					
+
 					_selectedMarker = MapMarker.None;
 				}
 				else
@@ -233,6 +223,7 @@ namespace Alex.Gui.Dialogs
 		}
 
 		private bool _displayHud;
+
 		/// <inheritdoc />
 		public override void OnShow()
 		{
@@ -240,7 +231,7 @@ namespace Alex.Gui.Dialogs
 
 			var option = Alex.Instance.Options.AlexOptions.VideoOptions.DisplayHud;
 			_displayHud = option.Value;
-			
+
 			option.Value = false;
 
 			UpdateZoomButtons();
@@ -259,10 +250,10 @@ namespace Alex.Gui.Dialogs
 			{
 				_zoomInBtn.Enabled = true;
 				_zoomOutBtn.Enabled = true;
-				
+
 				return;
 			}
-			
+
 			if (_mapRenderer.ZoomLevel >= ZoomLevel.Maximum)
 			{
 				_zoomInBtn.Enabled = true;
@@ -270,7 +261,7 @@ namespace Alex.Gui.Dialogs
 
 				return;
 			}
-			
+
 			if (_mapRenderer.ZoomLevel <= ZoomLevel.Minimum)
 			{
 				_zoomInBtn.Enabled = false;
@@ -291,6 +282,7 @@ namespace Alex.Gui.Dialogs
 		}
 
 		private MouseState _mouseState = new MouseState();
+
 		/// <inheritdoc />
 		protected override void OnUpdate(GameTime gameTime)
 		{
@@ -303,14 +295,14 @@ namespace Alex.Gui.Dialogs
 
 				if (scrollWheelDifference > 0)
 				{
-                    ZoomIn();
+					ZoomIn();
 				}
 				else if (scrollWheelDifference < 0)
 				{
 					ZoomOut();
 				}
 			}
-            
+
 			_mouseState = state;
 		}
 
@@ -336,19 +328,13 @@ namespace Alex.Gui.Dialogs
 				Icon = icon;
 			}
 
-			public virtual void Apply(IMap map)
-			{
-				
-			}
+			public virtual void Apply(IMap map) { }
 		}
 
 		public class RemoveIconAction : MapIconAction
 		{
 			/// <inheritdoc />
-			public RemoveIconAction(MapIcon icon) : base(icon)
-			{
-				
-			}
+			public RemoveIconAction(MapIcon icon) : base(icon) { }
 
 			/// <inheritdoc />
 			public override void Apply(IMap map)
@@ -361,10 +347,7 @@ namespace Alex.Gui.Dialogs
 		public class AddIconAction : MapIconAction
 		{
 			/// <inheritdoc />
-			public AddIconAction(MapIcon icon) : base(icon)
-			{
-				
-			}
+			public AddIconAction(MapIcon icon) : base(icon) { }
 
 			/// <inheritdoc />
 			public override void Apply(IMap map)

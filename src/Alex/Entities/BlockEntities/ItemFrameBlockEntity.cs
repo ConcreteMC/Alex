@@ -16,7 +16,7 @@ namespace Alex.Entities.BlockEntities
 	public class ItemFrameBlockEntity : BlockEntity
 	{
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(ItemFrameBlockEntity));
-		
+
 		/// <inheritdoc />
 		public ItemFrameBlockEntity(World level) : base(level)
 		{
@@ -32,11 +32,12 @@ namespace Alex.Entities.BlockEntities
 		protected override void ReadFrom(NbtCompound compound)
 		{
 			base.ReadFrom(compound);
-			
+
 			if (compound.TryGet("Item", out var itemTag))
 			{
 				var idTag = itemTag["id"] ?? itemTag["ID"];
-				if(idTag == null)
+
+				if (idTag == null)
 					return;
 
 				var count = itemTag["Count"].ByteValue;
@@ -45,6 +46,7 @@ namespace Alex.Entities.BlockEntities
 				if (idTag.TagType == NbtTagType.String)
 				{
 					var id = idTag.StringValue;
+
 					if (ItemFactory.TryGetItem(id, out var item))
 					{
 						item.Count = count;
@@ -61,6 +63,7 @@ namespace Alex.Entities.BlockEntities
 				{
 					var id = idTag.ShortValue;
 					var damage = itemTag["Damage"].ShortValue;
+
 					if (ItemFactory.TryGetItem(id, damage, out var item))
 					{
 						item.Count = count;
@@ -92,24 +95,28 @@ namespace Alex.Entities.BlockEntities
 				{
 					case BlockFace.East:
 						_yaw = 90f;
+
 						break;
 
 					case BlockFace.West:
 						_yaw = 270f;
+
 						break;
 
 					case BlockFace.North:
 						_yaw = 180f;
+
 						break;
 
 					case BlockFace.South:
 						_yaw = 0f;
+
 						break;
-					
+
 					default:
 						return;
 				}
-				
+
 				_facing = value;
 				UpdateOffset();
 			}
@@ -128,6 +135,7 @@ namespace Alex.Entities.BlockEntities
 		}
 
 		protected bool CanRender { get; set; } = false;
+
 		public bool SetItem(Item item)
 		{
 			if (item.Renderer != null)
@@ -154,28 +162,31 @@ namespace Alex.Entities.BlockEntities
 
 			if (itemRenderer?.ResourcePackModel == null)
 				return;
-			
+
 			if ((itemRenderer.ResourcePackModel.Type & ModelType.Block) != 0)
 			{
 				Scale = 0.25f;
-				Offset = Vector3.Transform(new Vector3(0.375f, 0.375f,-0.125f), Matrix.CreateRotationY(MathHelper.ToRadians(_yaw)));
+
+				Offset = Vector3.Transform(
+					new Vector3(0.375f, 0.375f, -0.125f), Matrix.CreateRotationY(MathHelper.ToRadians(_yaw)));
 			}
 			else
 			{
 				Scale = 1f / 16f;
-				Offset = Vector3.Transform(new Vector3(0f, 0f, 0.025f), Matrix.CreateRotationY(MathHelper.ToRadians(_yaw)));
+
+				Offset = Vector3.Transform(
+					new Vector3(0f, 0f, 0.025f), Matrix.CreateRotationY(MathHelper.ToRadians(_yaw)));
 			}
 		}
-		
+
 		public override void Update(IUpdateArgs args)
 		{
 			if (CanRender)
 			{
-				ItemRenderer.Update(
-					args);
+				ItemRenderer.Update(args);
 			}
 		}
-		
+
 		public override int Render(IRenderArgs renderArgs, bool useCulling)
 		{
 			if (!CanRender)
@@ -185,9 +196,9 @@ namespace Alex.Entities.BlockEntities
 
 			if (itemRenderer == null)
 				return 0;
-			
+
 			Matrix worldMatrix;
-			var offset = new Vector3((float) Width / 2f, 0f, (float) Width / 2f);
+			var offset = new Vector3((float)Width / 2f, 0f, (float)Width / 2f);
 			var knownPos = KnownPosition.ToVector3();
 
 			worldMatrix = Matrix.CreateScale(Scale) * Matrix.CreateTranslation(-offset)
@@ -195,7 +206,7 @@ namespace Alex.Entities.BlockEntities
 			                                        * Matrix.CreateTranslation(offset)
 			                                        * Matrix.CreateTranslation(knownPos);
 
-				return itemRenderer.Render(renderArgs, worldMatrix);
+			return itemRenderer.Render(renderArgs, worldMatrix);
 		}
 	}
 }

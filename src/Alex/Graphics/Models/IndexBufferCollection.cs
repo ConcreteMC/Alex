@@ -5,24 +5,20 @@ using Microsoft.Xna.Framework.Graphics;
 
 namespace Alex.Graphics.Models
 {
-	public class IndexBufferCollection: System.Collections.ObjectModel.ReadOnlyCollection<IndexBuffer>
+	public class IndexBufferCollection : System.Collections.ObjectModel.ReadOnlyCollection<IndexBuffer>
 	{
-		public IndexBufferCollection(IList<IndexBuffer> list)
-			: base(list)
-		{
-			
-		}
+		public IndexBufferCollection(IList<IndexBuffer> list) : base(list) { }
 
 		internal void Add(IndexBuffer item)
 		{
 			Items.Add(item);
 		}
-		
+
 		internal void Remove(IndexBuffer item)
 		{
 			Items.Remove(item);
 		}
-		
+
 		/// <summary>
 		/// Retrieves a ModelBone from the collection, given the name of the bone.
 		/// </summary>
@@ -32,8 +28,10 @@ namespace Alex.Graphics.Models
 			get
 			{
 				IndexBuffer ret;
+
 				if (!TryGetValue(boneName, out ret))
 					throw new KeyNotFoundException();
+
 				return ret;
 			}
 		}
@@ -54,11 +52,13 @@ namespace Alex.Graphics.Models
 				if (string.Equals(bone.Name, boneName, StringComparison.OrdinalIgnoreCase))
 				{
 					value = bone;
+
 					return true;
 				}
 			}
 
 			value = null;
+
 			return false;
 		}
 
@@ -97,6 +97,7 @@ namespace Alex.Graphics.Models
 			public bool MoveNext()
 			{
 				_position++;
+
 				return (_position < _collection.Count);
 			}
 
@@ -105,9 +106,7 @@ namespace Alex.Graphics.Models
 			/// <summary>
 			/// Immediately releases the unmanaged resources used by this object.
 			/// </summary>
-			public void Dispose()
-			{
-			}
+			public void Dispose() { }
 
 			#endregion
 

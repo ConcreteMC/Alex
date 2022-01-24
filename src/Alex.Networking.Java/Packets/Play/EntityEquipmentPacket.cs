@@ -20,16 +20,11 @@ namespace Alex.Networking.Java.Packets.Play
 
 			do
 			{
-				slotValue = (byte) stream.ReadByte();
-				SlotEnum slotEnum = (SlotEnum) slotValue;
-				
+				slotValue = (byte)stream.ReadByte();
+				SlotEnum slotEnum = (SlotEnum)slotValue;
+
 				var item = stream.ReadSlot();
-				slots.Add(new EquipmentSlot()
-				{
-					Data = item,
-					Slot = slotEnum
-				});
-				
+				slots.Add(new EquipmentSlot() { Data = item, Slot = slotEnum });
 			} while ((slotValue & (1 << 7)) != 0);
 
 			Slots = slots.ToArray();

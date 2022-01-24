@@ -11,13 +11,14 @@ namespace Alex.Gui.Elements.Hud
 	public class BossBarContainer : StackContainer
 	{
 		private ConcurrentDictionary<MiNET.Utils.UUID, BossBar> _bossBars;
+
 		public BossBarContainer()
 		{
 			_bossBars = new ConcurrentDictionary<UUID, BossBar>();
-			
+
 			base.Orientation = Orientation.Vertical;
 			Anchor = Alignment.TopCenter;
-			
+
 			//AddChild(new BossBar());
 		}
 
@@ -42,11 +43,11 @@ namespace Alex.Gui.Elements.Hud
 			{
 				bossbar.CustomColor = customColor;
 			}
-			
-			if (_bossBars.TryAdd(
-				uuid, bossbar))
+
+			if (_bossBars.TryAdd(uuid, bossbar))
 			{
 				AddChild(bossbar);
+
 				return true;
 			}
 
@@ -60,7 +61,7 @@ namespace Alex.Gui.Elements.Hud
 				bar.Text = title;
 			}
 		}
-		
+
 		public void UpdateStyle(UUID uuid, BossBarPacket.BossBarColor color, BossBarPacket.BossBarDivisions divisions)
 		{
 			if (_bossBars.TryGetValue(uuid, out var bar))
@@ -69,7 +70,7 @@ namespace Alex.Gui.Elements.Hud
 				bar.Divisions = divisions;
 			}
 		}
-		
+
 		public void UpdateHealth(UUID uuid, float health)
 		{
 			if (_bossBars.TryGetValue(uuid, out var bar))
@@ -96,7 +97,7 @@ namespace Alex.Gui.Elements.Hud
 			{
 				RemoveChild(bar.Value);
 			}
-			
+
 			_bossBars.Clear();
 		}
 	}
@@ -110,12 +111,11 @@ namespace Alex.Gui.Elements.Hud
 		private float _health;
 
 		private const int MaxWidth = 182;
+
 		public BossBar()
 		{
-			_textElement = new TextElement(){
-				Anchor = Alignment.TopCenter,
-				FontStyle = FontStyle.DropShadow
-			};
+			_textElement = new TextElement() { Anchor = Alignment.TopCenter, FontStyle = FontStyle.DropShadow };
+
 			_textureElement = new TextureElement()
 			{
 				Anchor = Alignment.BottomCenter,
@@ -127,7 +127,7 @@ namespace Alex.Gui.Elements.Hud
 			};
 
 			//_textureElement.Width = _textureElement.MinWidth = 182;
-			
+
 			AddChild(_textElement);
 			AddChild(_textureElement);
 
@@ -138,6 +138,7 @@ namespace Alex.Gui.Elements.Hud
 		}
 
 		private bool _divisionDirty = false;
+
 		public BossBarPacket.BossBarDivisions Divisions
 		{
 			get => _divisions;
@@ -149,7 +150,7 @@ namespace Alex.Gui.Elements.Hud
 		}
 
 		public byte Flags { get; set; }
-		
+
 		public string Text
 		{
 			get
@@ -186,6 +187,7 @@ namespace Alex.Gui.Elements.Hud
 				_customColor = value;
 
 				Color = BossBarPacket.BossBarColor.White;
+
 				if (value != null)
 				{
 					_textureElement.Background.Mask = value.Value;
@@ -203,42 +205,49 @@ namespace Alex.Gui.Elements.Hud
 			{
 				_color = value;
 				_colorDirty = true;
-				
+
 				switch (_color)
 				{
 					case BossBarPacket.BossBarColor.Pink:
 						_textureElement.Background = AlexGuiTextures.BossbarBackgroundPink;
 						_textureElement.BackgroundOverlay = AlexGuiTextures.BossbarProgressPink;
+
 						break;
 
 					case BossBarPacket.BossBarColor.Blue:
 						_textureElement.Background = AlexGuiTextures.BossbarBackgroundBlue;
 						_textureElement.BackgroundOverlay = AlexGuiTextures.BossbarProgressBlue;
+
 						break;
 
 					case BossBarPacket.BossBarColor.Red:
 						_textureElement.Background = AlexGuiTextures.BossbarBackgroundRed;
 						_textureElement.BackgroundOverlay = AlexGuiTextures.BossbarProgressRed;
+
 						break;
 
 					case BossBarPacket.BossBarColor.Green:
 						_textureElement.Background = AlexGuiTextures.BossbarBackgroundGreen;
 						_textureElement.BackgroundOverlay = AlexGuiTextures.BossbarProgressGreen;
+
 						break;
 
 					case BossBarPacket.BossBarColor.Yellow:
 						_textureElement.Background = AlexGuiTextures.BossbarBackgroundYellow;
 						_textureElement.BackgroundOverlay = AlexGuiTextures.BossbarProgressYellow;
+
 						break;
 
 					case BossBarPacket.BossBarColor.Purple:
 						_textureElement.Background = AlexGuiTextures.BossbarBackgroundPurple;
 						_textureElement.BackgroundOverlay = AlexGuiTextures.BossbarProgressPurple;
+
 						break;
 
 					case BossBarPacket.BossBarColor.White:
 						_textureElement.Background = AlexGuiTextures.BossbarBackgroundWhite;
 						_textureElement.BackgroundOverlay = AlexGuiTextures.BossbarProgressWhite;
+
 						break;
 				}
 
@@ -248,46 +257,57 @@ namespace Alex.Gui.Elements.Hud
 
 		private void UpdateDirty(bool force = false)
 		{
-			_textureElement.Background.Scale = new Vector2(182f / _textureElement.Background.Width, 5f / _textureElement.Background.Height);
-			
+			_textureElement.Background.Scale = new Vector2(
+				182f / _textureElement.Background.Width, 5f / _textureElement.Background.Height);
+
 			if (_colorDirty || force)
 			{
 				_colorDirty = false;
 				_textureElement.BackgroundOverlay.Scale = new Vector2(_health, 1f);
-				_textureElement.BackgroundOverlay.Scale = new Vector2(182f / _textureElement.BackgroundOverlay.Width, 5f / _textureElement.BackgroundOverlay.Height);
+
+				_textureElement.BackgroundOverlay.Scale = new Vector2(
+					182f / _textureElement.BackgroundOverlay.Width, 5f / _textureElement.BackgroundOverlay.Height);
 			}
-			
+
 			if ((_divisionDirty || force) && GuiRenderer != null)
 			{
 				_divisionDirty = false;
-			
+
 				switch (_divisions)
 				{
 					case BossBarPacket.BossBarDivisions.Six:
 						_textureElement.Texture = GuiRenderer.GetTexture(AlexGuiTextures.BossbarDivider6);
+
 						break;
+
 					case BossBarPacket.BossBarDivisions.Ten:
 						_textureElement.Texture = GuiRenderer.GetTexture(AlexGuiTextures.BossbarDivider10);
+
 						break;
+
 					case BossBarPacket.BossBarDivisions.Twelve:
 						_textureElement.Texture = GuiRenderer.GetTexture(AlexGuiTextures.BossbarDivider12);
+
 						break;
+
 					case BossBarPacket.BossBarDivisions.Twenty:
 						_textureElement.Texture = GuiRenderer.GetTexture(AlexGuiTextures.BossbarDivider20);
+
 						break;
+
 					default:
 						_textureElement.Texture = null;
+
 						break;
 				}
 				//_textureElement.Texture = GuiRenderer.GetTexture(_guiTexture);
 			}
 		}
-		
+
 		/// <inheritdoc />
 		protected override void OnInit(IGuiRenderer renderer)
 		{
 			base.OnInit(renderer);
-			
 		}
 
 		/// <inheritdoc />

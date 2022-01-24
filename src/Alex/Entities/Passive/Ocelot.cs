@@ -6,6 +6,7 @@ namespace Alex.Entities.Passive
 	public class Ocelot : PassiveMob
 	{
 		public bool IsTrusting { get; set; }
+
 		public Ocelot(World level) : base(level)
 		{
 			Height = 0.7;

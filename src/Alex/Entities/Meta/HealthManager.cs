@@ -14,68 +14,73 @@ namespace Alex.Entities.Meta
 	{
 		public float Health { get; }
 		public float MaxHealth { get; }
-		
-		public HealthChangedEventArgs(float health, float maxHealth) {
+
+		public HealthChangedEventArgs(float health, float maxHealth)
+		{
 			Health = health;
 			MaxHealth = maxHealth;
 		}
 	}
-	
+
 	public class ExhaustionChangedEventArgs : EventArgs
 	{
 		public float Exhaustion { get; }
 
-		public ExhaustionChangedEventArgs(float health) {
+		public ExhaustionChangedEventArgs(float health)
+		{
 			Exhaustion = health;
 		}
 	}
-	
+
 	public class SaturationChangedEventArgs : EventArgs
 	{
 		public float Saturation { get; }
 
-		public SaturationChangedEventArgs(float health) {
+		public SaturationChangedEventArgs(float health)
+		{
 			Saturation = health;
 		}
 	}
-	
+
 	public class HungerChangedEventArgs : EventArgs
 	{
 		public int Hunger { get; }
 		public int MaxHunger { get; }
-		
-		public HungerChangedEventArgs(int hunger, int maxHunger) {
+
+		public HungerChangedEventArgs(int hunger, int maxHunger)
+		{
 			Hunger = hunger;
 			MaxHunger = maxHunger;
 		}
 	}
-	
+
 	public class AirChangedEventArgs : EventArgs
 	{
 		public short AirAvailable { get; }
 		public short MaxAirAvailable { get; }
-		
-		public AirChangedEventArgs(short airAvailable, short maxAirAvailable) {
+
+		public AirChangedEventArgs(short airAvailable, short maxAirAvailable)
+		{
 			AirAvailable = airAvailable;
 			MaxAirAvailable = maxAirAvailable;
 		}
 	}
-	
+
 	public class HealthManager : EntityComponent, ITicked
 	{
-	//	private Entity Entity { get; }
+		//	private Entity Entity { get; }
 
 		private float _health = 20f;
 		private float _maxHealth = 20f;
 		private int _maxHunger = 20;
 		private short _availableAir = 300;
 		private short _maxAir = 300;
-		
+
 		private void InvokeHealthUpdate()
 		{
 			OnHealthChanged?.Invoke(this, new HealthChangedEventArgs(Health, MaxHealth));
 		}
-		
+
 		public float Health
 		{
 			get
@@ -101,12 +106,12 @@ namespace Alex.Entities.Meta
 
 		public int Hearts
 		{
-			get { return (int) Math.Ceiling(Health / 10d); }
+			get { return (int)Math.Ceiling(Health / 10d); }
 		}
 
 		public int MaxHearts
 		{
-			get { return (int) Math.Ceiling(MaxHealth / 10d); }
+			get { return (int)Math.Ceiling(MaxHealth / 10d); }
 		}
 
 		private int _hunger = 20;
@@ -134,7 +139,7 @@ namespace Alex.Entities.Meta
 			}
 		}
 
-		public float Saturation    { get; set; } = 20;
+		public float Saturation { get; set; } = 20;
 		public float MaxSaturation { get; set; } = 20;
 
 		private float _exhaustion = 0f;
@@ -149,7 +154,7 @@ namespace Alex.Entities.Meta
 			{
 				var previous = _exhaustion;
 				_exhaustion = Math.Clamp(value, 0f, MaxExhaustion);
-				
+
 				OnExhaustionChanged?.Invoke(this, new ExhaustionChangedEventArgs(value));
 			}
 		}
@@ -177,7 +182,7 @@ namespace Alex.Entities.Meta
 		}
 
 		public bool IsDying => Health * (10d / MaxHealth) < 1d;
-		
+
 		/// <summary>
 		///		Returns the ticks since the entity started dying
 		/// </summary>
@@ -188,10 +193,11 @@ namespace Alex.Entities.Meta
 		public EventHandler<ExhaustionChangedEventArgs> OnExhaustionChanged;
 		public EventHandler<SaturationChangedEventArgs> OnSaturationChanged;
 		public EventHandler<AirChangedEventArgs> OnAvailableAirChanged;
-		
+
 		public int FireTick { get; set; }
 		public int SuffocationTicks { get; set; }
 		public int LavaTicks { get; set; }
+
 		public HealthManager(Entity entity) : base(entity)
 		{
 			//Entity = entity;
@@ -216,6 +222,7 @@ namespace Alex.Entities.Meta
 		}
 
 		public bool IsDead => Health <= 0;
+
 		public void Kill()
 		{
 			if (IsDead)
@@ -227,6 +234,7 @@ namespace Alex.Entities.Meta
 
 		public DamageCause LastDamageCause { get; protected set; } = DamageCause.Unknown;
 		public float Absorption { get; set; }
+
 		public void TakeHit(int damage, DamageCause cause = DamageCause.Unknown)
 		{
 			if (Entity is Player player && player.Gamemode != GameMode.Survival)
@@ -237,14 +245,16 @@ namespace Alex.Entities.Meta
 
 			//LastDamageSource = source;
 			LastDamageCause = cause;
+
 			if (Absorption > 0)
 			{
 				float abs = Absorption;
 				abs -= damage;
+
 				if (abs < 0)
 				{
 					Absorption = 0;
-					damage = Math.Abs((int) Math.Floor(abs));
+					damage = Math.Abs((int)Math.Floor(abs));
 				}
 				else
 				{
@@ -260,39 +270,39 @@ namespace Alex.Entities.Meta
 			}
 
 			Health -= damage;
+
 			if (Health < 0)
 			{
 				//OnPlayerTakeHit(new HealthEventArgs(this, source, Entity));
 				Health = 0;
 				Kill();
+
 				return;
 			}
 
-			
+
 			IncreaseExhaustion(0.3f);
 
-				//	if (source != null)
-		//	{
-		//		DoKnockback(source, tool);
-		//	}
+			//	if (source != null)
+			//	{
+			//		DoKnockback(source, tool);
+			//	}
 
 			CooldownTick = 10;
 
 			//OnPlayerTakeHit(new HealthEventArgs(this, source, Entity));
 		}
 
-		protected virtual void DoKnockback(Entity source, Item tool)
-		{
-			
-		}
-		
+		protected virtual void DoKnockback(Entity source, Item tool) { }
+
 		public void IncreaseExhaustion(float amount)
 		{
 			Exhaustion += amount;
 			ProcessHunger();
 		}
-		
+
 		private PlayerLocation _lastExhaustionPosition = new PlayerLocation();
+
 		public void Move(float distance)
 		{
 			float movementStrainFactor = 0.01f; // Default for walking
@@ -305,7 +315,7 @@ namespace Alex.Entities.Meta
 			{
 				movementStrainFactor = 0.1f;
 			}
-			
+
 			Exhaustion += (distance * movementStrainFactor);
 
 			ProcessHunger();
@@ -346,7 +356,7 @@ namespace Alex.Entities.Meta
 			if (Hunger <= 0)
 			{
 				_ticker++;
-				
+
 				if (_ticker % 800 == 0)
 				{
 					TakeHit(1, DamageCause.Starving);
@@ -398,15 +408,17 @@ namespace Alex.Entities.Meta
 			if (Health <= 0)
 			{
 				Kill();
+
 				return;
 			}
-			
+
 			if (Entity.HeadInWater)
 			{
 				AvailableAir--;
+
 				if (AvailableAir <= 0)
 				{
-					if (Math.Abs(AvailableAir)%10 == 0)
+					if (Math.Abs(AvailableAir) % 10 == 0)
 					{
 						TakeHit(1, DamageCause.Drowning);
 					}
@@ -459,7 +471,7 @@ namespace Alex.Entities.Meta
 
 				if (LavaTicks <= 0)
 				{
-					TakeHit( 4, DamageCause.Lava);
+					TakeHit(4, DamageCause.Lava);
 					LavaTicks = 10;
 				}
 				else
@@ -475,26 +487,28 @@ namespace Alex.Entities.Meta
 			if (!Entity.IsInLava && Entity.IsOnFire)
 			{
 				FireTick--;
+
 				if (FireTick <= 0)
 				{
 					Entity.IsOnFire = false;
 				}
 
-				if (Math.Abs(FireTick)%20 == 0)
+				if (Math.Abs(FireTick) % 20 == 0)
 				{
 					TakeHit(1, DamageCause.FireTick);
 				}
 			}
 		}
-		
+
 		public int CooldownTick { get; set; }
+
 		public void OnTick()
 		{
 			if (!Entity.IsSpawned)
 				return;
-			
+
 			ProcessHungerTick();
-			
+
 			var pos = Entity.KnownPosition;
 
 			var distance = MathF.Abs(
@@ -523,8 +537,8 @@ namespace Alex.Entities.Meta
 			//IsDead = false;
 			CooldownTick = 0;
 			LastDamageCause = DamageCause.Unknown;
-		//	LastDamageSource = null;
-		
+			//	LastDamageSource = null;
+
 			Hunger = MaxHunger;
 			Saturation = MaxHunger;
 			Exhaustion = 0;

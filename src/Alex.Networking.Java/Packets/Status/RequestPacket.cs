@@ -9,14 +9,8 @@ namespace Alex.Networking.Java.Packets.Status
 			PacketId = 0x00;
 		}
 
-		public override void Decode(MinecraftStream stream)
-		{
-			
-		}
+		public override void Decode(MinecraftStream stream) { }
 
-		public override void Encode(MinecraftStream stream)
-		{
-			
-		}
+		public override void Encode(MinecraftStream stream) { }
 	}
 }

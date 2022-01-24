@@ -22,16 +22,12 @@ namespace Alex.Networking.Java.Util
 {
 	public class MinecraftStream : PacketStream, IMinecraftStream
 	{
-		public MinecraftStream(Stream baseStream, CancellationToken cancellationToken = default) : base(baseStream, cancellationToken)
-		{
-			
-		}
+		public MinecraftStream(Stream baseStream, CancellationToken cancellationToken = default) : base(
+			baseStream, cancellationToken) { }
 
-		public MinecraftStream(CancellationToken cancellationToken = default) : this(new MemoryStream(), cancellationToken)
-		{
-			
-		}
-		
+		public MinecraftStream(CancellationToken cancellationToken = default) : this(
+			new MemoryStream(), cancellationToken) { }
+
 		public void Read(Span<byte> memory, int count)
 		{
 			var data = BaseStream.ReadToSpan(count);
@@ -41,7 +37,7 @@ namespace Alex.Networking.Java.Util
 		public void Write(in Memory<byte> buffer, int offset, in int bufferLength)
 		{
 			var bytes = buffer.Slice(offset, bufferLength).ToArray();
-			
+
 			BaseStream.Write(bytes, offset, bytes.Length);
 		}
 
@@ -53,6 +49,7 @@ namespace Alex.Networking.Java.Util
 			{
 				var dat = new byte[length];
 				Read(dat, 0, length);
+
 				return dat;
 			}
 
@@ -60,11 +57,13 @@ namespace Alex.Networking.Java.Util
 			int read = 0;
 
 			var buffer = new byte[length];
+
 			while (read < buffer.Length && !CancellationToken.IsCancellationRequested)
 			{
 				int oldRead = read;
 
 				int r = this.Read(buffer, read, length - read);
+
 				if (r == 0) //No data read?
 				{
 					break;
@@ -72,7 +71,7 @@ namespace Alex.Networking.Java.Util
 
 				read += r;
 
-				if (CancellationToken.IsCancellationRequested) 
+				if (CancellationToken.IsCancellationRequested)
 					throw new ObjectDisposedException("");
 			}
 
@@ -113,20 +112,25 @@ namespace Alex.Networking.Java.Util
 			int numRead = 0;
 			int result = 0;
 			byte read;
+
 			do
 			{
-				read = (byte)ReadUnsignedByte();;
+				read = (byte)ReadUnsignedByte();
+				;
 
 				int value = (read & 0x7f);
 				result |= (value << (7 * numRead));
 
 				numRead++;
+
 				if (numRead > 5)
 				{
 					throw new Exception("VarInt is too big");
 				}
 			} while ((read & 0x80) != 0);
+
 			bytesRead = numRead;
+
 			return result;
 		}
 
@@ -135,6 +139,7 @@ namespace Alex.Networking.Java.Util
 			int numRead = 0;
 			long result = 0;
 			byte read;
+
 			do
 			{
 				read = (byte)ReadUnsignedByte();
@@ -142,6 +147,7 @@ namespace Alex.Networking.Java.Util
 				result |= (value << (7 * numRead));
 
 				numRead++;
+
 				if (numRead > 10)
 				{
 					throw new Exception("VarLong is too big");
@@ -164,36 +170,42 @@ namespace Alex.Networking.Java.Util
 		public ushort[] ReadUShort(int count)
 		{
 			var us = new ushort[count];
+
 			for (var i = 0; i < us.Length; i++)
 			{
 				var da = Read(2);
 				var d = BitConverter.ToUInt16(da, 0);
 				us[i] = d;
 			}
+
 			return EndianUtils.NetworkToHostOrder(us);
 		}
 
 		public ushort[] ReadUShortLocal(int count)
 		{
 			var us = new ushort[count];
+
 			for (var i = 0; i < us.Length; i++)
 			{
 				var da = Read(2);
 				var d = BitConverter.ToUInt16(da, 0);
 				us[i] = d;
 			}
+
 			return us;
 		}
 
 		public short[] ReadShortLocal(int count)
 		{
 			var us = new short[count];
+
 			for (var i = 0; i < us.Length; i++)
 			{
 				var da = Read(2);
 				var d = BitConverter.ToInt16(da, 0);
 				us[i] = d;
 			}
+
 			return us;
 		}
 
@@ -212,7 +224,7 @@ namespace Alex.Networking.Java.Util
 			return EndianUtils.NetworkToHostOrder(BitConverter.ToUInt64(Read(8), 0));
 		}
 
-        public Vector3 ReadPosition()
+		public Vector3 ReadPosition()
 		{
 			var val = ReadULong();
 			var x = Convert.ToSingle(val >> 38);
@@ -221,109 +233,110 @@ namespace Alex.Networking.Java.Util
 			//if (y > 2048)
 			//	y = -(0xFFF - y);
 
-			var z = Convert.ToSingle(val << 26 >> 38);  //Convert.ToSingle((val << 38 >> 38) >> 12);
+			var z = Convert.ToSingle(val << 26 >> 38); //Convert.ToSingle((val << 38 >> 38) >> 12);
 
-			if (x >= (2^25))
+			if (x >= (2 ^ 25))
 			{
-				x -= 2^26;
+				x -= 2 ^ 26;
 			}
 
-			if (y >= (2^11))
+			if (y >= (2 ^ 11))
 			{
-				y -= 2^12;
+				y -= 2 ^ 12;
 			}
 
-			if (z >= (2^25))
+			if (z >= (2 ^ 25))
 			{
-				z -= 2^26;
+				z -= 2 ^ 26;
 			}
 
-            return new Vector3(x, y, z);
+			return new Vector3(x, y, z);
 		}
-        
-        public async Task<Vector3> ReadPositionAsync()
-        {
-	        var val = await ReadULongAsync();
-	        var x = Convert.ToSingle(val >> 38);
-	        var y = Convert.ToSingle(val & 0xFFF);
-	        var z = Convert.ToSingle(val << 26 >> 38);
 
-	        if (x >= (2^25))
-	        {
-		        x -= 2^26;
-	        }
+		public async Task<Vector3> ReadPositionAsync()
+		{
+			var val = await ReadULongAsync();
+			var x = Convert.ToSingle(val >> 38);
+			var y = Convert.ToSingle(val & 0xFFF);
+			var z = Convert.ToSingle(val << 26 >> 38);
 
-	        if (y >= (2^11))
-	        {
-		        y -= 2^12;
-	        }
+			if (x >= (2 ^ 25))
+			{
+				x -= 2 ^ 26;
+			}
 
-	        if (z >= (2^25))
-	        {
-		        z -= 2^26;
-	        }
+			if (y >= (2 ^ 11))
+			{
+				y -= 2 ^ 12;
+			}
 
-	        return new Vector3(x, y, z);
-        }
-        
-        public BlockCoordinates ReadBlockCoordinates()
-        {
-	        ulong value = ReadULong();
+			if (z >= (2 ^ 25))
+			{
+				z -= 2 ^ 26;
+			}
 
-	        long x = (long)(value >> 38);
-	        long y = (long)(value & 0xFFF);
-	        long z = (long)(value << 26 >> 38);
+			return new Vector3(x, y, z);
+		}
 
-	        if (x >= Math.Pow(2, 25))
-		        x -= (long)Math.Pow(2, 26);
+		public BlockCoordinates ReadBlockCoordinates()
+		{
+			ulong value = ReadULong();
 
-	        if (y >= Math.Pow(2, 11))
-		        y -= (long)Math.Pow(2, 12);
+			long x = (long)(value >> 38);
+			long y = (long)(value & 0xFFF);
+			long z = (long)(value << 26 >> 38);
 
-	        if (z >= Math.Pow(2, 25))
-		        z -= (long)Math.Pow(2, 26);
+			if (x >= Math.Pow(2, 25))
+				x -= (long)Math.Pow(2, 26);
 
-	        return new BlockCoordinates((int)x,(int)y,(int)z);
-        }
-        
-        public async Task<BlockCoordinates> ReadBlockCoordinatesAsync()
-        {
-	        ulong value = await ReadULongAsync();
+			if (y >= Math.Pow(2, 11))
+				y -= (long)Math.Pow(2, 12);
 
-	        long x = (long)(value >> 38);
-	        long y = (long)(value & 0xFFF);
-	        long z = (long)(value << 26 >> 38);
+			if (z >= Math.Pow(2, 25))
+				z -= (long)Math.Pow(2, 26);
 
-	        if (x >= Math.Pow(2, 25))
-		        x -= (long)Math.Pow(2, 26);
+			return new BlockCoordinates((int)x, (int)y, (int)z);
+		}
 
-	        if (y >= Math.Pow(2, 11))
-		        y -= (long)Math.Pow(2, 12);
+		public async Task<BlockCoordinates> ReadBlockCoordinatesAsync()
+		{
+			ulong value = await ReadULongAsync();
 
-	        if (z >= Math.Pow(2, 25))
-		        z -= (long)Math.Pow(2, 26);
+			long x = (long)(value >> 38);
+			long y = (long)(value & 0xFFF);
+			long z = (long)(value << 26 >> 38);
 
-	        return new BlockCoordinates((int)x,(int)y,(int)z);
-        }
+			if (x >= Math.Pow(2, 25))
+				x -= (long)Math.Pow(2, 26);
+
+			if (y >= Math.Pow(2, 11))
+				y -= (long)Math.Pow(2, 12);
+
+			if (z >= Math.Pow(2, 25))
+				z -= (long)Math.Pow(2, 26);
+
+			return new BlockCoordinates((int)x, (int)y, (int)z);
+		}
 
 		public SlotData ReadSlot()
 		{
 			bool present = ReadBool();
+
 			if (!present) return null;
 
 			int id = ReadVarInt();
 			byte count = 0;
 			NbtCompound nbt = null;
-			
+
 			count = (byte)ReadUnsignedByte();
 			nbt = ReadNbtCompound();
-			
+
 
 			SlotData slot = new SlotData();
 			slot.Count = count;
 			slot.Nbt = nbt;
 			slot.ItemID = id;
-		//	slot.ItemDamage = damage;
+			//	slot.ItemDamage = damage;
 
 			return slot;
 		}
@@ -331,19 +344,20 @@ namespace Alex.Networking.Java.Util
 		public void WriteSlot(SlotData slot)
 		{
 			WriteBool(slot != null && slot.ItemID != -1);
+
 			if (slot == null)
 				return;
-			
+
 			WriteVarInt(slot.ItemID);
 			WriteByte(slot.Count);
 			WriteNbtCompound(slot.Nbt);
 		}
-		
+
 		#endregion
 
 		#region Writer
 
-        public void Write(byte[] data)
+		public void Write(byte[] data)
 		{
 			this.Write(data, 0, data.Length);
 		}
@@ -357,58 +371,67 @@ namespace Alex.Networking.Java.Util
 			WriteLong(toSend);
 		}
 
-	    public void WritePosition(BlockCoordinates pos)
-	    {
-            WritePosition(new Vector3(pos.X, pos.Y, pos.Z));
-	    }
+		public void WritePosition(BlockCoordinates pos)
+		{
+			WritePosition(new Vector3(pos.X, pos.Y, pos.Z));
+		}
 
-	    public int WriteRawVarInt32(uint value)
-	    {
-		    int written = 0;
-		    while ((value & -128) != 0)
-		    {
-			    WriteByte((byte) ((value & 0x7F) | 0x80));
-			    value >>= 7;
-		    }
+		public int WriteRawVarInt32(uint value)
+		{
+			int written = 0;
 
-		    WriteByte((byte) value);
-		    written++;
+			while ((value & -128) != 0)
+			{
+				WriteByte((byte)((value & 0x7F) | 0x80));
+				value >>= 7;
+			}
 
-		    return written;
-	    }
+			WriteByte((byte)value);
+			written++;
+
+			return written;
+		}
 
 		public int WriteVarInt(int value)
 		{
-			return WriteRawVarInt32((uint) value);
+			return WriteRawVarInt32((uint)value);
 			int write = 0;
+
 			do
 			{
 				byte temp = (byte)(value & 127);
 				value >>= 7;
+
 				if (value != 0)
 				{
 					temp |= 128;
 				}
+
 				WriteByte(temp);
 				write++;
 			} while (value != 0);
+
 			return write;
 		}
 
 		public int WriteVarLong(long value)
 		{
 			int write = 0;
+
 			do
 			{
 				byte temp = (byte)(value & 127);
 				value >>= 7;
+
 				if (value != 0)
 				{
 					temp |= 128;
 				}
+
 				WriteByte(temp);
 				write++;
 			} while (value != 0);
+
 			return write;
 		}
 
@@ -422,9 +445,10 @@ namespace Alex.Networking.Java.Util
 			if (data == null)
 			{
 				WriteVarInt(0);
+
 				return;
 			}
-			
+
 			var stringData = Encoding.UTF8.GetBytes(data);
 			WriteVarInt(stringData.Length);
 			Write(stringData);
@@ -465,7 +489,7 @@ namespace Alex.Networking.Java.Util
 			Write(EndianUtils.HostToNetworkOrderLong(data));
 		}
 
-        public void WriteUuid(MiNET.Utils.UUID uuid)
+		public void WriteUuid(MiNET.Utils.UUID uuid)
 		{
 			var guid = uuid.GetBytes();
 			var long1 = new byte[8];
@@ -486,13 +510,10 @@ namespace Alex.Networking.Java.Util
 
 		#endregion
 
-        private object _disposeLock = new object();
+		private object _disposeLock = new object();
 		private bool _disposed = false;
 
-		protected MinecraftStream(byte[] data) : base(data)
-		{
-			
-		}
+		protected MinecraftStream(byte[] data) : base(data) { }
 
 		protected override void Dispose(bool disposing)
 		{
@@ -507,9 +528,8 @@ namespace Alex.Networking.Java.Util
 
 					if (!CancellationToken.IsCancellationRequested)
 						CancellationToken.Cancel();
-
-
 				}
+
 				base.Dispose(disposing);
 			}
 			finally
@@ -520,15 +540,16 @@ namespace Alex.Networking.Java.Util
 
 		public NbtCompound ReadNbtCompound()
 		{
-			NbtTagType t = (NbtTagType) ReadUnsignedByte();
+			NbtTagType t = (NbtTagType)ReadUnsignedByte();
+
 			if (t != NbtTagType.Compound) return null;
 			Position--;
 
-            NbtFile file = new NbtFile() { BigEndian = true, UseVarInt = false };
+			NbtFile file = new NbtFile() { BigEndian = true, UseVarInt = false };
 
 			file.LoadFromStream(this, NbtCompression.None);
 
-			return (NbtCompound) file.RootTag;
+			return (NbtCompound)file.RootTag;
 		}
 
 		public void WriteNbtCompound(NbtCompound compound)
@@ -536,10 +557,11 @@ namespace Alex.Networking.Java.Util
 			if (compound == null)
 			{
 				WriteByte(0);
+
 				return;
 			}
 
-			NbtFile f = new NbtFile(compound) {BigEndian = true, UseVarInt = false};
+			NbtFile f = new NbtFile(compound) { BigEndian = true, UseVarInt = false };
 			f.SaveToStream(this, NbtCompression.None);
 			//WriteByte(0);
 		}
@@ -547,12 +569,13 @@ namespace Alex.Networking.Java.Util
 		public string ReadChatObject()
 		{
 			string raw = ReadString();
+
 			if (ChatObject.TryParse(raw, out string result))
 			{
 				return result;
 			}
 
-			return raw;// new ChatObject(raw);
+			return raw; // new ChatObject(raw);
 		}
 	}
 }

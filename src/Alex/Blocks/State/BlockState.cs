@@ -18,9 +18,10 @@ namespace Alex.Blocks.State
 	public class BlockState : IEnumerable<IStateProperty>, IHasKey
 	{
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(BlockState));
-		
+
 		protected internal HashSet<IStateProperty> States { get; set; }
 		public int Count => States.Count;
+
 		public BlockState()
 		{
 			States = new HashSet<IStateProperty>(new StatePropertyComparer());
@@ -29,13 +30,10 @@ namespace Alex.Blocks.State
 		public string Name { get; set; }
 		public uint Id { get; set; }
 
-		public BlockStateVariant ModelData { get; set; } = new BlockStateVariant()
-		{
-			new BlockStateModel()
-		};
-		
-		public Block Block       { get; set; }
-		public bool  Default     { get; set; } = false;
+		public BlockStateVariant ModelData { get; set; } = new BlockStateVariant() { new BlockStateModel() };
+
+		public Block Block { get; set; }
+		public bool Default { get; set; } = false;
 
 		public BlockStateVariantMapper VariantMapper { get; set; }
 
@@ -53,7 +51,7 @@ namespace Alex.Blocks.State
 
 			return property.DefaultValue;
 		}
-		
+
 		public BlockState WithProperty<T>(StateProperty<T> property, T value)
 		{
 			if (VariantMapper.TryResolve(this, property, value, out BlockState result))
@@ -63,10 +61,10 @@ namespace Alex.Blocks.State
 
 			if (LoggingConstants.LogInvalidBlockProperties)
 				Log.Debug($"Invalid property on state {Name} ({property}={value})");
-			
+
 			return this;
 		}
-		
+
 		public BlockState WithProperty(string property, string value)
 		{
 			if (VariantMapper.TryResolve(this, property, value, out BlockState result))
@@ -76,7 +74,7 @@ namespace Alex.Blocks.State
 
 			if (LoggingConstants.LogInvalidBlockProperties)
 				Log.Debug($"Invalid property on state {Name} ({property}={value})");
-			
+
 			return this;
 		}
 
@@ -88,16 +86,19 @@ namespace Alex.Blocks.State
 			if (first != null)
 			{
 				value = first.StringValue;
+
 				return true;
 			}
 
 			value = null;
+
 			return false;
 		}
-		
+
 		public bool Equals(BlockState other)
 		{
 			bool result = Name.Equals(other.Name, StringComparison.InvariantCultureIgnoreCase);
+
 			if (!result) return false;
 
 			var otherStates = new HashSet<IStateProperty>(other.States, new StatePropertyComparer());
@@ -113,7 +114,7 @@ namespace Alex.Blocks.State
 		{
 			if (ReferenceEquals(null, obj)) return false;
 			if (ReferenceEquals(this, obj)) return true;
-			
+
 			return obj.GetHashCode().Equals(GetHashCode());
 		}
 
@@ -122,7 +123,7 @@ namespace Alex.Blocks.State
 			var hash = new HashCode();
 			//hash.Add(ID);
 			hash.Add(Name);
-			
+
 			foreach (var state in States)
 			{
 				hash.Add(state);
@@ -150,6 +151,7 @@ namespace Alex.Blocks.State
 		{
 			StringBuilder sb = new StringBuilder();
 			var v = States.ToArray();
+
 			for (var index = 0; index < v.Length; index++)
 			{
 				var kv = v[index];

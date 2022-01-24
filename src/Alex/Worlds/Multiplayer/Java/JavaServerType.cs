@@ -131,11 +131,11 @@ namespace Alex.Worlds.Multiplayer.Java
 			{
 				if (string.IsNullOrWhiteSpace(profile.RefreshToken))
 				{
-					Log.Warn(
-						$"Refresh token was empty!");
+					Log.Warn($"Refresh token was empty!");
 
 					profile.AuthError = "Session expired.";
 					profile.Authenticated = false;
+
 					return profile;
 				}
 
@@ -161,6 +161,7 @@ namespace Alex.Worlds.Multiplayer.Java
 			}
 
 			profile.Authenticated = response.IsSuccess;
+
 			if (response.Session != null)
 			{
 				profile.Username = response.Session.Username;
@@ -215,8 +216,9 @@ namespace Alex.Worlds.Multiplayer.Java
 		public bool Success { get; }
 		public string Error { get; }
 		public string ErrorMessage { get; }
-		
+
 		public PlayerProfile Profile { get; }
+
 		public ProfileUpdateResult(bool success, string error, string profileErrorMessage, PlayerProfile profile = null)
 		{
 			Success = success;

@@ -10,13 +10,11 @@ namespace Alex.Blocks.Minecraft
 		{
 			RequiresUpdate = true;
 		}
-		
+
 		public override void BlockUpdate(World world, BlockCoordinates position, BlockCoordinates updatedBlock)
 		{
-			if (BlockState is BlockState state)
-			{
-				
-			}
+			if (BlockState is BlockState state) { }
+
 			base.BlockUpdate(world, position, updatedBlock);
 		}
 	}

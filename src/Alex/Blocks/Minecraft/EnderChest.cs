@@ -16,9 +16,9 @@ namespace Alex.Blocks.Minecraft
 			Solid = true;
 			Transparent = true;
 			Luminance = 7;
-			
+
 			//Hardness = 22.5f;
-			
+
 			CanInteract = true;
 			Renderable = false;
 
@@ -27,34 +27,34 @@ namespace Alex.Blocks.Minecraft
 			RequiresUpdate = true;
 			BlockMaterial = Material.Stone.Clone().WithHardness(22.5f);
 		}
-		
+
 		/// <inheritdoc />
 		public override IEnumerable<BoundingBox> GetBoundingBoxes(Vector3 blockPos)
 		{
 			yield return new BoundingBox(blockPos, blockPos + Vector3.One);
 		}
-		
+
 		/// <inheritdoc />
 		public override BlockState BlockPlaced(IBlockAccess world, BlockState state, BlockCoordinates position)
 		{
 			if (world is World w)
 			{
-				if ((w.EntityManager.TryGetBlockEntity(position, out var entity) &&!(entity is EnderChestBlockEntity)))
+				if ((w.EntityManager.TryGetBlockEntity(position, out var entity) && !(entity is EnderChestBlockEntity)))
 				{
 					w.EntityManager.RemoveBlockEntity(position);
 				}
 
 				if (entity is EnderChestBlockEntity)
 					return base.BlockPlaced(world, state, position);
-				
+
 				var ent = new EnderChestBlockEntity(w)
 				{
-					X = position.X & 0xf, Y = position.Y & 0xff, Z = position.Z& 0xf
+					X = position.X & 0xf, Y = position.Y & 0xff, Z = position.Z & 0xf
 				};
-				
+
 				if (ent.SetBlock(this))
 					w.SetBlockEntity(position.X, position.Y, position.Z, ent);
-					
+
 				/*w.EntityManager.AddBlockEntity(
 					position, ent);
 
@@ -65,6 +65,7 @@ namespace Alex.Blocks.Minecraft
 					chunk.AddBlockEntity(new BlockCoordinates(ent.X, ent.Y, ent.Z), ent);
 				}*/
 			}
+
 			return base.BlockPlaced(world, state, position);
 		}
 	}

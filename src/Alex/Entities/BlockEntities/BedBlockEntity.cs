@@ -25,39 +25,45 @@ namespace Alex.Entities.BlockEntities
 		public BedBlockEntity(World level) : base(level)
 		{
 			Type = new ResourceLocation("minecraft:bed");
-			
+
 			Width = 1f;
 			Height = 1f;
-			
+
 			Offset = new Vector3(0.5f, 0f, 0.5f);
 		}
 
 		private float _yRotation = 0f;
+
 		public BlockFace Facing
 		{
 			get => _facing;
 			set
 			{
 				_facing = value;
-				
+
 				var rotation = Rotation;
+
 				//rotation.X = -90f;
 				switch (value)
 				{
 					case BlockFace.East:
 						rotation.Y = 90f;
+
 						break;
 
 					case BlockFace.West:
 						rotation.Y = 270f;
+
 						break;
 
 					case BlockFace.North:
 						rotation.Y = 180f;
+
 						break;
 
 					case BlockFace.South:
 						rotation.Y = 0f;
+
 						break;
 				}
 
@@ -69,10 +75,10 @@ namespace Alex.Entities.BlockEntities
 		protected override void ReadFrom(NbtCompound compound)
 		{
 			base.ReadFrom(compound);
-			
 		}
 
 		private static readonly PropertyFace FACING = new PropertyFace("facing");
+
 		/// <inheritdoc />
 		protected override bool BlockChanged(Block oldBlock, Block newBlock)
 		{
@@ -83,19 +89,19 @@ namespace Alex.Entities.BlockEntities
 
 			if (_entityDescription == null)
 			{
-				if (Alex.Instance.Resources.TryGetEntityDefinition(
-					Type, out var entityDescription, out var source))
+				if (Alex.Instance.Resources.TryGetEntityDefinition(Type, out var entityDescription, out var source))
 				{
 					_entityDescription = entityDescription;
 					AnimationController?.UpdateEntityDefinition(source, source, entityDescription);
 				}
 			}
-			
+
 			Facing = FACING.GetValue(bed.BlockState);
-			
+
 			if (!Bed.PART.GetValue(bed.BlockState))
 			{
 				ModelRenderer = null;
+
 				return true;
 			}
 
@@ -117,11 +123,14 @@ namespace Alex.Entities.BlockEntities
 					{
 						case BlockColor.LightBlue:
 							texture = "light_blue";
+
 							break;
 
 						case BlockColor.LightGray:
 							texture = "default";
+
 							break;
+
 						case BlockColor.Cyan:
 						case BlockColor.Purple:
 						case BlockColor.Blue:
@@ -130,9 +139,10 @@ namespace Alex.Entities.BlockEntities
 						case BlockColor.Red:
 						case BlockColor.Black:
 							texture = bed.Variant.ToString().ToLower();
+
 							break;
-						
 					}
+
 					if (_entityDescription.Textures.TryGetValue(texture, out var texturePath))
 					{
 						if (Alex.Instance.Resources.TryGetBedrockBitmap(texturePath, out var bmp))
@@ -146,7 +156,7 @@ namespace Alex.Entities.BlockEntities
 			return true;
 		}
 	}
-	
+
 	public enum BlockColor
 	{
 		White,

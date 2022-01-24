@@ -20,13 +20,13 @@ namespace Alex.Entities.Passive
 				base.IsChested = value;
 
 				InvokeControllerUpdate();
-			/*	var modelRenderer = ModelRenderer;
-
-				if (modelRenderer != null)
-				{
-					modelRenderer.SetVisibility("Bag1", value);
-					modelRenderer.SetVisibility("Bag2", value);
-				}*/
+				/*	var modelRenderer = ModelRenderer;
+	
+					if (modelRenderer != null)
+					{
+						modelRenderer.SetVisibility("Bag1", value);
+						modelRenderer.SetVisibility("Bag2", value);
+					}*/
 			}
 		}
 

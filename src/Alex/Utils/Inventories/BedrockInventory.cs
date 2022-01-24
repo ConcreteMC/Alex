@@ -4,7 +4,7 @@ namespace Alex.Utils.Inventories
 {
 	public class BedrockInventory : Inventory
 	{
-		public BedrockInventory( int slots) : base(slots)
+		public BedrockInventory(int slots) : base(slots)
 		{
 			HelmetSlot = 39;
 			ChestSlot = 38;
@@ -16,7 +16,7 @@ namespace Alex.Utils.Inventories
 
 			InventoryId = 28;
 		}
-		
+
 		public override int SelectedSlot
 		{
 			get { return _selectedSlot; }
@@ -35,7 +35,7 @@ namespace Alex.Utils.Inventories
 				byte oldValue = _selectedSlot;
 				_selectedSlot = (byte)value;
 				// MainHand = Slots[36 + value];
-				
+
 				InvokeSelectedHotbarSlotChange(new SelectedSlotChangedEventArgs(oldValue, (byte)value));
 			}
 		}

@@ -9,13 +9,13 @@ namespace Alex.Networking.Java.Packets.Play
 		public byte ActionId { get; set; }
 		public byte Parameter { get; set; }
 		public int BlockType { get; set; }
-		
+
 		/// <inheritdoc />
 		public override void Decode(MinecraftStream stream)
 		{
 			Location = stream.ReadBlockCoordinates();
-			ActionId = (byte) stream.ReadByte();
-			Parameter = (byte) stream.ReadByte();
+			ActionId = (byte)stream.ReadByte();
+			Parameter = (byte)stream.ReadByte();
 			BlockType = stream.ReadVarInt();
 		}
 

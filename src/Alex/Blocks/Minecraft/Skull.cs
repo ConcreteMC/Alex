@@ -6,12 +6,13 @@ namespace Alex.Blocks.Minecraft
 	public class Skull : Block
 	{
 		public SkullType SkullType { get; set; } = SkullType.Player;
+
 		public Skull()
 		{
 			Renderable = false;
 			HasHitbox = true;
-			
-			
+
+
 			Solid = true;
 			Transparent = true;
 		}
@@ -23,10 +24,7 @@ namespace Alex.Blocks.Minecraft
 		}
 	}
 
-	public class WallSkull : Skull
-	{
-		
-	}
+	public class WallSkull : Skull { }
 
 	public enum SkullType
 	{

@@ -8,10 +8,7 @@ namespace Alex.Entities
 	public class TameableMob : PassiveMob
 	{
 		/// <inheritdoc />
-		protected TameableMob(EntityType type, World level) : base(level)
-		{
-			
-		}
+		protected TameableMob(EntityType type, World level) : base(level) { }
 
 		/// <inheritdoc />
 		protected override void HandleJavaMeta(MetaDataEntry entry)

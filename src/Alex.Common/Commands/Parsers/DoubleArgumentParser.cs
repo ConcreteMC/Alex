@@ -4,7 +4,7 @@ namespace Alex.Common.Commands.Parsers
 	{
 		/// <inheritdoc />
 		public DoubleArgumentParser(string name) : base(name) { }
-		
+
 		/// <inheritdoc />
 		protected override bool TryParse(string input, out double answer)
 		{

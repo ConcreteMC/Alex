@@ -8,7 +8,7 @@ namespace Alex.Blocks.Minecraft
 		{
 			Solid = true;
 			Transparent = false;
-			
+
 			BlockMaterial = Material.Dirt.WithHardness(0.2f);
 		}
 	}

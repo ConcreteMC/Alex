@@ -10,13 +10,13 @@ namespace Alex.Graphics.Models
 		/// <summary>
 		///		The effect to use for drawing this mesh
 		/// </summary>
-		public Microsoft.Xna.Framework.Graphics.Effect Effect 
+		public Microsoft.Xna.Framework.Graphics.Effect Effect
 		{
-			get 
+			get
 			{
 				return _effect;
 			}
-			set 
+			set
 			{
 				if (value == _effect)
 					return;
@@ -25,11 +25,13 @@ namespace Alex.Graphics.Models
 				{
 					// First check to see any other parts are also using this effect.
 					var removeEffect = true;
+
 					foreach (var part in Parent.MeshParts)
 					{
 						if (part != this && part._effect == _effect)
 						{
 							removeEffect = false;
+
 							break;
 						}
 					}
@@ -40,8 +42,8 @@ namespace Alex.Graphics.Models
 
 				// Set the new effect.
 				_effect = value;
-                
-				if (_effect != null && !Parent.Effects.Contains(_effect))                
+
+				if (_effect != null && !Parent.Effects.Contains(_effect))
 					Parent.Effects.Add(_effect);
 			}
 		}
@@ -74,7 +76,7 @@ namespace Alex.Graphics.Models
 		///		Gets or sets an object identifying this mesh.
 		/// </summary>
 		public object Tag { get; set; }
-		
+
 		/// <summary>
 		///		The vertex buffer containing the vertices for this mesh
 		/// </summary>
@@ -94,23 +96,28 @@ namespace Alex.Graphics.Models
 		public int Draw(GraphicsDevice graphicsDevice, Microsoft.Xna.Framework.Graphics.Effect effect)
 		{
 			int count = 0;
-			if (effect != null && PrimitiveCount > 0 && VertexBuffer != null && IndexBuffer != null && !effect.IsDisposed)
+
+			if (effect != null && PrimitiveCount > 0 && VertexBuffer != null && IndexBuffer != null
+			    && !effect.IsDisposed)
 			{
 				graphicsDevice.SetVertexBuffer(VertexBuffer);
 				graphicsDevice.Indices = IndexBuffer;
-                    
+
 				for (int j = 0; j < effect?.CurrentTechnique?.Passes?.Count; j++)
 				{
 					effect?.CurrentTechnique?.Passes[j]?.Apply();
+
 					//graphicsDevice.DrawInstancedPrimitives(PrimitiveType.TriangleList, part.VertexOffset, part.StartIndex, part.PrimitiveCount, );
-					graphicsDevice?.DrawIndexedPrimitives(PrimitiveType.TriangleList, VertexOffset, StartIndex, PrimitiveCount);
+					graphicsDevice?.DrawIndexedPrimitives(
+						PrimitiveType.TriangleList, VertexOffset, StartIndex, PrimitiveCount);
+
 					count++;
 				}
 			}
 
 			return count;
 		}
-		
+
 		/// <inheritdoc />
 		public void Dispose()
 		{

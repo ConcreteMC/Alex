@@ -16,17 +16,17 @@ namespace Alex.Networking.Java.Packets.Play
 		}
 
 		//public ActionEnum Action;
-	//	public string     TitleText;
-	//	public string     SubtitleText;
-	//	public string     ActionBarText;
-		public int        FadeIn, Stay, FadeOut;
+		//	public string     TitleText;
+		//	public string     SubtitleText;
+		//	public string     ActionBarText;
+		public int FadeIn, Stay, FadeOut;
 
 		public override void Decode(MinecraftStream stream)
 		{
 			FadeIn = stream.ReadInt();
 			Stay = stream.ReadInt();
 			FadeOut = stream.ReadInt();
-			
+
 			/*Action = (ActionEnum) stream.ReadVarInt();
 			switch (Action)
 			{

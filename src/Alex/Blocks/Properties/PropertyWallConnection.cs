@@ -7,13 +7,11 @@ namespace Alex.Blocks.Properties
 {
 	public class PropertyWallConnection : StateProperty<bool>
 	{
-		public PropertyWallConnection(string name) : this(name, "true", "false")
-		{
-		
-		}
+		public PropertyWallConnection(string name) : this(name, "true", "false") { }
 
 		private string TrueString;
 		private string FalseString;
+
 		public PropertyWallConnection(string name, string trueS, string falseS) : base(name)
 		{
 			TrueString = trueS;
@@ -23,7 +21,7 @@ namespace Alex.Blocks.Properties
 		/// <inheritdoc />
 		public override IStateProperty<bool> WithValue(bool value)
 		{
-			return new PropertyBool(Name, TrueString, FalseString) {Value = value};
+			return new PropertyBool(Name, TrueString, FalseString) { Value = value };
 		}
 
 		public override bool ParseValue(string value)
@@ -33,7 +31,7 @@ namespace Alex.Blocks.Properties
 				return result;
 			}
 
-			if (string.Equals(value, TrueString, StringComparison.InvariantCultureIgnoreCase) )
+			if (string.Equals(value, TrueString, StringComparison.InvariantCultureIgnoreCase))
 			{
 				return true;
 			}

@@ -13,21 +13,27 @@ namespace Alex.Networking.Java.Packets.Play
 
 		public override void Decode(MinecraftStream stream)
 		{
-			Event = (CombatEvent) stream.ReadVarInt();
+			Event = (CombatEvent)stream.ReadVarInt();
+
 			switch (Event)
 			{
 				case CombatEvent.EnterCombat:
 
 					break;
+
 				case CombatEvent.EndCombat:
 					Duration = stream.ReadVarInt();
 					EntityId = stream.ReadInt();
+
 					break;
+
 				case CombatEvent.EntityDead:
 					PlayerId = stream.ReadVarInt();
 					EntityId = stream.ReadInt();
 					Message = stream.ReadString();
+
 					break;
+
 				default:
 					throw new ArgumentOutOfRangeException();
 			}

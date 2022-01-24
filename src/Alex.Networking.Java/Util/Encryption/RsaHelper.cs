@@ -13,7 +13,12 @@ namespace Alex.Networking.Java.Util.Encryption
 		{
 			MemoryStream ms = new MemoryStream(publicKeyBytes);
 			BinaryReader rd = new BinaryReader(ms);
-			byte[] SeqOID = {0x30, 0x0D, 0x06, 0x09, 0x2A, 0x86, 0x48, 0x86, 0xF7, 0x0D, 0x01, 0x01, 0x01, 0x05, 0x00};
+
+			byte[] SeqOID =
+			{
+				0x30, 0x0D, 0x06, 0x09, 0x2A, 0x86, 0x48, 0x86, 0xF7, 0x0D, 0x01, 0x01, 0x01, 0x05, 0x00
+			};
+
 			byte[] seq = new byte[15];
 
 			try
@@ -173,7 +178,7 @@ namespace Alex.Networking.Java.Util.Encryption
 			{
 				byte hi = rd.ReadByte();
 				byte lo = rd.ReadByte();
-				count = BitConverter.ToUInt16(new[] {lo, hi}, 0);
+				count = BitConverter.ToUInt16(new[] { lo, hi }, 0);
 			}
 			else
 			{
@@ -189,20 +194,20 @@ namespace Alex.Networking.Java.Util.Encryption
 
 			return count;
 		}
-		
+
 		private static void GetTraits(int modulusLengthInBits, out int sizeMod, out int sizeExp)
 		{
 			int assumedLength = -1;
 			double logbase = Math.Log(modulusLengthInBits, 2);
 
-			if (logbase == (int) logbase)
+			if (logbase == (int)logbase)
 			{
 				assumedLength = modulusLengthInBits;
 			}
 			else
 			{
-				assumedLength = (int) (logbase + 1.0);
-				assumedLength = (int) (Math.Pow(2, assumedLength));
+				assumedLength = (int)(logbase + 1.0);
+				assumedLength = (int)(Math.Pow(2, assumedLength));
 				System.Diagnostics.Debug.Assert(false);
 			}
 
@@ -229,6 +234,7 @@ namespace Alex.Networking.Java.Util.Encryption
 				case 4096:
 					sizeMod = 0x200;
 					sizeExp = -1;
+
 					break;
 
 				default:

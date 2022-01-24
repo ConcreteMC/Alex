@@ -1,12 +1,12 @@
 ﻿namespace Alex.Common.World
 {
-    public enum LoadingState
-    {
+	public enum LoadingState
+	{
 		ConnectingToServer,
 		LoadingChunks,
 		GeneratingVertices,
 		Spawning,
 		RetrievingResources,
 		LoadingResources
-    }
+	}
 }

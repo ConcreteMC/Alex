@@ -10,7 +10,7 @@ namespace Alex.Blocks.Minecraft
 			Transparent = false;
 
 			Luminance = 15;
-			
+
 			BlockMaterial = Material.Wood.Clone().WithHardness(1);
 		}
 	}

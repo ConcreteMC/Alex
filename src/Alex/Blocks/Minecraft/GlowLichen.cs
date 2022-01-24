@@ -12,7 +12,8 @@ namespace Alex.Blocks.Minecraft
 			base.Transparent = true;
 			base.IsFullCube = false;
 
-			base.BlockMaterial = new Material(MapColor.Air).WithHardness(0.2f).SetReplaceable().SetWaterLoggable().SetFlammable();
+			base.BlockMaterial = new Material(MapColor.Air).WithHardness(0.2f).SetReplaceable().SetWaterLoggable()
+			   .SetFlammable();
 		}
 	}
 }

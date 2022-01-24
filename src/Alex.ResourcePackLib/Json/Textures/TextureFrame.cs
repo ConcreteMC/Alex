@@ -4,10 +4,8 @@ namespace Alex.ResourcePackLib.Json.Textures
 {
 	public class TextureFrame
 	{
-		[JsonProperty("index")]
-		public long Index { get; set; }
+		[JsonProperty("index")] public long Index { get; set; }
 
-		[JsonProperty("time")]
-		public double Time { get; set; }
+		[JsonProperty("time")] public double Time { get; set; }
 	}
 }

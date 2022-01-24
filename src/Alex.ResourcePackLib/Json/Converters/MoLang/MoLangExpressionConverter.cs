@@ -10,11 +10,8 @@ namespace Alex.ResourcePackLib.Json.Converters.MoLang
 {
 	public class MoLangExpressionConverter : JsonConverter
 	{
-		public MoLangExpressionConverter()
-		{
-			
-		}
-		
+		public MoLangExpressionConverter() { }
+
 		/// <inheritdoc />
 		public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
 		{
@@ -27,7 +24,6 @@ namespace Alex.ResourcePackLib.Json.Converters.MoLang
 			object existingValue,
 			JsonSerializer serializer)
 		{
-
 			JToken token = JToken.Load(reader);
 
 			if (token.Type == JTokenType.String)
@@ -52,7 +48,7 @@ namespace Alex.ResourcePackLib.Json.Converters.MoLang
 			{
 				return new IExpression[] { new BooleanExpression(token.Value<bool>()) };
 			}
-			
+
 			return existingValue;
 		}
 

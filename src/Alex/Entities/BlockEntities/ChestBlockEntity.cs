@@ -19,13 +19,13 @@ namespace Alex.Entities.BlockEntities
 	public class ChestBlockEntity : BlockEntity
 	{
 		private BoneMatrices HeadBone { get; set; }
-		private BoneMatrices Body     { get; set; }
-		
+		private BoneMatrices Body { get; set; }
+
 		/// <inheritdoc />
 		public ChestBlockEntity(World level) : base(level)
 		{
 			Type = new ResourceLocation("minecraft:chest");
-			
+
 			Width = 1f;
 			Height = 1f;
 		}
@@ -35,7 +35,7 @@ namespace Alex.Entities.BlockEntities
 		{
 			return new BoundingBox(pos, pos + Vector3.One);
 		}
-		
+
 		/// <inheritdoc />
 		public override BoundingBox GetVisibilityBoundingBox(Vector3 pos)
 		{
@@ -54,7 +54,7 @@ namespace Alex.Entities.BlockEntities
 			if (ModelRenderer.GetBoneTransform("body", out var body))
 			{
 				Body = body;
-				
+
 				var bodyRotation = Body.Rotation;
 				bodyRotation.Y = _yRotation;
 				Body.Rotation = bodyRotation;
@@ -62,6 +62,7 @@ namespace Alex.Entities.BlockEntities
 		}
 
 		private int _viewers;
+
 		public int Viewers
 		{
 			get
@@ -81,8 +82,9 @@ namespace Alex.Entities.BlockEntities
 			}
 		}
 
-		private BlockFace _rotation  = BlockFace.North;
-		private float     _yRotation = 0f;
+		private BlockFace _rotation = BlockFace.North;
+		private float _yRotation = 0f;
+
 		public BlockFace Facing
 		{
 			get
@@ -92,24 +94,28 @@ namespace Alex.Entities.BlockEntities
 			set
 			{
 				_rotation = value;
-				
+
 				//var headRotation = HeadBone.Rotation;
 				switch (value)
 				{
 					case BlockFace.East:
 						_yRotation = 90f;
+
 						break;
 
 					case BlockFace.West:
 						_yRotation = 270f;
+
 						break;
 
 					case BlockFace.North:
 						_yRotation = 180f;
+
 						break;
 
 					case BlockFace.South:
 						_yRotation = 0f;
+
 						break;
 				}
 
@@ -125,6 +131,7 @@ namespace Alex.Entities.BlockEntities
 		}
 
 		private ChestType _chestType = ChestType.Single;
+
 		public ChestType ChestType
 		{
 			get
@@ -143,7 +150,7 @@ namespace Alex.Entities.BlockEntities
 						{
 							ModelRenderer = renderer;
 							Texture = BlockEntityFactory.DoubleChestTexture;
-						
+
 							Offset = new Vector3(0f, 0f, 0.5f);
 						}
 					}
@@ -156,7 +163,7 @@ namespace Alex.Entities.BlockEntities
 				}
 				else if ((value & ChestType.Single) != 0)
 				{
-					if (new ChestEntityModel().TryGetRenderer( out var renderer))
+					if (new ChestEntityModel().TryGetRenderer(out var renderer))
 					{
 						ModelRenderer = renderer;
 						Texture = BlockEntityFactory.ChestTexture;
@@ -188,6 +195,7 @@ namespace Alex.Entities.BlockEntities
 			if (newBlock.BlockState.TryGetValue("type", out string type))
 			{
 				BlockEntities.ChestType chestType = 0;
+
 				switch (type)
 				{
 					case "single":
@@ -239,7 +247,9 @@ namespace Alex.Entities.BlockEntities
 						{
 							ChestType = ChestType.LeftHalf | ChestType.Double;
 						}
+
 						break;
+
 					case BlockFace.West:
 					case BlockFace.East:
 						if (difference == BlockCoordinates.Left)
@@ -250,13 +260,13 @@ namespace Alex.Entities.BlockEntities
 						{
 							ChestType = ChestType.LeftHalf | ChestType.Double;
 						}
+
 						break;
 				}
-				
 			}
 		}
 	}
-	
+
 	[Flags]
 	public enum ChestType
 	{

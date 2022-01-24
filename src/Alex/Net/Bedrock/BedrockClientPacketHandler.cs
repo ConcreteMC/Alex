@@ -62,29 +62,38 @@ namespace Alex.Net.Bedrock
 
 		private BedrockClient Client { get; }
 		private Alex AlexInstance { get; }
-        private CancellationToken CancellationToken { get; }
-        private ChunkProcessor ChunkProcessor { get; }
+		private CancellationToken CancellationToken { get; }
+		private ChunkProcessor ChunkProcessor { get; }
 
-        private WorldProvider  WorldProvider         { get; }
-        private PlayerProfile  PlayerProfile         { get; }
+		private WorldProvider WorldProvider { get; }
+		private PlayerProfile PlayerProfile { get; }
 
-        private BedrockTransactionTracker TransactionTracker => Client.TransactionTracker;
-        public BedrockClientPacketHandler(BedrockClient client, WorldProvider worldProvider, PlayerProfile profile, Alex alex, CancellationToken cancellationToken, ChunkProcessor chunkProcessor)
-        {
-	        Client = client;
-	        AlexInstance = alex;
-	        CancellationToken = cancellationToken;
-	        WorldProvider = worldProvider;
-	        PlayerProfile = profile;
-	        
-	        AnvilWorldProvider.LoadBlockConverter();
+		private BedrockTransactionTracker TransactionTracker => Client.TransactionTracker;
 
-	        ChunkProcessor = chunkProcessor;
-        }
+		public BedrockClientPacketHandler(BedrockClient client,
+			WorldProvider worldProvider,
+			PlayerProfile profile,
+			Alex alex,
+			CancellationToken cancellationToken,
+			ChunkProcessor chunkProcessor)
+		{
+			Client = client;
+			AlexInstance = alex;
+			CancellationToken = cancellationToken;
+			WorldProvider = worldProvider;
+			PlayerProfile = profile;
 
-        public  bool                  ReportUnhandled { get; set; } = true;
-        private Dictionary<int, (Type type, ulong count)> UnhandledPackets = new Dictionary<int, (Type type, ulong count)>();
-        private void UnhandledPackage(Packet packet)
+			AnvilWorldProvider.LoadBlockConverter();
+
+			ChunkProcessor = chunkProcessor;
+		}
+
+		public bool ReportUnhandled { get; set; } = true;
+
+		private Dictionary<int, (Type type, ulong count)> UnhandledPackets =
+			new Dictionary<int, (Type type, ulong count)>();
+
+		private void UnhandledPackage(Packet packet)
 		{
 			if (UnhandledPackets.TryAdd(packet.Id, (packet.GetType(), 1)))
 			{
@@ -98,43 +107,45 @@ namespace Alex.Net.Bedrock
 			}
 		}
 
-        public void HandleMcpeServerToClientHandshake(McpeServerToClientHandshake message)
-        {
-	        string token = message.token;
+		public void HandleMcpeServerToClientHandshake(McpeServerToClientHandshake message)
+		{
+			string token = message.token;
 
-	        IDictionary<string, dynamic> headers = JWT.Headers(token);
-	        string x5u = headers["x5u"].TrimEnd('=');
+			IDictionary<string, dynamic> headers = JWT.Headers(token);
+			string x5u = headers["x5u"].TrimEnd('=');
 
-	        try
-	        {
-		        var data = JWT.Payload<HandshakeData>(token);
-		        Client.InitiateEncryption(Base64Url.Decode(x5u), Base64Url.Decode(data.salt.TrimEnd('=')));
-	        }
-	        catch (Exception e)
-	        {
-		        string msg = $"Network error.";
+			try
+			{
+				var data = JWT.Payload<HandshakeData>(token);
+				Client.InitiateEncryption(Base64Url.Decode(x5u), Base64Url.Decode(data.salt.TrimEnd('=')));
+			}
+			catch (Exception e)
+			{
+				string msg = $"Network error.";
 
-		        if (e is Jose.IntegrityException)
-		        {
-			        msg = $"Invalid server signature!";
-		        }
-		        
-		        Client.ShowDisconnect(msg, false, false, DisconnectReason.Network);
-		        
-		        Log.Error(e, $"Could not complete handshake: {e.ToString()}");
-		        throw;
-	        }
-        }
-        
-        public void HandleMcpePlayStatus(McpePlayStatus message)
-        {
-	        var playStatus = (McpePlayStatus.PlayStatus)message.status;
+				if (e is Jose.IntegrityException)
+				{
+					msg = $"Invalid server signature!";
+				}
+
+				Client.ShowDisconnect(msg, false, false, DisconnectReason.Network);
+
+				Log.Error(e, $"Could not complete handshake: {e.ToString()}");
+
+				throw;
+			}
+		}
+
+		public void HandleMcpePlayStatus(McpePlayStatus message)
+		{
+			var playStatus = (McpePlayStatus.PlayStatus)message.status;
 			Client.PlayerStatus = playStatus;
 
 			if (playStatus == McpePlayStatus.PlayStatus.LoginSuccess)
 			{
-				Log.Info($"Play Status: Login success, reporting cache status as {(ChunkProcessor.Cache.Enabled ? "Enabled" : "Disabled")}");
-				
+				Log.Info(
+					$"Play Status: Login success, reporting cache status as {(ChunkProcessor.Cache.Enabled ? "Enabled" : "Disabled")}");
+
 				McpeClientCacheStatus status = McpeClientCacheStatus.CreateObject();
 				status.enabled = ChunkProcessor.Cache.Enabled;
 				Client.SendPacket(status);
@@ -142,12 +153,16 @@ namespace Alex.Net.Bedrock
 			else if (playStatus == McpePlayStatus.PlayStatus.LoginFailedClient)
 			{
 				Log.Info($"Client out of date!");
-				Client.ShowDisconnect("multiplayer.status.client_out_of_date", true, true, DisconnectReason.ClientOutOfDate);
+
+				Client.ShowDisconnect(
+					"multiplayer.status.client_out_of_date", true, true, DisconnectReason.ClientOutOfDate);
 			}
 			else if (playStatus == McpePlayStatus.PlayStatus.LoginFailedServer)
 			{
 				Log.Info($"Server out of date!");
-				Client.ShowDisconnect("multiplayer.status.server_out_of_date", true, true, DisconnectReason.ServerOutOfDate);
+
+				Client.ShowDisconnect(
+					"multiplayer.status.server_out_of_date", true, true, DisconnectReason.ServerOutOfDate);
 			}
 			else if (playStatus == McpePlayStatus.PlayStatus.PlayerSpawn)
 			{
@@ -161,42 +176,44 @@ namespace Alex.Net.Bedrock
 			}
 		}
 
-        public void HandleMcpeDisconnect(McpeDisconnect message)
-        {
-            Log.Info($"Received disconnect: {message.message}");
-            Client.ShowDisconnect(message.message, false, true, DisconnectReason.Kicked);
-        }
-        
-        public void HandleMcpeResourcePackDataInfo(McpeResourcePackDataInfo message)
-        {
-	        Client.ResourcePackManager.HandleMcpeResourcePackDataInfo(message);
-        }
+		public void HandleMcpeDisconnect(McpeDisconnect message)
+		{
+			Log.Info($"Received disconnect: {message.message}");
+			Client.ShowDisconnect(message.message, false, true, DisconnectReason.Kicked);
+		}
 
-        public void HandleMcpeResourcePackChunkData(McpeResourcePackChunkData message)
-        {
-	        Client.ResourcePackManager.HandleMcpeResourcePackChunkData(message);
-        }
+		public void HandleMcpeResourcePackDataInfo(McpeResourcePackDataInfo message)
+		{
+			Client.ResourcePackManager.HandleMcpeResourcePackDataInfo(message);
+		}
 
-        public void HandleMcpeResourcePacksInfo(McpeResourcePacksInfo message)
-        {
-	        Client.ResourcePackManager.HandleMcpeResourcePacksInfo(message);
-        }
+		public void HandleMcpeResourcePackChunkData(McpeResourcePackChunkData message)
+		{
+			Client.ResourcePackManager.HandleMcpeResourcePackChunkData(message);
+		}
 
-        public void HandleMcpeResourcePackStack(McpeResourcePackStack message)
-        {
-	        Client.ResourcePackManager.HandleMcpeResourcePackStack(message);
-        }
+		public void HandleMcpeResourcePacksInfo(McpeResourcePacksInfo message)
+		{
+			Client.ResourcePackManager.HandleMcpeResourcePacksInfo(message);
+		}
 
-        public void HandleMcpeText(McpeText message)
-        {
-	        string rawMessage = message.message;
+		public void HandleMcpeResourcePackStack(McpeResourcePackStack message)
+		{
+			Client.ResourcePackManager.HandleMcpeResourcePackStack(message);
+		}
+
+		public void HandleMcpeText(McpeText message)
+		{
+			string rawMessage = message.message;
+
 			switch (message.type)
 			{
 				case 0: //Raw
 					break;
+
 				case 2: //Translation
 					break;
-				
+
 				case 1: //Chat
 					if (!string.IsNullOrWhiteSpace(message.source))
 					{
@@ -204,32 +221,39 @@ namespace Alex.Net.Bedrock
 					}
 
 					break;
+
 				case 7: //Whisper
-					rawMessage = $"{ChatFormatting.Italic}{message.source}{ChatFormatting.Reset}{ChatFormatting.Italic} whispered{ChatFormatting.Reset}: {rawMessage}";
+					rawMessage =
+						$"{ChatFormatting.Italic}{message.source}{ChatFormatting.Reset}{ChatFormatting.Italic} whispered{ChatFormatting.Reset}: {rawMessage}";
+
 					break;
+
 				case 8: //Announcement
 					rawMessage = $"[{message.source}{ChatFormatting.Reset}]: {rawMessage}";
+
 					break;
 			}
-			WorldProvider?.ChatRecipient?.AddMessage(rawMessage, (MessageType) message.type);
+
+			WorldProvider?.ChatRecipient?.AddMessage(rawMessage, (MessageType)message.type);
 		}
 
 		public void HandleMcpeSetTime(McpeSetTime message)
 		{
 			Client.World?.SetTime(message.time, message.time % 24000);
-			
+
 			Client.ChangeDimensionResetEvent.Set();
 		}
-		
+
 		public void HandleMcpeStartGame(McpeStartGame message)
 		{
 			var player = Client.World.Player;
+
 			if (message.movementType > 0)
 			{
 				Client.ServerAuthoritiveMovement = true;
 				Log.Warn($"!!! Server uses server-authoritive movement, this is not yet FULLY supported!");
 			}
-			
+
 			try
 			{
 				player.EntityId = Client.EntityId = message.runtimeEntityId;
@@ -237,18 +261,19 @@ namespace Alex.Net.Bedrock
 				Client.World.SetRain(false, message.rainLevel);
 				Client.World.SetThunder(false, message.lightningLevel);
 				Client.Tick = message.currentTick;
-				
-				//Client.World.SpawnPoint 
-			//	Client.SpawnPoint = new Vector3(
-			//		message.spawn.X, message.spawn.Y - Player.EyeLevel, message.spawn.Z); //message.spawn;
 
-				Client.World.Dimension = (Dimension) message.dimension;
+				//Client.World.SpawnPoint 
+				//	Client.SpawnPoint = new Vector3(
+				//		message.spawn.X, message.spawn.Y - Player.EyeLevel, message.spawn.Z); //message.spawn;
+
+				Client.World.Dimension = (Dimension)message.dimension;
 				Client.World.Difficulty = (Difficulty)message.difficulty;
+
 				Client.World?.UpdatePlayerPosition(
 					new PlayerLocation(
 						new Microsoft.Xna.Framework.Vector3(message.spawn.X, message.spawn.Y, message.spawn.Z),
 						message.rotation.Y, message.rotation.Y, message.rotation.X), true);
-				
+
 				if (message.enableNewInventorySystem)
 				{
 					Client.ServerAuthoritiveInventory = true;
@@ -261,11 +286,12 @@ namespace Alex.Net.Bedrock
 				}
 
 				player.SetInventory(new BedrockInventory(46));
-				player.UpdateGamemode((GameMode) message.playerGamemode);
+				player.UpdateGamemode((GameMode)message.playerGamemode);
 				player.PermissionLevel = (PermissionLevel)message.permissionLevel;
-				
-				player.Controller.SetRewindHistorySize(message.movementRewindHistorySize);//.RewindHistory = message.movementRewindHistorySize;
-				
+
+				player.Controller.SetRewindHistorySize(
+					message.movementRewindHistorySize); //.RewindHistory = message.movementRewindHistorySize;
+
 				foreach (var gr in message.gamerules)
 				{
 					Client.World.SetGameRule(gr);
@@ -278,7 +304,7 @@ namespace Alex.Net.Bedrock
 			{
 				Client.GameStarted = true;
 				Client.RequestRenderDistance(0, Client.World.ChunkManager.RenderDistance);
-				
+
 				//Client.RequestChunkRadius(AlexInstance.Options.AlexOptions.VideoOptions.RenderDistance.Value);
 			}
 		}
@@ -291,28 +317,35 @@ namespace Alex.Net.Bedrock
 				OnGround = message.onGround
 			};
 
-			Client.World.UpdateEntityPosition(message.runtimeEntityId, pos, false, true, true, adjustForEntityHeight:true, teleport:message.mode == 2);
+			Client.World.UpdateEntityPosition(
+				message.runtimeEntityId, pos, false, true, true, adjustForEntityHeight: true,
+				teleport: message.mode == 2);
 		}
 
-		private void UpdateEntityAdventureFlags(Entity entity, uint flags, uint actionPermissions, uint commandPermissions, uint permissionLevel, uint customStoredPermissions)
+		private void UpdateEntityAdventureFlags(Entity entity,
+			uint flags,
+			uint actionPermissions,
+			uint commandPermissions,
+			uint permissionLevel,
+			uint customStoredPermissions)
 		{
 			if (entity == null)
 				return;
-			
+
 			entity.IsWorldImmutable = (flags & 0x01) != 0;
 			entity.IsNoPvP = (flags & 0x02) != 0;
 			entity.IsNoPvM = (flags & 0x04) != 0;
 			entity.CanFly = (flags & 0x40) != 0;
-			
+
 			//if (entity is Player)
 			entity.HasCollision = (flags & 0x80) == 0;
 			entity.IsFlying = (flags & 0x200) != 0;
 
 			if (entity is RemotePlayer player)
 			{
-				player.ActionPermissions = (ActionPermissions) actionPermissions;
-				player.CommandPermissions = (CommandPermission) commandPermissions;
-				player.PermissionLevel = (PermissionLevel) permissionLevel;
+				player.ActionPermissions = (ActionPermissions)actionPermissions;
+				player.CommandPermissions = (CommandPermission)commandPermissions;
+				player.PermissionLevel = (PermissionLevel)permissionLevel;
 				player.CustomStoredPermissions = customStoredPermissions;
 			}
 		}
@@ -326,10 +359,7 @@ namespace Alex.Net.Bedrock
 			{
 				entity = Client.World.Player;
 			}
-			else if (!Client.World.TryGetEntity(userId, out entity))
-			{
-			
-			}
+			else if (!Client.World.TryGetEntity(userId, out entity)) { }
 
 			if (entity == null)
 				return;
@@ -345,14 +375,17 @@ namespace Alex.Net.Bedrock
 			{
 				var remotePlayer = new RemotePlayer(Client.World, skin: entityData.Skin);
 				remotePlayer.SetInventory(new BedrockInventory(46));
-				
+
 				remotePlayer.NameTag = entityData.Nametag;
 				remotePlayer.UUID = entityData.Uuid;
 				remotePlayer.EntityId = message.runtimeEntityId;
-				remotePlayer.RenderLocation = remotePlayer.KnownPosition = new PlayerLocation(
-					message.x, message.y, message.z, -message.headYaw, -message.yaw, -message.pitch) {OnGround = true};
 
-				remotePlayer.Velocity = new Microsoft.Xna.Framework.Vector3(message.speedX, message.speedY, message.speedZ);
+				remotePlayer.RenderLocation = remotePlayer.KnownPosition = new PlayerLocation(
+					message.x, message.y, message.z, -message.headYaw, -message.yaw,
+					-message.pitch) { OnGround = true };
+
+				remotePlayer.Velocity = new Microsoft.Xna.Framework.Vector3(
+					message.speedX, message.speedY, message.speedZ);
 
 				if (message.item != null)
 				{
@@ -395,7 +428,7 @@ namespace Alex.Net.Bedrock
 
 		private ConcurrentDictionary<MiNET.Utils.UUID, PlayerListData> _playerListPlayers =
 			new ConcurrentDictionary<MiNET.Utils.UUID, PlayerListData>();
-		
+
 		public void HandleMcpePlayerList(McpePlayerList message)
 		{
 			if (message.records is PlayerAddRecords addRecords)
@@ -403,11 +436,10 @@ namespace Alex.Net.Bedrock
 				foreach (var r in addRecords)
 				{
 					if (_playerListPlayers.TryAdd(
-						r.ClientUuid, new PlayerListData(r.ClientUuid, r.Skin, r.DisplayName)))
+						    r.ClientUuid, new PlayerListData(r.ClientUuid, r.Skin, r.DisplayName)))
 					{
 						Client.World.AddPlayerListItem(
-							new PlayerListItem(
-								r.ClientUuid, r.DisplayName, (GameMode) ((int) r.GameMode), -1));
+							new PlayerListItem(r.ClientUuid, r.DisplayName, (GameMode)((int)r.GameMode), -1));
 					}
 				}
 			}
@@ -440,6 +472,7 @@ namespace Alex.Net.Bedrock
 			public bool ShouldRemove => DateTime.UtcNow > RemovalTime;
 
 			public bool AllowRemoval { get; set; } = false;
+
 			public PlayerListData(MiNET.Utils.UUID uuid, MiNET.Utils.Skins.Skin skin, string nametag)
 			{
 				Skin = skin;
@@ -461,31 +494,32 @@ namespace Alex.Net.Bedrock
 			if (entity == null)
 			{
 				Log.Warn($"Cannot spawn entity of type: {message.entityType}");
+
 				return;
 			}
 
-			entity.RenderLocation = entity.KnownPosition = new PlayerLocation(message.x, message.y, message.z, -message.headYaw, -message.yaw, -message.pitch);
+			entity.RenderLocation = entity.KnownPosition = new PlayerLocation(
+				message.x, message.y, message.z, -message.headYaw, -message.yaw, -message.pitch);
+
 			entity.KnownPosition.OnGround = false;
-			
+
 			entity.Velocity = new Microsoft.Xna.Framework.Vector3(message.speedX, message.speedY, message.speedZ);
 			entity.EntityId = message.runtimeEntityId;
 			entity.UUID = new UUID(Guid.NewGuid().ToByteArray());
-			
+
 			entity.SetInventory(new BedrockInventory(46));
-			
-			
+
+
 			if (message.metadata != null)
 				entity.HandleMetadata(message.metadata);
 
 			if (message.attributes != null)
 				entity.UpdateAttributes(message.attributes);
-			
+
 			if (message.links != null)
 			{
-			//	foreach (var link in message.links)
-				{
-					
-				}
+				//	foreach (var link in message.links)
+				{ }
 			}
 
 			if (!Client.World.SpawnEntity(entity))
@@ -568,9 +602,10 @@ namespace Alex.Net.Bedrock
 			{
 				location.Y -= Player.EyeLevel;
 				Client.World.UpdatePlayerPosition(location, true);
+
 				return;
 			}
-			
+
 			Client.World.UpdateEntityPosition(message.runtimeEntityId, location, false, true, true, false, true);
 		}
 
@@ -598,11 +633,9 @@ namespace Alex.Net.Bedrock
 							newPosition.Y -= Player.EyeLevel;
 						}
 					}
-						
+
 					Client.World.UpdateEntityPosition(
-						message.runtimeEntityId,
-						newPosition, false,
-						true, true, false, false);
+						message.runtimeEntityId, newPosition, false, true, true, false, false);
 				}
 			}
 		}
@@ -618,11 +651,11 @@ namespace Alex.Net.Bedrock
 
 			if (converted != null)
 			{
-				BlockUpdatePriority priority = (BlockUpdatePriority) message.blockPriority;
+				BlockUpdatePriority priority = (BlockUpdatePriority)message.blockPriority;
 
 				Client.World?.SetBlockState(
-					new BlockCoordinates(message.coordinates.X, message.coordinates.Y, message.coordinates.Z), 
-					converted, (int) message.storage, priority);
+					new BlockCoordinates(message.coordinates.X, message.coordinates.Y, message.coordinates.Z),
+					converted, (int)message.storage, priority);
 			}
 			else
 			{
@@ -643,12 +676,12 @@ namespace Alex.Net.Bedrock
 		public void HandleMcpeSpawnParticleEffect(McpeSpawnParticleEffect message)
 		{
 			if (!AlexInstance.ParticleManager.SpawnParticle(
-				message.particleName,
-				new Microsoft.Xna.Framework.Vector3(message.position.X, message.position.Y, message.position.Z)))
+				    message.particleName,
+				    new Microsoft.Xna.Framework.Vector3(message.position.X, message.position.Y, message.position.Z)))
 			{
 				Log.Warn($"Unknown particle: {message.particleName}");
 			}
-        }
+		}
 
 		private ConcurrentDictionary<string, int> _entityIdentifiers = new ConcurrentDictionary<string, int>();
 
@@ -673,10 +706,10 @@ namespace Alex.Net.Bedrock
 
 		public void HandleMcpeNetworkSettings(McpeNetworkSettings message)
 		{
-			var threshold = BitConverter.ToInt16(new byte[] {message.unknown, message.compressionThreshold});
-			
+			var threshold = BitConverter.ToInt16(new byte[] { message.unknown, message.compressionThreshold });
+
 			Client.Connection.Session.CompressionThreshold = threshold;
-			
+
 			Log.Info($"Compression Threshold: {threshold}");
 		}
 
@@ -701,11 +734,11 @@ namespace Alex.Net.Bedrock
 		/// <inheritdoc />
 		public void HandleMcpeItemComponent(McpeItemComponent message)
 		{
-		//	foreach (var entry in message.entries)
-		//	{
-		//		if (entry.Nbt != null)
-		//			Log.Info($"ItemComponent! Name={entry.Name} Nbt={entry.Nbt.NbtFile.ToString()}");
-		//	}
+			//	foreach (var entry in message.entries)
+			//	{
+			//		if (entry.Nbt != null)
+			//			Log.Info($"ItemComponent! Name={entry.Name} Nbt={entry.Nbt.NbtFile.ToString()}");
+			//	}
 			UnhandledPackage(message);
 		}
 
@@ -716,21 +749,20 @@ namespace Alex.Net.Bedrock
 		}
 
 		/// <inheritdoc />
-		public void HandleMcpeAlexEntityAnimation(McpeAlexEntityAnimation message)
-		{
-		
-		}
+		public void HandleMcpeAlexEntityAnimation(McpeAlexEntityAnimation message) { }
 
 		public void HandleMcpeNetworkChunkPublisherUpdate(McpeNetworkChunkPublisherUpdate message)
 		{
-			Client.ChunkPublisherPosition = new BlockCoordinates(message.coordinates.X, message.coordinates.Y, message.coordinates.Z);
+			Client.ChunkPublisherPosition = new BlockCoordinates(
+				message.coordinates.X, message.coordinates.Y, message.coordinates.Z);
+
 			Client.ChunkPublisherRadius = message.radius;
 		}
 
 		public void HandleMcpeBiomeDefinitionList(McpeBiomeDefinitionList message)
 		{
 			UnhandledPackage(message);
-        }
+		}
 
 		public void HandleMcpeLevelEventGeneric(McpeLevelEventGeneric message)
 		{
@@ -791,13 +823,14 @@ namespace Alex.Net.Bedrock
 		{
 			var msgId = message.eventId;
 
-			if (msgId >= 0x4000 && msgId <= (0x4000 | (int) ParticleType.Sneeze)) //Got particle :)
+			if (msgId >= 0x4000 && msgId <= (0x4000 | (int)ParticleType.Sneeze)) //Got particle :)
 			{
-				var particleType = ((ParticleType) msgId -  0x4000);
+				var particleType = ((ParticleType)msgId - 0x4000);
 
 				if (!AlexInstance.ParticleManager.SpawnParticle(
-					particleType,
-					new Microsoft.Xna.Framework.Vector3(message.position.X, message.position.Y, message.position.Z), message.data))
+					    particleType,
+					    new Microsoft.Xna.Framework.Vector3(message.position.X, message.position.Y, message.position.Z),
+					    message.data))
 				{
 					if (Client.IsConnected && LoggingConstants.LogUnknownParticles)
 						Log.Warn($"Unknown particle type: {particleType}");
@@ -805,44 +838,52 @@ namespace Alex.Net.Bedrock
 
 				return;
 			}
-			
-			var blockcoords = (BlockCoordinates) new Microsoft.Xna.Framework.Vector3(
+
+			var blockcoords = (BlockCoordinates)new Microsoft.Xna.Framework.Vector3(
 				message.position.X, message.position.Y, message.position.Z);
 
 			switch (message.eventId)
 			{
 				case 3001:
 					Client.World.SetRain(true);
+
 					break;
-				
+
 				case 3002:
 					Client.World.SetThunder(true);
+
 					break;
-				
+
 				case 3003:
 					Client.World.SetRain(false);
+
 					break;
-				
+
 				case 3004:
 					Client.World.SetThunder(false);
+
 					break;
-				
+
 				case 3600: //Start blockbreak
-					var ticksRequired = (double) ushort.MaxValue / message.data;
+					var ticksRequired = (double)ushort.MaxValue / message.data;
 
 					if (blockcoords == Client.World.Player.TargetBlock)
 						Client.World.Player.BreakTimeNeeded = ticksRequired;
-					
+
 					Client.World.AddOrUpdateBlockBreak(blockcoords, ticksRequired);
+
 					break;
+
 				case 3601: //Stop blockbreak
 					Client.World.EndBreakBlock(blockcoords);
+
 					break;
+
 				case 3602: //Update blockcracking
 					//Client.World.SetBlockBreakProgress(blockcoords);
 					break;
 			}
-			
+
 			/*if ((BlockCoordinates) new Microsoft.Xna.Framework.Vector3(
 				message.position.X, message.position.Y, message.position.Z) == Client.World.Player.TargetBlock)
 			{
@@ -856,12 +897,11 @@ namespace Alex.Net.Bedrock
 
 		public void HandleMcpeBlockEvent(McpeBlockEvent message)
 		{
-			var worldPos = new BlockCoordinates(
-				message.coordinates.X, message.coordinates.Y, message.coordinates.Z);
+			var worldPos = new BlockCoordinates(message.coordinates.X, message.coordinates.Y, message.coordinates.Z);
 
 			if (Client.World.EntityManager.TryGetBlockEntity(worldPos, out var blockEntity))
 			{
-				blockEntity.HandleBlockAction((byte) message.case1, message.case2);	
+				blockEntity.HandleBlockAction((byte)message.case1, message.case2);
 			}
 		}
 
@@ -879,39 +919,52 @@ namespace Alex.Net.Bedrock
 
 			if (Client.World.EntityManager.TryGet(message.runtimeEntityId, out entity))
 			{
-				Effect     effect     = null;
-				MiNET.Effects.EffectType effectType = (MiNET.Effects.EffectType) message.effectId;
+				Effect effect = null;
+				MiNET.Effects.EffectType effectType = (MiNET.Effects.EffectType)message.effectId;
 				EffectType alexEffectType = (EffectType)message.effectId;
+
 				switch (effectType)
 				{
 					case MiNET.Effects.EffectType.Slowness:
 						alexEffectType = EffectType.Slowness;
 						effect = new SlownessEffect();
+
 						break;
+
 					case MiNET.Effects.EffectType.Speed:
 						alexEffectType = EffectType.Speed;
 						effect = new SpeedEffect();
+
 						break;
+
 					case MiNET.Effects.EffectType.Haste:
 						alexEffectType = EffectType.Haste;
 						effect = new HasteEffect();
+
 						break;
+
 					case MiNET.Effects.EffectType.MiningFatigue:
 						alexEffectType = EffectType.MiningFatigue;
 						effect = new MiningFatigueEffect();
+
 						break;
+
 					case MiNET.Effects.EffectType.JumpBoost:
 						alexEffectType = EffectType.JumpBoost;
 						effect = new JumpBoostEffect();
+
 						break;
-				
+
 					case MiNET.Effects.EffectType.NightVision:
 						alexEffectType = EffectType.NightVision;
 						effect = new NightVisionEffect();
+
 						break;
-				
+
 					default:
-						Log.Warn($"Missing effect implementation. Alex={(EffectType) message.effectId} MiNET={(MiNET.Effects.EffectType)message.effectId}");
+						Log.Warn(
+							$"Missing effect implementation. Alex={(EffectType)message.effectId} MiNET={(MiNET.Effects.EffectType)message.effectId}");
+
 						return;
 				}
 
@@ -922,21 +975,24 @@ namespace Alex.Net.Bedrock
 						effect.Level = message.amplifier;
 						effect.Particles = message.particles;
 						entity.Effects.AddOrUpdateEffect(effect);
+
 						break;
-				
+
 					case 2: //Modify
 						if (entity.Effects.TryGetEffect(alexEffectType, out effect))
 						{
 							effect.Duration = message.duration;
 							effect.Particles = message.particles;
 							effect.Level = message.amplifier;
-						
+
 							entity.Effects.AddOrUpdateEffect(effect);
 						}
+
 						break;
 
 					case 3: //Remove
 						entity.Effects.RemoveEffect(effect.EffectId);
+
 						break;
 				}
 			}
@@ -958,6 +1014,7 @@ namespace Alex.Net.Bedrock
 						MinValue = attribute.Value.MinValue
 					});
 			}
+
 			//if (entity != null)
 			return attributes;
 		}
@@ -965,7 +1022,7 @@ namespace Alex.Net.Bedrock
 		public void HandleMcpeUpdateAttributes(McpeUpdateAttributes message)
 		{
 			Entity entity = null;
-			
+
 			if (!Client.World.TryGetEntity(message.runtimeEntityId, out entity))
 			{
 				if (message.runtimeEntityId == Client.EntityId)
@@ -979,7 +1036,9 @@ namespace Alex.Net.Bedrock
 
 		public void HandleMcpeInventoryTransaction(McpeInventoryTransaction message)
 		{
-			Log.Warn($"Inventory Transaction. TransactionRecords={message.transaction?.TransactionRecords?.Count ?? 0} RequestRecords={message.transaction?.RequestRecords?.Count ?? 0} HasNetworkIds={message.transaction?.HasNetworkIds ?? false}");
+			Log.Warn(
+				$"Inventory Transaction. TransactionRecords={message.transaction?.TransactionRecords?.Count ?? 0} RequestRecords={message.transaction?.RequestRecords?.Count ?? 0} HasNetworkIds={message.transaction?.HasNetworkIds ?? false}");
+
 			UnhandledPackage(message);
 		}
 
@@ -988,18 +1047,20 @@ namespace Alex.Net.Bedrock
 			if (Client.EntityId == message.runtimeEntityId && message.windowsId == 0)
 			{
 				Client.World.Player.Inventory.SelectedSlot = message.selectedSlot;
+
 				return;
 			}
-			
+
 			if (Client.World.TryGetEntity(message.runtimeEntityId, out var entity))
 			{
 				var item = message.item.ToAlexItem().Clone();
 
 				byte slot = message.slot;
+
 				switch (message.windowsId)
 				{
 					case 0:
-						
+
 						break;
 				}
 
@@ -1010,7 +1071,8 @@ namespace Alex.Net.Bedrock
 				}
 				else
 				{
-					Log.Warn($"Inventory slot {slot} is out of range for entity: {entity.ToString()} (Min=0 Max={entity.Inventory.SlotCount})");
+					Log.Warn(
+						$"Inventory slot {slot} is out of range for entity: {entity.ToString()} (Min=0 Max={entity.Inventory.SlotCount})");
 				}
 			}
 		}
@@ -1058,6 +1120,7 @@ namespace Alex.Net.Bedrock
 		public void HandleMcpeSetEntityData(McpeSetEntityData message)
 		{
 			Entity entity = null;
+
 			if (Client.EntityId == message.runtimeEntityId || message.runtimeEntityId == Client.World.Player.EntityId)
 			{
 				entity = Client.World.Player;
@@ -1069,7 +1132,7 @@ namespace Alex.Net.Bedrock
 
 			if (entity == null)
 			{
-			//	Log.Warn($"Unknown entity in SetEntityData: {message.runtimeEntityId}");
+				//	Log.Warn($"Unknown entity in SetEntityData: {message.runtimeEntityId}");
 				return;
 			}
 
@@ -1082,6 +1145,7 @@ namespace Alex.Net.Bedrock
 			var velocity = new Microsoft.Xna.Framework.Vector3(v.X, v.Y, v.Z);
 
 			Entity entity = null;
+
 			if (!Client.World.TryGetEntity(message.runtimeEntityId, out entity))
 			{
 				if (Client.EntityId == message.runtimeEntityId)
@@ -1089,10 +1153,10 @@ namespace Alex.Net.Bedrock
 					entity = Client.World.Player;
 				}
 			}
-			
+
 			if (entity == null)
 				return;
-			
+
 			entity.Movement.Velocity(velocity);
 		}
 
@@ -1116,7 +1180,7 @@ namespace Alex.Net.Bedrock
 			else if (message.spawnType == 0) //Player spawn
 			{
 				//Client.World.Player.SpawnPoint = new BlockCoordinates(
-			//		message.coordinates.X, (message.coordinates.Y), message.coordinates.Z);
+				//		message.coordinates.X, (message.coordinates.Y), message.coordinates.Z);
 			}
 
 			Client.World.SpawnPoint = new Microsoft.Xna.Framework.Vector3(
@@ -1135,12 +1199,17 @@ namespace Alex.Net.Bedrock
 				{
 					case 1:
 						entity.SwingArm();
+
 						break;
+
 					case 4: //Critical hit!
 						entity.EntityHurt();
+
 						break;
+
 					default:
 						Log.Info($"Unknown McpeAnimate action ID: {message.actionId}");
+
 						break;
 				}
 			}
@@ -1148,7 +1217,8 @@ namespace Alex.Net.Bedrock
 
 		public void HandleMcpeRespawn(McpeRespawn message)
 		{
-			Log.Info($"Respawn state {(McpeRespawn.RespawnState)message.state} | Runtime entity id: {message.runtimeEntityId}");
+			Log.Info(
+				$"Respawn state {(McpeRespawn.RespawnState)message.state} | Runtime entity id: {message.runtimeEntityId}");
 
 			switch ((McpeRespawn.RespawnState)message.state)
 			{
@@ -1162,13 +1232,15 @@ namespace Alex.Net.Bedrock
 					response.state = (int)McpeRespawn.RespawnState.ClientReady;
 
 					Client.SendPacket(response);
-				} break;
+				}
+
+					break;
 
 				case McpeRespawn.RespawnState.Ready:
 				{
 					Client.World.SpawnPoint = new Microsoft.Xna.Framework.Vector3(
 						message.x, (float)(message.y), message.z);
-					
+
 					Client.World.UpdatePlayerPosition(new PlayerLocation(message.x, message.y, message.z), true);
 
 					if (Client.CanSpawn)
@@ -1180,16 +1252,14 @@ namespace Alex.Net.Bedrock
 
 					Client.ChangeDimensionResetEvent.Set();
 
-					Client.SendPlayerAction(
-						PlayerAction.Respawn, 
-						null,
-						null);
-				} break;
+					Client.SendPlayerAction(PlayerAction.Respawn, null, null);
+				}
 
-				case McpeRespawn.RespawnState.ClientReady:
-				{
-					
-				} break;
+					break;
+
+				case McpeRespawn.RespawnState.ClientReady: { }
+
+					break;
 			}
 		}
 
@@ -1198,7 +1268,10 @@ namespace Alex.Net.Bedrock
 			try
 			{
 				var windowId = message.windowId;
-				var dialog = Client.World.InventoryManager.Show(Client.World.Player.Inventory, message.windowId, (ContainerType) message.type);
+
+				var dialog = Client.World.InventoryManager.Show(
+					Client.World.Player.Inventory, message.windowId, (ContainerType)message.type);
+
 				dialog.TransactionTracker = TransactionTracker;
 
 				dialog.OnContainerClose += (sender, args) =>
@@ -1219,82 +1292,88 @@ namespace Alex.Net.Bedrock
 			Client.World.InventoryManager.Close(message.windowId);
 		}
 
-        public void HandleMcpeInventoryContent(McpeInventoryContent message)
+		public void HandleMcpeInventoryContent(McpeInventoryContent message)
 		{
 			if (message.input == null)
 			{
 				Log.Warn($"Invalid inventory content! Input was null.");
+
 				return;
 			}
 
 			var startIndex = 0;
-			if (Client.World.InventoryManager.TryGet((int) message.inventoryId, out var container))
+
+			if (Client.World.InventoryManager.TryGet((int)message.inventoryId, out var container))
 			{
 				for (var index = 0; index < message.input.Count; index++)
 				{
 					var slot = message.input[index];
 
 					var result = slot.ToAlexItem().Clone();
+
 					if (result != null)
 					{
 						result.StackID = slot.UniqueId;
-						container.Inventory.SetSlot(startIndex+ index, result, true);
+						container.Inventory.SetSlot(startIndex + index, result, true);
 						//inventory[usedIndex] = result;
 					}
 					else
 					{
-						Log.Warn($"Failed to set window slot: {index} Id: {slot.Id}:{slot.Metadata} (Window={message.inventoryId})");
+						Log.Warn(
+							$"Failed to set window slot: {index} Id: {slot.Id}:{slot.Metadata} (Window={message.inventoryId})");
 					}
 				}
 
 				return;
 			}
 
-			InventoryBase inventory  = null;
+			InventoryBase inventory = null;
 			//var 
 
-				inventory = Client.World.Player.Inventory;
+			inventory = Client.World.Player.Inventory;
 
-				if (inventory is BedrockInventory bi)
+			if (inventory is BedrockInventory bi)
+			{
+				if (message.inventoryId == 0)
 				{
-					if (message.inventoryId == 0)
-					{
-						//startIndex = bi.InventoryOffset;
-					}
-					else if (message.inventoryId == 120)
-					{
-						startIndex = bi.BootsSlot;
-					}
-					else if (message.inventoryId == 119)
-					{
-						startIndex = bi.OffHandSlot;
+					//startIndex = bi.InventoryOffset;
+				}
+				else if (message.inventoryId == 120)
+				{
+					startIndex = bi.BootsSlot;
+				}
+				else if (message.inventoryId == 119)
+				{
+					startIndex = bi.OffHandSlot;
 
-						return;
-					}
-					else if (message.inventoryId == 124)
-					{
-						inventory = Client.World.Player.Inventory.UiInventory;
-					}
-
-					/*	if (message.inventoryId == 124)
-						{
-							startIndex = bi.slot
-						}*/
+					return;
+				}
+				else if (message.inventoryId == 124)
+				{
+					inventory = Client.World.Player.Inventory.UiInventory;
 				}
 
-				if (inventory == null)
+				/*	if (message.inventoryId == 124)
+					{
+						startIndex = bi.slot
+					}*/
+			}
+
+			if (inventory == null)
 			{
 				Log.Warn($"(Inventory content) Unknown inventory ID: {message.inventoryId}");
+
 				return;
 			}
 
 			for (var index = 0; index < message.input.Count; index++)
 			{
 				var slot = message.input[index];
-				
+
 				var usedIndex = index;
 
 				var result = slot.ToAlexItem().Clone();
+
 				if (result != null)
 				{
 					result.StackID = slot.UniqueId;
@@ -1302,7 +1381,8 @@ namespace Alex.Net.Bedrock
 
 					if (adjustedIndex > inventory.SlotCount - 1)
 					{
-						Log.Warn($"Slot {adjustedIndex} out of range for inventory {message.inventoryId} (Limit: {inventory.SlotCount})");
+						Log.Warn(
+							$"Slot {adjustedIndex} out of range for inventory {message.inventoryId} (Limit: {inventory.SlotCount})");
 					}
 					else
 					{
@@ -1313,29 +1393,31 @@ namespace Alex.Net.Bedrock
 					//inventory[usedIndex] = result;
 				}
 				else
-                {
-                    Log.Warn($"Failed to set slot: {index} Id: {slot.Id}:{slot.Metadata}");
-                }
-            }
+				{
+					Log.Warn($"Failed to set slot: {index} Id: {slot.Id}:{slot.Metadata}");
+				}
+			}
 		}
 
-        public void HandleMcpeInventorySlot(McpeInventorySlot message)
+		public void HandleMcpeInventorySlot(McpeInventorySlot message)
 		{
 			if (message.item == null)
 			{
 				Log.Warn($"Invalid inventory slot packet! Item was null.");
+
 				return;
 			}
 
-			if (Client.World.InventoryManager.TryGet((int) message.inventoryId, out var container))
+			if (Client.World.InventoryManager.TryGet((int)message.inventoryId, out var container))
 			{
-				var slotIndex  = (int)message.slot;
+				var slotIndex = (int)message.slot;
 				var item = message.item.ToAlexItem().Clone();
 
 				if (item != null)
 				{
 					container.Inventory.SetSlot(slotIndex, item, true);
 				}
+
 				return;
 			}
 
@@ -1345,80 +1427,84 @@ namespace Alex.Net.Bedrock
 			{
 				inventory = Client.World.Player.Inventory.UiInventory;
 			}
-			
+
 			if (message.inventoryId == 0x00 //Inventory
 			    || message.inventoryId == 120 //Armor
 			    || message.inventoryId == 119 //Offhand
-                                     )
+			   )
 			{
 				inventory = Client.World.Player.Inventory;
 			}
 
 			if (inventory == null)
 			{
-				Log.Warn($"(McpeInventorySlot) Unknown inventory ID: {message.inventoryId} ({JsonConvert.SerializeObject(message.item)})");
+				Log.Warn(
+					$"(McpeInventorySlot) Unknown inventory ID: {message.inventoryId} ({JsonConvert.SerializeObject(message.item)})");
+
 				return;
 			}
-			
+
 			var index = (int)message.slot;
 			var result = message.item.ToAlexItem().Clone();
 
 			if (result != null)
-            {
-	           // result.StackID = message.uniqueid;
-	           switch (message.inventoryId)
-	           {
-		           case 119:
-		           {
-			           if (inventory is BedrockInventory bi)
-			           {
-				           bi.OffHand = result;
-				       //    Log.Info($"Server set single slot (slot={index} inventory={message.inventoryId} stackId={result.StackID} uniqueId={message.uniqueid}): {result.Name}");
-			           }
+			{
+				// result.StackID = message.uniqueid;
+				switch (message.inventoryId)
+				{
+					case 119:
+					{
+						if (inventory is BedrockInventory bi)
+						{
+							bi.OffHand = result;
+							//    Log.Info($"Server set single slot (slot={index} inventory={message.inventoryId} stackId={result.StackID} uniqueId={message.uniqueid}): {result.Name}");
+						}
 
-			           break;
-		           }
+						break;
+					}
 
-		           case 120:
-		           {
-			           if (inventory is BedrockInventory bi)
-			           {
-				           bi.SetSlot(bi.BootsSlot + index, result, true);
-				         //  Log.Info($"Server set single slot (slot={index} inventory={message.inventoryId} stackId={result.StackID} uniqueId={message.uniqueid}): {result.Name}");
-			           }
+					case 120:
+					{
+						if (inventory is BedrockInventory bi)
+						{
+							bi.SetSlot(bi.BootsSlot + index, result, true);
+							//  Log.Info($"Server set single slot (slot={index} inventory={message.inventoryId} stackId={result.StackID} uniqueId={message.uniqueid}): {result.Name}");
+						}
 
-			           // inventory.SetSlot();
-			           break;
-		           }
+						// inventory.SetSlot();
+						break;
+					}
 
-		           case 124:
-			         //  Log.Info($"Server set cursor: {result.Name}");
-			           inventory.SetCursor(result, true);
-			           break;
-		           
-		           case 0:
-			         //  Log.Info($"Server set single slot (slot={index} inventory={message.inventoryId} stackId={result.StackID} uniqueId={message.uniqueid}): {result.Name}");
-			           inventory.SetSlot(index, result, true);
-			           break;
-		           
-		           default:
-			          // Log.Warn($"Server tried to set single slot (slot={index} inventory={message.inventoryId} stackId={result.StackID} uniqueId={message.uniqueid}): {result.Name}");
-			          // inventory[index] = result;
-			           break;
-	           }
-            }
-            else
-            {
-                Log.Warn($"Failed to set slot: {message.slot} Id: {message.item.Id}:{message.item.Metadata}");
-            }
+					case 124:
+						//  Log.Info($"Server set cursor: {result.Name}");
+						inventory.SetCursor(result, true);
+
+						break;
+
+					case 0:
+						//  Log.Info($"Server set single slot (slot={index} inventory={message.inventoryId} stackId={result.StackID} uniqueId={message.uniqueid}): {result.Name}");
+						inventory.SetSlot(index, result, true);
+
+						break;
+
+					default:
+						// Log.Warn($"Server tried to set single slot (slot={index} inventory={message.inventoryId} stackId={result.StackID} uniqueId={message.uniqueid}): {result.Name}");
+						// inventory[index] = result;
+						break;
+				}
+			}
+			else
+			{
+				Log.Warn($"Failed to set slot: {message.slot} Id: {message.item.Id}:{message.item.Metadata}");
+			}
 		}
 
-        public void HandleMcpePlayerHotbar(McpePlayerHotbar message)
-        {
-            UnhandledPackage(message);
-        }
+		public void HandleMcpePlayerHotbar(McpePlayerHotbar message)
+		{
+			UnhandledPackage(message);
+		}
 
-        public void HandleMcpeContainerSetData(McpeContainerSetData message)
+		public void HandleMcpeContainerSetData(McpeContainerSetData message)
 		{
 			UnhandledPackage(message);
 		}
@@ -1455,12 +1541,12 @@ namespace Alex.Net.Bedrock
 
 		public void HandleMcpeLevelChunk(McpeLevelChunk msg)
 		{
-			var blobs         = msg.blobHashes;
-			var cacheEnabled  = msg.cacheEnabled;
+			var blobs = msg.blobHashes;
+			var cacheEnabled = msg.cacheEnabled;
 			var subChunkCount = msg.subChunkCount;
-			var chunkData     = msg.chunkData;
-			var cx            = msg.chunkX;
-			var cz            = msg.chunkZ;
+			var chunkData = msg.chunkData;
+			var cx = msg.chunkX;
+			var cz = msg.chunkZ;
 			msg.PutPool();
 
 			//if (chunkData[0] < 1)
@@ -1469,23 +1555,25 @@ namespace Alex.Net.Bedrock
 				//Nothing to read.
 				return;
 			}
-			
+
 			ChunkProcessor.HandleChunkData(cacheEnabled, blobs, subChunkCount, chunkData, cx, cz);
 		}
 
 		//private object _changeDimensionLock = new object();
 		private SemaphoreSlim _changeDimensionSemaphone = new SemaphoreSlim(1);
+
 		public void HandleMcpeChangeDimension(McpeChangeDimension message)
 		{
-			Log.Info($"Initiating dimension change! Dimension={message.dimension} Respawn={message.respawn} Position={message.position}");
+			Log.Info(
+				$"Initiating dimension change! Dimension={message.dimension} Respawn={message.respawn} Position={message.position}");
 
 			World world = Client.World;
 			world.Dimension = (Dimension)message.dimension;
-			
+
 			Client.ResetInitialized();
 			var pos = new PlayerLocation(message.position.X, message.position.Y, message.position.Z);
 			Client.ChunkPublisherPosition = new BlockCoordinates(pos);
-						
+
 			world.UpdatePlayerPosition(pos, true);
 
 			ChunkProcessor.Clear();
@@ -1496,19 +1584,20 @@ namespace Alex.Net.Bedrock
 
 			McpePlayerAction action = McpePlayerAction.CreateObject();
 			action.runtimeEntityId = Client.EntityId;
-			action.actionId = (int) PlayerAction.DimensionChangeAck;
+			action.actionId = (int)PlayerAction.DimensionChangeAck;
 			Client.SendPacket(action);
-			
+
 			if (!_changeDimensionSemaphone.Wait(10, CancellationToken))
 			{
 				return;
 			}
-			
+
 			Client.World.Player.OnDespawn();
 
 			bool cancelled = false;
 			WorldLoadingDialog worldLoadingDialog = AlexInstance.GuiManager.CreateDialog<WorldLoadingDialog>();
 			worldLoadingDialog.ConnectingToServer = true;
+
 			worldLoadingDialog.CancelAction = () =>
 			{
 				cancelled = true;
@@ -1519,7 +1608,7 @@ namespace Alex.Net.Bedrock
 			};
 
 			worldLoadingDialog.UpdateProgress(LoadingState.LoadingChunks, 0);
-			
+
 			ThreadPool.QueueUserWorkItem(
 				(o) =>
 				{
@@ -1565,7 +1654,7 @@ namespace Alex.Net.Bedrock
 
 						Client.MarkAsInitialized();
 						Client.World.Player.OnSpawn();
-						
+
 						Log.Info($"Finished Respawn. Dimension={Client.World.Dimension}");
 					}
 					finally
@@ -1589,7 +1678,7 @@ namespace Alex.Net.Bedrock
 
 		public void HandleMcpeSetPlayerGameType(McpeSetPlayerGameType message)
 		{
-			Client.World.Player.UpdateGamemode((GameMode) message.gamemode);
+			Client.World.Player.UpdateGamemode((GameMode)message.gamemode);
 		}
 
 		public void HandleMcpeSimpleEvent(McpeSimpleEvent message)
@@ -1628,7 +1717,7 @@ namespace Alex.Net.Bedrock
 				$"Received chunkradius. Requested={AlexInstance.Options.AlexOptions.VideoOptions.RenderDistance.Value} Received={message.chunkRadius}");
 
 			Client.World.ChunkManager.RenderDistance = message.chunkRadius;
-		//	Client.ChunkRadius = message.chunkRadius;
+			//	Client.ChunkRadius = message.chunkRadius;
 		}
 
 		public void HandleMcpeItemFrameDropItem(McpeItemFrameDropItem message)
@@ -1639,7 +1728,7 @@ namespace Alex.Net.Bedrock
 		public void HandleMcpeGameRulesChanged(McpeGameRulesChanged message)
 		{
 			var lvl = Client.World;
-			
+
 			foreach (var gr in message.rules)
 			{
 				lvl.SetGameRule(gr);
@@ -1651,7 +1740,8 @@ namespace Alex.Net.Bedrock
 			UnhandledPackage(message);
 		}
 
-		private ConcurrentDictionary<long, MiNET.Utils.UUID> _bossBarMapping = new ConcurrentDictionary<long, MiNET.Utils.UUID>();
+		private ConcurrentDictionary<long, MiNET.Utils.UUID> _bossBarMapping =
+			new ConcurrentDictionary<long, MiNET.Utils.UUID>();
 
 		public void HandleMcpeBossEvent(McpeBossEvent message)
 		{
@@ -1746,6 +1836,7 @@ namespace Alex.Net.Bedrock
 			if (Client.CommandProvider is BedrockCommandProvider bcp)
 			{
 				bcp.Reset();
+
 				foreach (var cmd in message.CommandSet)
 				{
 					foreach (var version in cmd.Value.Versions)
@@ -1760,6 +1851,7 @@ namespace Alex.Net.Bedrock
 								{
 									string enumName = param.EnumType;
 									string[] options = null;
+
 									if (param.EnumValues != null)
 									{
 										options = param.EnumValues;
@@ -1770,8 +1862,9 @@ namespace Alex.Net.Bedrock
 										case "":
 											break;
 									}
-									
-									c.Properties.Add(new EnumCommandProperty(param.Name, !param.Optional, options, enumName));
+
+									c.Properties.Add(
+										new EnumCommandProperty(param.Name, !param.Optional, options, enumName));
 								}
 								else if (param.Type == "target")
 								{
@@ -1798,18 +1891,18 @@ namespace Alex.Net.Bedrock
 									Log.Debug($"Unknown parameter type: {param.Type} (name: {param.Name})");
 									c.Properties.Add(new CommandProperty(param.Name, !param.Optional));
 								}
-								
+
 								//CommandProperty cp = new CommandProperty(param.Name, !param.Optional);
 								//
 								//c.Properties.Add(cp);
 							}
-							
+
 							c.Description = c.Describe().FirstOrDefault(version.Description);
 							bcp.Register(c);
 						}
 					}
 				}
-				
+
 				Log.Info($"Registered {bcp.Count} commands.");
 			}
 			// Client.LoadCommands(message.CommandSet);
@@ -1838,8 +1931,8 @@ namespace Alex.Net.Bedrock
 			WorldProvider.Dispose();
 
 			string serverAddress = message.serverAddress;
-			ushort port          = message.port;
-			
+			ushort port = message.port;
+
 			ThreadPool.QueueUserWorkItem(
 				async o =>
 				{
@@ -1848,6 +1941,7 @@ namespace Alex.Net.Bedrock
 					if (!resolved.Success)
 					{
 						Log.Warn($"could not resolve hostname: {serverAddress}");
+
 						return;
 					}
 
@@ -1859,9 +1953,10 @@ namespace Alex.Net.Bedrock
 
 		public void HandleMcpeLevelSoundEventOld(McpeLevelSoundEventOld message)
 		{
-			PlaySound(message.soundId, message.blockId, message.entityType.ToString(), message.position, message.isGlobal);
+			PlaySound(
+				message.soundId, message.blockId, message.entityType.ToString(), message.position, message.isGlobal);
 		}
-		
+
 		public void HandleMcpeLevelSoundEventV2(McpeLevelSoundEventV2 message)
 		{
 			PlaySound(message.soundId, message.blockId, message.entityType, message.position, message.isGlobal);
@@ -1873,7 +1968,7 @@ namespace Alex.Net.Bedrock
 			string soundEvent = null;
 			string soundCategory = null;
 			string blockName = null;
-			
+
 			float pitch = 1f;
 			float volume = 1f;
 			SoundEvent se = null;
@@ -1963,13 +2058,15 @@ namespace Alex.Net.Bedrock
 
 			if (string.IsNullOrWhiteSpace(sound))
 			{
-				Log.Debug($"Failed to translate sound with id: {soundId} (Sound={sound}, SoundEvent={soundEvent}, blockid={blockId}, entityType={entityTypeId}, block={blockName}, soundCat={soundCategory})");
+				Log.Debug(
+					$"Failed to translate sound with id: {soundId} (Sound={sound}, SoundEvent={soundEvent}, blockid={blockId}, entityType={entityTypeId}, block={blockName}, soundCat={soundCategory})");
+
 				return;
 			}
- 
+
 			if (!AlexInstance.AudioEngine.PlaySound(
-				sound, new Microsoft.Xna.Framework.Vector3(position.X, position.Y, position.Z),
-				pitch, volume, isGlobal))
+				    sound, new Microsoft.Xna.Framework.Vector3(position.X, position.Y, position.Z), pitch, volume,
+				    isGlobal))
 			{
 				Log.Debug($"Could not play sound: {sound}");
 			}
@@ -1986,7 +2083,8 @@ namespace Alex.Net.Bedrock
 			var coords = message.coordinates;
 
 			if (!AlexInstance.AudioEngine.PlaySound(
-				message.name, new Microsoft.Xna.Framework.Vector3(coords.X, coords.Y, coords.Z), message.pitch, message.volume))
+				    message.name, new Microsoft.Xna.Framework.Vector3(coords.X, coords.Y, coords.Z), message.pitch,
+				    message.volume))
 			{
 				Log.Warn($"Sound not found: {message.name}");
 			}
@@ -2000,33 +2098,44 @@ namespace Alex.Net.Bedrock
 		public void HandleMcpeSetTitle(McpeSetTitle message)
 		{
 			var titleComponent = WorldProvider?.TitleComponent;
+
 			if (titleComponent == null)
 				return;
-			
-			switch ((TitleType) message.type)
+
+			switch ((TitleType)message.type)
 			{
 				case TitleType.Clear:
 					titleComponent.Hide();
+
 					break;
+
 				case TitleType.Reset:
 					titleComponent.Reset();
 					titleComponent.Hide();
+
 					break;
+
 				case TitleType.Title:
 					titleComponent.SetTimes(message.fadeInTime, message.stayTime, message.fadeOutTime);
 					titleComponent.SetTitle(message.text);
 					titleComponent.Show();
+
 					break;
+
 				case TitleType.SubTitle:
 					titleComponent.SetTimes(message.fadeInTime, message.stayTime, message.fadeOutTime);
 					titleComponent.SetSubtitle(message.text);
+
 					break;
+
 				case TitleType.ActionBar:
-					
+
 					break;
+
 				case TitleType.AnimationTimes:
 					titleComponent.SetTimes(message.fadeInTime, message.stayTime, message.fadeOutTime);
 					titleComponent.Show();
+
 					break;
 			}
 		}
@@ -2052,7 +2161,7 @@ namespace Alex.Net.Bedrock
 			{
 				data.Skin = message.skin;
 			}
-			
+
 			if (Client.World.EntityManager.TryGet(message.uuid, out var entity) && entity is RemotePlayer player)
 			{
 				player.Skin = message.skin;
@@ -2110,23 +2219,29 @@ namespace Alex.Net.Bedrock
 		public void HandleMcpeRemoveObjective(McpeRemoveObjective message)
 		{
 			var scoreboard = WorldProvider?.ScoreboardView;
+
 			if (scoreboard == null)
 				return;
-			
+
 			scoreboard.RemoveObjective(message.objectiveName);
 		}
 
 		public void HandleMcpeSetDisplayObjective(McpeSetDisplayObjective message)
 		{
 			var scoreboard = WorldProvider?.ScoreboardView;
+
 			if (scoreboard == null)
 				return;
-			
+
 			switch (message.displaySlot)
 			{
 				case "sidebar":
 					scoreboard.Clear();
-					scoreboard.AddObjective(new ScoreboardObjective(message.objectiveName, message.displayName, message.sortOrder, message.criteriaName));
+
+					scoreboard.AddObjective(
+						new ScoreboardObjective(
+							message.objectiveName, message.displayName, message.sortOrder, message.criteriaName));
+
 					//scoreboard.AddString(message.displayName);
 					break;
 			}
@@ -2135,16 +2250,19 @@ namespace Alex.Net.Bedrock
 		public void HandleMcpeSetScore(McpeSetScore message)
 		{
 			var scoreboard = WorldProvider?.ScoreboardView;
+
 			if (scoreboard == null)
 				return;
-		
+
 			foreach (var entry in message.entries)
 			{
 				if (entry is ScoreEntryChangeFakePlayer fakePlayer)
 				{
 					if (scoreboard.TryGetObjective(fakePlayer.ObjectiveName, out var objective))
 					{
-						objective.AddOrUpdate(fakePlayer.Id.ToString(), new ScoreboardEntry(fakePlayer.Id.ToString(), fakePlayer.Score, fakePlayer.CustomName));
+						objective.AddOrUpdate(
+							fakePlayer.Id.ToString(),
+							new ScoreboardEntry(fakePlayer.Id.ToString(), fakePlayer.Score, fakePlayer.CustomName));
 					}
 					//scoreboard.AddRow($"{fakePlayer.ObjectiveName}:{fakePlayer.Id}", fakePlayer.CustomName, entry.Score);
 				}
@@ -2169,8 +2287,7 @@ namespace Alex.Net.Bedrock
 						if (scoreboard.TryGetObjective(ent.ObjectiveName, out var objective))
 						{
 							objective.AddOrUpdate(
-								ent.Id.ToString(),
-								new ScoreboardEntry(ent.Id.ToString(), ent.Score, entity.NameTag));
+								ent.Id.ToString(), new ScoreboardEntry(ent.Id.ToString(), ent.Score, entity.NameTag));
 						}
 
 						//scoreboard.AddRow($"{player.ObjectiveName}:{player.Id}", playerEntity.NameTag, player.Score);
@@ -2185,10 +2302,7 @@ namespace Alex.Net.Bedrock
 
 					//	scoreboard.Remove($"{remove.ObjectiveName}:{remove.Id}");
 				}
-				else
-				{
-					
-				}
+				else { }
 			}
 		}
 
@@ -2203,11 +2317,11 @@ namespace Alex.Net.Bedrock
 
 			if (converted != null)
 			{
-				BlockUpdatePriority priority = (BlockUpdatePriority) message.blockPriority;
+				BlockUpdatePriority priority = (BlockUpdatePriority)message.blockPriority;
 
 				Client.World?.SetBlockState(
-					new BlockCoordinates(message.coordinates.X, message.coordinates.Y, message.coordinates.Z), 
-					converted, (int) message.dataLayerId, priority);
+					new BlockCoordinates(message.coordinates.X, message.coordinates.Y, message.coordinates.Z),
+					converted, (int)message.dataLayerId, priority);
 			}
 			else
 			{
@@ -2215,7 +2329,7 @@ namespace Alex.Net.Bedrock
 			}
 		}
 
-        public void HandleMcpeSetScoreboardIdentity(McpeSetScoreboardIdentity message)
+		public void HandleMcpeSetScoreboardIdentity(McpeSetScoreboardIdentity message)
 		{
 			UnhandledPackage(message);
 		}
@@ -2225,7 +2339,7 @@ namespace Alex.Net.Bedrock
 			//Client.CommandProvider.
 			UnhandledPackage(message);
 		}
-		
+
 		public void HandleMcpeNetworkStackLatency(McpeNetworkStackLatency message)
 		{
 			if (message.unknownFlag == 1)
@@ -2233,7 +2347,7 @@ namespace Alex.Net.Bedrock
 				var response = McpeNetworkStackLatency.CreateObject();
 				response.timestamp = message.timestamp;
 				response.unknownFlag = 0;
-				
+
 				Client.SendPacket(response);
 			}
 		}
@@ -2266,28 +2380,35 @@ namespace Alex.Net.Bedrock
 			}*/
 			UnhandledPackage(message);
 		}
-		
+
 		public bool HandleOtherPackets(Packet message)
 		{
 			switch (message)
 			{
 				case McpeEmote emote:
 				{
-					HandleMcpeEmote(emote); 
-				} return true;
-				
+					HandleMcpeEmote(emote);
+				}
+
+					return true;
+
 				case McpeAnimateEntity emote:
 				{
-					HandleMcpeAnimateEntity(emote); 
-				} return true;
+					HandleMcpeAnimateEntity(emote);
+				}
+
+					return true;
 
 				case McpeUpdateGm packet:
 				{
 					HandleMcpeUpdatePlayerGameType(packet);
-				} return true;
+				}
+
+					return true;
 			}
-			
+
 			UnhandledPackage(message);
+
 			return false;
 		}
 
@@ -2295,24 +2416,25 @@ namespace Alex.Net.Bedrock
 		{
 			if (packet.PlayerEntityUniqueId != Client.EntityId)
 				return;
+
 			Client.World.Player.UpdateGamemode(packet.GameMode);
 			//packet.
 		}
-		
+
 		/// <inheritdoc />
 		public void ReportPackets()
 		{
 			var entries = UnhandledPackets.ToArray();
 			UnhandledPackets.Clear();
-			
+
 			foreach (var p in entries)
 			{
 				var type = p.Value.type;
+
 				if (type == null)
 					continue;
-				
-				Log.Warn(
-					$"Unhandled packet: {type.FullName} * {p.Value.count} (0x{p.Key:x2})");
+
+				Log.Warn($"Unhandled packet: {type.FullName} * {p.Value.count} (0x{p.Key:x2})");
 			}
 		}
 	}

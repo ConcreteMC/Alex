@@ -1,7 +1,4 @@
 namespace Alex.Blocks.Minecraft
 {
-	public class PottedDeadBush : PottedPlantBlock
-	{
-		
-	}
+	public class PottedDeadBush : PottedPlantBlock { }
 }

@@ -10,14 +10,13 @@ namespace Alex.Blocks
 	{
 		public static PropertyBool OPEN => new PropertyBool("open", "true", "false");
 
-		public bool IsPowered => RedstoneBase.POWERED.GetValue(BlockState);// BlockState.GetTypedValue(RedstoneBase.POWERED);
+		public bool IsPowered =>
+			RedstoneBase.POWERED.GetValue(BlockState); // BlockState.GetTypedValue(RedstoneBase.POWERED);
+
 		public bool IsOpen => OPEN.GetValue(BlockState);
 
-		protected OpenableBlockBase()
-		{
-			
-		}
-		
+		protected OpenableBlockBase() { }
+
 		/// <inheritdoc />
 		public override bool TryGetStateProperty(string prop, out IStateProperty stateProperty)
 		{
@@ -25,11 +24,15 @@ namespace Alex.Blocks
 			{
 				case "open":
 					stateProperty = OPEN;
+
 					return true;
+
 				case "powered":
 					stateProperty = RedstoneBase.POWERED;
+
 					return true;
 			}
+
 			return base.TryGetStateProperty(prop, out stateProperty);
 		}
 	}

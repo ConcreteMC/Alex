@@ -8,14 +8,14 @@ using Microsoft.Xna.Framework.Graphics;
 
 namespace Alex.Graphics.Models.Items
 {
-    public interface IItemRenderer : IAttached, IDisposable
-    {
-        ResourcePackModelBase ResourcePackModel { get; }
-        
-        DisplayPosition DisplayPosition   { get; set; }
+	public interface IItemRenderer : IAttached, IDisposable
+	{
+		ResourcePackModelBase ResourcePackModel { get; }
 
-        bool Cache(ResourceManager pack);
+		DisplayPosition DisplayPosition { get; set; }
 
-        IItemRenderer CloneItemRenderer();
-    }
+		bool Cache(ResourceManager pack);
+
+		IItemRenderer CloneItemRenderer();
+	}
 }

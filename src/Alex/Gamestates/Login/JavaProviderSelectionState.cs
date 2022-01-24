@@ -19,7 +19,10 @@ namespace Alex.Gamestates.Login
 		private readonly Func<IGameState> _microsoft;
 		private readonly Func<IGameState> _mojang;
 
-		public JavaProviderSelectionState(JavaServerType serverType, GuiPanoramaSkyBox skyBox, Func<IGameState> microsoft, Func<IGameState> mojang)
+		public JavaProviderSelectionState(JavaServerType serverType,
+			GuiPanoramaSkyBox skyBox,
+			Func<IGameState> microsoft,
+			Func<IGameState> mojang)
 		{
 			Title = "Minecraft Login";
 			_serverType = serverType;
@@ -61,13 +64,14 @@ namespace Alex.Gamestates.Login
 			Body.BackgroundOverlay = new Color(Color.Black, 0.5f);
 			Body.ChildAnchor = Alignment.MiddleCenter;
 
-			Body.AddChild( new TextElement()
-			{
-				TextColor = (Color) TextColor.Cyan,
-				Text = "Please choose your account type:",
-				FontStyle = FontStyle.Italic,
-				Scale = 1.1f
-			});
+			Body.AddChild(
+				new TextElement()
+				{
+					TextColor = (Color)TextColor.Cyan,
+					Text = "Please choose your account type:",
+					FontStyle = FontStyle.Italic,
+					Scale = 1.1f
+				});
 
 			Body.AddRow(
 				new AlexButton(MojangLoginButtonPressed)
@@ -105,7 +109,7 @@ namespace Alex.Gamestates.Login
 		{
 			Alex.GameStateManager.SetActiveState(state);
 		}
-		
+
 		private void MicrostLoginButtonPressed()
 		{
 			var state = _microsoft?.Invoke();

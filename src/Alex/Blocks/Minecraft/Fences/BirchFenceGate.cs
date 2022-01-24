@@ -11,8 +11,6 @@ namespace Alex.Blocks.Minecraft.Fences
 
 	public class BirchFence : Fence
 	{
-		public BirchFence() : base()
-		{
-		}
+		public BirchFence() : base() { }
 	}
 }

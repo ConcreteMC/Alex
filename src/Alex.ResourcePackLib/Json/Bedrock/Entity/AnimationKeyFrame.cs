@@ -11,7 +11,7 @@ namespace Alex.ResourcePackLib.Json.Bedrock.Entity
 		/// </summary>
 		[JsonProperty("pre")]
 		public IExpression[][] Pre { get; set; }
-		
+
 		/// <summary>
 		///  when at interpolating away from this key frame to the next, use this value
 		/// </summary>

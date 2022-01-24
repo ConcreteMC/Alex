@@ -4,7 +4,7 @@ namespace Alex.Common.Commands.Parsers
 	{
 		/// <inheritdoc />
 		public FloatArgumentParser(string name) : base(name) { }
-		
+
 		/// <inheritdoc />
 		protected override bool TryParse(string input, out float answer)
 		{

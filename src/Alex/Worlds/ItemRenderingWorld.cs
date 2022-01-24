@@ -11,241 +11,240 @@ using Microsoft.Xna.Framework;
 
 namespace Alex.Worlds
 {
-    public class ItemRenderingWorld : IBlockAccess
-    {
-        private static BlockState Air { get; } = BlockFactory.GetBlockState("minecraft:air");
+	public class ItemRenderingWorld : IBlockAccess
+	{
+		private static BlockState Air { get; } = BlockFactory.GetBlockState("minecraft:air");
 
-        private Block Block { get; }
-        public ItemRenderingWorld(Block block)
-        {
-            Block = block;
-        }
-        
-        public void ResetChunks()
-        {
-            throw new System.NotImplementedException();
-        }
+		private Block Block { get; }
 
-        public void RebuildChunks()
-        {
-            throw new System.NotImplementedException();
-        }
+		public ItemRenderingWorld(Block block)
+		{
+			Block = block;
+		}
 
-        public void Render(IRenderArgs args)
-        {
-            throw new System.NotImplementedException();
-        }
+		public void ResetChunks()
+		{
+			throw new System.NotImplementedException();
+		}
 
-        public Vector3 GetSpawnPoint()
-        {
-            throw new System.NotImplementedException();
-        }
+		public void RebuildChunks()
+		{
+			throw new System.NotImplementedException();
+		}
 
-        public byte GetSkyLight(Vector3 position)
-        {
-            return 0xf;
-        }
+		public void Render(IRenderArgs args)
+		{
+			throw new System.NotImplementedException();
+		}
 
-        public byte GetSkyLight(float x, float y, float z)
-        {
-            return 0xf;
-        }
+		public Vector3 GetSpawnPoint()
+		{
+			throw new System.NotImplementedException();
+		}
 
-        public byte GetSkyLight(int x, int y, int z)
-        {
-            return 0xf;
-        }
+		public byte GetSkyLight(Vector3 position)
+		{
+			return 0xf;
+		}
 
-        public byte GetBlockLight(Vector3 position)
-        {
-            return 0;
-        }
+		public byte GetSkyLight(float x, float y, float z)
+		{
+			return 0xf;
+		}
 
-        public byte GetBlockLight(float x, float y, float z)
-        {
-            return 0;
-        }
+		public byte GetSkyLight(int x, int y, int z)
+		{
+			return 0xf;
+		}
 
-        public byte GetBlockLight(int x, int y, int z)
-        {
-            return 0;
-        }
+		public byte GetBlockLight(Vector3 position)
+		{
+			return 0;
+		}
 
-        public Block GetBlock(BlockCoordinates position)
-        {
-            return Air.Block;
-        }
+		public byte GetBlockLight(float x, float y, float z)
+		{
+			return 0;
+		}
 
-        public Block GetBlock(Vector3 position)
-        {
-            return Air.Block;
-        }
+		public byte GetBlockLight(int x, int y, int z)
+		{
+			return 0;
+		}
 
-        public Block GetBlock(float x, float y, float z)
-        {
-            return Air.Block;
-        }
+		public Block GetBlock(BlockCoordinates position)
+		{
+			return Air.Block;
+		}
 
-        public Block GetBlock(int x, int y, int z)
-        {
-            return Air.Block;
-        }
+		public Block GetBlock(Vector3 position)
+		{
+			return Air.Block;
+		}
 
-        public void SetBlock(float x, float y, float z, Block block)
-        {
-            throw new System.NotImplementedException();
-        }
+		public Block GetBlock(float x, float y, float z)
+		{
+			return Air.Block;
+		}
 
-        public void SetBlock(int x, int y, int z, Block block)
-        {
-            throw new System.NotImplementedException();
-        }
+		public Block GetBlock(int x, int y, int z)
+		{
+			return Air.Block;
+		}
 
-        public void SetBlockState(int x, int y, int z, BlockState block)
-        {
-            throw new System.NotImplementedException();
-        }
-        
-        public BlockState GetBlockState(int x, int y, int z)
-        {
-            return Air;
-        }
+		public void SetBlock(float x, float y, float z, Block block)
+		{
+			throw new System.NotImplementedException();
+		}
 
-        public BlockState GetBlockState(int x, int y, int z, int storage)
-        {
-            return Air;
-        }
+		public void SetBlock(int x, int y, int z, Block block)
+		{
+			throw new System.NotImplementedException();
+		}
 
-        public IEnumerable<ChunkSection.BlockEntry> GetBlockStates(int positionX, int positionY, int positionZ)
-        {
-            return new[]
-            {
-               new ChunkSection.BlockEntry(Air, 0)
-            };
-        }
+		public void SetBlockState(int x, int y, int z, BlockState block)
+		{
+			throw new System.NotImplementedException();
+		}
 
-        public BlockState GetBlockState(BlockCoordinates coordinates)
-        {
-            return Air;
-        }
+		public BlockState GetBlockState(int x, int y, int z)
+		{
+			return Air;
+		}
 
-        /// <inheritdoc />
-        public void SetBlockState(int x,
-            int y,
-            int z,
-            BlockState block,
-            int storage,
-            BlockUpdatePriority priority = BlockUpdatePriority.High)
-        {
-            
-        }
+		public BlockState GetBlockState(int x, int y, int z, int storage)
+		{
+			return Air;
+		}
 
-        /// <inheritdoc />
-        public Biome GetBiome(BlockCoordinates coordinates)
-        {
-            return BiomeUtils.GetBiome(0);
-        }
+		public IEnumerable<ChunkSection.BlockEntry> GetBlockStates(int positionX, int positionY, int positionZ)
+		{
+			return new[] { new ChunkSection.BlockEntry(Air, 0) };
+		}
 
-        public int GetBiome(int x, int y, int z)
-        {
-            return 0;
-        }
+		public BlockState GetBlockState(BlockCoordinates coordinates)
+		{
+			return Air;
+		}
 
-        public bool HasBlock(int x, int y, int z)
-        {
-            return true;
-        }
+		/// <inheritdoc />
+		public void SetBlockState(int x,
+			int y,
+			int z,
+			BlockState block,
+			int storage,
+			BlockUpdatePriority priority = BlockUpdatePriority.High) { }
 
-        public BlockCoordinates FindBlockPosition(BlockCoordinates coords, out ChunkColumn chunk)
-        {
-            throw new System.NotImplementedException();
-        }
+		/// <inheritdoc />
+		public Biome GetBiome(BlockCoordinates coordinates)
+		{
+			return BiomeUtils.GetBiome(0);
+		}
 
-        public ChunkColumn GetChunkColumn(int x, int z)
-        {
-            throw new System.NotImplementedException();
-        }
+		public int GetBiome(int x, int y, int z)
+		{
+			return 0;
+		}
 
-        public bool IsTransparent(int posX, int posY, int posZ)
-        {
-            return !Block.Transparent;
-        }
+		public bool HasBlock(int x, int y, int z)
+		{
+			return true;
+		}
 
-        public bool IsSolid(int posX, int posY, int posZ)
-        {
-            return !Block.Solid;
-        }
+		public BlockCoordinates FindBlockPosition(BlockCoordinates coords, out ChunkColumn chunk)
+		{
+			throw new System.NotImplementedException();
+		}
 
-        public bool IsScheduled(int posX, int posY, int posZ)
-        {
-            return false;
-        }
+		public ChunkColumn GetChunkColumn(int x, int z)
+		{
+			throw new System.NotImplementedException();
+		}
 
-        public void GetBlockData(int posX, int posY, int posZ, out bool transparent, out bool solid)
-        {
-            transparent = !Block.Transparent;
-            solid = !Block.Solid;
-        }
+		public bool IsTransparent(int posX, int posY, int posZ)
+		{
+			return !Block.Transparent;
+		}
 
-        public ChunkColumn GetChunk(BlockCoordinates coordinates, bool cacheOnly = false)
-        {
-            throw new System.NotImplementedException();
-        }
+		public bool IsSolid(int posX, int posY, int posZ)
+		{
+			return !Block.Solid;
+		}
 
-        public ChunkColumn GetChunk(ChunkCoordinates coordinates, bool cacheOnly = false)
-        {
-            throw new System.NotImplementedException();
-        }
+		public bool IsScheduled(int posX, int posY, int posZ)
+		{
+			return false;
+		}
 
-        public void SetSkyLight(BlockCoordinates coordinates, byte skyLight)
-        {
-            throw new System.NotImplementedException();
-        }
+		public void GetBlockData(int posX, int posY, int posZ, out bool transparent, out bool solid)
+		{
+			transparent = !Block.Transparent;
+			solid = !Block.Solid;
+		}
 
-        public byte GetSkyLight(BlockCoordinates coordinates)
-        {
-            return 15;
-        }
+		public ChunkColumn GetChunk(BlockCoordinates coordinates, bool cacheOnly = false)
+		{
+			throw new System.NotImplementedException();
+		}
 
-        public byte GetBlockLight(BlockCoordinates coordinates)
-        {
-            return 0;
-        }
+		public ChunkColumn GetChunk(ChunkCoordinates coordinates, bool cacheOnly = false)
+		{
+			throw new System.NotImplementedException();
+		}
 
-        /// <inheritdoc />
-        public void SetBlockLight(BlockCoordinates coordinates, byte blockLight)
-        {
-            throw new System.NotImplementedException();
-        }
+		public void SetSkyLight(BlockCoordinates coordinates, byte skyLight)
+		{
+			throw new System.NotImplementedException();
+		}
 
-        /// <inheritdoc />
-        public bool TryGetBlockLight(BlockCoordinates coordinates, out byte blockLight)
-        {
-            blockLight = 0;
-            return true;
-        }
+		public byte GetSkyLight(BlockCoordinates coordinates)
+		{
+			return 15;
+		}
 
-        /// <inheritdoc />
-        public void GetLight(BlockCoordinates coordinates, out byte blockLight, out byte skyLight)
-        {
-            skyLight = 0xf;
-            blockLight = 0;
-        }
+		public byte GetBlockLight(BlockCoordinates coordinates)
+		{
+			return 0;
+		}
 
-        public int GetHeight(BlockCoordinates coordinates)
-        {
-            throw new System.NotImplementedException();
-        }
+		/// <inheritdoc />
+		public void SetBlockLight(BlockCoordinates coordinates, byte blockLight)
+		{
+			throw new System.NotImplementedException();
+		}
 
-        public Block GetBlock(BlockCoordinates coord, ChunkColumn tryChunk = null)
-        {
-            return Air.Block;
-        }
+		/// <inheritdoc />
+		public bool TryGetBlockLight(BlockCoordinates coordinates, out byte blockLight)
+		{
+			blockLight = 0;
 
-        public void SetBlock(Block block, bool broadcast = true, bool applyPhysics = true, bool calculateLight = true,
-            ChunkColumn possibleChunk = null)
-        {
-            throw new System.NotImplementedException();
-        }
-    }
+			return true;
+		}
+
+		/// <inheritdoc />
+		public void GetLight(BlockCoordinates coordinates, out byte blockLight, out byte skyLight)
+		{
+			skyLight = 0xf;
+			blockLight = 0;
+		}
+
+		public int GetHeight(BlockCoordinates coordinates)
+		{
+			throw new System.NotImplementedException();
+		}
+
+		public Block GetBlock(BlockCoordinates coord, ChunkColumn tryChunk = null)
+		{
+			return Air.Block;
+		}
+
+		public void SetBlock(Block block,
+			bool broadcast = true,
+			bool applyPhysics = true,
+			bool calculateLight = true,
+			ChunkColumn possibleChunk = null)
+		{
+			throw new System.NotImplementedException();
+		}
+	}
 }

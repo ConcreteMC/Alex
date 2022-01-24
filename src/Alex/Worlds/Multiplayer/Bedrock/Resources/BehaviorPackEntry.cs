@@ -10,6 +10,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock.Resources
 	{
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(BehaviorPackEntry));
 		private ResourcePackInfo Info { get; }
+
 		private ZipFileSystem FileSystem { get; set; } = null;
 		//public BedrockResourcePack ResourcePack { get; private set; }
 
@@ -24,18 +25,19 @@ namespace Alex.Worlds.Multiplayer.Bedrock.Resources
 		{
 			base.OnComplete(data);
 
-		//	if (!Directory.Exists("texturepacks"))
-		//		Directory.CreateDirectory("texturepacks");
+			//	if (!Directory.Exists("texturepacks"))
+			//		Directory.CreateDirectory("texturepacks");
 
-		//	File.WriteAllBytes($"BEHAVIORPACK_{Identifier}_{Version}.zip", data);
+			//	File.WriteAllBytes($"BEHAVIORPACK_{Identifier}_{Version}.zip", data);
 
 			if (!string.IsNullOrWhiteSpace(Info.ContentKey))
 			{
 				Log.Warn($"Skipping behaviorpack as they seem to require encryption.");
+
 				return;
 				//FileSystem.UseEncryption(Info.ContentKey);
 			}
-			
+
 			FileSystem = new ZipFileSystem(new MemoryStream(data), Info.ContentIdentity);
 			//ResourcePack = new BedrockResourcePack(FileSystem);
 

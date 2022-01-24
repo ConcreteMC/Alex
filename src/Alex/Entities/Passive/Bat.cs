@@ -19,11 +19,11 @@ namespace Alex.Entities.Passive
 
 				if (ModelRenderer != null)
 				{
-					
 					//ModelRenderer
 				}
 			}
 		}
+
 		public Bat(World level) : base(level)
 		{
 			Height = 0.9;

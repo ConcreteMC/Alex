@@ -5,101 +5,100 @@ using RocketUI;
 
 namespace Alex.Gui.Elements.Hud
 {
-    public class TipPopupComponent : Container, IChatRecipient
-    {
-        private TextElement Tip { get; set; }
-        private TextElement Popup { get; set; }
-        
-        private DateTime TipHideTime { get; set; } = DateTime.UtcNow;
-        private DateTime PopupHideTime { get; set; } = DateTime.UtcNow;
+	public class TipPopupComponent : Container, IChatRecipient
+	{
+		private TextElement Tip { get; set; }
+		private TextElement Popup { get; set; }
 
-        private bool DoUpdate { get; set; } = false;
+		private DateTime TipHideTime { get; set; } = DateTime.UtcNow;
+		private DateTime PopupHideTime { get; set; } = DateTime.UtcNow;
 
-        private static readonly Thickness TipMargin = new Thickness(0, 0, 0, 16);
-        public TipPopupComponent()
-        {
-            Tip = new TextElement(true)
-            {
-                Anchor = Alignment.BottomCenter,
-                BackgroundOverlay = Color.Black * 0.5f,
-                Margin = TipMargin
-            };
-            
-            Popup = new TextElement(true)
-            {
-                Anchor = Alignment.BottomCenter,
-                BackgroundOverlay = Color.Black * 0.5f
-               // Margin = new Thickness(0, 0, 0, -12)
-            };
-        }
+		private bool DoUpdate { get; set; } = false;
 
-        protected override void OnInit(IGuiRenderer renderer)
-        {
-            base.OnInit(renderer);
+		private static readonly Thickness TipMargin = new Thickness(0, 0, 0, 16);
 
-            Tip.Font = renderer.Font;
-            Popup.Font = renderer.Font;
-            
-            AddChild(Tip);
-            AddChild(Popup);
-        }
+		public TipPopupComponent()
+		{
+			Tip = new TextElement(true)
+			{
+				Anchor = Alignment.BottomCenter, BackgroundOverlay = Color.Black * 0.5f, Margin = TipMargin
+			};
 
-        protected override void OnUpdate(GameTime gameTime)
-        {
-            base.OnUpdate(gameTime);
+			Popup = new TextElement(true)
+			{
+				Anchor = Alignment.BottomCenter, BackgroundOverlay = Color.Black * 0.5f
+				// Margin = new Thickness(0, 0, 0, -12)
+			};
+		}
 
-            if (!DoUpdate)
-                return;
+		protected override void OnInit(IGuiRenderer renderer)
+		{
+			base.OnInit(renderer);
 
-            if (DateTime.UtcNow >= PopupHideTime && Popup.IsVisible)
-            {
-                Popup.IsVisible = false;
-                UpdateMargins();
-            }
-            
-            if (DateTime.UtcNow >= TipHideTime && Tip.IsVisible)
-            {
-                Tip.IsVisible = false;
-                UpdateMargins();
-            }
+			Tip.Font = renderer.Font;
+			Popup.Font = renderer.Font;
 
-            if (!Tip.IsVisible && !Popup.IsVisible)
-                DoUpdate = false;
-        }
+			AddChild(Tip);
+			AddChild(Popup);
+		}
 
-        private void UpdateMargins()
-        {
-            if (Popup.IsVisible)
-            {
-                Tip.Margin = TipMargin;
-            }
-            else
-            {
-                Tip.Margin = Thickness.Zero;
-            }
-        }
+		protected override void OnUpdate(GameTime gameTime)
+		{
+			base.OnUpdate(gameTime);
 
-        /// <inheritdoc />
-        public void AddMessage(string message, MessageType messageType)
-        {
-            switch (messageType)
-            {
-                case MessageType.Popup:
-                    Popup.Text = message;
-                    PopupHideTime = DateTime.UtcNow + TimeSpan.FromSeconds(3);
-                    Popup.IsVisible = true;
-                    
-                    break;
-                case MessageType.Tip:
-                    Tip.Text = message;
-                    TipHideTime = DateTime.UtcNow + TimeSpan.FromSeconds(3);
-                    Tip.IsVisible = true;
+			if (!DoUpdate)
+				return;
 
-                    break;
-            }
+			if (DateTime.UtcNow >= PopupHideTime && Popup.IsVisible)
+			{
+				Popup.IsVisible = false;
+				UpdateMargins();
+			}
 
-            DoUpdate = true;
-            UpdateMargins();
-        }
-    }
+			if (DateTime.UtcNow >= TipHideTime && Tip.IsVisible)
+			{
+				Tip.IsVisible = false;
+				UpdateMargins();
+			}
+
+			if (!Tip.IsVisible && !Popup.IsVisible)
+				DoUpdate = false;
+		}
+
+		private void UpdateMargins()
+		{
+			if (Popup.IsVisible)
+			{
+				Tip.Margin = TipMargin;
+			}
+			else
+			{
+				Tip.Margin = Thickness.Zero;
+			}
+		}
+
+		/// <inheritdoc />
+		public void AddMessage(string message, MessageType messageType)
+		{
+			switch (messageType)
+			{
+				case MessageType.Popup:
+					Popup.Text = message;
+					PopupHideTime = DateTime.UtcNow + TimeSpan.FromSeconds(3);
+					Popup.IsVisible = true;
+
+					break;
+
+				case MessageType.Tip:
+					Tip.Text = message;
+					TipHideTime = DateTime.UtcNow + TimeSpan.FromSeconds(3);
+					Tip.IsVisible = true;
+
+					break;
+			}
+
+			DoUpdate = true;
+			UpdateMargins();
+		}
+	}
 }

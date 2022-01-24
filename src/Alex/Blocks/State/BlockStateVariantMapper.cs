@@ -6,144 +6,152 @@ using Alex.Graphics.Models.Blocks;
 
 namespace Alex.Blocks.State
 {
-    public sealed class BlockStateVariantMapper
-    {
-        private static NLog.Logger Log = NLog.LogManager.GetCurrentClassLogger(typeof(BlockStateVariantMapper));
-        private HashSet<BlockState> Variants { get; }
-        private HashSet<string> _knownKeys = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-        private BlockState _default = null;
-        
-        public  bool       IsMultiPart { get; set; } = false;
-        
-        private BlockModel _model = null;
-        public BlockModel Model
-        {
-            get
-            {
-                return _model ?? new MissingBlockModel();
-            }
-            set
-            {
-                _model = value;
-            }
-        }
-        
-        public BlockStateVariantMapper(List<BlockState> variants)
-        {
-            Variants = new HashSet<BlockState>(variants);
+	public sealed class BlockStateVariantMapper
+	{
+		private static NLog.Logger Log = NLog.LogManager.GetCurrentClassLogger(typeof(BlockStateVariantMapper));
+		private HashSet<BlockState> Variants { get; }
+		private HashSet<string> _knownKeys = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+		private BlockState _default = null;
 
-            foreach (var variant in variants)
-            {
-                variant.VariantMapper = this;
+		public bool IsMultiPart { get; set; } = false;
 
-                if (variant.Default)
-                    _default = variant;
-            }
+		private BlockModel _model = null;
 
-            foreach (var key in variants.SelectMany(x => x.States.Select(s => s.Name).Distinct()))
-                _knownKeys.Add(key);
-        }
-		
-        public bool TryResolve<T>(BlockState source, StateProperty<T> property, T value, out BlockState result)
-        {
-            if (!_knownKeys.Contains(property.Name))
-            {
-                result = source;
-                return false;
-            }
-            
-            var clone = new BlockState
-            {
-                Name = source.Name,
-                Id = source.Id, 
-                Block = source.Block,
-                VariantMapper = source.VariantMapper,
-                Default = source.Default,
-                ModelData = source.ModelData,
-                States = new HashSet<IStateProperty>(source.States.Count, source.States.Comparer)
-            };
-            
-            foreach (var prop in source.States)
-            {
-                var p = prop;
+		public BlockModel Model
+		{
+			get
+			{
+				return _model ?? new MissingBlockModel();
+			}
+			set
+			{
+				_model = value;
+			}
+		}
 
-                if (p.Identifier == property.Identifier)
-                {
-                    clone.States.Add(p.WithValue(value));
-                }
-                else
-                {
-                    clone.States.Add(p);
-                }
-            }
-            
-            if (Variants.TryGetValue(clone, out var actualValue))
-            {
-                result = actualValue;
-                return true;
-            }
+		public BlockStateVariantMapper(List<BlockState> variants)
+		{
+			Variants = new HashSet<BlockState>(variants);
 
-            result = source;
-            return false;
-        }
-        
-        public bool TryResolve(BlockState source, string property, string value, out BlockState result)
-        {
-            result = source;
-            if (!_knownKeys.Contains(property))
-            {
-                return false;
-            }
-            
-            var propHah = property.GetHashCode(StringComparison.OrdinalIgnoreCase);
-            if (source.States.All(x => x.Identifier != propHah))
-                return false;
-            
-          
-            var clone = new BlockState
-            {
-                Name = source.Name,
-                Id = source.Id,
-                Block = source.Block,
-                VariantMapper = source.VariantMapper,
-                Default = source.Default,
-                ModelData = source.ModelData,
-                States = new HashSet<IStateProperty>(source.States.Count, source.States.Comparer)
-            };
-            
-            foreach (var prop in source.States)
-            {
-                var p = prop;
+			foreach (var variant in variants)
+			{
+				variant.VariantMapper = this;
 
-                if (p.Identifier == propHah)
-                {
-                    clone.States.Add(p.WithValue(value));
-                }
-                else
-                {
-                    clone.States.Add(p);
-                }
-            }
-          
-            if (Variants.TryGetValue(clone, out var actualValue))
-            {
-                result = actualValue;
-                return true;
-            }
+				if (variant.Default)
+					_default = variant;
+			}
 
-            result = source;
-            return false;
-        }
+			foreach (var key in variants.SelectMany(x => x.States.Select(s => s.Name).Distinct()))
+				_knownKeys.Add(key);
+		}
 
-        public BlockState[] GetVariants()
-        {
-            return Variants.ToArray();
-        }
+		public bool TryResolve<T>(BlockState source, StateProperty<T> property, T value, out BlockState result)
+		{
+			if (!_knownKeys.Contains(property.Name))
+			{
+				result = source;
 
-        public BlockState GetDefaultState()
-        {
-            return _default;
-            //return Variants.FirstOrDefault(x => x.Default);
-        }
-    }
+				return false;
+			}
+
+			var clone = new BlockState
+			{
+				Name = source.Name,
+				Id = source.Id,
+				Block = source.Block,
+				VariantMapper = source.VariantMapper,
+				Default = source.Default,
+				ModelData = source.ModelData,
+				States = new HashSet<IStateProperty>(source.States.Count, source.States.Comparer)
+			};
+
+			foreach (var prop in source.States)
+			{
+				var p = prop;
+
+				if (p.Identifier == property.Identifier)
+				{
+					clone.States.Add(p.WithValue(value));
+				}
+				else
+				{
+					clone.States.Add(p);
+				}
+			}
+
+			if (Variants.TryGetValue(clone, out var actualValue))
+			{
+				result = actualValue;
+
+				return true;
+			}
+
+			result = source;
+
+			return false;
+		}
+
+		public bool TryResolve(BlockState source, string property, string value, out BlockState result)
+		{
+			result = source;
+
+			if (!_knownKeys.Contains(property))
+			{
+				return false;
+			}
+
+			var propHah = property.GetHashCode(StringComparison.OrdinalIgnoreCase);
+
+			if (source.States.All(x => x.Identifier != propHah))
+				return false;
+
+
+			var clone = new BlockState
+			{
+				Name = source.Name,
+				Id = source.Id,
+				Block = source.Block,
+				VariantMapper = source.VariantMapper,
+				Default = source.Default,
+				ModelData = source.ModelData,
+				States = new HashSet<IStateProperty>(source.States.Count, source.States.Comparer)
+			};
+
+			foreach (var prop in source.States)
+			{
+				var p = prop;
+
+				if (p.Identifier == propHah)
+				{
+					clone.States.Add(p.WithValue(value));
+				}
+				else
+				{
+					clone.States.Add(p);
+				}
+			}
+
+			if (Variants.TryGetValue(clone, out var actualValue))
+			{
+				result = actualValue;
+
+				return true;
+			}
+
+			result = source;
+
+			return false;
+		}
+
+		public BlockState[] GetVariants()
+		{
+			return Variants.ToArray();
+		}
+
+		public BlockState GetDefaultState()
+		{
+			return _default;
+			//return Variants.FirstOrDefault(x => x.Default);
+		}
+	}
 }

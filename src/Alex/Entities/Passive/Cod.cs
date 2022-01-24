@@ -8,7 +8,7 @@ namespace Alex.Entities.Passive
 		/// <inheritdoc />
 		public Cod(World level) : base(level)
 		{
-			Width = 0.5; 
+			Width = 0.5;
 			Height = 0.3;
 		}
 	}

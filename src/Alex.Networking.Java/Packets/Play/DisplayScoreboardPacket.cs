@@ -6,11 +6,11 @@ namespace Alex.Networking.Java.Packets.Play
 	{
 		public ScoreboardPosition Position { get; set; }
 		public string ScoreName { get; set; }
-		
+
 		/// <inheritdoc />
 		public override void Decode(MinecraftStream stream)
 		{
-			Position = (ScoreboardPosition) stream.ReadByte();
+			Position = (ScoreboardPosition)stream.ReadByte();
 			ScoreName = stream.ReadString();
 		}
 
@@ -35,7 +35,7 @@ namespace Alex.Networking.Java.Packets.Play
 			TeamGray = 10,
 			TeamDarkGray = 11,
 			TeamBlue = 12,
-			
+
 			TeamOther13 = 13,
 			TeamOther14 = 14,
 			TeamOther15 = 15,

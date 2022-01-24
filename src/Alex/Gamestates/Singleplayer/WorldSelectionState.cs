@@ -29,13 +29,14 @@ public class WorldSelectionState : ListSelectionStateBase<WorldListEntry>
 	private AlexButton _deleteButton;
 	private AlexButton _editButton;
 	private AlexButton _recreateButton;
+
 	public WorldSelectionState(GuiPanoramaSkyBox skyBox, IStorageSystem storageSystem)
 	{
 		TitleTranslationKey = "selectWorld.title";
-		
+
 		_skyBox = skyBox;
 		_storageSystem = storageSystem.Open("storage", "worlds");
-		
+
 		Header.Padding = new Thickness(3, 3, 3, 0);
 		Header.Margin = new Thickness(3, 3, 3, 0);
 
@@ -50,13 +51,10 @@ public class WorldSelectionState : ListSelectionStateBase<WorldListEntry>
 						});
 
 				row.AddChild(
-					_createButton =
-						new AlexButton(
-							"New World",
-							CreateWorldButtonPressed)
-						{
-							TranslationKey = "selectWorld.create", Enabled = false
-						});
+					_createButton = new AlexButton("New World", CreateWorldButtonPressed)
+					{
+						TranslationKey = "selectWorld.create", Enabled = false
+					});
 			});
 
 		Footer.AddRow(
@@ -133,25 +131,23 @@ public class WorldSelectionState : ListSelectionStateBase<WorldListEntry>
 		if (selectedItem == null)
 			return;
 
-		Alex.GameStateManager.SetActiveState(new GuiConfirmState(new GuiConfirmState.GuiConfirmStateOptions()
-		{
-			WarningTranslationKey = "selectWorld.deleteWarning",
-			WarningParameters = new []
-			{
-				selectedItem.WorldInfo.Name	
-			},
-			
-			MessageTranslationKey = "selectWorld.deleteQuestion",
-			ConfirmTranslationKey = "selectWorld.deleteButton",
-			CancelTranslationKey = "gui.cancel"
-		}, confirm =>
-		{
-			if (confirm)
-			{
-				_storageSystem.Delete(selectedItem.WorldInfo.Name);
-				RemoveItem(selectedItem);
-			}
-		}), true, false);
+		Alex.GameStateManager.SetActiveState(
+			new GuiConfirmState(
+				new GuiConfirmState.GuiConfirmStateOptions()
+				{
+					WarningTranslationKey = "selectWorld.deleteWarning",
+					WarningParameters = new[] { selectedItem.WorldInfo.Name },
+					MessageTranslationKey = "selectWorld.deleteQuestion",
+					ConfirmTranslationKey = "selectWorld.deleteButton",
+					CancelTranslationKey = "gui.cancel"
+				}, confirm =>
+				{
+					if (confirm)
+					{
+						_storageSystem.Delete(selectedItem.WorldInfo.Name);
+						RemoveItem(selectedItem);
+					}
+				}), true, false);
 	}
 
 	private void OnEditButtonPressed()
@@ -244,9 +240,8 @@ public class WorldSelectionState : ListSelectionStateBase<WorldListEntry>
 							TntExplodes = true,
 							SendCommandfeedback = true,
 							RandomTickSpeed = 3,
-							
 						};
-						
+
 						level.Dimension = Dimension.Overworld;
 						level.Initialize();
 						levelManager.Levels.Add(level);

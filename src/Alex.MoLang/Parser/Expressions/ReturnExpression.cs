@@ -17,7 +17,8 @@ namespace Alex.MoLang.Parser.Expressions
 		}
 
 		/// <inheritdoc />
-		public ReturnExpression(IExpression value) : base() {
+		public ReturnExpression(IExpression value) : base()
+		{
 			_value = value;
 		}
 	}

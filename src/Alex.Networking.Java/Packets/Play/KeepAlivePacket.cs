@@ -21,7 +21,7 @@ namespace Alex.Networking.Java.Packets.Play
 			stream.WriteLong(KeepAliveid);
 		}
 	}
-	
+
 	public class KeepAliveResponsePacket : Packet<KeepAliveResponsePacket>
 	{
 		public KeepAliveResponsePacket()

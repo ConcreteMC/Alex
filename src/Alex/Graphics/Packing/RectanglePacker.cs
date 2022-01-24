@@ -62,17 +62,13 @@ internal abstract class RectanglePacker
 ///   the object you tried to pack into the remaining packing area.
 /// </remarks>
 [Serializable]
-internal class OutOfSpaceException : Exception 
+internal class OutOfSpaceException : Exception
 {
 	/// <summary>Initializes the exception with an error message</summary>
 	/// <param name="message">Error message describing the cause of the exception</param>
-	public OutOfSpaceException(string message) 
-		: base(message) 
-	{ 
-	}
+	public OutOfSpaceException(string message) : base(message) { }
 }
 
- 
 [Serializable]
 internal class AtlasException : Exception
 {
@@ -90,12 +86,10 @@ internal class AtlasException : Exception
 		FailedToSaveImage,
 		FailedToSaveMap
 	}
+
 	/// <summary>Initializes the exception with an error message</summary>
 	/// <param name="message">Error message describing the cause of the exception</param>
-	public AtlasException(FailCode message)
-		: base(message.ToString())
-	{
-	}
+	public AtlasException(FailCode message) : base(message.ToString()) { }
 }
 
 /// <summary>Rectangle packer using an algorithm by Javier Arevalo</summary>

@@ -10,17 +10,13 @@ namespace Alex.Graphics.Models
 	/// </summary>
 	public sealed class ModelMeshCollection : ReadOnlyCollection<ModelMesh>
 	{
-		internal ModelMeshCollection(IList<ModelMesh> list)
-			: base(list)
-		{
+		internal ModelMeshCollection(IList<ModelMesh> list) : base(list) { }
 
-		}
-		
 		internal void Add(ModelMesh item)
 		{
 			Items.Add(item);
 		}
-		
+
 		internal void Remove(ModelMesh item)
 		{
 			Items.Remove(item);
@@ -35,8 +31,10 @@ namespace Alex.Graphics.Models
 			get
 			{
 				ModelMesh ret;
+
 				if (!TryGetValue(meshName, out ret))
 					throw new KeyNotFoundException();
+
 				return ret;
 			}
 		}
@@ -57,11 +55,13 @@ namespace Alex.Graphics.Models
 				if (string.Compare(mesh.Name, meshName, StringComparison.Ordinal) == 0)
 				{
 					value = mesh;
+
 					return true;
 				}
 			}
 
 			value = null;
+
 			return false;
 		}
 
@@ -100,6 +100,7 @@ namespace Alex.Graphics.Models
 			public bool MoveNext()
 			{
 				_position++;
+
 				return (_position < _collection.Count);
 			}
 
@@ -108,9 +109,7 @@ namespace Alex.Graphics.Models
 			/// <summary>
 			/// Immediately releases the unmanaged resources used by this object.
 			/// </summary>
-			public void Dispose()
-			{
-			}
+			public void Dispose() { }
 
 			#endregion
 

@@ -5,16 +5,12 @@ namespace Alex.Utils.Auth
 {
 	public class BedrockTokenPair
 	{
-		[JsonProperty("access_token")]
-		public string AccessToken;
-		
-		[JsonProperty("refresh_token")]
-		public string RefreshToken;
+		[JsonProperty("access_token")] public string AccessToken;
 
-		[JsonProperty("expiry_time")]
-		public DateTime ExpiryTime;
+		[JsonProperty("refresh_token")] public string RefreshToken;
 
-		[JsonIgnore]
-		public string DeviceId;
+		[JsonProperty("expiry_time")] public DateTime ExpiryTime;
+
+		[JsonIgnore] public string DeviceId;
 	}
 }

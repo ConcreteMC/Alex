@@ -17,19 +17,23 @@ namespace Alex.MoLang.Parser.Expressions
 		/// <inheritdoc />
 		public override IMoValue Evaluate(MoScope scope, MoLangEnvironment environment)
 		{
-			int     loop     = (int) (double)Count.Evaluate(scope, environment).Value;
+			int loop = (int)(double)Count.Evaluate(scope, environment).Value;
 			MoScope subScope = new MoScope();
 
-			while (loop > 0) {
+			while (loop > 0)
+			{
 				subScope.IsContinue = false;
 				subScope.IsBreak = false;
-				
+
 				Body.Evaluate(subScope, environment);
 				loop--;
 
-				if (subScope.ReturnValue != null) {
+				if (subScope.ReturnValue != null)
+				{
 					return subScope.ReturnValue;
-				} else if (subScope.IsBreak) {
+				}
+				else if (subScope.IsBreak)
+				{
 					break;
 				}
 			}

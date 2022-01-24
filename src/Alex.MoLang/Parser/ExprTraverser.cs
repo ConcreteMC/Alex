@@ -8,188 +8,198 @@ using Alex.MoLang.Runtime.Exceptions;
 
 namespace Alex.MoLang.Parser
 {
-    public static class ExprFinder
-    {
-        public static List<IExpression> Find(Predicate<IExpression> predicate, params IExpression[] expressions) {
-            ExprTraverser  traverser = new ExprTraverser();
-            FindingVisitor visitor   = new FindingVisitor(predicate);
+	public static class ExprFinder
+	{
+		public static List<IExpression> Find(Predicate<IExpression> predicate, params IExpression[] expressions)
+		{
+			ExprTraverser traverser = new ExprTraverser();
+			FindingVisitor visitor = new FindingVisitor(predicate);
 
-            traverser.Visitors.Add(visitor);
-            traverser.Traverse(expressions);
+			traverser.Visitors.Add(visitor);
+			traverser.Traverse(expressions);
 
-            return visitor.FoundExpressions;
-        }
+			return visitor.FoundExpressions;
+		}
 
-        public static IExpression FindFirst(Predicate<IExpression> predicate, params IExpression[] expressions) {
-            ExprTraverser       traverser = new ExprTraverser();
-            FirstFindingVisitor visitor   = new FirstFindingVisitor(predicate);
+		public static IExpression FindFirst(Predicate<IExpression> predicate, params IExpression[] expressions)
+		{
+			ExprTraverser traverser = new ExprTraverser();
+			FirstFindingVisitor visitor = new FirstFindingVisitor(predicate);
 
-            traverser.Visitors.Add(visitor);
-            traverser.Traverse(expressions);
+			traverser.Visitors.Add(visitor);
+			traverser.Traverse(expressions);
 
-            return visitor.Found;
-        }
-    }
-    public class ExprTraverser
-    {
-        public readonly List<IExprVisitor> Visitors = new List<IExprVisitor>();
+			return visitor.Found;
+		}
+	}
 
-        private bool _stop = false;
-        public IExpression[] Traverse(IExpression[] expressions)
-        {
-            TraverseArray(expressions);
+	public class ExprTraverser
+	{
+		public readonly List<IExprVisitor> Visitors = new List<IExprVisitor>();
 
-            return expressions.Where(x => x != null).ToArray();
-        }
+		private bool _stop = false;
 
-        private void TraverseArray(IExpression[] expressions)
-        {
-            foreach (IExprVisitor visitor in Visitors) {
-                visitor.BeforeTraverse(expressions);
-            }
+		public IExpression[] Traverse(IExpression[] expressions)
+		{
+			TraverseArray(expressions);
 
-            for (var index = 0; index < expressions.Length; index++)
-            {
-                IExpression expression = expressions[index];
+			return expressions.Where(x => x != null).ToArray();
+		}
 
-                if (expression == null)
-                    throw new MoLangRuntimeException("Expression was null", null);
+		private void TraverseArray(IExpression[] expressions)
+		{
+			foreach (IExprVisitor visitor in Visitors)
+			{
+				visitor.BeforeTraverse(expressions);
+			}
 
-                expressions[index] = TraverseExpr(expression, null);
+			for (var index = 0; index < expressions.Length; index++)
+			{
+				IExpression expression = expressions[index];
 
-                if (_stop)
-                {
-                    break;
-                }
-            }
+				if (expression == null)
+					throw new MoLangRuntimeException("Expression was null", null);
 
-            foreach (IExprVisitor visitor in Visitors) {
-                visitor.AfterTraverse(expressions);
-            }
+				expressions[index] = TraverseExpr(expression, null);
 
-            //return expressions.Where(x => x != null).ToArray();
-        }
+				if (_stop)
+				{
+					break;
+				}
+			}
 
-        private IExpression TraverseExpr(IExpression expression, IExpression parent)
-        {
-            Visit(expression);
-            expression.Meta.Parent = parent;
-            foreach (var field in GetAllProperties(expression.GetType()))
-            {
-                if (!typeof(IEnumerable<Expression>).IsAssignableFrom(field.PropertyType)
-                    && !typeof(IExpression).IsAssignableFrom(field.PropertyType))
-                {
-                    continue;
-                }
-                
-                //field.setAccessible(true);
-                var fieldValue = GetFieldValue(field, expression);
-                if (fieldValue == null)
-                    continue;
-                
-                if (fieldValue is IExpression original)
-                {
-                    fieldValue = TraverseExpr(original, expression);
-                }
-                else if (fieldValue is IEnumerable<IExpression> expressions)
-                {
-                    var exprs = expressions.ToArray();
-                    foreach (var ex in exprs)
-                    {
-                        if (ex != null)
-                            ex.Meta.Parent = expression;
-                    }
-                    TraverseArray(exprs);
-                    
-                    fieldValue = exprs;
-                }
-                
-                SetFieldValue(field, expression, fieldValue);
+			foreach (IExprVisitor visitor in Visitors)
+			{
+				visitor.AfterTraverse(expressions);
+			}
 
-                if (_stop)
-                {
-                    break;
-                }
-            }
+			//return expressions.Where(x => x != null).ToArray();
+		}
 
-            OnLeave(expression);
-            return expression;
-        }
+		private IExpression TraverseExpr(IExpression expression, IExpression parent)
+		{
+			Visit(expression);
+			expression.Meta.Parent = parent;
 
-        private void Visit(IExpression expression)
-        {
-          //  VisitationResult visitationResult = VisitationResult.None;
-            foreach (var visitor in Visitors)
-            {
-               visitor.OnVisit(this, expression);
-            }
+			foreach (var field in GetAllProperties(expression.GetType()))
+			{
+				if (!typeof(IEnumerable<Expression>).IsAssignableFrom(field.PropertyType)
+				    && !typeof(IExpression).IsAssignableFrom(field.PropertyType))
+				{
+					continue;
+				}
 
-           // return visitationResult;
-        }
+				//field.setAccessible(true);
+				var fieldValue = GetFieldValue(field, expression);
 
-        private void OnLeave(IExpression expression)
-        {
-            foreach (var visitor in Visitors)
-            {
-                visitor.OnLeave(expression);
-            }
-        }
+				if (fieldValue == null)
+					continue;
 
-        public void Stop()
-        {
-            _stop = true;
-        }
+				if (fieldValue is IExpression original)
+				{
+					fieldValue = TraverseExpr(original, expression);
+				}
+				else if (fieldValue is IEnumerable<IExpression> expressions)
+				{
+					var exprs = expressions.ToArray();
 
-        private static ConcurrentDictionary<Type, PropertyInfo[]> _cachedProperties =
-            new ConcurrentDictionary<Type, PropertyInfo[]>();
-        private static PropertyInfo[] GetAllProperties(Type type)
-        {
-            return _cachedProperties.GetOrAdd(
-                type, t => t.GetProperties(BindingFlags.Public | BindingFlags.Instance).ToArray());
-          //  return type.GetProperties(BindingFlags.Public | BindingFlags.Instance).ToList();
-        }
+					foreach (var ex in exprs)
+					{
+						if (ex != null)
+							ex.Meta.Parent = expression;
+					}
 
-        private object GetFieldValue(PropertyInfo field, object obj)
-        {
-            return field.GetValue(obj);
-            try
-            {
-                return field.GetValue(obj);//.get(obj);
-            }
-            catch (Exception throwable)
-            {
-                // noop
-            }
+					TraverseArray(exprs);
 
-            return null;
-        }
+					fieldValue = exprs;
+				}
 
-        private void SetFieldValue(PropertyInfo field, object obj, object value)
-        {
-            field.SetValue(obj, value);
+				SetFieldValue(field, expression, fieldValue);
 
-            return;
-            try
-            {
-                
-            }
-            catch (Exception throwable)
-            {
-                
-                // noop
-            }
-        }
+				if (_stop)
+				{
+					break;
+				}
+			}
 
-        [Flags]
-        public enum VisitationResult
-        {
-            None,
-            
-            RemoveCurrent = 0x01,
-            StopTraversal = 0x02,
-            DontTraverseChildren = 0x04,
-            DontTraverseCurrent = 0x08,
-            DontTraverseCurrentAndChildren = DontTraverseCurrent | DontTraverseChildren
-        }
-    }
+			OnLeave(expression);
+
+			return expression;
+		}
+
+		private void Visit(IExpression expression)
+		{
+			//  VisitationResult visitationResult = VisitationResult.None;
+			foreach (var visitor in Visitors)
+			{
+				visitor.OnVisit(this, expression);
+			}
+
+			// return visitationResult;
+		}
+
+		private void OnLeave(IExpression expression)
+		{
+			foreach (var visitor in Visitors)
+			{
+				visitor.OnLeave(expression);
+			}
+		}
+
+		public void Stop()
+		{
+			_stop = true;
+		}
+
+		private static ConcurrentDictionary<Type, PropertyInfo[]> _cachedProperties =
+			new ConcurrentDictionary<Type, PropertyInfo[]>();
+
+		private static PropertyInfo[] GetAllProperties(Type type)
+		{
+			return _cachedProperties.GetOrAdd(
+				type, t => t.GetProperties(BindingFlags.Public | BindingFlags.Instance).ToArray());
+			//  return type.GetProperties(BindingFlags.Public | BindingFlags.Instance).ToList();
+		}
+
+		private object GetFieldValue(PropertyInfo field, object obj)
+		{
+			return field.GetValue(obj);
+
+			try
+			{
+				return field.GetValue(obj); //.get(obj);
+			}
+			catch (Exception throwable)
+			{
+				// noop
+			}
+
+			return null;
+		}
+
+		private void SetFieldValue(PropertyInfo field, object obj, object value)
+		{
+			field.SetValue(obj, value);
+
+			return;
+
+			try { }
+			catch (Exception throwable)
+			{
+				// noop
+			}
+		}
+
+		[Flags]
+		public enum VisitationResult
+		{
+			None,
+
+			RemoveCurrent = 0x01,
+			StopTraversal = 0x02,
+			DontTraverseChildren = 0x04,
+			DontTraverseCurrent = 0x08,
+			DontTraverseCurrentAndChildren = DontTraverseCurrent | DontTraverseChildren
+		}
+	}
 }

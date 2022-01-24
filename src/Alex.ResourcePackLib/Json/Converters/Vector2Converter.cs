@@ -9,12 +9,9 @@ namespace Alex.ResourcePackLib.Json.Converters
 	{
 		public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
 		{
-			var v = value is Vector2 ? (Vector2) value : new Vector2();
+			var v = value is Vector2 ? (Vector2)value : new Vector2();
 
-			writer.WriteRawValue(JsonConvert.SerializeObject(new float[]
-			{
-				v.X, v.Y
-			}, Formatting.None));
+			writer.WriteRawValue(JsonConvert.SerializeObject(new float[] { v.X, v.Y }, Formatting.None));
 			/*
 			serializer.Serialize(writer, new float[]
 			{
@@ -23,13 +20,17 @@ namespace Alex.ResourcePackLib.Json.Converters
 			});*/
 		}
 
-		public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
+		public override object ReadJson(JsonReader reader,
+			Type objectType,
+			object existingValue,
+			JsonSerializer serializer)
 		{
 			var obj = JToken.Load(reader);
 
 			if (obj.Type == JTokenType.Array)
 			{
 				var arr = (JArray)obj;
+
 				if (arr.Count == 2)
 				{
 					var v3 = new Vector2();
@@ -42,7 +43,7 @@ namespace Alex.ResourcePackLib.Json.Converters
 					{
 						v3.X = arr[0].Value<float>();
 					}
-					
+
 					if (arr[1].Type == JTokenType.Integer)
 					{
 						v3.Y = arr[1].Value<int>();
@@ -61,7 +62,8 @@ namespace Alex.ResourcePackLib.Json.Converters
 
 		public override bool CanConvert(Type objectType)
 		{
-			return typeof(Vector2).IsAssignableFrom(objectType) || typeof(Vector2?).IsAssignableFrom(objectType);;
+			return typeof(Vector2).IsAssignableFrom(objectType) || typeof(Vector2?).IsAssignableFrom(objectType);
+			;
 		}
 	}
 }

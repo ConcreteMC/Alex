@@ -14,7 +14,8 @@ namespace Alex.MoLang.Parser.Expressions
 		}
 
 		/// <inheritdoc />
-		public UnaryMinusExpression(IExpression value) {
+		public UnaryMinusExpression(IExpression value)
+		{
 			_value = value;
 		}
 	}

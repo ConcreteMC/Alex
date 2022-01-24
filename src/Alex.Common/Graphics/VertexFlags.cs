@@ -9,7 +9,7 @@ namespace Alex.Common.Graphics
 		Solid = (1 << 1),
 		Transparent = (1 << 2),
 		FullCube = (1 << 3),
-		
+
 		Default = Solid | Transparent | FullCube
 	}
 }

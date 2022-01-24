@@ -21,10 +21,7 @@ namespace Alex.ResourcePackLib.Json.Converters
 			{
 				var v = val.Down.Origin;
 
-				writer.WriteRawValue(JsonConvert.SerializeObject(new float[]
-				{
-					v.X, v.Y
-				}, Formatting.None));
+				writer.WriteRawValue(JsonConvert.SerializeObject(new float[] { v.X, v.Y }, Formatting.None));
 
 				return;
 			}
@@ -37,7 +34,7 @@ namespace Alex.ResourcePackLib.Json.Converters
 			newObject.Add("west", val.West);
 			newObject.Add("up", val.Up);
 			newObject.Add("down", val.Down);
-			
+
 			serializer.Serialize(writer, newObject);
 		}
 
@@ -48,7 +45,7 @@ namespace Alex.ResourcePackLib.Json.Converters
 			bool hasExistingValue,
 			JsonSerializer serializer)
 		{
-			var               obj     = JToken.Load(reader);
+			var obj = JToken.Load(reader);
 
 			if (obj.Type == JTokenType.Array)
 			{
@@ -56,34 +53,47 @@ namespace Alex.ResourcePackLib.Json.Converters
 
 				return new EntityModelUV(origin);
 			}
-			
-			var           jObject = (JObject)obj;
-			EntityModelUV uvData  = new EntityModelUV();
+
+			var jObject = (JObject)obj;
+			EntityModelUV uvData = new EntityModelUV();
+
 			foreach (var property in jObject)
 			{
 				if (property.Value.Type != JTokenType.Object)
 					continue;
 
-				var j2 = (JObject) property.Value;
+				var j2 = (JObject)property.Value;
+
 				switch (property.Key)
 				{
 					case "north":
 						uvData.North = j2.ToObject<EntityModelUVData>(serializer);
+
 						break;
+
 					case "east":
 						uvData.East = j2.ToObject<EntityModelUVData>(serializer);
+
 						break;
+
 					case "south":
 						uvData.South = j2.ToObject<EntityModelUVData>(serializer);
+
 						break;
+
 					case "west":
 						uvData.West = j2.ToObject<EntityModelUVData>(serializer);
+
 						break;
+
 					case "up":
 						uvData.Up = j2.ToObject<EntityModelUVData>(serializer);
+
 						break;
+
 					case "down":
 						uvData.Down = j2.ToObject<EntityModelUVData>(serializer);
+
 						break;
 				}
 			}

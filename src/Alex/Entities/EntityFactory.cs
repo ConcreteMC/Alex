@@ -35,42 +35,47 @@ namespace Alex.Entities
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(EntityFactory));
 
 		private static ConcurrentDictionary<string, Func<ModelRenderer>> _registeredRenderers =
-			new ConcurrentDictionary<string,  Func<ModelRenderer>>();
+			new ConcurrentDictionary<string, Func<ModelRenderer>>();
 
 		private static IReadOnlyDictionary<long, EntityData> _idToData;
+
 		public static void Load(ResourceManager resourceManager, IProgressReceiver progressReceiver)
 		{
 			progressReceiver?.UpdateProgress(0, "Loading entity data...");
 
-            Dictionary<long, EntityData> networkIdToData = new Dictionary<long, EntityData>();
-            EntityData[] entityObjects = JsonConvert.DeserializeObject<EntityData[]>(ResourceManager.ReadStringResource("Alex.Resources.NewEntities.txt"));
+			Dictionary<long, EntityData> networkIdToData = new Dictionary<long, EntityData>();
 
-            long unknownId = 0;
-            for (int i = 0; i < entityObjects.Length; i++)
+			EntityData[] entityObjects = JsonConvert.DeserializeObject<EntityData[]>(
+				ResourceManager.ReadStringResource("Alex.Resources.NewEntities.txt"));
+
+			long unknownId = 0;
+
+			for (int i = 0; i < entityObjects.Length; i++)
 			{
-                EntityData p = entityObjects[i];
-                var originalName = p.Name;
-                p.OriginalName = originalName;
-                //p.Name = p.Name.Replace("_", "");
-                
-                long id = 0;
+				EntityData p = entityObjects[i];
+				var originalName = p.Name;
+				p.OriginalName = originalName;
+				//p.Name = p.Name.Replace("_", "");
+
+				long id = 0;
 				progressReceiver?.UpdateProgress(i, entityObjects.Length, "Loading entity data...", p.Name);
-				if (resourceManager.Registries.Entities.Entries.TryGetValue($"minecraft:{originalName}",
-					out var registryEntry))
-                {
-                    id = registryEntry.ProtocolId;
+
+				if (resourceManager.Registries.Entities.Entries.TryGetValue(
+					    $"minecraft:{originalName}", out var registryEntry))
+				{
+					id = registryEntry.ProtocolId;
 					networkIdToData.TryAdd(registryEntry.ProtocolId, p);
-                    //networkIdToData.TryAdd(p.InternalId + 1, p);
-                }
+					//networkIdToData.TryAdd(p.InternalId + 1, p);
+				}
 				else
 				{
 					Log.Warn($"Could not resolve {p.Name}'s protocol id!");
-                    id = unknownId++;
-                }
+					id = unknownId++;
+				}
 			}
 
 			_idToData = networkIdToData;
-        }
+		}
 
 		public static bool ModelByNetworkId(long networkId, out EntityData data)
 		{
@@ -89,7 +94,7 @@ namespace Alex.Entities
 				//}
 			}
 
-		//	renderer = null;
+			//	renderer = null;
 			return false;
 		}
 
@@ -101,7 +106,7 @@ namespace Alex.Entities
 			{
 				lookupName = "fireworks_rocket";
 			}
-			
+
 			if (_registeredRenderers.TryGetValue(lookupName, out var func))
 			{
 				return func();
@@ -129,13 +134,15 @@ namespace Alex.Entities
 			}
 			else
 			{
-				var f = _registeredRenderers.FirstOrDefault(x => x.Key.ToString().ToLowerInvariant().Contains(name.ToLowerInvariant())).Value;
+				var f = _registeredRenderers
+				   .FirstOrDefault(x => x.Key.ToString().ToLowerInvariant().Contains(name.ToLowerInvariant())).Value;
 
 				if (f != null)
 				{
 					return f();
 				}
 			}
+
 			return null;
 		}
 
@@ -156,7 +163,7 @@ namespace Alex.Entities
 			{
 				if (!texture.Value.IsDisposed)
 					texture.Value?.Dispose();
-			//	if (texture.Value != null)
+				//	if (texture.Value != null)
 				//	texture.Value.Dispose();
 			}
 		}
@@ -171,7 +178,7 @@ namespace Alex.Entities
 			int total = entityDefinitions.Count;
 
 			foreach (var def in entityDefinitions.OrderByDescending(
-				x => string.IsNullOrWhiteSpace(x.Value.MinEngineVersion)))
+				         x => string.IsNullOrWhiteSpace(x.Value.MinEngineVersion)))
 			{
 				//	double percentage = 100D * ((double)done / (double)total);
 				progressReceiver?.UpdateProgress(done, total, $"Importing entity definitions...", def.Key.ToString());
@@ -202,7 +209,7 @@ namespace Alex.Entities
 					string modelKey;
 
 					if (!geometry.TryGetValue("default", out modelKey) && !geometry.TryGetValue(
-						new ResourceLocation(def.Value.Identifier).Path, out modelKey))
+						    new ResourceLocation(def.Value.Identifier).Path, out modelKey))
 					{
 						modelKey = geometry.FirstOrDefault().Value;
 					}
@@ -250,6 +257,7 @@ namespace Alex.Entities
 			new ConcurrentDictionary<string, Texture2D>(StringComparer.OrdinalIgnoreCase);
 
 		public static readonly Guid PooledTagIdentifier = Guid.Parse("58142097-1b3d-4dc5-b98e-33da88bcf74a");
+
 		public static Entity Create(ResourceLocation entityType, World world, bool initRenderController = true)
 		{
 			Entity entity = null;
@@ -639,8 +647,10 @@ namespace Alex.Entities
 						entity = new XpOrbEntity(world);
 
 						break;
+
 					case EntityType.Turtle:
 						entity = new Turtle(world);
+
 						break;
 					//case EntityType.Human:
 					//entity = new PlayerMob("test", world, );
@@ -654,6 +664,7 @@ namespace Alex.Entities
 
 			//var stringId = entityType.ToStringId();
 			var resources = Alex.Instance.Resources;
+
 			if (entity == null)
 			{
 				//Log.Warn($"No entity implementation found, falling back to Alex.Entities.Entity for: {entityType}");
@@ -664,20 +675,22 @@ namespace Alex.Entities
 			{
 				entity.Type = entityType;
 			}
-			
+
 			LoadEntityDefinition(resources, entity, initRenderController);
-			
+
 			return entity;
 		}
 
-		public static void LoadEntityDefinition(ResourceManager resources, Entity entity, bool initRenderController = true)
+		public static void LoadEntityDefinition(ResourceManager resources,
+			Entity entity,
+			bool initRenderController = true)
 		{
 			if (!resources.TryGetEntityDefinition(entity.Type, out var description, out var resourcePack)) return;
 			entity.Description = description;
 			//World.BackgroundWorker.Enqueue(
 			//		() =>
 			//		{
-			var e = entity; 
+			var e = entity;
 
 			if (initRenderController)
 			{
@@ -699,7 +712,6 @@ namespace Alex.Entities
 			//Texture2D texture2D = null;
 			//if (renderer == null || texture2D == null)
 			{
-							
 				var textures = description.Textures;
 				string texture;
 
@@ -726,7 +738,7 @@ namespace Alex.Entities
 							e, Alex.Instance.GraphicsDevice, bmp2, texture2D1 =>
 							{
 								e.Texture = texture2D1;
-								
+
 								bmp2.Dispose();
 							});
 					}

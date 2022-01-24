@@ -16,17 +16,17 @@ namespace Alex.Entities.Generic
 	public class EntityFallingBlock : ItemEntity
 	{
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(EntityFallingBlock));
-		
+
 		/// <inheritdoc />
 		public EntityFallingBlock(World level) : base(level)
 		{
 			Height = Width = 0.98;
-			
+
 			DoRotation = false;
-			
+
 			Gravity = 0.04;
 			Drag = 0.02;
-			
+
 			HasPhysics = true;
 			IsAffectedByGravity = true;
 			NoAi = false;
@@ -69,11 +69,12 @@ namespace Alex.Entities.Generic
 		{
 			if (flag == MiNET.Entities.Entity.MetadataFlags.Variant && entry is MetadataInt mdi)
 			{
-				var blockState = ChunkProcessor.Instance.GetBlockState((uint) mdi.Value);
+				var blockState = ChunkProcessor.Instance.GetBlockState((uint)mdi.Value);
 
 				if (blockState == null)
 				{
 					Log.Warn($"Could not find block! Lookup={(uint)mdi.Value} Original={mdi.Value}");
+
 					return true;
 				}
 

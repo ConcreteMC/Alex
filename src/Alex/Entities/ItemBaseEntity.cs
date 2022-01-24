@@ -14,28 +14,27 @@ namespace Alex.Entities
 	public class ItemBaseEntity : ThrowableEntity
 	{
 		/// <inheritdoc />
-		public ItemBaseEntity(World level) : base(level)
-		{
-			
-		}
-		
+		public ItemBaseEntity(World level) : base(level) { }
+
 		/// <inheritdoc />
 		protected override void HandleJavaMeta(MetaDataEntry entry)
 		{
 			base.HandleJavaMeta(entry);
-			
+
 			if (entry.Index == 8 && entry is MetadataSlot slot)
 			{
 				var item = JavaWorldProvider.GetItemFromSlotData(slot.Value);
+
 				if (item != null)
 				{
 					SetItem(item);
 				}
 			}
 		}
-		
+
 		protected new IItemRenderer ItemRenderer { get; set; } = null;
 		protected bool CanRender { get; set; } = false;
+
 		public virtual void SetItem(Item item)
 		{
 			if (item.Renderer != null)
@@ -52,16 +51,15 @@ namespace Alex.Entities
 				CanRender = false;
 			}
 		}
-		
+
 		public override void Update(IUpdateArgs args)
 		{
 			if (CanRender)
 			{
-				ItemRenderer.Update(
-					args);
+				ItemRenderer.Update(args);
 			}
 		}
-		
+
 		public override int Render(IRenderArgs renderArgs, bool useCulling)
 		{
 			if (!CanRender)
@@ -71,10 +69,12 @@ namespace Alex.Entities
 
 			if (itemRenderer == null)
 				return 0;
-			
-			return itemRenderer.Render(renderArgs, Matrix.Identity * Matrix.CreateScale(Scale)
-			                                                             * Matrix.CreateRotationY(MathHelper.ToRadians(KnownPosition.Yaw))
-			                                                             * Matrix.CreateTranslation(KnownPosition.ToVector3()));
+
+			return itemRenderer.Render(
+				renderArgs,
+				Matrix.Identity * Matrix.CreateScale(Scale)
+				                * Matrix.CreateRotationY(MathHelper.ToRadians(KnownPosition.Yaw))
+				                * Matrix.CreateTranslation(KnownPosition.ToVector3()));
 		}
 
 		/// <inheritdoc />

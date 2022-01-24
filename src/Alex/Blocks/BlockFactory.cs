@@ -34,14 +34,17 @@ namespace Alex.Blocks
 
 		public static IReadOnlyDictionary<uint, BlockState> AllBlockstates => RegisteredBlockStates;
 
-		private static readonly ConcurrentDictionary<uint, BlockState> RegisteredBlockStates = new ConcurrentDictionary<uint, BlockState>();
+		private static readonly ConcurrentDictionary<uint, BlockState> RegisteredBlockStates =
+			new ConcurrentDictionary<uint, BlockState>();
 
 		private static readonly ConcurrentDictionary<ResourceLocation, BlockStateVariantMapper> BlockStateByName =
 			new ConcurrentDictionary<ResourceLocation, BlockStateVariantMapper>();
 
-		public static readonly ConcurrentDictionary<ResourceLocation, BlockStateVariantMapper> BedrockStates = new ConcurrentDictionary<ResourceLocation, BlockStateVariantMapper>();
+		public static readonly ConcurrentDictionary<ResourceLocation, BlockStateVariantMapper> BedrockStates =
+			new ConcurrentDictionary<ResourceLocation, BlockStateVariantMapper>();
 
 		private static bool _builtin = false;
+
 		private static void RegisterBuiltinBlocks(ResourceManager manager)
 		{
 			if (_builtin)
@@ -55,24 +58,20 @@ namespace Alex.Blocks
 			{
 				BlockState bs = new BlockState()
 				{
-					Default = i == 0,
-					Name = "minecraft:light_block",
+					Default = i == 0, Name = "minecraft:light_block",
 					//VariantMapper = lightBlockVariantMapper,
 				};
 
 				bs.States.Add(new PropertyInt("block_light_level", i));
-				
-				var block = new LightBlock()
-				{
-					Luminance = i
-				};
-				
+
+				var block = new LightBlock() { Luminance = i };
+
 				bs.Block = block;
 				block.BlockState = bs;
-				
+
 				states.Add(bs);
 			}
-			
+
 			var lightBlockVariantMapper = new BlockStateVariantMapper(states);
 
 			BlockStateByName.TryAdd("minecraft:light_block", lightBlockVariantMapper);
@@ -84,10 +83,13 @@ namespace Alex.Blocks
 			BlockStateByName.TryAdd("minecraft:item_frame", itemFrameBlock);
 			//RegisteredBlockStates.Add(Block.GetBlockStateID(), StationairyWaterModel);
 		}
-		
 
-		internal static int LoadBlockstates(IRegistryManager registryManager, ResourceManager resources, bool replace,
-			bool reportMissing = false, IProgressReceiver progressReceiver = null)
+
+		internal static int LoadBlockstates(IRegistryManager registryManager,
+			ResourceManager resources,
+			bool replace,
+			bool reportMissing = false,
+			IProgressReceiver progressReceiver = null)
 		{
 			//RuntimeIdTable = TableEntry.FromJson(raw);
 
@@ -98,18 +100,20 @@ namespace Alex.Blocks
 			return LoadModels(registryManager, resources, replace, reportMissing, progressReceiver);
 		}
 
-		private static readonly Regex _blockMappingRegex = new Regex(@"(?'key'[\:a-zA-Z_\d][^\[]*)(\[(?'data'.*)\])?", RegexOptions.Compiled);
+		private static readonly Regex _blockMappingRegex = new Regex(
+			@"(?'key'[\:a-zA-Z_\d][^\[]*)(\[(?'data'.*)\])?", RegexOptions.Compiled);
+
 		private static int LoadModels(IRegistryManager registryManager,
 			ResourceManager resources,
 			bool replace,
 			bool reportMissing,
 			IProgressReceiver progressReceiver)
 		{
-			Stopwatch sw  = Stopwatch.StartNew();
-			
-			var       raw = ResourceManager.ReadStringResource("Alex.Resources.blockmap.json");
+			Stopwatch sw = Stopwatch.StartNew();
+
+			var raw = ResourceManager.ReadStringResource("Alex.Resources.blockmap.json");
 			var mapping = JsonConvert.DeserializeObject<BlockMap>(raw);
-			
+
 			raw = ResourceManager.ReadStringResource("Alex.Resources.custom_blockmap.json");
 			var mapping2 = JsonConvert.DeserializeObject<BlockMap>(raw);
 
@@ -119,12 +123,13 @@ namespace Alex.Blocks
 				{
 					if (!mapping.TryAdd(map.Key, map.Value))
 					{
-						Log.Warn($"Failed to register custom block mapping: {map.Key} -> {map.Value.BedrockIdentifier}");
+						Log.Warn(
+							$"Failed to register custom block mapping: {map.Key} -> {map.Value.BedrockIdentifier}");
 					}
 				}
 			}
 
-			var blockRegistry      = registryManager.GetRegistry<Block>();
+			var blockRegistry = registryManager.GetRegistry<Block>();
 			//var blockStateRegistry = registryManager.GetRegistry<BlockState>();
 
 			var data = BlockData.FromJson(ResourceManager.ReadStringResource("Alex.Resources.NewBlocks.json"));
@@ -135,6 +140,7 @@ namespace Alex.Blocks
 			void LoadEntry(KeyValuePair<string, BlockData> entry)
 			{
 				done++;
+
 				if (!resources.TryGetBlockState(entry.Key, out var blockStateResource))
 				{
 					if (reportMissing)
@@ -142,15 +148,15 @@ namespace Alex.Blocks
 
 					return;
 				}
-				
+
 				//double percentage = 100D * ((double) done / (double) total);blockstate variants
 				progressReceiver.UpdateProgress(done, total, $"Importing block models...", entry.Key);
 
 				var model = ResolveModel(resources, blockStateResource, out bool isMultipartModel);
-				
+
 				List<BlockState> states = new List<BlockState>();
-				
-				var location     = new ResourceLocation(entry.Key);
+
+				var location = new ResourceLocation(entry.Key);
 				IRegistryEntry<Block> registryEntry;
 
 				if (!blockRegistry.TryGet(location, out registryEntry))
@@ -162,8 +168,9 @@ namespace Alex.Blocks
 				{
 					registryEntry = registryEntry.WithLocation(location);
 				}
-				
+
 				var block = registryEntry.Value;
+
 				if (string.IsNullOrWhiteSpace(block.DisplayName))
 				{
 					block.DisplayName = entry.Key;
@@ -230,10 +237,10 @@ namespace Alex.Blocks
 					states.Add(variantState);
 				}
 
-				var variantMap   = new BlockStateVariantMapper(states);
+				var variantMap = new BlockStateVariantMapper(states);
 				variantMap.Model = model;
 				variantMap.IsMultiPart = isMultipartModel;
-				
+
 				if (variantMap.Model == null)
 				{
 					Log.Warn($"No model found for {entry.Key}[{variantMap.ToString()}]");
@@ -272,32 +279,33 @@ namespace Alex.Blocks
 					}
 				}
 			}
-			
+
 			Parallel.ForEach(data, LoadEntry);
 
 			var blockStateTime = sw.Elapsed;
-			
+
 			int counter = 1;
 
 			sw.Restart();
+
 			Parallel.ForEach(
 				mapping.GroupBy(x => x.Value.BedrockIdentifier), (m) =>
 				{
 					progressReceiver?.UpdateProgress(counter, mapping.Count, "Mapping blockstates...", m.Key);
-					var location     = new ResourceLocation(m.Key);
+					var location = new ResourceLocation(m.Key);
 
 					List<BlockState> states = new List<BlockState>(m.Count());
 					BlockModel blockModel = null;
 					bool isMultiPart = false;
-					
-					bool first  = true;
+
+					bool first = true;
 
 					foreach (var state in m)
 					{
-						var match     = _blockMappingRegex.Match(state.Key);
-						var keyMatch  = match.Groups["key"];
+						var match = _blockMappingRegex.Match(state.Key);
+						var keyMatch = match.Groups["key"];
 						var dataMatch = match.Groups["data"];
-						
+
 						if (!keyMatch.Success)
 						{
 							Log.Warn($"Entry without key!");
@@ -311,10 +319,9 @@ namespace Alex.Blocks
 						{
 							if (dataMatch.Success)
 							{
-								var properties =
-									new BlockVariantKey(dataMatch.Value);
-								
-								foreach(var prop in properties)
+								var properties = new BlockVariantKey(dataMatch.Value);
+
+								foreach (var prop in properties)
 								{
 									pcVariant = pcVariant.WithProperty(prop.Key, prop.Value);
 								}
@@ -329,6 +336,7 @@ namespace Alex.Blocks
 						}
 
 						PeBlockState bedrockState = new PeBlockState(pcVariant);
+
 						if (state.Value.BedrockStates != null && state.Value.BedrockStates.Count > 0)
 						{
 							foreach (var bs in state.Value.BedrockStates)
@@ -336,9 +344,9 @@ namespace Alex.Blocks
 								bedrockState.States.Add(new PropertyString(bs.Key, bs.Value));
 							}
 						}
-						
+
 						bedrockState.Name = state.Value.BedrockIdentifier;
-						bedrockState.Id = (uint) Interlocked.Increment(ref counter);
+						bedrockState.Id = (uint)Interlocked.Increment(ref counter);
 						bedrockState.Default = first;
 						bedrockState.ModelData = pcVariant.ModelData;
 
@@ -347,6 +355,7 @@ namespace Alex.Blocks
 							blockModel = pcVariant.VariantMapper.Model;
 							isMultiPart = pcVariant.VariantMapper.IsMultiPart;
 						}
+
 						first = false;
 
 						states.Add(bedrockState);
@@ -354,8 +363,7 @@ namespace Alex.Blocks
 
 					BedrockStates[m.Key] = new BlockStateVariantMapper(states)
 					{
-						Model = blockModel,
-						IsMultiPart = isMultiPart
+						Model = blockModel, IsMultiPart = isMultiPart
 					};
 				});
 
@@ -366,7 +374,8 @@ namespace Alex.Blocks
 		}
 
 		private static BlockModel ResolveModel(ResourceManager resources,
-			BlockStateResource blockStateResource, out bool isMultipartModel)
+			BlockStateResource blockStateResource,
+			out bool isMultipartModel)
 		{
 			isMultipartModel = blockStateResource.Parts.Any(x => x.When != null && x.When.Length > 0);
 			string name = blockStateResource.Name;
@@ -391,15 +400,19 @@ namespace Alex.Blocks
 			return new ResourcePackBlockModel(resources);
 		}
 
-		private static BlockStateVariant ResolveVariant(BlockStateResource blockStateResource, BlockState state, bool isMultiPart)
+		private static BlockStateVariant ResolveVariant(BlockStateResource blockStateResource,
+			BlockState state,
+			bool isMultiPart)
 		{
 			if (isMultiPart)
 			{
 				return new BlockStateVariant(MultiPartModelHelper.GetModels(state, blockStateResource));
 			}
-			
-			int                                     closestMatch = -1;
-			KeyValuePair<BlockVariantKey, BlockStateVariant> closest      = default(KeyValuePair<BlockVariantKey, BlockStateVariant>);
+
+			int closestMatch = -1;
+
+			KeyValuePair<BlockVariantKey, BlockStateVariant> closest =
+				default(KeyValuePair<BlockVariantKey, BlockStateVariant>);
 
 			foreach (var v in blockStateResource.Variants)
 			{
@@ -410,9 +423,10 @@ namespace Alex.Blocks
 				{
 					foreach (var kv in state)
 					{
-						if (!variant.TryGetValue(kv.Name, out string vValue) || !vValue.Equals(kv.StringValue, StringComparison.OrdinalIgnoreCase))
+						if (!variant.TryGetValue(kv.Name, out string vValue) || !vValue.Equals(
+							    kv.StringValue, StringComparison.OrdinalIgnoreCase))
 							break;
-						
+
 						matches++;
 					}
 				}
@@ -425,7 +439,6 @@ namespace Alex.Blocks
 					if (matches == state.Count)
 						break;
 				}
-
 			}
 
 			return closest.Value;

@@ -4,21 +4,21 @@ namespace Alex.Utils
 {
 	public class BedrockMotd
 	{
-		public string     Edition;
-		public string     MOTD;
-		public int        MaxPlayers;
-		public int        Players;
-		public int        ProtocolVersion;
-		public string     ClientVersion;
+		public string Edition;
+		public string MOTD;
+		public int MaxPlayers;
+		public int Players;
+		public int ProtocolVersion;
+		public string ClientVersion;
 		public IPEndPoint ServerEndpoint;
-		public long       Latency;
+		public long Latency;
 
 		public BedrockMotd(string raw)
 		{
 			if (string.IsNullOrWhiteSpace(raw)) return;
 
 			var split = raw.Split(';');
-			int i     = 0;
+			int i = 0;
 			Edition = split[i++];
 			MOTD = split[i++];
 
@@ -26,7 +26,7 @@ namespace Alex.Utils
 			{
 				ProtocolVersion = protocolVersion;
 			}
-			
+
 			ClientVersion = split[i++];
 
 			if (int.TryParse(split[i++], out int players))

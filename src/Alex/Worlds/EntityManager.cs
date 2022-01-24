@@ -31,29 +31,34 @@ namespace Alex.Worlds
 	public class EntityManager : IDisposable, ITicked
 	{
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(EntityManager));
-		
-		private                 ConcurrentDictionary<long, Entity>                  Entities      { get; }
-		private                 ConcurrentDictionary<MiNET.Utils.UUID, Entity>      EntityByUUID  { get; }
-		private                 ConcurrentDictionary<BlockCoordinates, BlockEntity> BlockEntities { get; }
-		private                 GraphicsDevice                                      Device        { get; }
 
-		public  int             EntityCount      => Entities.Count + BlockEntities.Count;
-		public  int             EntitiesRendered { get; private set; } = 0;
-		
+		private ConcurrentDictionary<long, Entity> Entities { get; }
+		private ConcurrentDictionary<MiNET.Utils.UUID, Entity> EntityByUUID { get; }
+		private ConcurrentDictionary<BlockCoordinates, BlockEntity> BlockEntities { get; }
+		private GraphicsDevice Device { get; }
+
+		public int EntityCount => Entities.Count + BlockEntities.Count;
+		public int EntitiesRendered { get; private set; } = 0;
+
 		/// <summary>
 		///		The amount of calls made to DrawPrimitives in the last render call
 		/// </summary>
 		public int DrawCount { get; private set; } = 0;
-		private World           World            { get; }
-		private NetworkProvider Network          { get; }
+
+		private World World { get; }
+		private NetworkProvider Network { get; }
 
 		private Entity[] _rendered;
 
 		public EventHandler<Entity> EntityAdded;
 		public EventHandler<Entity> EntityRemoved;
-		
+
 		private IOptionsProvider OptionsProvider { get; }
-		public EntityManager(IServiceProvider serviceProvider, GraphicsDevice device, World world, NetworkProvider networkProvider)
+
+		public EntityManager(IServiceProvider serviceProvider,
+			GraphicsDevice device,
+			World world,
+			NetworkProvider networkProvider)
 		{
 			Network = networkProvider;
 			World = world;
@@ -62,8 +67,8 @@ namespace Alex.Worlds
 			EntityByUUID = new ConcurrentDictionary<MiNET.Utils.UUID, Entity>();
 			BlockEntities = new ConcurrentDictionary<BlockCoordinates, BlockEntity>();
 			_rendered = new Entity[0];
-			
-			OptionsProvider = serviceProvider.GetService<IOptionsProvider>();//.AlexOptions.VideoOptions.
+
+			OptionsProvider = serviceProvider.GetService<IOptionsProvider>(); //.AlexOptions.VideoOptions.
 
 			_spriteEffect = new BasicEffect(device)
 			{
@@ -73,7 +78,7 @@ namespace Alex.Worlds
 				FogEnabled = false,
 				PreferPerPixelLighting = false
 			};
-			
+
 			world.ChunkManager.OnChunkAdded += OnChunkAdded;
 			world.ChunkManager.OnChunkRemoved += OnChunkRemoved;
 		}
@@ -81,17 +86,18 @@ namespace Alex.Worlds
 		private void OnChunkRemoved(object? sender, ChunkRemovedEventArgs e)
 		{
 			var chunk = e.Chunk;
+
 			foreach (var blockEntity in chunk.BlockEntities)
 			{
 				var pos = blockEntity.Key;
-				RemoveBlockEntity(
-					new BlockCoordinates(pos.X, pos.Y, pos.Z));
+				RemoveBlockEntity(new BlockCoordinates(pos.X, pos.Y, pos.Z));
 			}
 		}
 
 		private void OnChunkAdded(object? sender, ChunkAddedEventArgs e)
 		{
 			var chunk = e.Chunk;
+
 			foreach (var blockEntity in chunk.BlockEntities)
 			{
 				var pos = blockEntity.Key;
@@ -102,6 +108,7 @@ namespace Alex.Worlds
 		private Stopwatch _sw = new Stopwatch();
 
 		private object _tickLock = new object();
+
 		public void OnTick()
 		{
 			if (!Monitor.TryEnter(_tickLock, 0))
@@ -116,7 +123,7 @@ namespace Alex.Worlds
 			{
 				if (World?.Camera == null)
 					return;
-				
+
 				List<Entity> rendered = new List<Entity>(_rendered.Length);
 
 				var entities = Entities.Values.ToArray();
@@ -130,8 +137,8 @@ namespace Alex.Worlds
 
 					//if (World.Camera.BoundingFrustum.Contains(entity.GetVisibilityBoundingBox(entityPos)) != ContainmentType.Disjoint)
 					if (Math.Abs(Vector3.Distance(cameraChunkPosition, entityPos)) <= Math.Min(
-						World.ChunkManager.RenderDistance,
-						OptionsProvider.AlexOptions.VideoOptions.EntityRenderDistance.Value) * 16f)
+						    World.ChunkManager.RenderDistance,
+						    OptionsProvider.AlexOptions.VideoOptions.EntityRenderDistance.Value) * 16f)
 					{
 						entityCount++;
 						rendered.Add(entity);
@@ -155,6 +162,7 @@ namespace Alex.Worlds
 			finally
 			{
 				Monitor.Exit(_tickLock);
+
 				if (_sw.Elapsed.TotalMilliseconds >= 50)
 				{
 					Log.Warn(
@@ -172,24 +180,26 @@ namespace Alex.Worlds
 			IReadOnlyCollection<Entity> toUpdate;
 			toUpdate = _rendered.OrderByDescending(x => DateTime.UtcNow - x.LastUpdate).ToArray();
 			//toUpdate = _rendered;
-			
+
 			float maxTime = delta / toUpdate.Count;
 			long elapsedTime = 0;
+
 			foreach (var entity in toUpdate)
 			{
 				if (elapsedTime >= delta)
 					break;
+
 				_updateWatch.Restart();
 				//if (entity.IsRendered)
 
 				//pos.Y = 0;
-			
+
 				if (!entity.IsRendered)
 					continue;
-				
+
 				entity.Update(args);
 				entity.LastUpdate = DateTime.UtcNow;
-				
+
 				var elapsed = _updateWatch.ElapsedMilliseconds;
 				elapsedTime += elapsed;
 
@@ -205,12 +215,10 @@ namespace Alex.Worlds
 			//_spriteEffect.SetDistance(0.015f, args.Camera.FarDistance);
 			if (_rendered != null)
 			{
-			
 				using (GraphicsContext.CreateContext(
-					args.GraphicsDevice, BlendState.AlphaBlend, DepthStencilState.Default,
-					RasterizerState.CullNone))
+					       args.GraphicsDevice, BlendState.AlphaBlend, DepthStencilState.Default,
+					       RasterizerState.CullNone))
 				{
-					
 					int renderCount = 0;
 					int drawCount = 0;
 					//var entities    = _rendered.ToArray();
@@ -236,15 +244,15 @@ namespace Alex.Worlds
 		private static RasterizerState RasterizerState = new RasterizerState()
 		{
 			//DepthBias = -0.0015f,
-			CullMode = CullMode.CullCounterClockwiseFace, 
-			FillMode = FillMode.Solid, 
-			DepthClipEnable = true, 
+			CullMode = CullMode.CullCounterClockwiseFace,
+			FillMode = FillMode.Solid,
+			DepthClipEnable = true,
 			ScissorTestEnable = false,
 			MultiSampleAntiAlias = true,
-			
 		};
 
 		private BasicEffect _spriteEffect;
+
 		public void Render2D(IRenderArgs args)
 		{
 			if (_rendered != null)
@@ -253,7 +261,7 @@ namespace Alex.Worlds
 
 				if (entities.Length == 0)
 					return;
-				
+
 				_spriteEffect.Projection = args.Camera.ProjectionMatrix;
 				_spriteEffect.View = args.Camera.ViewMatrix;
 
@@ -262,7 +270,7 @@ namespace Alex.Worlds
 					args.SpriteBatch.Begin(
 						SpriteSortMode.BackToFront, BlendState.NonPremultiplied, SamplerState.PointWrap,
 						DepthStencilState.DepthRead, RasterizerState);
-					
+
 					foreach (var entity in entities)
 					{
 						if (!entity.HideNameTag)
@@ -289,30 +297,30 @@ namespace Alex.Worlds
 		private void RenderNametag(IRenderArgs args, Entity entity)
 		{
 			var lines = entity.NameTagLines;
-			
+
 			if (lines == null || lines.Length == 0)
 				return;
 
-			Vector3 posOffset = new Vector3(0,  0.5f, 0);
+			Vector3 posOffset = new Vector3(0, 0.5f, 0);
 
 			//if (!entity.IsInvisible)
 			{
-				posOffset.Y += (float) ((entity.Height) * entity.Scale);
+				posOffset.Y += (float)((entity.Height) * entity.Scale);
 			}
 
 			var renderlocation = entity.RenderLocation.ToVector3();
-			var rotation = new Vector3(
-				               renderlocation.X, renderlocation.Y + posOffset.Y, renderlocation.Z)
+
+			var rotation = new Vector3(renderlocation.X, renderlocation.Y + posOffset.Y, renderlocation.Z)
 			               - args.Camera.Position;
 
 			rotation.Normalize();
 
-			var halfWidth = (float) (entity.Width * entity.Scale);
+			var halfWidth = (float)(entity.Width * entity.Scale);
 			var pos = renderlocation + posOffset + (-(rotation * halfWidth));
 
 			//Matrix rotationMatrix = MatrixHelper.CreateRotation(args.Camera.Rotation);
 			//Vector3 lookAtOffset = Vector3.Forward.Transform(rotationMatrix);
-			
+
 			/*
 			var world = Matrix.Identity;
 			world *= Matrix.CreateScale(0.25f / 16f, 0.25f / 16f, 1f);
@@ -321,51 +329,54 @@ namespace Alex.Worlds
 			world.Up = -world.Up;
 			_spriteEffect.World = world;*/
 
-			
+
 			//
 			//Matrix.CreateBillboard(
 			//	pos, args.Camera.Position, Vector3.Up, args.Camera.Direction)
 			var screenSpace = args.SpriteBatch.GraphicsDevice.Viewport.Project(
 				pos, args.Camera.ProjectionMatrix, args.Camera.ViewMatrix, Matrix.Identity);
-				
+
 			//bool isOnScreen = args.SpriteBatch.GraphicsDevice.Viewport.Bounds.Contains((int) screenSpace.X, (int) screenSpace.Y);
 
 			//if (!isOnScreen) return;
-				
+
 			//count++;
 			float depth = screenSpace.Z;
 			var scale = 1f / depth;
+
 			try
 			{
 				int yOffset = 0;
-				
+
 				Vector2 renderPosition = Vector2.Zero;
+
 				foreach (var str in lines)
 				{
 					var line = str;
 
 					if (line.Length == 0)
 						continue;
-					
+
 					var stringSize = Alex.Font.MeasureString(line, scale).ToPoint();
-					
+
 					renderPosition.X = screenSpace.X;
 					renderPosition.Y = screenSpace.Y;
-					renderPosition.X +=  -(stringSize.X / 2f);
+					renderPosition.X += -(stringSize.X / 2f);
 					renderPosition.Y += yOffset;
 
 					args.SpriteBatch.FillRectangle(
 						new Rectangle(renderPosition.ToPoint(), stringSize), _backgroundColor * 1f, depth + 0.0000001f);
 
 					args.SpriteBatch.DrawString(
-						Alex.Font, line, renderPosition, TextColor.White, FontStyle.None, 0f, Vector2.Zero, Vector2.One * scale, layerDepth: depth);
+						Alex.Font, line, renderPosition, TextColor.White, FontStyle.None, 0f, Vector2.Zero,
+						Vector2.One * scale, layerDepth: depth);
 
 					yOffset += (stringSize.Y);
 				}
 			}
 			finally
 			{
-			//	args.SpriteBatch.End();
+				//	args.SpriteBatch.End();
 			}
 		}
 
@@ -373,13 +384,13 @@ namespace Alex.Worlds
 		{
 			var blockEntities = BlockEntities.ToArray();
 			BlockEntities.Clear();
-			
+
 			foreach (var blockEntity in blockEntities)
 			{
 				BlockEntities.TryRemove(blockEntity.Key, out _);
 				blockEntity.Value?.Dispose();
 			}
-			
+
 			var entities = Entities.ToArray();
 			Entities.Clear();
 			EntityByUUID.Clear();
@@ -398,7 +409,7 @@ namespace Alex.Worlds
 				entity?.Dispose();
 			}
 		}
-		
+
 		public void UnloadEntities(ChunkCoordinates coordinates)
 		{
 			foreach (var entity in Entities.ToArray())
@@ -416,12 +427,9 @@ namespace Alex.Worlds
 			{
 				if (removeId)
 				{
-					if (Entities.TryRemove(e.EntityId, out e))
-					{
-						
-					}
+					if (Entities.TryRemove(e.EntityId, out e)) { }
 				}
-				
+
 				EntityRemoved?.Invoke(this, e);
 				e?.Dispose();
 			}
@@ -442,12 +450,15 @@ namespace Alex.Worlds
 					EntityByUUID.TryRemove(entity.UUID, out Entity _);
 
 					return false;
-				}else if (entity.EntityId == -1)
+				}
+				else if (entity.EntityId == -1)
 				{
-					Log.Warn($"Tried adding entity with invalid entity id: {entity.NameTag} | {entity.UUID.ToString()}");
+					Log.Warn(
+						$"Tried adding entity with invalid entity id: {entity.NameTag} | {entity.UUID.ToString()}");
 				}
 
 				EntityAdded?.Invoke(this, entity);
+
 				return true;
 			}
 
@@ -502,21 +513,24 @@ namespace Alex.Worlds
 			return EntityByUUID.TryGetValue(uuid, out entity);
 		}
 
-	    public IEnumerable<Entity> GetEntities(Vector3 camPos, double radius)
-	    {
-		    return Entities.Values.ToArray().Where(x => x.IsRendered && Math.Abs(Vector3.DistanceSquared(x.KnownPosition.ToVector3(), camPos)) < radius).ToArray();
-	    }
+		public IEnumerable<Entity> GetEntities(Vector3 camPos, double radius)
+		{
+			return Entities.Values.ToArray().Where(
+					x => x.IsRendered && Math.Abs(Vector3.DistanceSquared(x.KnownPosition.ToVector3(), camPos))
+						< radius)
+			   .ToArray();
+		}
 
-	    public void ClearEntities()
-	    {
-		    Clear();
-	    }
-	    
-	    public void Dispose()
-	    {
-		    Log.Info($"Entitymanager disposing...");
-		    
-		    Clear();
-	    }
+		public void ClearEntities()
+		{
+			Clear();
+		}
+
+		public void Dispose()
+		{
+			Log.Info($"Entitymanager disposing...");
+
+			Clear();
+		}
 	}
 }

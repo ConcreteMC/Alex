@@ -16,16 +16,13 @@ namespace Alex.MoLang.Runtime
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(MoLangRuntime));
 		public MoLangEnvironment Environment { get; }
 
-		public MoLangRuntime() : this(new MoLangEnvironment())
-		{
-			
-		}
+		public MoLangRuntime() : this(new MoLangEnvironment()) { }
 
 		public MoLangRuntime(MoLangEnvironment environment)
 		{
 			Environment = environment;
 		}
-		
+
 		/*public IMoValue Execute(IExpression expression) {
 			return Execute(new List<IExpression>()
 			{
@@ -33,7 +30,8 @@ namespace Alex.MoLang.Runtime
 			});
 		}*/
 
-		public IMoValue Execute(params IExpression[] expressions) {
+		public IMoValue Execute(params IExpression[] expressions)
+		{
 			return Execute(expressions, null);
 		}
 
@@ -74,6 +72,7 @@ namespace Alex.MoLang.Runtime
 				{
 					throw new MoLangRuntimeException(
 						expression, "An error occured while evaluating the expression", ex);
+
 					break;
 				}
 			}

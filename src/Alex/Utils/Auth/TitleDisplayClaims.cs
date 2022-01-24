@@ -4,7 +4,6 @@ namespace Alex.Utils.Auth
 {
 	public class TitleDisplayClaims
 	{
-		[JsonProperty("xti")]
-		public XTI Xti { get; set; }
+		[JsonProperty("xti")] public XTI Xti { get; set; }
 	}
 }

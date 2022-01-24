@@ -19,295 +19,304 @@ using RocketUI;
 
 namespace Alex.Gui.Elements.Map
 {
-    public class WorldMap : IMap, ITicked, IDisposable
-    {
-        private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(WorldMap));
-        
-        private World _world;
-        private readonly ConcurrentDictionary<ChunkCoordinates, RenderedMap> _textureContainers = new();
+	public class WorldMap : IMap, ITicked, IDisposable
+	{
+		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(WorldMap));
 
-        private readonly ConcurrentHashSet<MapIcon> _markers;
+		private World _world;
+		private readonly ConcurrentDictionary<ChunkCoordinates, RenderedMap> _textureContainers = new();
 
-        public int ChunkSize { get; set; } = 16;
-        private int RenderDistance => _world?.ChunkManager?.RenderDistance ?? 1;
-        /// <inheritdoc />
-        public int Width => RenderDistance * ChunkSize;
+		private readonly ConcurrentHashSet<MapIcon> _markers;
 
-        /// <inheritdoc />
-        public int Height => RenderDistance * ChunkSize;
+		public int ChunkSize { get; set; } = 16;
+		private int RenderDistance => _world?.ChunkManager?.RenderDistance ?? 1;
 
-        /// <inheritdoc />
-        public float Scale { get; } = 1f;
+		/// <inheritdoc />
+		public int Width => RenderDistance * ChunkSize;
 
-        /// <inheritdoc />
-        public Vector3 Center => _world?.Camera?.Position ?? Vector3.Zero;
+		/// <inheritdoc />
+		public int Height => RenderDistance * ChunkSize;
 
-        /// <inheritdoc />
-        public float Rotation => 180f - (_world?.Player?.KnownPosition?.HeadYaw ?? 0);
+		/// <inheritdoc />
+		public float Scale { get; } = 1f;
 
-        public bool AlphaBlending { get; set; } = true;
-        public bool Enabled { get; set; } = false;
-        
-        private OptionsPropertyAccessor<bool> _alphaBlendingAccessor;
-        private SpriteBatch _spriteBatch;
-        private RenderTarget2D _renderTarget;
-        public WorldMap(World world, AlexOptions options)
-        {
-            _world = world;
-            _markers = new ConcurrentHashSet<MapIcon>();
-            
-            world.ChunkManager.OnChunkAdded += OnChunkAdded;
-            world.ChunkManager.OnChunkRemoved += OnChunkRemoved;
-            world.ChunkManager.OnChunkUpdate += OnChunkUpdate;
+		/// <inheritdoc />
+		public Vector3 Center => _world?.Camera?.Position ?? Vector3.Zero;
 
-            world.EntityManager.EntityAdded += EntityAdded;
-            world.EntityManager.EntityRemoved += EntityRemoved;
+		/// <inheritdoc />
+		public float Rotation => 180f - (_world?.Player?.KnownPosition?.HeadYaw ?? 0);
 
-            ChunkSize = 16;// * Math.Max(1, lod);
+		public bool AlphaBlending { get; set; } = true;
+		public bool Enabled { get; set; } = false;
 
-            _alphaBlendingAccessor = options.UserInterfaceOptions.Minimap.AlphaBlending.Bind(AlphaBindSettingChanged);
-            AlphaBlending = _alphaBlendingAccessor.Value;
+		private OptionsPropertyAccessor<bool> _alphaBlendingAccessor;
+		private SpriteBatch _spriteBatch;
+		private RenderTarget2D _renderTarget;
 
-            _spriteBatch = new SpriteBatch(Alex.Instance.GraphicsDevice);
+		public WorldMap(World world, AlexOptions options)
+		{
+			_world = world;
+			_markers = new ConcurrentHashSet<MapIcon>();
 
-            Enabled = true;/*options.UserInterfaceOptions.Minimap.Enabled.Value;
+			world.ChunkManager.OnChunkAdded += OnChunkAdded;
+			world.ChunkManager.OnChunkRemoved += OnChunkRemoved;
+			world.ChunkManager.OnChunkUpdate += OnChunkUpdate;
+
+			world.EntityManager.EntityAdded += EntityAdded;
+			world.EntityManager.EntityRemoved += EntityRemoved;
+
+			ChunkSize = 16; // * Math.Max(1, lod);
+
+			_alphaBlendingAccessor = options.UserInterfaceOptions.Minimap.AlphaBlending.Bind(AlphaBindSettingChanged);
+			AlphaBlending = _alphaBlendingAccessor.Value;
+
+			_spriteBatch = new SpriteBatch(Alex.Instance.GraphicsDevice);
+
+			Enabled = true; /*options.UserInterfaceOptions.Minimap.Enabled.Value;
             options.UserInterfaceOptions.Minimap.Enabled.Bind(
                 (old, newValue) =>
                 {
                     Enabled = newValue;
                 });*/
-        }
+		}
 
-        private void AlphaBindSettingChanged(bool oldvalue, bool newvalue)
-        {
-            AlphaBlending = newvalue;
-        }
+		private void AlphaBindSettingChanged(bool oldvalue, bool newvalue)
+		{
+			AlphaBlending = newvalue;
+		}
 
-        public MapIcon AddMarker(Vector3 position, MapMarker icon)
-        {
-            var res = new MapIcon(icon) {Position = position};
-           // AddChild(res);
-           Add(res);
-           
-            return res;
-        }
+		public MapIcon AddMarker(Vector3 position, MapMarker icon)
+		{
+			var res = new MapIcon(icon) { Position = position };
+			// AddChild(res);
+			Add(res);
 
-        public void Add(MapIcon icon)
-        {
-            if (icon == null)
-                return;
-            
-            _markers.Add(icon);
-        }
+			return res;
+		}
 
-        public void Remove(MapIcon icon)
-        {
-            if (icon == null)
-                return;
+		public void Add(MapIcon icon)
+		{
+			if (icon == null)
+				return;
 
-            _markers.TryRemove(icon);
-        }
+			_markers.Add(icon);
+		}
 
-        private void EntityRemoved(object sender, Entity e)
-        {
-            Remove(e.MapIcon);
-        }
+		public void Remove(MapIcon icon)
+		{
+			if (icon == null)
+				return;
 
-        private void EntityAdded(object sender, Entity e)
-        {
-            Add(e.MapIcon);
-        }
-        
-        private void OnChunkUpdate(object sender, ChunkUpdatedEventArgs e)
-        {
-            if (TryGetContainer(e.Position, out var container))
-            {
-                container.MarkDirty();
-            }
-        }
+			_markers.TryRemove(icon);
+		}
 
-        private void OnChunkRemoved(object sender, ChunkRemovedEventArgs e)
-        {
-            RemoveContainer(e.Position);
-            //if (TryGetContainer(e.Position, out var container))
-            //    container.Invalidate();
-        }
+		private void EntityRemoved(object sender, Entity e)
+		{
+			Remove(e.MapIcon);
+		}
 
-        private void OnChunkAdded(object sender, ChunkAddedEventArgs e)
-        {
-            var container = _textureContainers.GetOrAdd(
-                e.Position, coordinates => new RenderedMap(coordinates, ChunkSize));
-            container.MarkDirty();
-        }
+		private void EntityAdded(object sender, Entity e)
+		{
+			Add(e.MapIcon);
+		}
 
-        private bool TryAdd(ChunkCoordinates coordinates, RenderedMap container)
-        {
-            return _textureContainers.TryAdd(coordinates, container);
-        }
+		private void OnChunkUpdate(object sender, ChunkUpdatedEventArgs e)
+		{
+			if (TryGetContainer(e.Position, out var container))
+			{
+				container.MarkDirty();
+			}
+		}
 
-        private bool TryGetContainer(ChunkCoordinates coordinates, out RenderedMap container)
-        {
-            if (!_textureContainers.TryGetValue(coordinates, out container)) return false;
+		private void OnChunkRemoved(object sender, ChunkRemovedEventArgs e)
+		{
+			RemoveContainer(e.Position);
+			//if (TryGetContainer(e.Position, out var container))
+			//    container.Invalidate();
+		}
 
-            if (container.Invalidated)
-            {
-                RemoveContainer(coordinates);
-                return false;
-            }
+		private void OnChunkAdded(object sender, ChunkAddedEventArgs e)
+		{
+			var container = _textureContainers.GetOrAdd(
+				e.Position, coordinates => new RenderedMap(coordinates, ChunkSize));
 
-            return true;
-        }
-        
+			container.MarkDirty();
+		}
 
-        private void RemoveContainer(ChunkCoordinates coordinates)
-        {
-            if (_textureContainers.TryRemove(coordinates, out var container))
-            {
-                container.Invalidate();
-                container.Dispose();
-            }
-        }
+		private bool TryAdd(ChunkCoordinates coordinates, RenderedMap container)
+		{
+			return _textureContainers.TryAdd(coordinates, container);
+		}
 
-        public IEnumerable<IMapElement> GetSections(ChunkCoordinates center, int radius)
-        {
-            var containers = _textureContainers;
-            if (containers == null || containers.IsEmpty)
-                yield break;
-            
-            for (int x = center.X - radius; x < center.X + radius; x++)
-            {
-                for (int y = center.Z - radius; y < center.Z + radius; y++)
-                {
-                    if (TryGetContainer(new ChunkCoordinates(x, y), out var container))
-                    {
-                        yield return container;
-                    }
-                }
-            }
-        }
+		private bool TryGetContainer(ChunkCoordinates coordinates, out RenderedMap container)
+		{
+			if (!_textureContainers.TryGetValue(coordinates, out container)) return false;
 
-        /// <inheritdoc />
-        public uint[] GetData()
-        {
-            uint[] data = new uint[Width * Height];
-            
-            _renderTarget.GetData(data);
-            
-            return data;
-        }
+			if (container.Invalidated)
+			{
+				RemoveContainer(coordinates);
 
-        /// <inheritdoc />
-        public Texture2D GetTexture(GraphicsDevice device)
-        {
-            if (Disposed || !Enabled) return null;
-            
-            Texture2D oldTexture = null;
-            var texture = _renderTarget;
+				return false;
+			}
 
-            try
-            {
-                if (texture == null || texture.IsDisposed || texture.Width != Width || texture.Height != Height)
-                {
-                    oldTexture = texture;
+			return true;
+		}
 
-                    texture = new RenderTarget2D(device, Width, Height);
-                }
-                
-                using (device.PushRenderTarget(_renderTarget))
-                {
-                    _spriteBatch.Begin();
 
-                    foreach (var element in GetSections(new ChunkCoordinates(Center), RenderDistance))
-                    {
-                        var t = element.GetTexture(device);
-                        if (t == null)
-                            continue;
+		private void RemoveContainer(ChunkCoordinates coordinates)
+		{
+			if (_textureContainers.TryRemove(coordinates, out var container))
+			{
+				container.Invalidate();
+				container.Dispose();
+			}
+		}
 
-                        var distance = element.Position - Center;
-                        
-                        _spriteBatch.Draw(t, new Vector2(Width / 2f, Height / 2f) + new Vector2(distance.X, distance.Z), Color.White);
-                    }
-                    
-                    _spriteBatch.End();
-                }
-            }
-            finally
-            {
-                _renderTarget = texture;
-                
-                if (oldTexture != null && oldTexture != _renderTarget)
-                    oldTexture.Dispose();
-            }
+		public IEnumerable<IMapElement> GetSections(ChunkCoordinates center, int radius)
+		{
+			var containers = _textureContainers;
 
-            return texture;
-        }
+			if (containers == null || containers.IsEmpty)
+				yield break;
 
-        public IEnumerable<MapIcon> GetMarkers(ChunkCoordinates center, int radius)
-        {
-            var markers = _markers;
-            if (markers == null || markers.IsEmpty)
-                yield break;
+			for (int x = center.X - radius; x < center.X + radius; x++)
+			{
+				for (int y = center.Z - radius; y < center.Z + radius; y++)
+				{
+					if (TryGetContainer(new ChunkCoordinates(x, y), out var container))
+					{
+						yield return container;
+					}
+				}
+			}
+		}
 
-            foreach (var icon in markers
-               .Where(
-                    x => x.AlwaysShown || (Math.Abs(new ChunkCoordinates(x.Position).DistanceTo(center)) <= radius
-                                           )).OrderBy(x => x.DrawOrder))
-            {
-                yield return icon;
-            }
-        }
+		/// <inheritdoc />
+		public uint[] GetData()
+		{
+			uint[] data = new uint[Width * Height];
 
-        /// <inheritdoc />
-        public void OnTick()
-        {
-            if (Disposed || !Enabled) return;
+			_renderTarget.GetData(data);
 
-            foreach (var container in GetSections(new ChunkCoordinates(Center), RenderDistance))
-            {
-                if (container is RenderedMap rm)
-                {
-                    if (rm.IsDirty)
-                    {
-                        rm.Tick(_world, AlphaBlending);
-                    }
-                }
-            }
-        }
+			return data;
+		}
 
-        public bool Disposed { get; private set; } = false;
-        /// <inheritdoc />
-        public void Dispose()
-        {
-            if (Disposed)
-                return;
-            
-            Disposed = true;
-          //  _trackedEntities.CollectionChanged -= TrackedEntitiesOnCollectionChanged;
-         //   _trackedEntities.Clear();
-            
-         //  _trackedEntities = null;
-            
-            _world.EntityManager.EntityAdded -= EntityAdded;
-            _world.EntityManager.EntityRemoved -= EntityRemoved;
-            
-            _world.ChunkManager.OnChunkAdded -= OnChunkAdded;
-            _world.ChunkManager.OnChunkRemoved -= OnChunkRemoved;
-            _world.ChunkManager.OnChunkUpdate -= OnChunkUpdate;
+		/// <inheritdoc />
+		public Texture2D GetTexture(GraphicsDevice device)
+		{
+			if (Disposed || !Enabled) return null;
 
-            _markers.Clear();
+			Texture2D oldTexture = null;
+			var texture = _renderTarget;
 
-            var elements = _textureContainers.ToArray();
-            _textureContainers.Clear();
+			try
+			{
+				if (texture == null || texture.IsDisposed || texture.Width != Width || texture.Height != Height)
+				{
+					oldTexture = texture;
 
-            foreach (var element in elements)
-            {
-                element.Value?.Dispose();
-            }
+					texture = new RenderTarget2D(device, Width, Height);
+				}
 
-            _world = null;
-            
-            _alphaBlendingAccessor?.Dispose();
-            _alphaBlendingAccessor = null;
-        }
-    }
+				using (device.PushRenderTarget(_renderTarget))
+				{
+					_spriteBatch.Begin();
+
+					foreach (var element in GetSections(new ChunkCoordinates(Center), RenderDistance))
+					{
+						var t = element.GetTexture(device);
+
+						if (t == null)
+							continue;
+
+						var distance = element.Position - Center;
+
+						_spriteBatch.Draw(
+							t, new Vector2(Width / 2f, Height / 2f) + new Vector2(distance.X, distance.Z), Color.White);
+					}
+
+					_spriteBatch.End();
+				}
+			}
+			finally
+			{
+				_renderTarget = texture;
+
+				if (oldTexture != null && oldTexture != _renderTarget)
+					oldTexture.Dispose();
+			}
+
+			return texture;
+		}
+
+		public IEnumerable<MapIcon> GetMarkers(ChunkCoordinates center, int radius)
+		{
+			var markers = _markers;
+
+			if (markers == null || markers.IsEmpty)
+				yield break;
+
+			foreach (var icon in markers
+				        .Where(
+					         x => x.AlwaysShown || (Math.Abs(new ChunkCoordinates(x.Position).DistanceTo(center))
+					                                <= radius)).OrderBy(x => x.DrawOrder))
+			{
+				yield return icon;
+			}
+		}
+
+		/// <inheritdoc />
+		public void OnTick()
+		{
+			if (Disposed || !Enabled) return;
+
+			foreach (var container in GetSections(new ChunkCoordinates(Center), RenderDistance))
+			{
+				if (container is RenderedMap rm)
+				{
+					if (rm.IsDirty)
+					{
+						rm.Tick(_world, AlphaBlending);
+					}
+				}
+			}
+		}
+
+		public bool Disposed { get; private set; } = false;
+
+		/// <inheritdoc />
+		public void Dispose()
+		{
+			if (Disposed)
+				return;
+
+			Disposed = true;
+			//  _trackedEntities.CollectionChanged -= TrackedEntitiesOnCollectionChanged;
+			//   _trackedEntities.Clear();
+
+			//  _trackedEntities = null;
+
+			_world.EntityManager.EntityAdded -= EntityAdded;
+			_world.EntityManager.EntityRemoved -= EntityRemoved;
+
+			_world.ChunkManager.OnChunkAdded -= OnChunkAdded;
+			_world.ChunkManager.OnChunkRemoved -= OnChunkRemoved;
+			_world.ChunkManager.OnChunkUpdate -= OnChunkUpdate;
+
+			_markers.Clear();
+
+			var elements = _textureContainers.ToArray();
+			_textureContainers.Clear();
+
+			foreach (var element in elements)
+			{
+				element.Value?.Dispose();
+			}
+
+			_world = null;
+
+			_alphaBlendingAccessor?.Dispose();
+			_alphaBlendingAccessor = null;
+		}
+	}
 }

@@ -8,18 +8,18 @@ namespace Alex.Networking.Java.Packets.Play
 		public ObjectiveMode Mode { get; set; }
 		public string Value { get; set; }
 		public ObjectiveType Type { get; set; }
-		
-		
+
+
 		/// <inheritdoc />
 		public override void Decode(MinecraftStream stream)
 		{
 			ObjectiveName = stream.ReadString();
-			Mode = (ObjectiveMode) stream.ReadByte();
+			Mode = (ObjectiveMode)stream.ReadByte();
 
 			if (Mode == ObjectiveMode.Create || Mode == ObjectiveMode.UpdateText)
 			{
 				Value = stream.ReadChatObject();
-				Type = (ObjectiveType) stream.ReadByte();
+				Type = (ObjectiveType)stream.ReadByte();
 			}
 		}
 

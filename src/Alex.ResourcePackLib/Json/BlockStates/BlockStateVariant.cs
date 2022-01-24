@@ -7,14 +7,8 @@ namespace Alex.ResourcePackLib.Json.BlockStates
 	[JsonConverter(typeof(BlockStateVariantConverter))]
 	public class BlockStateVariant : List<BlockStateModel>
 	{
-		public BlockStateVariant() : base()
-		{
+		public BlockStateVariant() : base() { }
 
-		}
-
-		public BlockStateVariant(params BlockStateModel[] values) : base(values)
-		{
-
-		}
+		public BlockStateVariant(params BlockStateModel[] values) : base(values) { }
 	}
 }

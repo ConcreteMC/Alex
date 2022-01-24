@@ -18,6 +18,7 @@ namespace Alex.Gamestates.Login
 		protected TextElement ErrorMessage;
 
 		private readonly GuiPanoramaSkyBox _backgroundSkyBox;
+
 		protected BaseLoginState(string title, GuiPanoramaSkyBox skyBox)
 		{
 			Title = title;
@@ -35,28 +36,29 @@ namespace Alex.Gamestates.Login
 			base.HeaderTitle.FontStyle = FontStyle.Bold | FontStyle.DropShadow;
 			Footer.ChildAnchor = Alignment.MiddleCenter;
 			TextElement t;
-			Footer.AddChild(t = new TextElement()
-			{
-				Text = "We are NOT in anyway or form affiliated with Mojang/Minecraft or Microsoft!",
-				TextColor = (Color) TextColor.Yellow,
-				Scale = 1f,
-				FontStyle = FontStyle.DropShadow,
 
-				Anchor = Alignment.MiddleCenter
-			});
+			Footer.AddChild(
+				t = new TextElement()
+				{
+					Text = "We are NOT in anyway or form affiliated with Mojang/Minecraft or Microsoft!",
+					TextColor = (Color)TextColor.Yellow,
+					Scale = 1f,
+					FontStyle = FontStyle.DropShadow,
+					Anchor = Alignment.MiddleCenter
+				});
 
 			TextElement info;
-			Footer.AddChild(info = new TextElement()
-			{
-				Text = "We will never collect/store or do anything with your data.",
 
-				TextColor = (Color) TextColor.Yellow,
-				Scale = 0.8f,
-				FontStyle = FontStyle.DropShadow,
-
-				Anchor = Alignment.MiddleCenter,
-				Padding = new Thickness(0, 5, 0, 0)
-			});
+			Footer.AddChild(
+				info = new TextElement()
+				{
+					Text = "We will never collect/store or do anything with your data.",
+					TextColor = (Color)TextColor.Yellow,
+					Scale = 0.8f,
+					FontStyle = FontStyle.DropShadow,
+					Anchor = Alignment.MiddleCenter,
+					Padding = new Thickness(0, 5, 0, 0)
+				});
 
 			/*
 			 *  "We will never collect/store or do anything with your data.\n" +
@@ -65,60 +67,49 @@ namespace Alex.Gamestates.Login
 			Body.BackgroundOverlay = new Color(Color.Black, 0.5f);
 			Body.ChildAnchor = Alignment.MiddleCenter;
 
-			var usernameRow = AddGuiRow(new TextElement()
-			{
-				Text = "Username:",
-				Margin = new Thickness(0, 0, 5, 0)
-			}, NameInput = new TextInput()
-			{
-				TabIndex = 1,
+			var usernameRow = AddGuiRow(
+				new TextElement() { Text = "Username:", Margin = new Thickness(0, 0, 5, 0) },
+				NameInput = new TextInput()
+				{
+					TabIndex = 1, Width = 200, PlaceHolder = "Username...", Margin = new Thickness(5),
+				});
 
-				Width = 200,
-
-				PlaceHolder = "Username...",
-				Margin = new Thickness(5),
-			});
 			usernameRow.ChildAnchor = Alignment.MiddleCenter;
 
-			var passwordRow = AddGuiRow(new TextElement()
-			{
-				Text = "Password:",
-				Margin = new Thickness(0, 0, 5, 0)
-			}, PasswordInput = new TextInput()
-			{
-				TabIndex = 2,
+			var passwordRow = AddGuiRow(
+				new TextElement() { Text = "Password:", Margin = new Thickness(0, 0, 5, 0) },
+				PasswordInput = new TextInput()
+				{
+					TabIndex = 2,
+					Width = 200,
+					PlaceHolder = "Password...",
+					Margin = new Thickness(5),
+					IsPasswordInput = true
+				});
 
-				Width = 200,
-
-				PlaceHolder = "Password...",
-				Margin = new Thickness(5),
-				IsPasswordInput = true
-			});
 			passwordRow.ChildAnchor = Alignment.MiddleCenter;
 
-			var buttonRow = AddGuiRow(LoginButton = new AlexButton(OnLoginButtonPressed)
-			{
-				AccessKey = Keys.Enter,
+			var buttonRow = AddGuiRow(
+				LoginButton = new AlexButton(OnLoginButtonPressed)
+				{
+					AccessKey = Keys.Enter,
+					Text = "Login",
+					Margin = new Thickness(5),
+					Width = 100,
+					TabIndex = 3
+				}.ApplyModernStyle(false),
+				new AlexButton(OnCancelButtonPressed)
+				{
+					AccessKey = Keys.Escape,
+					TranslationKey = "gui.cancel",
+					Margin = new Thickness(5),
+					Width = 100,
+					TabIndex = 4
+				}.ApplyModernStyle(false));
 
-				Text = "Login",
-				Margin = new Thickness(5),
-				Width = 100,
-				TabIndex = 3
-			}.ApplyModernStyle(false), new AlexButton(OnCancelButtonPressed)
-			{
-				AccessKey = Keys.Escape,
-
-				TranslationKey = "gui.cancel",
-				Margin = new Thickness(5),
-				Width = 100,
-				TabIndex = 4
-			}.ApplyModernStyle(false));
 			buttonRow.ChildAnchor = Alignment.MiddleCenter;
 
-			AddRocketElement(ErrorMessage = new TextElement()
-			{
-				TextColor = (Color) TextColor.Yellow
-			});
+			AddRocketElement(ErrorMessage = new TextElement() { TextColor = (Color)TextColor.Yellow });
 
 			Initialized();
 		}
@@ -128,8 +119,8 @@ namespace Alex.Gamestates.Login
 		private void OnLoginButtonPressed()
 		{
 			DisableInput();
-			
-		//	LoginButton.Enabled = false;
+
+			//	LoginButton.Enabled = false;
 			ErrorMessage.Text = "Authenticating...";
 
 			LoginButtonPressed(NameInput.Value, PasswordInput.Value);

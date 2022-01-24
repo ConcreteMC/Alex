@@ -9,9 +9,9 @@ namespace Alex.Blocks.Minecraft
 			Solid = true;
 			Transparent = true;
 			IsFullCube = true;
-			
+
 			Diffusion = 4;
-			
+
 			BlockMaterial = Material.Ice;
 		}
 	}

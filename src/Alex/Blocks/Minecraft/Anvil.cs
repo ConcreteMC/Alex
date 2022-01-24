@@ -10,7 +10,7 @@ namespace Alex.Blocks.Minecraft
 			Transparent = true;
 
 			BlockMaterial = Material.Anvil;
-			
+
 			CanInteract = true;
 		}
 	}

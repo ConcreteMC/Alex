@@ -10,25 +10,25 @@ namespace Alex.Utils.Assets
 	{
 		[J("arguments")] public Arguments Arguments { get; set; }
 		[J("assetIndex")] public LauncherMetaAssetIndex AssetIndex { get; set; }
-		
+
 		[J("assets")] public string Assets { get; set; }
-		
+
 		[J("downloads")] public LauncherMetaDownloads Downloads { get; set; }
-		
+
 		[J("id")] public string Id { get; set; }
-		
+
 		[J("libraries")] public Library[] Libraries { get; set; }
-		
+
 		[J("logging")] public Logging Logging { get; set; }
-		
+
 		[J("mainClass")] public string MainClass { get; set; }
-		
+
 		[J("minimumLauncherVersion")] public long MinimumLauncherVersion { get; set; }
-		
+
 		[J("releaseTime")] public System.DateTimeOffset ReleaseTime { get; set; }
-		
+
 		[J("time")] public System.DateTimeOffset Time { get; set; }
-		
+
 		[J("type")] public string Type { get; set; }
 	}
 
@@ -176,7 +176,8 @@ namespace Alex.Utils.Assets
 
 	public partial class LauncherMeta
 	{
-		public static LauncherMeta FromJson(string json) => JsonConvert.DeserializeObject<LauncherMeta>(json, Converter.Settings);
+		public static LauncherMeta FromJson(string json) =>
+			JsonConvert.DeserializeObject<LauncherMeta>(json, Converter.Settings);
 	}
 
 	public partial struct GameElement
@@ -190,12 +191,16 @@ namespace Alex.Utils.Assets
 			{
 				case JsonToken.StartObject:
 					GameClass = serializer.Deserialize<GameClass>(reader);
+
 					return;
+
 				case JsonToken.String:
 				case JsonToken.Date:
 					String = serializer.Deserialize<string>(reader);
+
 					return;
 			}
+
 			throw new Exception("Cannot convert GameElement");
 		}
 
@@ -204,13 +209,17 @@ namespace Alex.Utils.Assets
 			if (GameClass != null)
 			{
 				serializer.Serialize(writer, GameClass);
+
 				return;
 			}
+
 			if (String != null)
 			{
 				serializer.Serialize(writer, String);
+
 				return;
 			}
+
 			throw new Exception("Union must not be null");
 		}
 	}
@@ -226,12 +235,16 @@ namespace Alex.Utils.Assets
 			{
 				case JsonToken.StartArray:
 					StringArray = serializer.Deserialize<string[]>(reader);
+
 					return;
+
 				case JsonToken.String:
 				case JsonToken.Date:
 					String = serializer.Deserialize<string>(reader);
+
 					return;
 			}
+
 			throw new Exception("Cannot convert Value");
 		}
 
@@ -240,13 +253,17 @@ namespace Alex.Utils.Assets
 			if (String != null)
 			{
 				serializer.Serialize(writer, String);
+
 				return;
 			}
+
 			if (StringArray != null)
 			{
 				serializer.Serialize(writer, StringArray);
+
 				return;
 			}
+
 			throw new Exception("Union must not be null");
 		}
 	}
@@ -262,12 +279,16 @@ namespace Alex.Utils.Assets
 			{
 				case JsonToken.StartObject:
 					JvmClass = serializer.Deserialize<JvmClass>(reader);
+
 					return;
+
 				case JsonToken.String:
 				case JsonToken.Date:
 					String = serializer.Deserialize<string>(reader);
+
 					return;
 			}
+
 			throw new Exception("Cannot convert JvmElement");
 		}
 
@@ -276,13 +297,17 @@ namespace Alex.Utils.Assets
 			if (JvmClass != null)
 			{
 				serializer.Serialize(writer, JvmClass);
+
 				return;
 			}
+
 			if (String != null)
 			{
 				serializer.Serialize(writer, String);
+
 				return;
 			}
+
 			throw new Exception("Union must not be null");
 		}
 	}
@@ -294,37 +319,48 @@ namespace Alex.Utils.Assets
 
 	internal class Converter : JsonConverter
 	{
-		public override bool CanConvert(Type t) => t == typeof(GameElement) || t == typeof(Value) || t == typeof(JvmElement);
+		public override bool CanConvert(Type t) =>
+			t == typeof(GameElement) || t == typeof(Value) || t == typeof(JvmElement);
 
 		public override object ReadJson(JsonReader reader, Type t, object existingValue, JsonSerializer serializer)
 		{
 			if (t == typeof(GameElement))
 				return new GameElement(reader, serializer);
+
 			if (t == typeof(Value))
 				return new Value(reader, serializer);
+
 			if (t == typeof(JvmElement))
 				return new JvmElement(reader, serializer);
+
 			throw new Exception("Unknown type");
 		}
 
 		public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
 		{
 			var t = value.GetType();
+
 			if (t == typeof(GameElement))
 			{
 				((GameElement)value).WriteJson(writer, serializer);
+
 				return;
 			}
+
 			if (t == typeof(Value))
 			{
 				((Value)value).WriteJson(writer, serializer);
+
 				return;
 			}
+
 			if (t == typeof(JvmElement))
 			{
 				((JvmElement)value).WriteJson(writer, serializer);
+
 				return;
 			}
+
 			throw new Exception("Unknown type");
 		}
 
@@ -332,9 +368,9 @@ namespace Alex.Utils.Assets
 		{
 			MetadataPropertyHandling = MetadataPropertyHandling.Ignore,
 			DateParseHandling = DateParseHandling.None,
-			Converters = {
-				new Converter(),
-				new IsoDateTimeConverter { DateTimeStyles = DateTimeStyles.AssumeUniversal }
+			Converters =
+			{
+				new Converter(), new IsoDateTimeConverter { DateTimeStyles = DateTimeStyles.AssumeUniversal }
 			},
 		};
 	}

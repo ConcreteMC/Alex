@@ -2,14 +2,14 @@ using Alex.Blocks.Materials;
 
 namespace Alex.Blocks.Minecraft
 {
-    public class Stem : Block
-    {
-        public Stem()
-        {
-            Solid = false;
-            Transparent = true;
+	public class Stem : Block
+	{
+		public Stem()
+		{
+			Solid = false;
+			Transparent = true;
 
-            BlockMaterial = Material.Plants;
-        }
-    }
+			BlockMaterial = Material.Plants;
+		}
+	}
 }

@@ -8,7 +8,7 @@ namespace Alex.Blocks.Minecraft.Liquid
 		{
 			Solid = false;
 			Transparent = true;
-			
+
 			BlockMaterial = Material.Lava;
 
 			Luminance = 15;

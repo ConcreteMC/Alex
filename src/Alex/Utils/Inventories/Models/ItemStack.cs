@@ -10,31 +10,31 @@ namespace Alex.Utils.Inventories.Models
 		/// field. If not, the field should be set to 1 if the server authoritative inventories are disabled in the
 		/// StartGame packet, or to a unique stack ID if it is enabled.
 		/// </summary>
-		public int       StackNetworkId { get; set; }
-		
+		public int StackNetworkId { get; set; }
+
 		/// <summary>
 		///  Stack is the actual item stack of the item instance.
 		/// </summary>
-		public ItemStack Stack          { get; set; }
-		
+		public ItemStack Stack { get; set; }
+
 		public ItemInstance(int networkId, ItemStack stack)
 		{
 			StackNetworkId = networkId;
 			Stack = stack;
 		}
 	}
-	
+
 	/// <summary>
 	/// ItemStack represents an item instance/stack over network. It has a network ID and a metadata value that
 	/// define its type.
 	/// </summary>
 	public struct ItemStack
 	{
-		public ItemType Type          { get; set; }
-		public short    Count         { get; set; }
-		public Nbt      NbtData       { get; set; }
+		public ItemType Type { get; set; }
+		public short Count { get; set; }
+		public Nbt NbtData { get; set; }
 		public string[] CanBePlacedOn { get; set; }
-		public string[] CanBreak      { get; set; }
+		public string[] CanBreak { get; set; }
 
 		public ItemStack(ItemType type, short count, Nbt nbt, string[] placeOn, string[] canBreak)
 		{
@@ -52,7 +52,7 @@ namespace Alex.Utils.Inventories.Models
 	/// </summary>
 	public struct ItemType
 	{
-		public int   NetworkId     { get; set; }
+		public int NetworkId { get; set; }
 		public short MetadataValue { get; set; }
 
 		public ItemType(int networkId, short metadataValue)
@@ -68,9 +68,9 @@ namespace Alex.Utils.Inventories.Models
 	/// </summary>
 	public struct ItemEntry
 	{
-		public string Name           { get; set; }
-		public short  RuntimeId      { get; set; }
-		public bool   ComponentBased { get; set; }
+		public string Name { get; set; }
+		public short RuntimeId { get; set; }
+		public bool ComponentBased { get; set; }
 
 		public ItemEntry(string name, short runtimeId, bool componentBased)
 		{

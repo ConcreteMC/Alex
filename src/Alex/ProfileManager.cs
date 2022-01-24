@@ -15,13 +15,14 @@ namespace Alex
 	{
 		public IStorageSystem StorageSystem { get; }
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(ProfileManager));
-		
+
 		private ProfilesFileFormat CurrentFile { get; set; }
+
 		public ProfileManager(IStorageSystem storageSystem)
 		{
 			StorageSystem = storageSystem;
 			CurrentFile = new ProfilesFileFormat();
-			
+
 			Load();
 			CurrentFile.Profiles.CollectionChanged += ProfilesOnCollectionChanged;
 		}
@@ -44,7 +45,7 @@ namespace Alex
 				{
 					CurrentFile.SelectedProfile = profile.UUID;
 				}
-				
+
 				if (currentIndex == -1)
 				{
 					CurrentFile.Profiles.Add(profile);
@@ -85,10 +86,12 @@ namespace Alex
 		}
 
 		private object _saveLock = new object();
+
 		/// <inheritdoc />
 		public void Save()
 		{
 			var profiles = CurrentFile.Profiles;
+
 			lock (_loadingLock)
 			{
 				try
@@ -98,19 +101,19 @@ namespace Alex
 				}
 				finally
 				{
-					
 					profiles.CollectionChanged += ProfilesOnCollectionChanged;
 				}
 			}
 		}
-		
+
 		private int GetIndexOf(PlayerProfile entry)
 		{
-			var newEntry = CurrentFile.Profiles.FirstOrDefault(x => x.UUID.Equals(entry.UUID, StringComparison.InvariantCultureIgnoreCase));
+			var newEntry = CurrentFile.Profiles.FirstOrDefault(
+				x => x.UUID.Equals(entry.UUID, StringComparison.InvariantCultureIgnoreCase));
 
 			if (newEntry == default)
 				return -1;
-			
+
 			return CurrentFile.Profiles.IndexOf(newEntry);
 		}
 

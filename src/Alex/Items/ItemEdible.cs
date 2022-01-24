@@ -1,7 +1,4 @@
 namespace Alex.Items
 {
-	public class ItemEdible : Item
-	{
-		
-	}
+	public class ItemEdible : Item { }
 }

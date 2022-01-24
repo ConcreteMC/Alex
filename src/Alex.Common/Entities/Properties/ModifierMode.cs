@@ -2,8 +2,8 @@ namespace Alex.Common.Entities.Properties
 {
 	public enum ModifierMode
 	{
-		Add          = 0,
+		Add = 0,
 		AddMultiplied = 1,
-		Multiply     = 2
+		Multiply = 2
 	}
 }

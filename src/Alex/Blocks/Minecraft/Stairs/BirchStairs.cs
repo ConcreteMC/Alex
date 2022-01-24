@@ -9,7 +9,7 @@ namespace Alex.Blocks.Minecraft.Stairs
 		{
 			Solid = true;
 			Transparent = true;
-			
+
 			base.BlockMaterial = Material.Wood.Clone().WithMapColor(MapColor.Sand);
 		}
 	}

@@ -6,17 +6,13 @@ using Newtonsoft.Json.Linq;
 
 namespace Alex.ResourcePackLib.Json.Converters
 {
-
 	public class Vector3Converter : JsonConverter
 	{
 		public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
 		{
-			var v = value is Vector3 ? (Vector3) value : new Vector3();
+			var v = value is Vector3 ? (Vector3)value : new Vector3();
 
-			writer.WriteRawValue(JsonConvert.SerializeObject(new float[]
-			{
-				v.X, v.Y, v.Z
-			}, Formatting.None));
+			writer.WriteRawValue(JsonConvert.SerializeObject(new float[] { v.X, v.Y, v.Z }, Formatting.None));
 			/*serializer.Serialize(writer, new float[]
 			{
 				v.X,
@@ -25,13 +21,17 @@ namespace Alex.ResourcePackLib.Json.Converters
 			});*/
 		}
 
-		public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
+		public override object ReadJson(JsonReader reader,
+			Type objectType,
+			object existingValue,
+			JsonSerializer serializer)
 		{
 			var obj = JToken.Load(reader);
 
 			if (obj.Type == JTokenType.Array)
 			{
 				var arr = (JArray)obj;
+
 				if (arr.Count == 3)
 				{
 					var v3 = new Vector3();
@@ -44,7 +44,7 @@ namespace Alex.ResourcePackLib.Json.Converters
 					{
 						v3.X = arr[0].Value<float>();
 					}
-					
+
 					if (arr[1].Type == JTokenType.Integer)
 					{
 						v3.Y = arr[1].Value<int>();

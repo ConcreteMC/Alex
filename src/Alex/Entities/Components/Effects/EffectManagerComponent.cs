@@ -8,12 +8,11 @@ namespace Alex.Entities.Components.Effects
 {
 	public class EffectManagerComponent : EntityComponent, ITicked
 	{
-		private readonly ConcurrentDictionary<EffectType, Effect> _effects = new ConcurrentDictionary<EffectType, Effect>();
-		public EffectManagerComponent(Entity entity) : base(entity)
-		{
-			
-		}
-		
+		private readonly ConcurrentDictionary<EffectType, Effect> _effects =
+			new ConcurrentDictionary<EffectType, Effect>();
+
+		public EffectManagerComponent(Entity entity) : base(entity) { }
+
 		/// <inheritdoc />
 		public void OnTick()
 		{
@@ -32,19 +31,22 @@ namespace Alex.Entities.Components.Effects
 			{
 				return effect.Modify(modifier);
 			}
+
 			return modifier;
 		}
-		
+
 		public void AddOrUpdateEffect(Effect effect)
 		{
 			var effect1 = effect;
-			
-			effect = _effects.AddOrUpdate(effect.EffectId, effect, (type, e) =>
-			{
-				e?.Remove(Entity);
-				return effect1;
-			});
-			
+
+			effect = _effects.AddOrUpdate(
+				effect.EffectId, effect, (type, e) =>
+				{
+					e?.Remove(Entity);
+
+					return effect1;
+				});
+
 			effect?.ApplyTo(Entity);
 		}
 
@@ -60,7 +62,7 @@ namespace Alex.Entities.Components.Effects
 		{
 			return _effects.TryGetValue(type, out effect);
 		}
-		
+
 		public bool TryGetEffect<T>(EffectType type, out T effect) where T : Effect
 		{
 			if (_effects.TryGetValue(type, out var temp))
@@ -68,6 +70,7 @@ namespace Alex.Entities.Components.Effects
 				if (temp is T t)
 				{
 					effect = t;
+
 					return true;
 				}
 			}

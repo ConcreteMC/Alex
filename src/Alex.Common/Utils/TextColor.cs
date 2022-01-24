@@ -12,7 +12,7 @@ namespace Alex.Common.Utils
 		private static Logger Log = LogManager.GetCurrentClassLogger(typeof(TextColor));
 
 		public const char Prefix = '§';
-        
+
 		// @formatter:off — disable formatter after this line
 		// BG = Math.Floor(FG/4f);
 		public static readonly TextColor Black       = new TextColor('0',   0,   0,   0,   0,   0,   0, "black");
@@ -45,32 +45,13 @@ namespace Alex.Common.Utils
 
 		public static readonly TextColor[] Colors = new[]
 		{
-			Black,
-			DarkBlue,
-			DarkGreen,
-			DarkCyan,
-			DarkRed,
-			Purple,
-			Gold,
-			Gray,
-			DarkGray,
-			Blue,
-			BrightGreen,
-			Cyan,
-			Red,
-			Pink,
-			Yellow,
-			White,
+			Black, DarkBlue, DarkGreen, DarkCyan, DarkRed, Purple, Gold, Gray, DarkGray, Blue, BrightGreen, Cyan,
+			Red, Pink, Yellow, White,
 		};
-        
+
 		public static readonly TextColor[] Formatters = new[]
 		{
-			Obfuscated,
-			Bold,
-			Strikethrough,
-			Underline,
-			Italic,
-			Reset
+			Obfuscated, Bold, Strikethrough, Underline, Italic, Reset
 		};
 
 		public string Name
@@ -93,13 +74,13 @@ namespace Alex.Common.Utils
 			}
 		}
 
-		public string[] Aliases  { get; private set; }
-        
-		public  Color    ForegroundColor;
-		public  Color    BackgroundColor;
-		public  char     Code;
+		public string[] Aliases { get; private set; }
+
+		public Color ForegroundColor;
+		public Color BackgroundColor;
+		public char Code;
 		private string[] _altNames;
-		private string   _name;
+		private string _name;
 
 		public TextColor(char code, string name, params string[] altNames)
 		{
@@ -107,8 +88,16 @@ namespace Alex.Common.Utils
 			Code = code;
 			AltNames = altNames;
 		}
-        
-		public TextColor(char code, byte r, byte g, byte b, byte br, byte bg, byte bb, string name, params string[] altNames) : this(code, name, altNames)
+
+		public TextColor(char code,
+			byte r,
+			byte g,
+			byte b,
+			byte br,
+			byte bg,
+			byte bb,
+			string name,
+			params string[] altNames) : this(code, name, altNames)
 		{
 			try
 			{
@@ -124,7 +113,7 @@ namespace Alex.Common.Utils
 		public TextColor(Color c, bool lookupColor = true)
 		{
 			ForegroundColor = c;
-            
+
 			if (lookupColor && TryMatchColorByForegroundColor(c, out TextColor match))
 			{
 				BackgroundColor = match.BackgroundColor;
@@ -139,20 +128,20 @@ namespace Alex.Common.Utils
 		}
 
 		private void UpdateAliases()
-		{            
-
+		{
 			if (AltNames == null || AltNames.Length == 0)
 			{
-				Aliases =  new[] { Name };
+				Aliases = new[] { Name };
+
 				return;
 			}
-            
+
 			var list = new List<string>();
 			list.AddRange(AltNames);
 			list.Add(Name);
 			Aliases = list.ToArray();
 		}
-        
+
 		public static bool TryMatchColorByForegroundColor(Color color, out TextColor textColor)
 		{
 			foreach (var allColor in Colors)
@@ -160,13 +149,16 @@ namespace Alex.Common.Utils
 				if (allColor.ForegroundColor == color)
 				{
 					textColor = allColor;
+
 					return true;
 				}
 			}
 
 			textColor = default;
+
 			return false;
 		}
+
 		public static bool TryMatchColorByName(string name, out TextColor textColor)
 		{
 			foreach (var allColor in Colors)
@@ -174,93 +166,138 @@ namespace Alex.Common.Utils
 				if (allColor.Aliases.Any(alias => string.Equals(name, alias, StringComparison.OrdinalIgnoreCase)))
 				{
 					textColor = allColor;
+
 					return true;
 				}
 			}
-            
+
 			foreach (var allColor in Formatters)
 			{
 				if (allColor.Aliases.Any(alias => string.Equals(name, alias, StringComparison.OrdinalIgnoreCase)))
 				{
 					textColor = allColor;
+
 					return true;
 				}
 			}
 
 			textColor = default;
+
 			return false;
 		}
+
 		public static bool TryMatchColorByCode(char code, out TextColor textColor)
 		{
 			switch (code)
 			{
 				case '0':
 					textColor = Black;
+
 					return true;
+
 				case '1':
 					textColor = DarkBlue;
+
 					return true;
+
 				case '2':
 					textColor = DarkGreen;
+
 					return true;
+
 				case '3':
 					textColor = DarkCyan;
+
 					return true;
+
 				case '4':
 					textColor = DarkRed;
+
 					return true;
+
 				case '5':
 					textColor = Purple;
+
 					return true;
+
 				case '6':
 					textColor = Gold;
+
 					return true;
+
 				case '7':
 					textColor = Gray;
+
 					return true;
+
 				case '8':
 					textColor = DarkGray;
+
 					return true;
+
 				case '9':
 					textColor = Blue;
+
 					return true;
-				
+
 				case 'a':
 					textColor = BrightGreen;
+
 					return true;
+
 				case 'b':
 					textColor = Cyan;
+
 					return true;
+
 				case 'c':
 					textColor = Red;
+
 					return true;
+
 				case 'd':
 					textColor = Pink;
+
 					return true;
+
 				case 'e':
 					textColor = Yellow;
+
 					return true;
+
 				case 'f':
 					textColor = White;
+
 					return true;
-				
+
 				case 'k':
 					textColor = Obfuscated;
+
 					return true;
+
 				case 'l':
 					textColor = Bold;
+
 					return true;
+
 				case 'm':
 					textColor = Strikethrough;
+
 					return true;
+
 				case 'n':
 					textColor = Underline;
+
 					return true;
+
 				case 'o':
 					textColor = Italic;
+
 					return true;
+
 				case 'r':
 					textColor = Reset;
+
 					return true;
 			}
 			/*foreach (var allColor in Colors)
@@ -282,16 +319,18 @@ namespace Alex.Common.Utils
 			}*/
 
 			textColor = default;
+
 			return false;
 		}
-                
+
 		private static int ToBackgroundColor(int foreground)
 		{
 			if (foreground <= 0)
 				return 0;
-			return (int) Math.Floor(foreground / 4f);
+
+			return (int)Math.Floor(foreground / 4f);
 		}
-        
+
 		public override string ToString()
 		{
 			return $"§{Code}";
@@ -303,7 +342,7 @@ namespace Alex.Common.Utils
 			{
 				return textColor.ToString();
 			}
-            
+
 			return string.Empty;
 		}
 
@@ -311,6 +350,7 @@ namespace Alex.Common.Utils
 		{
 			if (TryMatchColorByCode(col, out var textColor))
 				return textColor;
+
 			return White;
 		}
 
@@ -326,19 +366,9 @@ namespace Alex.Common.Utils
 
 		private static readonly TextColor[] RainbowColors = new TextColor[]
 		{
-			DarkRed,
-			Red,
-			Gold,
-			Yellow,
-			BrightGreen,
-			DarkGreen,
-			Cyan,
-			Blue,
-			DarkBlue,
-			Purple,
-			Pink
+			DarkRed, Red, Gold, Yellow, BrightGreen, DarkGreen, Cyan, Blue, DarkBlue, Purple, Pink
 		};
-        
+
 		public static string Rainbow(string input)
 		{
 			StringBuilder sb = new StringBuilder();
@@ -357,7 +387,7 @@ namespace Alex.Common.Utils
 
 			return sb.ToString();
 		}
-        
+
 		public static explicit operator Color(TextColor textColor)
 		{
 			return textColor.ForegroundColor;
@@ -367,6 +397,7 @@ namespace Alex.Common.Utils
 		{
 			if (TryMatchColorByForegroundColor(color, out var textColor))
 				return textColor;
+
 			return new TextColor(color, false);
 		}
 	}

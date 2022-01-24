@@ -11,6 +11,7 @@ namespace Alex.Networking.Java.Packets.Play
 
 		public int X;
 		public int Z;
+
 		public override void Decode(MinecraftStream stream)
 		{
 			X = stream.ReadInt();

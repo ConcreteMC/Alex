@@ -2,13 +2,14 @@
 
 namespace Alex.Common.Data.Options
 {
-    public interface IOptionsProperty
-    {
-        void ResetToDefault();
+	public interface IOptionsProperty
+	{
+		void ResetToDefault();
 
-        object GetValue();
-        void SetValue(object obj);
-        
-        Type PropertyType { get; }
-    }
+		object GetValue();
+
+		void SetValue(object obj);
+
+		Type PropertyType { get; }
+	}
 }

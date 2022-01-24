@@ -11,12 +11,10 @@ namespace Alex.ResourcePackLib.Json.Models.Entities
 	{
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(EntityModel));
 
-		[JsonIgnore]
-		public FormatVersion FormatVersion { get; set; } = FormatVersion.Unknown;
-		
-		[JsonProperty("description")]
-		public ModelDescription Description { get; set; }
-	    
+		[JsonIgnore] public FormatVersion FormatVersion { get; set; } = FormatVersion.Unknown;
+
+		[JsonProperty("description")] public ModelDescription Description { get; set; }
+
 		/// <summary>
 		/// Bones define the 'skeleton' of the mob: the parts that can be animated, and to which geometry and other bones are attached.
 		/// </summary>
@@ -29,15 +27,15 @@ namespace Alex.ResourcePackLib.Json.Models.Entities
 			{
 				throw new InvalidParameterException("BaseEntity may not be null!");
 			}
-			
+
 			if (topEntity == null)
 			{
 				throw new InvalidParameterException("TopEntity may not be null!");
 			}
-			
-			Dictionary<string, EntityModelBone> bones  = new Dictionary<string, EntityModelBone>();
-			
-			EntityModel           entity = new EntityModel();
+
+			Dictionary<string, EntityModelBone> bones = new Dictionary<string, EntityModelBone>();
+
+			EntityModel entity = new EntityModel();
 			entity.Description = topEntity.Description;
 
 			if (baseEntity.Bones != null)
@@ -59,11 +57,11 @@ namespace Alex.ResourcePackLib.Json.Models.Entities
 					{
 						var existingBone = bones[bone.Name];
 						var existingCubes = existingBone.Cubes;
-						
+
 						var cubes = bone.Cubes?.Select(x => x.Clone()).ToArray();
 
 						//if (existingCubes == null)
-						
+
 						//Already exists.
 						/*if (bone.Cubes == null || bone.Cubes.Length == 0)
 						{

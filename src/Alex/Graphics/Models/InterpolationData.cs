@@ -5,7 +5,10 @@ namespace Alex.Graphics.Models;
 public abstract class InterpolationData<V>
 {
 	public static InterpolationData<Vector3> Empty => new VectorInterpolationData(Vector3.Zero, Vector3.Zero, -1d);
-	public static InterpolationData<Vector3> EmptyRotation => new RotatedInterpolationData(Vector3.Zero, Vector3.Zero, -1d);
+
+	public static InterpolationData<Vector3> EmptyRotation =>
+		new RotatedInterpolationData(Vector3.Zero, Vector3.Zero, -1d);
+
 	public InterpolationData(V start, V target, double targetTime)
 	{
 		TargetTime = targetTime;
@@ -22,11 +25,11 @@ public abstract class InterpolationData<V>
 	protected double ElapsedTime;
 
 	public abstract InterpolationData<V> WithValues(V start, V target, double targetTime);
-		
+
 	protected abstract V OnUpdate(double elapsedTime);
 
 	public abstract void Reset();
-		
+
 	public V Update(double deltaTime)
 	{
 		if (TargetTime <= 0)
@@ -34,7 +37,7 @@ public abstract class InterpolationData<V>
 
 		if (ElapsedTime >= TargetTime)
 			return Target;
-			
+
 		ElapsedTime += deltaTime;
 
 		return OnUpdate(ElapsedTime);

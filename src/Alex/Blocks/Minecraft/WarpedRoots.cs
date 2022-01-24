@@ -9,9 +9,9 @@ namespace Alex.Blocks.Minecraft
 		{
 			Transparent = true;
 			Solid = false;
-			
+
 			IsFullCube = false;
-			
+
 			base.BlockMaterial = Material.Plants.Clone().SetReplaceable().WithMapColor(MapColor.WarpedStem);
 		}
 	}

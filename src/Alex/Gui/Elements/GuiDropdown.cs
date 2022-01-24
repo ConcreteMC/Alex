@@ -8,12 +8,13 @@ namespace Alex.Gui.Elements
 {
 	public class GuiDropdown : ValuedControl<int>
 	{
-		public  Color BorderColor { get; set; } = Color.LightGray;
+		public Color BorderColor { get; set; } = Color.LightGray;
 
 		public Thickness BorderThickness { get; set; } = Thickness.One;
 		public List<string> Options { get; } = new List<string>();
 
 		private Color _textColor = Color.White;
+
 		public Color TextColor
 		{
 			get => _textColor;
@@ -25,6 +26,7 @@ namespace Alex.Gui.Elements
 		}
 
 		private TextElement _textElement;
+
 		public GuiDropdown()
 		{
 			MinWidth = 100;
@@ -32,20 +34,17 @@ namespace Alex.Gui.Elements
 			BackgroundOverlay = Color.Black;
 			HighlightedBackground = Color.Gray;
 			FocusedBackground = Color.Black * 0.8f;
-			
-			AddChild(_textElement = new TextElement()
-			{
-				Anchor = Alignment.MiddleLeft
-			});
+
+			AddChild(_textElement = new TextElement() { Anchor = Alignment.MiddleLeft });
 		}
 
 		private void UpdateDisplayText(int value)
 		{
 			if (Options.Count == 0)
 				return;
-			
+
 			value = Math.Clamp(value, 0, Options.Count - 1);
-			
+
 			_textElement.TextColor = _textColor;
 			_textElement.Text = Options[value];
 		}
@@ -66,6 +65,7 @@ namespace Alex.Gui.Elements
 			graphics.DrawRectangle(bounds, BorderColor, BorderThickness);
 
 			var position = bounds.Location;
+
 			//bounds = RenderBounds;
 			if (Focused)
 			{
@@ -75,7 +75,7 @@ namespace Alex.Gui.Elements
 				for (var index = 0; index < Options.Count; index++)
 				{
 					var option = Options[index];
-					
+
 					y += bounds.Height;
 					var pos = position + new Point(0, y);
 					var rect = new Rectangle(pos, new Point(bounds.Width, bounds.Height));
@@ -89,6 +89,7 @@ namespace Alex.Gui.Elements
 
 		private int _higlightedIndex = -1;
 		private MouseState _previousMouseState = new MouseState();
+
 		/// <inheritdoc />
 		protected override void OnUpdate(GameTime gameTime)
 		{
@@ -96,7 +97,6 @@ namespace Alex.Gui.Elements
 
 			if (Focused)
 			{
-
 				var bounds = RenderBounds;
 				bounds.Inflate(1f, 1f);
 
@@ -111,7 +111,7 @@ namespace Alex.Gui.Elements
 
 					var cursorPosition = mouseState.Position;
 					cursorPosition = GuiManager.GuiRenderer.Unproject(cursorPosition.ToVector2()).ToPoint();
-					
+
 					int y = 0;
 
 					var previousHighlight = _higlightedIndex;
@@ -127,12 +127,13 @@ namespace Alex.Gui.Elements
 						{
 							_higlightedIndex = index;
 
-							if (mouseState.LeftButton == ButtonState.Released && _previousMouseState.LeftButton == ButtonState.Pressed)
+							if (mouseState.LeftButton == ButtonState.Released
+							    && _previousMouseState.LeftButton == ButtonState.Pressed)
 							{
 								//Clicked item.
 								Value = index;
 								GuiManager.FocusManager.FocusedElement = null;
-								
+
 								//FocusContext.ClearFocus(this);
 							}
 
@@ -150,7 +151,6 @@ namespace Alex.Gui.Elements
 		/// <inheritdoc />
 		protected override void OnCursorMove(Point cursorPosition, Point previousCursorPosition, bool isCursorDown)
 		{
-			
 			base.OnCursorMove(cursorPosition, previousCursorPosition, isCursorDown);
 		}
 
@@ -158,6 +158,7 @@ namespace Alex.Gui.Elements
 		protected override bool OnValueChanged(int value)
 		{
 			UpdateDisplayText(value);
+
 			return base.OnValueChanged(value);
 		}
 	}

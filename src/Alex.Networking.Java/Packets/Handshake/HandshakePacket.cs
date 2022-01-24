@@ -19,7 +19,7 @@ namespace Alex.Networking.Java.Packets.Handshake
 			ProtocolVersion = stream.ReadVarInt();
 			ServerAddress = stream.ReadString();
 			ServerPort = stream.ReadUShort();
-			NextState = (ConnectionState) stream.ReadVarInt();
+			NextState = (ConnectionState)stream.ReadVarInt();
 		}
 
 		public override void Encode(MinecraftStream stream)
@@ -27,7 +27,7 @@ namespace Alex.Networking.Java.Packets.Handshake
 			stream.WriteVarInt(ProtocolVersion);
 			stream.WriteString(ServerAddress);
 			stream.WriteUShort(ServerPort);
-			stream.WriteVarInt((int) NextState);
+			stream.WriteVarInt((int)NextState);
 		}
 	}
 }

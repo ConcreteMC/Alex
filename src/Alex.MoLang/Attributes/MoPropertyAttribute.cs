@@ -6,6 +6,7 @@ namespace Alex.MoLang.Attributes
 	public class MoPropertyAttribute : Attribute
 	{
 		public string Name { get; }
+
 		public MoPropertyAttribute(string name)
 		{
 			Name = name;

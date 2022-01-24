@@ -11,7 +11,8 @@ namespace Alex.Utils.Commands
 		public string[] Options { get; }
 
 		/// <inheritdoc />
-		public EnumCommandProperty(string name, bool required = true, string[] options = null, string enumName = "enum") : base(name, required, enumName)
+		public EnumCommandProperty(string name, bool required = true, string[] options = null, string enumName = "enum")
+			: base(name, required, enumName)
 		{
 			Options = options;
 		}
@@ -26,6 +27,7 @@ namespace Alex.Utils.Commands
 		public bool TryParse(SeekableTextReader reader, out string[] matches)
 		{
 			matches = null;
+
 			if (reader.ReadSingleWord(out string result) > 0)
 			{
 				Log.Debug($"Enum Read: {result}");
@@ -35,10 +37,11 @@ namespace Alex.Utils.Commands
 				{
 					matches = Options.Where(x => x.StartsWith(result, StringComparison.InvariantCultureIgnoreCase))
 					   .ToArray();
+
 					return true;
 				}
 			}
-			
+
 			//	Log.Debug($"")
 
 			return false;

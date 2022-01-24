@@ -5,7 +5,7 @@ namespace Alex.Networking.Java.Packets.Play
 	public class UpdateViewDistancePacket : Packet<UpdateViewDistancePacket>
 	{
 		public int ViewDistance { get; set; }
-		
+
 		/// <inheritdoc />
 		public override void Decode(MinecraftStream stream)
 		{

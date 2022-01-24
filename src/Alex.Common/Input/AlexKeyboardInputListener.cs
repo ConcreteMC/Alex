@@ -10,10 +10,8 @@ namespace Alex.Common.Input
 	public class AlexKeyboardInputListener : InputListenerBase<AlexKeyboardInputListener.AlexKeyState, Keys[]>
 	{
 		public static EventHandler<AlexKeyboardInputListener> InstanceCreated;
-        
-		public AlexKeyboardInputListener() : this(PlayerIndex.One)
-		{
-		}
+
+		public AlexKeyboardInputListener() : this(PlayerIndex.One) { }
 
 		public AlexKeyboardInputListener(PlayerIndex playerIndex) : base(playerIndex)
 		{
@@ -44,6 +42,7 @@ namespace Alex.Common.Input
 		{
 			private KeyboardState _currentState;
 			private Keys[] _pressedKeys;
+
 			public AlexKeyState()
 			{
 				_currentState = Keyboard.GetState();
@@ -52,14 +51,15 @@ namespace Alex.Common.Input
 
 			public bool IsKeyDown(params Keys[] key)
 			{
-				return key.All(x => _pressedKeys.Contains(x));// _pressedKeys.Contains(key); _currentState.IsKeyDown(key);
+				return
+					key.All(x => _pressedKeys.Contains(x)); // _pressedKeys.Contains(key); _currentState.IsKeyDown(key);
 			}
 
 			public bool IsKeyUp(params Keys[] key)
 			{
 				return !key.All(x => _pressedKeys.Contains(x));
 			}
-			
+
 			public static AlexKeyState GetState()
 			{
 				return new AlexKeyState();

@@ -6,81 +6,84 @@ using NLog;
 
 namespace Alex.Plugins
 {
-     internal class AssemblyManager
-    {
-        private static readonly ILogger Log = LogManager.GetCurrentClassLogger(typeof(AssemblyManager));
-        
-        private ConcurrentDictionary<string, Assembly> AssemblyReferences { get; }
-        
-        public AssemblyManager()
-        {
-            AssemblyReferences = new ConcurrentDictionary<string, Assembly>();
-            
-            foreach (var referencedAssemblies in AppDomain.CurrentDomain.GetAssemblies())
-            {
-                if (!AssemblyReferences.ContainsKey(referencedAssemblies.GetName().Name))
-                {
-                    AssemblyReferences.TryAdd(referencedAssemblies.GetName().Name, referencedAssemblies);
-					
-                    foreach (var referenced in referencedAssemblies.GetReferencedAssemblies())
-                    {
-                        if (!AssemblyReferences.ContainsKey(referenced.Name))
-                        {
-                            var newlyLoaded = Assembly.Load(referenced);
-                            AssemblyReferences.TryAdd(referenced.Name, newlyLoaded);
-                        }
-                    }
-                }
-            }
-        }
+	internal class AssemblyManager
+	{
+		private static readonly ILogger Log = LogManager.GetCurrentClassLogger(typeof(AssemblyManager));
 
-        public bool TryLoadAssemblyFromFile(string assemblyName, string file, out Assembly assembly)
-        {
-            try
-            {
-                assembly = Assembly.LoadFrom(file);
-                if (AssemblyReferences.TryAdd(assemblyName, assembly))
-                {
-                    return true;
-                }
-            }
-            catch (Exception ex)
-            {
-                Log.Error(ex,$"Failed to load assembly {assemblyName} even tho its path was found!");
+		private ConcurrentDictionary<string, Assembly> AssemblyReferences { get; }
 
-                //assemblies = default(Assembly[])
-            }
+		public AssemblyManager()
+		{
+			AssemblyReferences = new ConcurrentDictionary<string, Assembly>();
 
-            assembly = null;
-            return false;
-        }
+			foreach (var referencedAssemblies in AppDomain.CurrentDomain.GetAssemblies())
+			{
+				if (!AssemblyReferences.ContainsKey(referencedAssemblies.GetName().Name))
+				{
+					AssemblyReferences.TryAdd(referencedAssemblies.GetName().Name, referencedAssemblies);
 
-        public bool TryGetAssembly(string assemblyName, out Assembly assembly)
-        {
-            return AssemblyReferences.TryGetValue(assemblyName, out assembly);
-        }
-        
-        public bool IsLoaded(string assemblyName, out Assembly outAssembly)
-        {
-            Assembly[] loadedAssemblies = AppDomain.CurrentDomain.GetAssemblies();//.Concat(AssemblyReferences.Values.ToArray()).ToArray();
+					foreach (var referenced in referencedAssemblies.GetReferencedAssemblies())
+					{
+						if (!AssemblyReferences.ContainsKey(referenced.Name))
+						{
+							var newlyLoaded = Assembly.Load(referenced);
+							AssemblyReferences.TryAdd(referenced.Name, newlyLoaded);
+						}
+					}
+				}
+			}
+		}
 
-            Assembly ooutAssembly =
-                loadedAssemblies.FirstOrDefault(x => x.GetName().Name
-                    .Equals(assemblyName, StringComparison.InvariantCultureIgnoreCase));
+		public bool TryLoadAssemblyFromFile(string assemblyName, string file, out Assembly assembly)
+		{
+			try
+			{
+				assembly = Assembly.LoadFrom(file);
 
-            if (ooutAssembly != null)
-            {
-                outAssembly = ooutAssembly;
+				if (AssemblyReferences.TryAdd(assemblyName, assembly))
+				{
+					return true;
+				}
+			}
+			catch (Exception ex)
+			{
+				Log.Error(ex, $"Failed to load assembly {assemblyName} even tho its path was found!");
 
-                if (!AssemblyReferences.ContainsKey(assemblyName))
-                {
-                    AssemblyReferences.TryAdd(assemblyName, outAssembly);
-                }
-                
-                return true;
-            }
-            
-            return AssemblyReferences.TryGetValue(assemblyName, out outAssembly);
-        }
-    }
+				//assemblies = default(Assembly[])
+			}
+
+			assembly = null;
+
+			return false;
+		}
+
+		public bool TryGetAssembly(string assemblyName, out Assembly assembly)
+		{
+			return AssemblyReferences.TryGetValue(assemblyName, out assembly);
+		}
+
+		public bool IsLoaded(string assemblyName, out Assembly outAssembly)
+		{
+			Assembly[]
+				loadedAssemblies =
+					AppDomain.CurrentDomain.GetAssemblies(); //.Concat(AssemblyReferences.Values.ToArray()).ToArray();
+
+			Assembly ooutAssembly = loadedAssemblies.FirstOrDefault(
+				x => x.GetName().Name.Equals(assemblyName, StringComparison.InvariantCultureIgnoreCase));
+
+			if (ooutAssembly != null)
+			{
+				outAssembly = ooutAssembly;
+
+				if (!AssemblyReferences.ContainsKey(assemblyName))
+				{
+					AssemblyReferences.TryAdd(assemblyName, outAssembly);
+				}
+
+				return true;
+			}
+
+			return AssemblyReferences.TryGetValue(assemblyName, out outAssembly);
+		}
+	}
 }

@@ -12,23 +12,27 @@ namespace Alex.MoLang.Runtime.Struct
 	public class PropertyCache
 	{
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(PropertyCache));
-		
+
 		public readonly Dictionary<string, ValueAccessor> Properties = new(StringComparer.OrdinalIgnoreCase);
-		public readonly Dictionary<string, Func<object, MoParams, IMoValue>> Functions = new(StringComparer.OrdinalIgnoreCase);
+
+		public readonly Dictionary<string, Func<object, MoParams, IMoValue>> Functions = new(
+			StringComparer.OrdinalIgnoreCase);
 
 		public PropertyCache(Type arg)
 		{
 			ProcessMethods(arg, Functions);
 			ProcessProperties(arg, Properties);
 		}
-		
-		private static void ProcessMethods(IReflect type, IDictionary<string, Func<object, MoParams, IMoValue>> functions)
+
+		private static void ProcessMethods(IReflect type,
+			IDictionary<string, Func<object, MoParams, IMoValue>> functions)
 		{
 			var methods = type.GetMethods(BindingFlags.Public | BindingFlags.Instance);
 
 			foreach (var method in methods)
 			{
 				var functionAttribute = method.GetCustomAttribute<MoFunctionAttribute>();
+
 				if (functionAttribute == null)
 					continue;
 
@@ -37,6 +41,7 @@ namespace Alex.MoLang.Runtime.Struct
 					if (functions.ContainsKey(name))
 					{
 						Log.Warn($"Duplicate function \'{name}\' in {type.ToString()}");
+
 						continue;
 					}
 
@@ -61,7 +66,8 @@ namespace Alex.MoLang.Runtime.Struct
 
 								if (!mo.Contains(index))
 								{
-									if (!parameter.IsOptional) throw new MissingMethodException($"Missing parameter: {parameter.Name}");
+									if (!parameter.IsOptional)
+										throw new MissingMethodException($"Missing parameter: {parameter.Name}");
 
 									break;
 								}
@@ -82,7 +88,7 @@ namespace Alex.MoLang.Runtime.Struct
 								}
 								else if (t == typeof(float))
 								{
-									parameters[index] = (float) mo.GetDouble(index);
+									parameters[index] = (float)mo.GetDouble(index);
 								}
 								else if (t == typeof(string))
 								{
@@ -117,8 +123,7 @@ namespace Alex.MoLang.Runtime.Struct
 						return value;
 					}
 
-					functions.Add(
-						name, ExecuteMolangFunction);
+					functions.Add(name, ExecuteMolangFunction);
 				}
 			}
 		}
@@ -137,7 +142,7 @@ namespace Alex.MoLang.Runtime.Struct
 					valueAccessors.Add(functionAttribute.Name, new PropertyAccessor(prop));
 				}
 			}
-			
+
 			var fields = type.GetFields(BindingFlags.Public | BindingFlags.Instance);
 
 			foreach (var prop in fields)

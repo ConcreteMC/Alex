@@ -7,16 +7,16 @@ namespace Alex.Blocks.Minecraft
 	public class WallSign : Block
 	{
 		public WoodType WoodType { get; }
-		
+
 		public WallSign(WoodType woodType = WoodType.Oak) : base()
 		{
 			WoodType = woodType;
-			
+
 			Solid = false;
 			Transparent = true;
 			Renderable = false;
 			CanInteract = true;
-			
+
 			HasHitbox = true;
 
 			//RequiresUpdate = true
@@ -28,15 +28,16 @@ namespace Alex.Blocks.Minecraft
 	public class StandingSign : Block
 	{
 		public WoodType WoodType { get; }
+
 		public StandingSign(WoodType woodType = WoodType.Oak)
 		{
 			WoodType = woodType;
-			
+
 			Solid = false;
 			Transparent = true;
 			Renderable = false;
 			CanInteract = true;
-			
+
 			HasHitbox = true;
 
 			//RequiresUpdate = true;

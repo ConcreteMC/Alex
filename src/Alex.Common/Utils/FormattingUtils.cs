@@ -9,6 +9,7 @@ namespace Alex.Common.Utils
 			// Determine the suffix and readable value
 			string suffix;
 			double readable;
+
 			if (absolute_i >= 0x1000000000000000) // Exabyte
 			{
 				suffix = "EB";
@@ -43,8 +44,10 @@ namespace Alex.Common.Utils
 			{
 				return i.ToString("0 B"); // Byte
 			}
+
 			// Divide by 1024 to get fractional value
 			readable = (readable / 1024);
+
 			// Return formatted number with suffix
 			return readable.ToString($"F{decimals}") + suffix;
 		}

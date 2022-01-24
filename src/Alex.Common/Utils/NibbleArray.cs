@@ -6,9 +6,7 @@ namespace Alex.Common.Utils
 	{
 		public readonly byte[] Data;
 
-		public NibbleArray()
-		{
-		}
+		public NibbleArray() { }
 
 		public NibbleArray(byte[] data)
 		{
@@ -18,6 +16,7 @@ namespace Alex.Common.Utils
 		public NibbleArray(int length, byte initialValue = 0)
 		{
 			Data = new byte[length / 2];
+
 			for (int i = 0; i < Data.Length; i++)
 			{
 				Data[i] = initialValue;
@@ -43,7 +42,7 @@ namespace Alex.Common.Utils
 
 		public object Clone()
 		{
-			return new NibbleArray((byte[]) Data.Clone());
+			return new NibbleArray((byte[])Data.Clone());
 		}
 	}
 }

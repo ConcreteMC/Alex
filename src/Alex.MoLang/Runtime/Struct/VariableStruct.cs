@@ -44,19 +44,21 @@ namespace Alex.MoLang.Runtime.Struct
 
 			string main = key.Value;
 
-			if (!string.IsNullOrWhiteSpace(main)) {
+			if (!string.IsNullOrWhiteSpace(main))
+			{
 				//object vstruct = Get(main, MoParams.Empty);
 
-				if (!Map.TryGetValue(main, out var container)) {
+				if (!Map.TryGetValue(main, out var container))
+				{
 					if (!key.HasChildren)
 					{
 						//Map.TryAdd(main, container = new VariableStruct());
 						throw new MoLangRuntimeException($"Variable was not a struct: {key}", null);
 					}
-					
+
 					Map.TryAdd(main, container = new VariableStruct());
 				}
-				
+
 				if (container is IMoStruct moStruct)
 				{
 					moStruct.Set(key.Next, value);
@@ -65,7 +67,7 @@ namespace Alex.MoLang.Runtime.Struct
 				{
 					throw new MoLangRuntimeException($"Variable was not a struct: {key}", null);
 				}
-				
+
 				//((IMoStruct) vstruct).Set(string.Join(".", segments), value);
 
 				//Map[main] = (IMoStruct)vstruct;//.Add(main, (IMoStruct) vstruct);
@@ -102,10 +104,10 @@ namespace Alex.MoLang.Runtime.Struct
 
 			if (Map.TryGetValue(key.Value, out var v))
 				return v;
-			
+
 			//
-		//	Log.Info($"Unknown variable: {key}");
-			
+			//	Log.Info($"Unknown variable: {key}");
+
 			return DoubleValue.Zero;
 		}
 

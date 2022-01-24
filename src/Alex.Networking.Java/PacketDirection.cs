@@ -1,8 +1,8 @@
 ﻿namespace Alex.Networking.Java
 {
-    public enum PacketDirection
-    {
-        ServerBound,
-        ClientBound
-    }
+	public enum PacketDirection
+	{
+		ServerBound,
+		ClientBound
+	}
 }

@@ -7,13 +7,9 @@ namespace Alex.ResourcePackLib.Json.Bedrock.Particles.Components
 {
 	public class LifetimeExpressionComponent : ParticleComponent
 	{
-		public LifetimeExpressionComponent()
-		{
-			
-		}
-		
-		[JsonProperty("max_lifetime")]
-		public IExpression[] MaxLifetime { get; set; }
+		public LifetimeExpressionComponent() { }
+
+		[JsonProperty("max_lifetime")] public IExpression[] MaxLifetime { get; set; }
 
 		public double CalculateLifetime(MoLangRuntime runtime)
 		{

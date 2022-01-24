@@ -17,11 +17,12 @@ namespace Alex.Gui.Elements.Map
 		private int Size { get; set; }
 		public bool IsDirty { get; private set; }
 		public bool Invalidated { get; private set; } = false;
-		
+
 		public ChunkCoordinates Coordinates { get; }
-		
+
 		/// <inheritdoc />
 		public Vector3 Position { get; }
+
 		public RenderedMap(ChunkCoordinates coordinates, int size = 16) : base(size, size)
 		{
 			Position = new Vector3(coordinates.X * 16, 0f, coordinates.Z * 16);
@@ -33,7 +34,7 @@ namespace Alex.Gui.Elements.Map
 		{
 			Invalidated = true;
 		}
-		
+
 		public void MarkDirty()
 		{
 			IsDirty = true;
@@ -43,7 +44,7 @@ namespace Alex.Gui.Elements.Map
 		{
 			if (Invalidated)
 				return;
-			
+
 			try
 			{
 				var target = world.GetChunkColumn(Coordinates.X, Coordinates.Z);
@@ -51,6 +52,7 @@ namespace Alex.Gui.Elements.Map
 				if (target == null)
 				{
 					Invalidate();
+
 					return;
 				}
 
@@ -58,27 +60,28 @@ namespace Alex.Gui.Elements.Map
 				var cz = target.Z * 16;
 
 				var scale = Size / 16;
+
 				for (int x = 0; x < 16; x++)
 				{
 					var rx = cx + x;
+
 					for (int z = 0; z < 16; z++)
 					{
 						var rz = cz + z;
-						
+
 						BlockState state;
 
 						var height = target.GetHeight(x, z);
 
 						state = GetHighestBlock(
 							target, x, height, z, (s) => s.Block.BlockMaterial.MapColor.BaseColor.A > 0, out height);
-						
+
 						var blockMaterial = state?.Block?.BlockMaterial;
 
 						if (blockMaterial == null || blockMaterial.MapColor.BaseColor.A <= 0)
 							continue;
 
-						Color color = GetColorForBlock(
-							world, blockMaterial, rx, height, rz);
+						Color color = GetColorForBlock(world, blockMaterial, rx, height, rz);
 
 						if (alphaBlend)
 						{
@@ -90,7 +93,7 @@ namespace Alex.Gui.Elements.Map
 								var bs = GetHighestBlock(
 									target, x, height, z, (s) => s.Block.BlockMaterial.MapColor.BaseColor.A > 0,
 									out height);
-								
+
 								if (bs == null)
 									break;
 
@@ -110,10 +113,15 @@ namespace Alex.Gui.Elements.Map
 			}
 		}
 
-		private BlockState GetHighestBlock(ChunkColumn target, int x, int height, int z, Predicate<BlockState> predicate, out int finalHeight)
+		private BlockState GetHighestBlock(ChunkColumn target,
+			int x,
+			int height,
+			int z,
+			Predicate<BlockState> predicate,
+			out int finalHeight)
 		{
 			finalHeight = height;
-			
+
 			if (height > target.WorldSettings.MinY)
 			{
 				for (int y = height - 1; y > target.WorldSettings.MinY; y--)
@@ -123,6 +131,7 @@ namespace Alex.Gui.Elements.Map
 					if (predicate(state))
 					{
 						finalHeight = y;
+
 						return state;
 					}
 				}
@@ -162,6 +171,7 @@ namespace Alex.Gui.Elements.Map
 			if (Invalidated)
 			{
 				HasChanges = false;
+
 				return null;
 			}
 
@@ -169,10 +179,12 @@ namespace Alex.Gui.Elements.Map
 		}
 
 		private Texture2D _texture = null;
+
 		/// <inheritdoc />
 		public override Texture2D GetTexture(GraphicsDevice device)
 		{
 			var texture = _texture;
+
 			if (texture == null)
 			{
 				var data = GetData();
@@ -188,13 +200,14 @@ namespace Alex.Gui.Elements.Map
 			if (HasChanges && !IsDirty)
 			{
 				var data = GetData();
-				
+
 				if (data != null)
 					texture.SetData(data);
 			}
 
 			_texture = texture;
-			return texture;	
+
+			return texture;
 		}
 
 		/// <inheritdoc />

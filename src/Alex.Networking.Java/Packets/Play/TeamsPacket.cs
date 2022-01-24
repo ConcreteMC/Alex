@@ -8,12 +8,12 @@ namespace Alex.Networking.Java.Packets.Play
 		public string TeamName { get; set; }
 		public Mode PacketMode { get; set; }
 		public TeamsMode Payload { get; set; }
-		
+
 		/// <inheritdoc />
 		public override void Decode(MinecraftStream stream)
 		{
 			TeamName = stream.ReadString();
-			PacketMode = (Mode) stream.ReadByte();
+			PacketMode = (Mode)stream.ReadByte();
 
 			switch (PacketMode)
 			{
@@ -21,6 +21,7 @@ namespace Alex.Networking.Java.Packets.Play
 					var a = new CreateTeam();
 					a.Read(stream);
 					Payload = a;
+
 					break;
 
 				case Mode.RemoveTeam:
@@ -30,18 +31,21 @@ namespace Alex.Networking.Java.Packets.Play
 					var upd = new UpdateTeam();
 					upd.Read(stream);
 					Payload = upd;
+
 					break;
 
 				case Mode.AddPlayer:
 					var add = new AddPlayers();
 					add.Read(stream);
 					Payload = add;
+
 					break;
 
 				case Mode.RemovePlayer:
 					var remove = new RemovePlayers();
 					remove.Read(stream);
 					Payload = remove;
+
 					break;
 			}
 		}
@@ -61,49 +65,43 @@ namespace Alex.Networking.Java.Packets.Play
 			RemovePlayer = 4
 		}
 
-		public class TeamsMode
-		{
-			
-		}
+		public class TeamsMode { }
 
 		public class TeamInfo : TeamsMode
 		{
-			public string    TeamDisplayName   { get; set; }
-			public byte      Flags             { get; set; }
-			public string    NameTagVisibility { get; set; }
-			public string    CollisionRule     { get; set; }
-			public TeamColor TeamColor         { get; set; }
-			public string    TeamPrefix        { get; set; }
-			public string    TeamSuffix        { get; set; }
+			public string TeamDisplayName { get; set; }
+			public byte Flags { get; set; }
+			public string NameTagVisibility { get; set; }
+			public string CollisionRule { get; set; }
+			public TeamColor TeamColor { get; set; }
+			public string TeamPrefix { get; set; }
+			public string TeamSuffix { get; set; }
 
 			public virtual void Read(MinecraftStream stream)
 			{
 				TeamDisplayName = stream.ReadChatObject();
-				Flags = (byte) stream.ReadByte();
+				Flags = (byte)stream.ReadByte();
 				NameTagVisibility = stream.ReadString();
 				CollisionRule = stream.ReadString();
-				TeamColor = (TeamsPacket.TeamColor) stream.ReadVarInt();
+				TeamColor = (TeamsPacket.TeamColor)stream.ReadVarInt();
 				TeamPrefix = stream.ReadChatObject();
 				TeamSuffix = stream.ReadChatObject();
 			}
 		}
 
-		public class UpdateTeam : TeamInfo
-		{
-			
-		}
-		
+		public class UpdateTeam : TeamInfo { }
+
 		public class CreateTeam : TeamInfo
 		{
 			public string[] Entities { get; set; }
-			
+
 			public override void Read(MinecraftStream stream)
 			{
 				base.Read(stream);
-				
+
 				int count = stream.ReadVarInt();
 				Entities = new string[count];
-				
+
 				for (int i = 0; i < count; i++)
 				{
 					Entities[i] = stream.ReadString();
@@ -114,12 +112,12 @@ namespace Alex.Networking.Java.Packets.Play
 		public class PlayersData : TeamsMode
 		{
 			public string[] Entities { get; set; }
-			
+
 			public void Read(MinecraftStream stream)
 			{
 				int count = stream.ReadVarInt();
 				Entities = new string[count];
-				
+
 				for (int i = 0; i < count; i++)
 				{
 					Entities[i] = stream.ReadString();
@@ -127,19 +125,10 @@ namespace Alex.Networking.Java.Packets.Play
 			}
 		}
 
-		public class AddPlayers : PlayersData
-		{
-			
-		}
+		public class AddPlayers : PlayersData { }
 
-		public class RemovePlayers : PlayersData
-		{
-			
-		}
+		public class RemovePlayers : PlayersData { }
 
-		public enum TeamColor
-		{
-			
-		}
+		public enum TeamColor { }
 	}
 }

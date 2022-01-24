@@ -9,7 +9,7 @@ namespace Alex.Blocks.Minecraft
 		{
 			Solid = true;
 			Transparent = false;
-			
+
 			base.BlockMaterial = Material.Stone.Clone().WithMapColor(MapColor.Quartz);
 		}
 	}

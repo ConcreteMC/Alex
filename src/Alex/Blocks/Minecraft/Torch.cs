@@ -22,17 +22,22 @@ namespace Alex.Blocks.Minecraft
 			Transparent = true;
 
 			IsFullCube = false;
-			
+
 			Luminance = 14;
 
 			BlockMaterial = Material.Decoration;
 		}
 
 		/// <inheritdoc />
-		public override bool PlaceBlock(World world, Player player, BlockCoordinates position, BlockFace face, Vector3 cursorPosition)
+		public override bool PlaceBlock(World world,
+			Player player,
+			BlockCoordinates position,
+			BlockFace face,
+			Vector3 cursorPosition)
 		{
 			position += face.GetBlockCoordinates();
 			BlockState state = BlockState;
+
 			if (face != BlockFace.Up && face != BlockFace.Down)
 			{
 				var wallTorch = BlockFactory.GetBlockState("minecraft:wall_torch");
@@ -44,6 +49,7 @@ namespace Alex.Blocks.Minecraft
 			}
 
 			world.SetBlockState(position, state);
+
 			return true;
 		}
 
@@ -52,8 +58,9 @@ namespace Alex.Blocks.Minecraft
 		{
 			var min = base.GetBoundingBoxes(blockPos).MinBy(x => x.GetDimensions().LengthSquared());
 			min.Inflate(0.25f);
+
 			yield return min;
-				
+
 			yield break;
 		}
 	}

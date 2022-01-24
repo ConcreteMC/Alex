@@ -8,6 +8,7 @@ namespace Alex.Utils
 		{
 			return false;
 		}
+
 		public static bool TryConvertKeyboardInput(this Keys keyInput, out char key)
 		{
 			switch (keyInput)
@@ -301,7 +302,7 @@ namespace Alex.Utils
 					return true;
 			}
 
-			key = (char) 0;
+			key = (char)0;
 
 			return false;
 		}

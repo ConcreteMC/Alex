@@ -2,13 +2,14 @@
 
 namespace Alex.Common.Services
 {
-    public interface IOptionsProvider
-    {
-        AlexOptions AlexOptions { get; }
+	public interface IOptionsProvider
+	{
+		AlexOptions AlexOptions { get; }
 
-        void Load();
-        void Save();
+		void Load();
 
-        void ResetAllToDefault();
-    }
+		void Save();
+
+		void ResetAllToDefault();
+	}
 }

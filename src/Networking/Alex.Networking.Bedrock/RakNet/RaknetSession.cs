@@ -54,16 +54,18 @@ namespace Alex.Networking.Bedrock.RakNet
 
 		private readonly RaknetConnection _connection;
 
-		private long _lastOrderingIndex   = -1; // That's the first message with wrapper
+		private long _lastOrderingIndex = -1; // That's the first message with wrapper
 
 
-		private readonly ConcurrentDictionary<long, Packet> _orderingBufferQueue = new ConcurrentDictionary<long, Packet>();
-		private          CancellationTokenSource                          _cancellationToken;
+		private readonly ConcurrentDictionary<long, Packet> _orderingBufferQueue =
+			new ConcurrentDictionary<long, Packet>();
+
+		private CancellationTokenSource _cancellationToken;
 
 		public ConnectionInfo ConnectionInfo { get; }
 
 		public ICustomMessageHandler CustomMessageHandler { get; set; }
-		
+
 		public IPEndPoint EndPoint { get; }
 		public short MtuSize { get; }
 		public long NetworkIdentifier { get; set; }
@@ -72,7 +74,7 @@ namespace Alex.Networking.Bedrock.RakNet
 		public int ReliableMessageNumber = -1;
 		public int SplitPartId = 0;
 		public int OrderingIndex = -1;
-	
+
 		public bool Evicted { get; set; }
 
 		public ConnectionState State { get; set; } = ConnectionState.Unconnected;
@@ -84,14 +86,23 @@ namespace Alex.Networking.Bedrock.RakNet
 
 		public const long InactivityTimeout = 30000;
 
-		public ConcurrentDictionary<int, SplitPartPacket[]> Splits { get; } = new ConcurrentDictionary<int, SplitPartPacket[]>();
+		public ConcurrentDictionary<int, SplitPartPacket[]> Splits { get; } =
+			new ConcurrentDictionary<int, SplitPartPacket[]>();
+
 		private ConcurrentQueue<int> OutgoingAckQueue { get; } = new ConcurrentQueue<int>();
 		private ConcurrentQueue<int> OutgoingNackQueue { get; } = new ConcurrentQueue<int>();
-		public ConcurrentDictionary<int, Datagram> WaitingForAckQueue { get; } = new ConcurrentDictionary<int, Datagram>();
+
+		public ConcurrentDictionary<int, Datagram> WaitingForAckQueue { get; } =
+			new ConcurrentDictionary<int, Datagram>();
 
 		public int CompressionThreshold { get; set; } = -1;
 		private HighPrecisionTimer _tickerHighPrecisionTimer;
-		public RaknetSession(ConnectionInfo connectionInfo, RaknetConnection connection, IPEndPoint endPoint, short mtuSize, ICustomMessageHandler messageHandler = null)
+
+		public RaknetSession(ConnectionInfo connectionInfo,
+			RaknetConnection connection,
+			IPEndPoint endPoint,
+			short mtuSize,
+			ICustomMessageHandler messageHandler = null)
 		{
 			_connection = connection;
 			ConnectionInfo = connectionInfo;
@@ -113,7 +124,7 @@ namespace Alex.Networking.Bedrock.RakNet
 		internal void HandleRakMessage(Packet message)
 		{
 			if (message == null) return;
-			
+
 			// This is not completely finished. Ordering and sequence streams (32 unique channels/streams each)
 			// needs to work by their channel index. Right now, it's only one channel per reliability type.
 			// According to Dylan order and sequence streams can run on the same channel, but documentation
@@ -124,23 +135,34 @@ namespace Alex.Networking.Bedrock.RakNet
 				case Reliability.ReliableOrdered:
 				case Reliability.ReliableOrderedWithAckReceipt:
 					AddToOrderedChannel(message);
+
 					break;
+
 				case Reliability.UnreliableSequenced:
 				case Reliability.ReliableSequenced:
-					Log.Warn($"Sequenced: {message.ReliabilityHeader.SequencingIndex} | OrderIndex: {message.ReliabilityHeader.OrderingIndex}");
+					Log.Warn(
+						$"Sequenced: {message.ReliabilityHeader.SequencingIndex} | OrderIndex: {message.ReliabilityHeader.OrderingIndex}");
+
 					AddToOrderedChannel(message);
+
 					break;
+
 				case Reliability.Unreliable:
 				case Reliability.UnreliableWithAckReceipt:
 				case Reliability.Reliable:
 				case Reliability.ReliableWithAckReceipt:
 					HandlePacket(message);
+
 					break;
+
 				case Reliability.Undefined:
 					Log.Error($"Receive packet with undefined reliability");
+
 					break;
+
 				default:
 					Log.Warn($"Receive packet with unexpected reliability={message.ReliabilityHeader.Reliability}");
+
 					break;
 			}
 		}
@@ -148,9 +170,9 @@ namespace Alex.Networking.Bedrock.RakNet
 		private AutoResetEvent _orderingResetEvent = new AutoResetEvent(false);
 
 		private Thread _orderingThread = null;
+
 		private void AddToOrderedChannel(Packet message)
 		{
-
 			try
 			{
 				if (_cancellationToken.Token.IsCancellationRequested) return;
@@ -159,11 +181,11 @@ namespace Alex.Networking.Bedrock.RakNet
 
 				if (Interlocked.Read(ref _lastOrderingIndex) >= current)
 					return;
-				
+
 				if (_orderingThread == null)
 				{
 					var task = new Task(ProcessOrderedQueue, _cancellationToken.Token, TaskCreationOptions.LongRunning);
-					
+
 					/*_orderingThread = new Thread(
 						ProcessOrderedQueue)
 					{
@@ -183,27 +205,29 @@ namespace Alex.Networking.Bedrock.RakNet
 		}
 
 		public bool IsOutOfOrder => _orderingBufferQueue.Count > 1;
+
 		private void ProcessOrderedQueue()
 		{
 			_orderingThread = Thread.CurrentThread;
 			_orderingThread.Name = $"RaknetSession Ordering ({EndPoint})";
 			int count = 0;
-			
+
 			try
 			{
 				while (!_cancellationToken.IsCancellationRequested && !Evicted)
 				{
 					var key = Interlocked.Read(ref _lastOrderingIndex) + 1;
+
 					if (_orderingBufferQueue.TryRemove(key, out var value))
 					{
 						Interlocked.Exchange(ref _lastOrderingIndex, key);
 						HandlePacket(value);
+
 						continue;
 					}
-					
+
 					_orderingResetEvent.WaitOne();
 				}
-
 			}
 			catch (ObjectDisposedException)
 			{
@@ -224,7 +248,7 @@ namespace Alex.Networking.Bedrock.RakNet
 			try
 			{
 				//	RakOfflineHandler.TraceReceive(Log, message);
-				if (message.Id < (int) DefaultMessageIdTypes.ID_USER_PACKET_ENUM)
+				if (message.Id < (int)DefaultMessageIdTypes.ID_USER_PACKET_ENUM)
 				{
 					// Standard RakNet online message handlers
 					switch (message)
@@ -285,17 +309,16 @@ namespace Alex.Networking.Bedrock.RakNet
 						{
 							throw;
 						}
-						
+
 						Log.Warn(e, $"Custom message handler error");
 					}
 				}
-				
 			}
 			catch (Exception e)
 			{
 				Log.Error(e, "Packet handling error!");
 				Disconnect("Packet handling error!", false);
-				
+
 				throw;
 			}
 			finally
@@ -353,6 +376,7 @@ namespace Alex.Networking.Bedrock.RakNet
 			var packet = NewIncomingConnection.CreateObject();
 			packet.clientendpoint = EndPoint;
 			packet.systemAddresses = new IPEndPoint[20];
+
 			for (int i = 0; i < 20; i++)
 			{
 				packet.systemAddresses[i] = new IPEndPoint(IPAddress.Any, 0);
@@ -372,18 +396,22 @@ namespace Alex.Networking.Bedrock.RakNet
 			CustomMessageHandler?.Disconnect(reason, sendDisconnect);
 			Close();
 		}
-		
+
 		// MCPE Login handling
-		
+
 		private ConcurrentQueue<Packet> _sendQueue = new ConcurrentQueue<Packet>();
+
 		public void SendPacket(Packet packet)
 		{
 			if (packet == null) return;
 
 			if (State == ConnectionState.Unconnected)
 			{
-				if (Log.IsDebugEnabled) Log.Debug($"Ignoring send of packet {packet.GetType().Name} because session is not connected");
+				if (Log.IsDebugEnabled)
+					Log.Debug($"Ignoring send of packet {packet.GetType().Name} because session is not connected");
+
 				packet.PutPool();
+
 				return;
 			}
 
@@ -402,7 +430,7 @@ namespace Alex.Networking.Bedrock.RakNet
 
 			{
 				SendAckQueue();
-				
+
 				if (_tickCounter++ >= 5)
 				{
 					SendQueue();
@@ -410,7 +438,7 @@ namespace Alex.Networking.Bedrock.RakNet
 					CheckTimeout();
 					_tickCounter = 0;
 				}
-				
+
 				SendNackQueue();
 			}
 			catch (Exception e)
@@ -427,19 +455,22 @@ namespace Alex.Networking.Bedrock.RakNet
 		private void DoResends()
 		{
 			if (Evicted) return;
-			
+
 			try
 			{
 				//UpdateSync.Wait();
-			
+
 				if (WaitingForAckQueue.Count == 0) return;
 
-			//	long rto = SlidingWindow.GetRtoForRetransmission();
+				//	long rto = SlidingWindow.GetRtoForRetransmission();
 				//if (rto == 0) return;
 
-				int transmissionBandwidth = CongestionManager.GetRetransmissionBandwidth(CurrentTimeMillis(), UnackedBytes);
+				int transmissionBandwidth =
+					CongestionManager.GetRetransmissionBandwidth(CurrentTimeMillis(), UnackedBytes);
+
 				if (transmissionBandwidth <= 0)
 					return;
+
 				var queue = WaitingForAckQueue;
 
 				foreach (KeyValuePair<int, Datagram> datagramPair in queue)
@@ -447,11 +478,12 @@ namespace Alex.Networking.Bedrock.RakNet
 					if (Evicted) return;
 
 					Datagram datagram = datagramPair.Value;
-					
+
 					if (!datagram.Timer.IsRunning)
 					{
 						Log.Error($"Timer not running for #{datagram.Header.DatagramSequenceNumber}");
 						datagram.Timer.Restart();
+
 						continue;
 					}
 
@@ -469,18 +501,19 @@ namespace Alex.Networking.Bedrock.RakNet
 							Interlocked.Add(ref UnackedBytes, -datagram.Size);
 
 							//if (Log.IsDebugEnabled) 
-								Log.Warn($"{(datagram.RetransmitImmediate ? "NAK RSND" : "TIMEOUT")}, Resent #{datagramPair.Key}, Transmissions: {datagram.TransmissionCount} Type: {datagram.FirstMessageId} (0x{datagram.FirstMessageId:x2}) ({elapsedTime} > {datagramTimeout})");
+							Log.Warn(
+								$"{(datagram.RetransmitImmediate ? "NAK RSND" : "TIMEOUT")}, Resent #{datagramPair.Key}, Transmissions: {datagram.TransmissionCount} Type: {datagram.FirstMessageId} (0x{datagram.FirstMessageId:x2}) ({elapsedTime} > {datagramTimeout})");
 
 							Interlocked.Increment(ref ConnectionInfo.Resends);
-							
+
 							CongestionManager.OnResend(RaknetSession.CurrentTimeMillis(), datagramPair.Key);
-							
+
 							var sent = _connection.SendDatagram(this, datagram);
 
 							Interlocked.Add(ref UnackedBytes, sent);
-							
+
 							transmissionBandwidth -= sent;
-							
+
 							if (transmissionBandwidth <= 0)
 								break;
 						}
@@ -492,11 +525,12 @@ namespace Alex.Networking.Bedrock.RakNet
 				//UpdateSync.Release();
 			}
 		}
+
 		private void CheckTimeout()
 		{
 			if (Evicted) return;
 
-			ConnectionInfo.Latency = (long) CongestionManager.GetRtt();
+			ConnectionInfo.Latency = (long)CongestionManager.GetRtt();
 			long now = DateTime.UtcNow.Ticks / TimeSpan.TicksPerMillisecond;
 			long lastUpdate = LastUpdatedTime.Ticks / TimeSpan.TicksPerMillisecond;
 
@@ -520,13 +554,13 @@ namespace Alex.Networking.Bedrock.RakNet
 		//private ThreadSafeList<int> _nacked = new ThreadSafeList<int>();
 		private void SendNackQueue()
 		{
-			var           queue      = OutgoingNackQueue;
-			int           queueCount = queue.Count;
+			var queue = OutgoingNackQueue;
+			int queueCount = queue.Count;
 
 			if (queueCount == 0) return;
-			
+
 			List<int> enqueued = new List<int>();
-			
+
 			for (int i = 0; i < queueCount; i++)
 			{
 				if (!queue.TryDequeue(out int nack)) break;
@@ -542,11 +576,11 @@ namespace Alex.Networking.Bedrock.RakNet
 			{
 				var acks = Nak.CreateObject();
 				acks.ranges = Acks.Slize(enqueued);
-				
+
 				byte[] data = acks.Encode();
 				_connection.SendData(data, EndPoint);
 				this.CongestionManager.OnSendNack();
-				
+
 				acks.PutPool();
 			}
 		}
@@ -555,9 +589,9 @@ namespace Alex.Networking.Bedrock.RakNet
 		{
 			if (!CongestionManager.ShouldSendAcks(CurrentTimeMillis()))
 				return;
-			
-			var           queue      = OutgoingAckQueue;
-			int           queueCount = queue.Count;
+
+			var queue = OutgoingAckQueue;
+			int queueCount = queue.Count;
 
 			if (queueCount == 0) return;
 
@@ -604,22 +638,24 @@ namespace Alex.Networking.Bedrock.RakNet
 			try
 			{
 				var unacked = UnackedBytes;
-				int transmissionBandwidth = this.CongestionManager.GetTransmissionBandwidth(unacked, _bandwidthExceededStatistic);
+
+				int transmissionBandwidth =
+					this.CongestionManager.GetTransmissionBandwidth(unacked, _bandwidthExceededStatistic);
 
 				if (transmissionBandwidth <= 0)
 				{
 					return;
 					//ConnectionInfo.
 				}
-				
+
 				var sendList = new List<Packet>();
 				int length = _sendQueue.Count;
 
 				for (int i = 0; i < length; i++)
 				{
-				//	if (transmissionBandwidth <= 0)
-				//		break;
-					
+					//	if (transmissionBandwidth <= 0)
+					//		break;
+
 					Packet packet;
 
 					if (!_sendQueue.TryDequeue(out packet))
@@ -630,15 +666,16 @@ namespace Alex.Networking.Bedrock.RakNet
 					if (State == ConnectionState.Unconnected)
 					{
 						packet.PutPool();
+
 						continue;
 					}
 
-				//	var packetSize = packet.Encode().Length;
+					//	var packetSize = packet.Encode().Length;
 
 					//if (packetSize < transmissionBandwidth)
 					{
-					//	transmissionBandwidth -= packetSize;
-						
+						//	transmissionBandwidth -= packetSize;
+
 						sendList.Add(packet);
 					}
 				}
@@ -647,6 +684,7 @@ namespace Alex.Networking.Bedrock.RakNet
 
 				List<Packet> prepareSend = CustomMessageHandler.PrepareSend(sendList);
 				Packet[] packets = new Packet[prepareSend.Count];
+
 				//var preppedSendList = new List<Packet>();
 				for (var index = 0; index < prepareSend.Count; index++)
 				{
@@ -668,14 +706,15 @@ namespace Alex.Networking.Bedrock.RakNet
 				}
 
 				var sentData = 0;
+
 				foreach (Datagram datagram in Datagram.CreateDatagrams(MtuSize, this, packets))
 				{
 					var data = _connection.SendDatagram(this, datagram);
 					sentData += data;
 					Interlocked.Add(ref UnackedBytes, data);
 				}
-					
-				foreach(var packet in packets)
+
+				foreach (var packet in packets)
 					packet?.PutPool();
 
 				_bandwidthExceededStatistic = _sendQueue.Count > 0;
@@ -695,19 +734,20 @@ namespace Alex.Networking.Bedrock.RakNet
 		public void SendDirectPacket(Packet packet)
 		{
 			if (packet.ReliabilityHeader.Reliability == Reliability.ReliableOrdered)
-				throw new Exception($"Can't send direct messages with ordering. The offending packet was {packet.GetType().Name}");
+				throw new Exception(
+					$"Can't send direct messages with ordering. The offending packet was {packet.GetType().Name}");
 
 			if (packet.ReliabilityHeader.Reliability == Reliability.Undefined)
 				packet.ReliabilityHeader.Reliability = Reliability.Reliable; // Questionable practice
-			
+
 			foreach (Datagram datagram in Datagram.CreateDatagrams(MtuSize, this, packet))
 			{
 				var data = _connection.SendDatagram(this, datagram);
 				Interlocked.Add(ref UnackedBytes, data);
 				//UnackedBytes += _connection.SendDatagram(this, datagram);
 			}
-			
-		//	_packetSender.SendPacket(this, packet);
+
+			//	_packetSender.SendPacket(this, packet);
 		}
 
 		public IPEndPoint GetClientEndPoint()
@@ -721,41 +761,44 @@ namespace Alex.Networking.Bedrock.RakNet
 		}
 
 		private bool _closed = false;
+
 		public void Close()
 		{
 			if (_closed)
 				return;
 
 			_closed = true;
-			
+
 			_orderingResetEvent?.Dispose();
 			_orderingResetEvent = null;
-			
-			
+
+
 			//	_tickerHighPrecisionTimer?.(Timeout.Infinite, Timeout.Infinite);
 			_tickerHighPrecisionTimer?.Dispose();
 			_tickerHighPrecisionTimer = null;
 
 			State = ConnectionState.Unconnected;
 			Evicted = true;
-			
+
 			CustomMessageHandler = null;
 
 			// Send with high priority, bypass queue
 			SendDirectPacket(DisconnectionNotification.CreateObject());
 
-			SendQueue(500);//.Wait();
+			SendQueue(500); //.Wait();
 
 			_cancellationToken.Cancel();
 			_orderingBufferQueue.Clear();
 
 			var ackQueue = WaitingForAckQueue;
+
 			foreach (var kvp in ackQueue)
 			{
 				if (ackQueue.TryRemove(kvp.Key, out Datagram datagram)) datagram.PutPool();
 			}
 
 			var splits = Splits;
+
 			foreach (var kvp in splits)
 			{
 				if (splits.TryRemove(kvp.Key, out SplitPartPacket[] splitPartPackets))
@@ -783,16 +826,16 @@ namespace Alex.Networking.Bedrock.RakNet
 
 			if (Log.IsDebugEnabled) Log.Info($"Closed network session");
 		}
-		
-		private static readonly DateTime Jan1st1970 = new DateTime
-			(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
-		
+
+		private static readonly DateTime Jan1st1970 = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+
 		public static long CurrentTimeMillis()
 		{
-			return (long) (DateTime.UtcNow - Jan1st1970).TotalMilliseconds;
+			return (long)(DateTime.UtcNow - Jan1st1970).TotalMilliseconds;
 		}
 
 		public int UnackedBytes = 0;
+
 		internal void HandleAck(Ack ack)
 		{
 			var queue = WaitingForAckQueue;
@@ -802,8 +845,10 @@ namespace Alex.Networking.Bedrock.RakNet
 				if (queue.TryRemove(i, out Datagram datagram))
 				{
 					Interlocked.Add(ref UnackedBytes, -datagram.Size);
-						
-					CongestionManager.OnAck(CurrentTimeMillis(), datagram.Timer.ElapsedMilliseconds,i, datagram.Header.IsContinuousSend);
+
+					CongestionManager.OnAck(
+						CurrentTimeMillis(), datagram.Timer.ElapsedMilliseconds, i, datagram.Header.IsContinuousSend);
+
 					datagram.PutPool();
 				}
 				else
@@ -812,10 +857,11 @@ namespace Alex.Networking.Bedrock.RakNet
 					Log.Warn($"ACK, Failed to remove datagram #{i}");
 				}
 			}
-			
+
 			foreach ((int start, int end) range in ack.ranges)
 			{
 				Interlocked.Increment(ref ConnectionInfo.Ack);
+
 				if (range.start == range.end)
 				{
 					Ack(range.Item1);
@@ -848,7 +894,7 @@ namespace Alex.Networking.Bedrock.RakNet
 				{
 					//	if (Log.IsDebugEnabled)
 					//
-				//	Log.Warn($"NAK, no datagram #{i}");
+					//	Log.Warn($"NAK, no datagram #{i}");
 				}
 			}
 
@@ -874,12 +920,15 @@ namespace Alex.Networking.Bedrock.RakNet
 		{
 			var sequenceIndex = datagram.Header.DatagramSequenceNumber.IntValue();
 			OutgoingAckQueue.Enqueue(sequenceIndex);
+
 			if (CongestionManager.OnPacketReceived(
-				CurrentTimeMillis(),  sequenceIndex, datagram.Header.IsContinuousSend, datagram.Size, out var skippedMessageCount))
+				    CurrentTimeMillis(), sequenceIndex, datagram.Header.IsContinuousSend, datagram.Size,
+				    out var skippedMessageCount))
 			{
 				if (skippedMessageCount > 0)
 				{
 					var start = sequenceIndex - skippedMessageCount;
+
 					for (int i = 0; i < skippedMessageCount; i++)
 					{
 						OutgoingNackQueue.Enqueue((int)(start + i));
@@ -888,7 +937,7 @@ namespace Alex.Networking.Bedrock.RakNet
 
 				if (datagram.Header.IsPacketPair)
 					CongestionManager.OnGotPacketPair(datagram.Header.DatagramSequenceNumber);
-				
+
 				return true;
 			}
 

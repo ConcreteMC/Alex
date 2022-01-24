@@ -7,7 +7,7 @@ namespace Alex.Networking.Java.Packets.Play
 		public float Health { get; set; }
 		public int Food { get; set; }
 		public float Saturation { get; set; }
-		
+
 		/// <inheritdoc />
 		public override void Decode(MinecraftStream stream)
 		{
@@ -17,9 +17,6 @@ namespace Alex.Networking.Java.Packets.Play
 		}
 
 		/// <inheritdoc />
-		public override void Encode(MinecraftStream stream)
-		{
-			
-		}
+		public override void Encode(MinecraftStream stream) { }
 	}
 }

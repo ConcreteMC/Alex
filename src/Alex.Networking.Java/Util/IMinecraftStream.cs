@@ -13,9 +13,11 @@ namespace Alex.Networking.Java.Util
 		Task WriteAsync(byte[] data);
 
 		Task<sbyte> ReadByteAsync();
+
 		Task WriteByteAsync(byte value);
+
 		Task<byte> ReadUnsignedByteAsync();
-		
+
 		Task<int> ReadIntAsync();
 
 		Task<float> ReadFloatAsync();
@@ -84,7 +86,7 @@ namespace Alex.Networking.Java.Util
 
 		Task<string> ReadChatObjectAsync();
 	}
-	
+
 	public interface IMinecraftStream
 	{
 		byte[] Read(int length);
@@ -92,8 +94,9 @@ namespace Alex.Networking.Java.Util
 		void Write(byte[] data);
 
 		sbyte ReadSignedByte();
+
 		byte ReadUnsignedByte();
-		
+
 		int ReadInt();
 
 		float ReadFloat();

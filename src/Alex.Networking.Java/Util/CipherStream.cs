@@ -37,7 +37,9 @@ namespace Alex.Networking.Java.Util
 				this.WriteCipher = writeCipher;
 			}
 		}
+
 		#region Synchronous
+
 		public override int ReadByte()
 		{
 			if (ReadCipher == null)
@@ -58,6 +60,7 @@ namespace Alex.Networking.Java.Util
 				return Stream.Read(buffer, offset, count);
 
 			int num = 0;
+
 			while (num < count)
 			{
 				if (mInBuf == null || mInPos >= mInBuf.Length)
@@ -86,8 +89,7 @@ namespace Alex.Networking.Java.Util
 			do
 			{
 				mInBuf = ReadAndProcessBlock();
-			}
-			while (!inStreamEnded && mInBuf == null);
+			} while (!inStreamEnded && mInBuf == null);
 
 			return mInBuf != null;
 		}
@@ -99,23 +101,24 @@ namespace Alex.Networking.Java.Util
 
 			byte[] block = new byte[readSize];
 			int numRead = 0;
+
 			do
 			{
 				int count = Stream.Read(block, numRead, block.Length - numRead);
+
 				if (count < 1)
 				{
 					inStreamEnded = true;
+
 					break;
 				}
+
 				numRead += count;
-			}
-			while (numRead < block.Length);
+			} while (numRead < block.Length);
 
 			Debug.Assert(inStreamEnded || numRead == block.Length);
 
-			byte[] bytes = inStreamEnded
-				? ReadCipher.DoFinal(block, 0, numRead)
-				: ReadCipher.ProcessBytes(block);
+			byte[] bytes = inStreamEnded ? ReadCipher.DoFinal(block, 0, numRead) : ReadCipher.ProcessBytes(block);
 
 			if (bytes != null && bytes.Length == 0)
 			{
@@ -138,10 +141,12 @@ namespace Alex.Networking.Java.Util
 			if (WriteCipher == null)
 			{
 				Stream.Write(buffer, offset, count);
+
 				return;
 			}
 
 			byte[] data = WriteCipher.ProcessBytes(buffer, offset, count);
+
 			if (data != null)
 			{
 				Stream.Write(data, 0, data.Length);
@@ -153,10 +158,12 @@ namespace Alex.Networking.Java.Util
 			if (WriteCipher == null)
 			{
 				Stream.WriteByte(b);
+
 				return;
 			}
 
 			byte[] data = WriteCipher.ProcessByte(b);
+
 			if (data != null)
 			{
 				Stream.Write(data, 0, data.Length);
@@ -168,22 +175,24 @@ namespace Alex.Networking.Java.Util
 		{
 			var stream = Stream;
 			var cipher = WriteCipher;
+
 			if (stream != null && cipher != null)
 			{
 				byte[] data = cipher.DoFinal();
 				stream.Write(data, 0, data.Length);
 				stream.Flush();
 			}
-			
+
 			base.Close();
 		}
 
 		private bool _disposed = false;
+
 		protected override void Dispose(bool disposing)
 		{
 			if (disposing && !_disposed)
 			{
-				_disposed = true; 
+				_disposed = true;
 				Stream?.Dispose();
 				Stream = null;
 			}
@@ -195,6 +204,7 @@ namespace Alex.Networking.Java.Util
 		public override void Flush() => Stream.Flush();
 
 		#endregion
+
 		#region Asynchronous
 
 		private async Task<bool> FillInBufAsync()
@@ -207,8 +217,7 @@ namespace Alex.Networking.Java.Util
 			do
 			{
 				mInBuf = await ReadAndProcessBlockAsync();
-			}
-			while (!inStreamEnded && mInBuf == null);
+			} while (!inStreamEnded && mInBuf == null);
 
 			return mInBuf != null;
 		}
@@ -220,23 +229,24 @@ namespace Alex.Networking.Java.Util
 
 			byte[] block = new byte[readSize];
 			int numRead = 0;
+
 			do
 			{
 				int count = await Stream.ReadAsync(block, numRead, block.Length - numRead);
+
 				if (count < 1)
 				{
 					inStreamEnded = true;
+
 					break;
 				}
+
 				numRead += count;
-			}
-			while (numRead < block.Length);
+			} while (numRead < block.Length);
 
 			Debug.Assert(inStreamEnded || numRead == block.Length);
 
-			byte[] bytes = inStreamEnded
-				? ReadCipher.DoFinal(block, 0, numRead)
-				: ReadCipher.ProcessBytes(block);
+			byte[] bytes = inStreamEnded ? ReadCipher.DoFinal(block, 0, numRead) : ReadCipher.ProcessBytes(block);
 
 			if (bytes != null && bytes.Length == 0)
 			{
@@ -256,16 +266,21 @@ namespace Alex.Networking.Java.Util
 				await Stream.WriteAsync(data, 0, data.Length);
 				await Stream.FlushAsync();
 			}
+
 			await Stream.DisposeAsync();
 			await base.DisposeAsync();
 		}
 
-		public override async Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
+		public override async Task<int> ReadAsync(byte[] buffer,
+			int offset,
+			int count,
+			CancellationToken cancellationToken)
 		{
 			if (ReadCipher == null)
 				return await Stream.ReadAsync(buffer, offset, count);
 
 			int num = 0;
+
 			while (num < count)
 			{
 				if (mInBuf == null || mInPos >= mInBuf.Length)
@@ -300,10 +315,12 @@ namespace Alex.Networking.Java.Util
 			if (WriteCipher == null)
 			{
 				await Stream.WriteAsync(buffer, offset, count);
+
 				return;
 			}
 
 			byte[] data = WriteCipher.ProcessBytes(buffer, offset, count);
+
 			if (data != null)
 			{
 				await Stream.WriteAsync(data, 0, data.Length);
@@ -311,7 +328,9 @@ namespace Alex.Networking.Java.Util
 		}
 
 		#endregion
+
 		#region Unimplemented & Unsupported
+
 		public override bool CanSeek => false;
 
 		public sealed override long Length => throw new NotSupportedException();
@@ -325,6 +344,7 @@ namespace Alex.Networking.Java.Util
 		public sealed override long Seek(long offset, SeekOrigin origin) => throw new NotSupportedException();
 
 		public sealed override void SetLength(long length) => throw new NotSupportedException();
+
 		#endregion
 	}
 }

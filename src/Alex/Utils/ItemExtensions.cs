@@ -13,10 +13,11 @@ namespace Alex.Utils
 	public static class ItemsExtensions
 	{
 		private static readonly ILogger Log = LogManager.GetCurrentClassLogger();
-		
-		private static JsonSerializerSettings SerializerSettings = new JsonSerializerSettings() {ReferenceLoopHandling = ReferenceLoopHandling.Ignore};
 
-		public static Item ToAlexItem(this MiNET.Items.Item item, [CallerMemberName]string source = "")
+		private static JsonSerializerSettings SerializerSettings =
+			new JsonSerializerSettings() { ReferenceLoopHandling = ReferenceLoopHandling.Ignore };
+
+		public static Item ToAlexItem(this MiNET.Items.Item item, [CallerMemberName] string source = "")
 		{
 			if (item == null)
 				return new ItemAir();
@@ -28,7 +29,7 @@ namespace Alex.Utils
 
 			//if (ChunkProcessor.Itemstates != null)
 			//	itemState = ChunkProcessor.Itemstates.FirstOrDefault(x => x.Id == item.Id);
-			
+
 
 			//if (itemState == null)
 			//	itemState = MiNET.Items.ItemFactory.Itemstates.FirstOrDefault(x => x.Id == item.Id);
@@ -37,7 +38,7 @@ namespace Alex.Utils
 			//{
 			if (ItemFactory.TryGetItem(item.Name, out result))
 			{
-					//	Log.Info($"{item.Id} = {JsonConvert.SerializeObject(itemState, SerializerSettings)} || {JsonConvert.SerializeObject(result, SerializerSettings)}");
+				//	Log.Info($"{item.Id} = {JsonConvert.SerializeObject(itemState, SerializerSettings)} || {JsonConvert.SerializeObject(result, SerializerSettings)}");
 			}
 			else if (result == null && item.Id < 256 && item.Id >= 0) //Block
 			{
@@ -60,21 +61,18 @@ namespace Alex.Utils
 					ItemFactory.TryGetItem(t.Name, out result);
 				}
 			}
-			else if (ItemFactory.TryGetItem(item.Id, item.Metadata, out result))
-			{
-				
-			}
+			else if (ItemFactory.TryGetItem(item.Id, item.Metadata, out result)) { }
 
 			if (result == null || (result.IsAir() && !(item is MiNET.Items.ItemAir)))
 			{
 				if (!ItemFactory.TryGetBedrockItem(item.Name, item.Metadata, out result))
-					Log.Warn($"Failed to convert MiNET item to Alex item. (MiNET={item}, CallingMethod={source}{(item == null ? "" : $", Name={item.Name}")})");
+					Log.Warn(
+						$"Failed to convert MiNET item to Alex item. (MiNET={item}, CallingMethod={source}{(item == null ? "" : $", Name={item.Name}")})");
 			}
 
 			if (result == null)
 			{
-				
-				return new ItemAir() {Count = 0};
+				return new ItemAir() { Count = 0 };
 			}
 
 			result.StackID = item.UniqueId;
@@ -84,7 +82,6 @@ namespace Alex.Utils
 			result.Id = item.Id;
 
 			return result;
-
 		}
 	}
 }

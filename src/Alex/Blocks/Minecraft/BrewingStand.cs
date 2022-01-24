@@ -12,7 +12,7 @@ namespace Alex.Blocks.Minecraft
 			IsFullCube = false;
 
 			CanInteract = true;
-			
+
 			base.BlockMaterial = Material.Metal;
 		}
 	}

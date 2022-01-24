@@ -9,10 +9,10 @@ namespace Alex.Entities.BlockEntities
 {
 	public class FurnaceBlockEntity : BlockEntity
 	{
-		public short CookTime      { get; set; }
+		public short CookTime { get; set; }
 		public short CookTimeTotal { get; set; }
-		public short BurnTime      { get; set; }
-		public short BurnTick      { get; set; }
+		public short BurnTime { get; set; }
+		public short BurnTick { get; set; }
 
 		/// <inheritdoc />
 		public FurnaceBlockEntity(World level) : base(level)
@@ -32,16 +32,13 @@ namespace Alex.Entities.BlockEntities
 					if (item.TagType != NbtTagType.Compound)
 						continue;
 
-					NbtCompound itemCompound = (NbtCompound) item;
-					var         count        = itemCompound["Count"].ByteValue;
-					var         slot         = itemCompound["Slot"].ByteValue;
-					var         id           = itemCompound["id"].ShortValue;
+					NbtCompound itemCompound = (NbtCompound)item;
+					var count = itemCompound["Count"].ByteValue;
+					var slot = itemCompound["Slot"].ByteValue;
+					var id = itemCompound["id"].ShortValue;
 
-					if (itemCompound.TryGet("Damage", out NbtShort damageTag))
-					{
-						
-					}
-					
+					if (itemCompound.TryGet("Damage", out NbtShort damageTag)) { }
+
 					//ItemFactory.
 					//var         damage        = itemCompound["Damage"].ShortValue;
 				}
@@ -51,12 +48,12 @@ namespace Alex.Entities.BlockEntities
 			{
 				BurnTime = burnTime.Value;
 			}
-			
+
 			if (compound.TryGet("CookTime", out NbtShort cookTime))
 			{
 				CookTime = cookTime.Value;
 			}
-			
+
 			if (compound.TryGet("CookTimeTotal", out NbtShort cookTimeTotal))
 			{
 				CookTimeTotal = cookTimeTotal.Value;

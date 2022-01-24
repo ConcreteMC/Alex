@@ -7,133 +7,131 @@ using Alex.Common.Utils.Collections;
 
 namespace Alex.Common.Data.Servers
 {
-    public class SavedServerDataProvider : IListStorageProvider<SavedServerEntry>
-    {
-        private string StorageKey { get; }
+	public class SavedServerDataProvider : IListStorageProvider<SavedServerEntry>
+	{
+		private string StorageKey { get; }
 
-        public IReadOnlyCollection<SavedServerEntry> Data => _data;
+		public IReadOnlyCollection<SavedServerEntry> Data => _data;
 
-        private readonly ObservableCollection<SavedServerEntry> _data;
+		private readonly ObservableCollection<SavedServerEntry> _data;
 
-        private readonly IStorageSystem _storage;
+		private readonly IStorageSystem _storage;
 
-        public SavedServerDataProvider(IStorageSystem storage) : this(storage, "SavedServers")
-        {
-            
-        }
-        
-        public SavedServerDataProvider(IStorageSystem storage, string key)
-        {
-            StorageKey = key;
-            _storage = storage;
-            
-            _data = new ObservableCollection<SavedServerEntry>();
-            _data.CollectionChanged += DataOnCollectionChanged;
-            
-            Load();
-        }
+		public SavedServerDataProvider(IStorageSystem storage) : this(storage, "SavedServers") { }
 
-        private void DataOnCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
-        {
-            Save();
-        }
+		public SavedServerDataProvider(IStorageSystem storage, string key)
+		{
+			StorageKey = key;
+			_storage = storage;
 
-        private object _loadingLock = new object();
-        public void Load()
-        {
-            lock (_loadingLock)
-            {
-                _data.CollectionChanged -= DataOnCollectionChanged;
+			_data = new ObservableCollection<SavedServerEntry>();
+			_data.CollectionChanged += DataOnCollectionChanged;
 
-                try
-                {
-                    if (_storage.TryReadJson(StorageKey, out SavedServerEntry[] newEntries))
-                    {
-                        _data.Clear();
-                        _data.AddRange(newEntries);
-                    }
-                }
-                finally
-                {
-                    _data.CollectionChanged += DataOnCollectionChanged;
-                }
-            }
-        }
+			Load();
+		}
 
-        public void Save()
-        {
-            lock (_loadingLock)
-            {
-                _storage.TryWriteJson(StorageKey, Data.ToArray());
-            }
-        }
+		private void DataOnCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
+		{
+			Save();
+		}
 
-        private int GetIndexOf(SavedServerEntry entry)
-        {
-            var newEntry = _data.FirstOrDefault(x => x.InternalIdentifier.Equals(entry.InternalIdentifier));
-            return _data.IndexOf(newEntry);
-        }
+		private object _loadingLock = new object();
 
-        public bool MoveUp(SavedServerEntry entry)
-        {
-            lock (_loadingLock)
-            {
-                var currentIndex = GetIndexOf(entry);
+		public void Load()
+		{
+			lock (_loadingLock)
+			{
+				_data.CollectionChanged -= DataOnCollectionChanged;
 
-                if (currentIndex == -1 || currentIndex == 0)
-                    return false;
+				try
+				{
+					if (_storage.TryReadJson(StorageKey, out SavedServerEntry[] newEntries))
+					{
+						_data.Clear();
+						_data.AddRange(newEntries);
+					}
+				}
+				finally
+				{
+					_data.CollectionChanged += DataOnCollectionChanged;
+				}
+			}
+		}
 
-                _data.Move(currentIndex, currentIndex - 1);
+		public void Save()
+		{
+			lock (_loadingLock)
+			{
+				_storage.TryWriteJson(StorageKey, Data.ToArray());
+			}
+		}
 
-                return true;
-            }
-        }
+		private int GetIndexOf(SavedServerEntry entry)
+		{
+			var newEntry = _data.FirstOrDefault(x => x.InternalIdentifier.Equals(entry.InternalIdentifier));
 
-        public bool MoveDown(SavedServerEntry entry)
-        {
-            lock (_loadingLock)
-            {
-                var currentIndex = GetIndexOf(entry);
+			return _data.IndexOf(newEntry);
+		}
 
-                if (currentIndex == -1 || currentIndex == _data.Count - 1)
-                    return false;
+		public bool MoveUp(SavedServerEntry entry)
+		{
+			lock (_loadingLock)
+			{
+				var currentIndex = GetIndexOf(entry);
 
-                _data.Move(currentIndex, currentIndex + 1);
+				if (currentIndex == -1 || currentIndex == 0)
+					return false;
 
-                return true;
+				_data.Move(currentIndex, currentIndex - 1);
 
-            }
-        }
-        
-        public void MoveEntry(int index, SavedServerEntry entry)
-        {
-            lock (_loadingLock)
-            {
-                var oldIndex = GetIndexOf(entry);
+				return true;
+			}
+		}
 
-                if (oldIndex == -1)
-                    return;
+		public bool MoveDown(SavedServerEntry entry)
+		{
+			lock (_loadingLock)
+			{
+				var currentIndex = GetIndexOf(entry);
 
-                _data.Move(oldIndex, index);
-            }
-        }
+				if (currentIndex == -1 || currentIndex == _data.Count - 1)
+					return false;
 
-        public void AddEntry(SavedServerEntry entry)
-        {
-            lock (_loadingLock)
-            {
-                _data.Add(entry);
-            }
-        }
+				_data.Move(currentIndex, currentIndex + 1);
 
-        public bool RemoveEntry(SavedServerEntry entry)
-        {
-            lock (_loadingLock)
-            {
-                var newEntry = _data.FirstOrDefault(x => x.InternalIdentifier.Equals(entry.InternalIdentifier));
+				return true;
+			}
+		}
 
-                return newEntry != null && _data.Remove(newEntry);
-            }
-        }
-    }
+		public void MoveEntry(int index, SavedServerEntry entry)
+		{
+			lock (_loadingLock)
+			{
+				var oldIndex = GetIndexOf(entry);
+
+				if (oldIndex == -1)
+					return;
+
+				_data.Move(oldIndex, index);
+			}
+		}
+
+		public void AddEntry(SavedServerEntry entry)
+		{
+			lock (_loadingLock)
+			{
+				_data.Add(entry);
+			}
+		}
+
+		public bool RemoveEntry(SavedServerEntry entry)
+		{
+			lock (_loadingLock)
+			{
+				var newEntry = _data.FirstOrDefault(x => x.InternalIdentifier.Equals(entry.InternalIdentifier));
+
+				return newEntry != null && _data.Remove(newEntry);
+			}
+		}
+	}
 }

@@ -12,7 +12,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 	public class CachedChunk
 	{
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(CachedChunk));
-		
+
 		public int X { get; }
 		public int Z { get; }
 		public ulong[] SubChunks { get; set; } = new ulong[16];
@@ -20,6 +20,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 		public ulong Biome { get; set; }
 
 		public ChunkColumn Chunk { get; }
+
 		public bool IsComplete => Sections.All(x => x != null);
 		// public Action<ChunkColumn> Callback { get; set; }
 		//public uint               SubChunkCount = 0;
@@ -81,7 +82,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			var coordinates = new ChunkCoordinates(Chunk.X, Chunk.Z);
 
 			foreach (KeyValuePair<BlockCoordinates, NbtCompound> bePair in processor._futureBlockEntities.Where(
-				be => (ChunkCoordinates) be.Key == coordinates))
+				         be => (ChunkCoordinates)be.Key == coordinates))
 			{
 				Chunk.AddBlockEntity(bePair.Key, bePair.Value);
 				processor._futureBlockEntities.TryRemove(bePair.Key, out _);

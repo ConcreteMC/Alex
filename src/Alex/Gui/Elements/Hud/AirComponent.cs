@@ -8,167 +8,168 @@ using RocketUI;
 
 namespace Alex.Gui.Elements.Hud
 {
-	 public class AirComponent : StackContainer
-    {
-        private Player Player { get; }
-        private AirTexture[] AirBubbles { get; }
-        
-        public AirComponent(Player player)
-        {
-           // Hunger = player.Hunger;
-            Player = player;
+	public class AirComponent : StackContainer
+	{
+		private Player Player { get; }
+		private AirTexture[] AirBubbles { get; }
 
-            ChildAnchor = Alignment.BottomLeft;
-            Orientation = Orientation.Horizontal;
-            
-            Height = 10;
-            //Width = 10 * 8;
-            AirBubbles = new AirTexture[10];
-            for (int i = 0; i < 10; i++)
-            {
-                AddChild(AirBubbles[i] = new AirTexture()
-                {
-                   // Margin = new Thickness(0, 0, (i * 8), 0),
-                    Anchor = Alignment.BottomRight
-                });
-            }
-            
-            player.HealthManager.OnAvailableAirChanged += OnAvailableAirChanged;
-        }
+		public AirComponent(Player player)
+		{
+			// Hunger = player.Hunger;
+			Player = player;
 
-        private void OnAvailableAirChanged(object? sender, AirChangedEventArgs e)
-        {
-            UpdateAir(e.AirAvailable, e.MaxAirAvailable);
-        }
+			ChildAnchor = Alignment.BottomLeft;
+			Orientation = Orientation.Horizontal;
 
-        private void UpdateAir(int availableAir, int maxAir)
-        {
-            var hearts = availableAir * (10d / maxAir);
-            bool isRounded = (hearts % 1 == 0);
-                
-            var ceil = isRounded ? (int)hearts : (int)Math.Ceiling(hearts);
-                
-            for (int i = 0; i < AirBubbles.Length; i++)
-            {
-                HeartValue value = HeartValue.Full;
-                    
-                if ((i + 1) <= ceil)
-                {
-                    value = HeartValue.Full;
-                        
-                    if (!isRounded && (i + 1) == ceil)
-                    {
-                        value = HeartValue.Half;
-                    }
-                }
-                else
-                {
-                    value = HeartValue.None;
-                }
-                    
-                AirBubbles[^(i + 1)].Set(value);
-            }
-        }
-        
-        protected override void OnUpdate(GameTime gameTime)
-        {
-            if (Player.HeadInWater)
-            {
-                IsVisible = true;
-            }
-            else if (IsVisible)
-            {
-                IsVisible = false;
-            }
+			Height = 10;
+			//Width = 10 * 8;
+			AirBubbles = new AirTexture[10];
 
-            base.OnUpdate(gameTime);
-        }
-        
-        public class AirTexture : RocketControl
-        {
-            private TextureElement Texture { get; set; }
+			for (int i = 0; i < 10; i++)
+			{
+				AddChild(
+					AirBubbles[i] = new AirTexture()
+					{
+						// Margin = new Thickness(0, 0, (i * 8), 0),
+						Anchor = Alignment.BottomRight
+					});
+			}
 
-            //private 
-            public AirTexture()
-            {
-                Width = 9;
-                Height = 9;
-            
-                AddChild(Texture = new TextureElement()
-                {
-                    Anchor = Alignment.TopRight,
+			player.HealthManager.OnAvailableAirChanged += OnAvailableAirChanged;
+		}
 
-                    Height = 9,
-                    Width = 9,
-                    //Margin = new Thickness(4, 4)
-                });
-            }
-        
-            protected override void OnInit(IGuiRenderer renderer)
-            {
-                //Background = renderer.GetTexture(AlexGuiTextures.HungerPlaceholder);
-                Texture.Texture = renderer.GetTexture(AlexGuiTextures.AirBubble);
-                Set(_previousValue);
-            }
+		private void OnAvailableAirChanged(object? sender, AirChangedEventArgs e)
+		{
+			UpdateAir(e.AirAvailable, e.MaxAirAvailable);
+		}
 
-            private double _animationTimeElapsed = -1;
+		private void UpdateAir(int availableAir, int maxAir)
+		{
+			var hearts = availableAir * (10d / maxAir);
+			bool isRounded = (hearts % 1 == 0);
 
-            private const double AnimationTime = 200d;
-            /// <inheritdoc />
-            protected override void OnUpdate(GameTime gameTime)
-            {
-                base.OnUpdate(gameTime);
+			var ceil = isRounded ? (int)hearts : (int)Math.Ceiling(hearts);
 
-                if (_animationTimeElapsed >= 0d)
-                {
-                    if (_animationTimeElapsed <= AnimationTime)
-                    {
-                        _animationTimeElapsed +=Alex.DeltaTimeSpan.TotalMilliseconds;
-                    }
+			for (int i = 0; i < AirBubbles.Length; i++)
+			{
+				HeartValue value = HeartValue.Full;
 
-                    if (_animationTimeElapsed >= AnimationTime)
-                    {
-                        Texture.IsVisible = false;
-                        _animationTimeElapsed = -1d;
-                    }
-                }
-            }
+				if ((i + 1) <= ceil)
+				{
+					value = HeartValue.Full;
 
-            private HeartValue _previousValue = HeartValue.Full;
+					if (!isRounded && (i + 1) == ceil)
+					{
+						value = HeartValue.Half;
+					}
+				}
+				else
+				{
+					value = HeartValue.None;
+				}
 
-            public void Set(HeartValue value)
-            {
+				AirBubbles[^(i + 1)].Set(value);
+			}
+		}
 
-                switch (value)
-                {
-                    case HeartValue.Full:
-                        Texture.IsVisible = true;
-                        
-                        if (GuiRenderer != null)
-                            Texture.Texture = GuiRenderer.GetTexture(AlexGuiTextures.AirBubble);
+		protected override void OnUpdate(GameTime gameTime)
+		{
+			if (Player.HeadInWater)
+			{
+				IsVisible = true;
+			}
+			else if (IsVisible)
+			{
+				IsVisible = false;
+			}
 
-                        break;
+			base.OnUpdate(gameTime);
+		}
 
-                    case HeartValue.Half:
-                        Texture.IsVisible = true;
+		public class AirTexture : RocketControl
+		{
+			private TextureElement Texture { get; set; }
 
-                        break;
+			//private 
+			public AirTexture()
+			{
+				Width = 9;
+				Height = 9;
 
-                    case HeartValue.None:
-                        if (_previousValue != HeartValue.None)
-                        {
-                            Texture.IsVisible = true;
-                            if (GuiRenderer != null)
-                                Texture.Texture = GuiRenderer.GetTexture(AlexGuiTextures.PoppedAirBubble);
-                            
-                            _animationTimeElapsed = 0d;
-                        }
+				AddChild(
+					Texture = new TextureElement()
+					{
+						Anchor = Alignment.TopRight, Height = 9, Width = 9,
+						//Margin = new Thickness(4, 4)
+					});
+			}
 
-                        break;
-                }
+			protected override void OnInit(IGuiRenderer renderer)
+			{
+				//Background = renderer.GetTexture(AlexGuiTextures.HungerPlaceholder);
+				Texture.Texture = renderer.GetTexture(AlexGuiTextures.AirBubble);
+				Set(_previousValue);
+			}
 
-                _previousValue = value;
-            }
-        }
-    }
+			private double _animationTimeElapsed = -1;
+
+			private const double AnimationTime = 200d;
+
+			/// <inheritdoc />
+			protected override void OnUpdate(GameTime gameTime)
+			{
+				base.OnUpdate(gameTime);
+
+				if (_animationTimeElapsed >= 0d)
+				{
+					if (_animationTimeElapsed <= AnimationTime)
+					{
+						_animationTimeElapsed += Alex.DeltaTimeSpan.TotalMilliseconds;
+					}
+
+					if (_animationTimeElapsed >= AnimationTime)
+					{
+						Texture.IsVisible = false;
+						_animationTimeElapsed = -1d;
+					}
+				}
+			}
+
+			private HeartValue _previousValue = HeartValue.Full;
+
+			public void Set(HeartValue value)
+			{
+				switch (value)
+				{
+					case HeartValue.Full:
+						Texture.IsVisible = true;
+
+						if (GuiRenderer != null)
+							Texture.Texture = GuiRenderer.GetTexture(AlexGuiTextures.AirBubble);
+
+						break;
+
+					case HeartValue.Half:
+						Texture.IsVisible = true;
+
+						break;
+
+					case HeartValue.None:
+						if (_previousValue != HeartValue.None)
+						{
+							Texture.IsVisible = true;
+
+							if (GuiRenderer != null)
+								Texture.Texture = GuiRenderer.GetTexture(AlexGuiTextures.PoppedAirBubble);
+
+							_animationTimeElapsed = 0d;
+						}
+
+						break;
+				}
+
+				_previousValue = value;
+			}
+		}
+	}
 }

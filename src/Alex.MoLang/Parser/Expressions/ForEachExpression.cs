@@ -23,19 +23,26 @@ namespace Alex.MoLang.Parser.Expressions
 		{
 			IMoValue array = Array.Evaluate(scope, environment);
 
-			if (array is VariableStruct vs) {
+			if (array is VariableStruct vs)
+			{
 				MoScope subScope = new MoScope();
 
-				foreach (IMoValue value in vs.Map.Values) {
+				foreach (IMoValue value in vs.Map.Values)
+				{
 					subScope.IsContinue = false;
 					subScope.IsBreak = false;
-					
-					Variable.Assign(subScope, environment, value is VariableStruct vss ? vss.Map.FirstOrDefault().Value : value);
+
+					Variable.Assign(
+						subScope, environment, value is VariableStruct vss ? vss.Map.FirstOrDefault().Value : value);
+
 					Body.Evaluate(subScope, environment);
 
-					if (subScope.ReturnValue != null) {
+					if (subScope.ReturnValue != null)
+					{
 						return subScope.ReturnValue;
-					} else if (subScope.IsBreak) {
+					}
+					else if (subScope.IsBreak)
+					{
 						break;
 					}
 				}

@@ -4,51 +4,60 @@ using System.Text;
 
 namespace Alex.Common.Services
 {
-    public interface IStorageSystem
-    {
-	    string PathOnDisk { get; }
-	    void EnableEncryption(byte[] key);
-	    
-        #region Json
-        
-        bool TryWriteJson<T>(string key, T value);
-        bool TryReadJson<T>(string key, out T value);
+	public interface IStorageSystem
+	{
+		string PathOnDisk { get; }
 
-        bool TryReadJson<T>(string key, out T value, Encoding encoding);
+		void EnableEncryption(byte[] key);
 
-        #endregion
+		#region Json
 
-        #region Bytes
-        
-	    bool TryWriteBytes(string key, byte[] value);
-	    bool TryReadBytes(string key, out byte[] value);
-        
-        #endregion
+		bool TryWriteJson<T>(string key, T value);
 
-        #region String
-        
-        bool TryWriteString(string key, string value);
-        bool TryWriteString(string key, string value, Encoding encoding);
-        
-        bool TryReadString(string key, out string value);
-        bool TryReadString(string key, out string value, Encoding encoding);
-        
-        #endregion
+		bool TryReadJson<T>(string key, out T value);
 
-        #region Directory
+		bool TryReadJson<T>(string key, out T value, Encoding encoding);
 
-        bool TryGetDirectory(string key, out DirectoryInfo info);
-        bool TryCreateDirectory(string key);
-        bool TryDeleteDirectory(string key);
+		#endregion
 
-        IEnumerable<string> EnumerateDirectories();
-        #endregion
+		#region Bytes
 
-        bool Exists(string key);
-        bool Delete(string key);
+		bool TryWriteBytes(string key, byte[] value);
 
-        Stream OpenFileStream(string key, FileMode access);
+		bool TryReadBytes(string key, out byte[] value);
 
-        IStorageSystem Open(params string[] path);
-    }
+		#endregion
+
+		#region String
+
+		bool TryWriteString(string key, string value);
+
+		bool TryWriteString(string key, string value, Encoding encoding);
+
+		bool TryReadString(string key, out string value);
+
+		bool TryReadString(string key, out string value, Encoding encoding);
+
+		#endregion
+
+		#region Directory
+
+		bool TryGetDirectory(string key, out DirectoryInfo info);
+
+		bool TryCreateDirectory(string key);
+
+		bool TryDeleteDirectory(string key);
+
+		IEnumerable<string> EnumerateDirectories();
+
+		#endregion
+
+		bool Exists(string key);
+
+		bool Delete(string key);
+
+		Stream OpenFileStream(string key, FileMode access);
+
+		IStorageSystem Open(params string[] path);
+	}
 }

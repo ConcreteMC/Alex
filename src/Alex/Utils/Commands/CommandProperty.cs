@@ -11,7 +11,7 @@ namespace Alex.Utils.Commands
 		public bool Required { get; }
 
 		public string TypeIdentifier { get; set; }
-		
+
 		public CommandProperty(string name, bool required = true, string typeIdentifier = "Unknown")
 		{
 			Name = name;
@@ -28,7 +28,7 @@ namespace Alex.Utils.Commands
 
 			return false;
 		}
-		
+
 		/// <inheritdoc />
 		public override string ToString()
 		{

@@ -40,17 +40,18 @@ namespace Alex.Common.Utils
 	public class FastRandom
 	{
 		// The +1 ensures NextDouble doesn't generate 1.0
-		const double REAL_UNIT_INT  = 1.0 / (int.MaxValue + 1.0);
-		const float FLOAT_REAL_UNIT_INT  = 1.0f / (int.MaxValue + 1.0f);
-		
+		const double REAL_UNIT_INT = 1.0 / (int.MaxValue + 1.0);
+		const float FLOAT_REAL_UNIT_INT = 1.0f / (int.MaxValue + 1.0f);
+
 		const double REAL_UNIT_UINT = 1.0 / (uint.MaxValue + 1.0);
-		const uint   Y              = 842502087, Z = 3579807591, W = 273326509;
+		const uint Y = 842502087, Z = 3579807591, W = 273326509;
 
 		uint x, y, z, w;
 
 		#region Constructors
 
 		public static readonly FastRandom Instance = new FastRandom(Environment.TickCount);
+
 		/// <summary>
 		/// Initialises a new instance using time dependent seed.
 		/// </summary>
@@ -116,8 +117,10 @@ namespace Alex.Common.Utils
 			// Handle the special case where the value int.MaxValue is generated. This is outside of 
 			// the range of permitted values, so we therefore call Next() to try again.
 			uint rtn = w & 0x7FFFFFFF;
+
 			if (rtn == 0x7FFFFFFF)
 				return Next();
+
 			return (int)rtn;
 		}
 
@@ -161,18 +164,19 @@ namespace Alex.Common.Utils
 			// The explicit int cast before the first multiplication gives better performance.
 			// See comments in NextDouble.
 			int range = upperBound - lowerBound;
+
 			if (range < 0)
 			{
 				// If range is <0 then an overflow has occured and must resort to using long integer arithmetic instead (slower).
 				// We also must use all 32 bits of precision, instead of the normal 31, which again is slower.	
-				return lowerBound + (int)((REAL_UNIT_UINT * (w = (w ^ (w >> 19)) ^ (t ^ (t >> 8)))) *
-										   (upperBound - (long)lowerBound));
+				return lowerBound + (int)((REAL_UNIT_UINT * (w = (w ^ (w >> 19)) ^ (t ^ (t >> 8))))
+				                          * (upperBound - (long)lowerBound));
 			}
 
 			// 31 bits of precision will suffice if range<=int.MaxValue. This allows us to cast to an int and gain
 			// a little more performance.
-			return lowerBound + (int)((REAL_UNIT_INT * (int)(0x7FFFFFFF & (w = (w ^ (w >> 19)) ^ (t ^ (t >> 8))))) *
-									   range);
+			return lowerBound
+			       + (int)((REAL_UNIT_INT * (int)(0x7FFFFFFF & (w = (w ^ (w >> 19)) ^ (t ^ (t >> 8))))) * range);
 		}
 
 		/// <summary>
@@ -197,7 +201,7 @@ namespace Alex.Common.Utils
 			// System.Random.
 			return (REAL_UNIT_INT * (int)(0x7FFFFFFF & (w = (w ^ (w >> 19)) ^ (t ^ (t >> 8)))));
 		}
-		
+
 		/// <summary>
 		/// Generates a random float. Values returned are from 0.0 up to but not including 1.0.
 		/// </summary>
@@ -220,7 +224,7 @@ namespace Alex.Common.Utils
 			// System.Random.
 			return (FLOAT_REAL_UNIT_INT * (int)(0x7FFFFFFF & (w = (w ^ (w >> 19)) ^ (t ^ (t >> 8)))));
 		}
-		
+
 		/// <summary>
 		/// Fills the provided byte array with random bytes.
 		/// This method is functionally equivalent to System.Random.NextBytes(). 
@@ -232,6 +236,7 @@ namespace Alex.Common.Utils
 			uint x = this.x, y = this.y, z = this.z, w = this.w;
 			int i = 0;
 			uint t;
+
 			for (int bound = buffer.Length - 3; i < bound;)
 			{
 				// Generate 4 bytes. 
@@ -261,12 +266,15 @@ namespace Alex.Common.Utils
 				w = (w ^ (w >> 19)) ^ (t ^ (t >> 8));
 
 				buffer[i++] = (byte)w;
+
 				if (i < buffer.Length)
 				{
 					buffer[i++] = (byte)(w >> 8);
+
 					if (i < buffer.Length)
 					{
 						buffer[i++] = (byte)(w >> 16);
+
 						if (i < buffer.Length)
 						{
 							buffer[i] = (byte)(w >> 24);
@@ -274,6 +282,7 @@ namespace Alex.Common.Utils
 					}
 				}
 			}
+
 			this.x = x;
 			this.y = y;
 			this.z = z;
@@ -337,6 +346,7 @@ namespace Alex.Common.Utils
 			x = y;
 			y = z;
 			z = w;
+
 			return (w = (w ^ (w >> 19)) ^ (t ^ (t >> 8)));
 		}
 
@@ -355,6 +365,7 @@ namespace Alex.Common.Utils
 			x = y;
 			y = z;
 			z = w;
+
 			return (int)(0x7FFFFFFF & (w = (w ^ (w >> 19)) ^ (t ^ (t >> 8))));
 		}
 
@@ -384,6 +395,7 @@ namespace Alex.Common.Utils
 
 				// Reset the bitMask that tells us which bit to read next.
 				bitMask = 0x80000000;
+
 				return (bitBuffer & bitMask) == 0;
 			}
 

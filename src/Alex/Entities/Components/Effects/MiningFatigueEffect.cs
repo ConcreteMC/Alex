@@ -7,7 +7,7 @@ namespace Alex.Entities.Components.Effects;
 public class MiningFatigueEffect : Effect
 {
 	public static readonly UUID DigSlowDownUUID = new MiNET.Utils.UUID("55FCED67-E92A-486E-9800-B47F202C4386");
-	
+
 	/// <inheritdoc />
 	public MiningFatigueEffect() : base(EffectType.MiningFatigue)
 	{

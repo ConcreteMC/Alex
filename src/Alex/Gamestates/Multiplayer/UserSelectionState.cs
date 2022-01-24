@@ -14,9 +14,11 @@ namespace Alex.Gamestates.Multiplayer
 	public class UserSelectionState : ListSelectionStateBase<UserSelectionItem>
 	{
 		public delegate void ProfileSelected(PlayerProfile selectedProfile);
+
 		public delegate void Cancelled();
+
 		public delegate void AddAccountButtonClicked();
-		
+
 		private AlexButton SelectButton { get; set; }
 		private AlexButton AddButton { get; set; }
 		private AlexButton RemoveButton { get; set; }
@@ -27,7 +29,11 @@ namespace Alex.Gamestates.Multiplayer
 
 		private readonly ProfileSelected _onProfileSelected;
 		private readonly Cancelled _onCancel;
-		public UserSelectionState(ServerTypeImplementation serverType, GuiPanoramaSkyBox skyBox, ProfileSelected onProfileSelected, Cancelled onCancel)
+
+		public UserSelectionState(ServerTypeImplementation serverType,
+			GuiPanoramaSkyBox skyBox,
+			ProfileSelected onProfileSelected,
+			Cancelled onCancel)
 		{
 			Title = $"{serverType.DisplayName} - Account Selection";
 			_serverType = serverType;
@@ -56,6 +62,7 @@ namespace Alex.Gamestates.Multiplayer
 		public void ReloadData()
 		{
 			ClearItems();
+
 			foreach (var profile in _serverType.ProfileProvider.Data)
 			{
 				AddItem(new UserSelectionItem(profile));
@@ -66,7 +73,7 @@ namespace Alex.Gamestates.Multiplayer
 		{
 			//_serverType.ProfileProvider.Save();
 		}
-		
+
 		private void OnRemoveClicked()
 		{
 			var item = SelectedItem;
@@ -76,10 +83,11 @@ namespace Alex.Gamestates.Multiplayer
 				return;
 
 			var profileProvider = _serverType.ProfileProvider;
+
 			if (profileProvider != null)
 			{
 				RemoveItem(item);
-				profileProvider.RemoveEntry(selectedProfile);//.RemoveProfile(selectedProfile);
+				profileProvider.RemoveEntry(selectedProfile); //.RemoveProfile(selectedProfile);
 			}
 		}
 
@@ -100,7 +108,7 @@ namespace Alex.Gamestates.Multiplayer
 			{
 				var overlay = Alex.GuiManager.CreateDialog<GenericLoadingDialog>();
 				overlay.Show();
-				
+
 				try
 				{
 					var profile = await _serverType.VerifySession(item.Profile);
@@ -112,20 +120,20 @@ namespace Alex.Gamestates.Multiplayer
 				}
 			}
 		}
-		
+
 		/// <inheritdoc />
 		protected override void OnShow()
 		{
 			base.OnShow();
 			ReloadData();
 		}
-		
+
 		/// <inheritdoc />
 		protected override void OnHide()
 		{
 			base.OnHide();
 			SaveData();
-			
+
 			_onCancel?.Invoke();
 		}
 
@@ -133,13 +141,15 @@ namespace Alex.Gamestates.Multiplayer
 		protected override void OnSelectedItemChanged(UserSelectionItem newItem)
 		{
 			base.OnSelectedItemChanged(newItem);
+
 			if (newItem == null)
 			{
 				SelectButton.Enabled = false;
 				RemoveButton.Enabled = false;
+
 				return;
 			}
-			
+
 			SelectButton.Enabled = true;
 			RemoveButton.Enabled = AllowDelete;
 		}
@@ -156,14 +166,14 @@ namespace Alex.Gamestates.Multiplayer
 
 			base.OnDraw(args);
 		}
-		
+
 		protected override void OnItemDoubleClick(UserSelectionItem item)
 		{
 			base.OnItemDoubleClick(item);
-		    
+
 			if (SelectedItem != item)
 				return;
-		    
+
 			SelectAccount(item);
 		}
 	}

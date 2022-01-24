@@ -17,11 +17,17 @@ namespace Alex.Utils
 
 		public readonly int XFrames;
 		//public readonly vecto
-		
+
 		public int FrameWidth => Animated ? Width / XFrames : Width;
 		public int FrameHeight => Animated ? Height / YFrames : Height;
-		
-		public TextureInfo(Vector2 atlasSize, Vector2 position, int width, int height, bool animated, int framesInWidth, int framesInHeight)
+
+		public TextureInfo(Vector2 atlasSize,
+			Vector2 position,
+			int width,
+			int height,
+			bool animated,
+			int framesInWidth,
+			int framesInHeight)
 		{
 			AtlasSize = atlasSize;
 			Position = position;
@@ -29,7 +35,7 @@ namespace Alex.Utils
 			Height = height;
 			Animated = animated;
 
-			YFrames =  Math.Max(framesInHeight, 1);
+			YFrames = Math.Max(framesInHeight, 1);
 			XFrames = Math.Max(framesInWidth, 1);
 			//int framesInWidth  = width / frameWidth;
 			//int framesInHeight = height / frameHeight;

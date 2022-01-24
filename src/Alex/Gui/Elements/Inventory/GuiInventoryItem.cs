@@ -15,16 +15,17 @@ namespace Alex.Gui.Elements.Inventory
 		public bool IsSelected
 		{
 			get { return _isSelected; }
-			set { _isSelected = value; OnSelectedChanged(); }
+			set
+			{
+				_isSelected = value;
+				OnSelectedChanged();
+			}
 		}
 
 		public TextureSlice2D SelectedBackground { get; private set; }
 
 
-		public GuiInventoryItem()
-		{
-			
-		}
+		public GuiInventoryItem() { }
 
 		protected override void OnInit(IGuiRenderer renderer)
 		{
@@ -32,12 +33,12 @@ namespace Alex.Gui.Elements.Inventory
 			//_counTextElement.Font = renderer.Font;
 			base.OnInit(renderer);
 		}
-		
+
 		private void OnSelectedChanged()
 		{
 			Background = IsSelected ? SelectedBackground : null;
 		}
-		
+
 		protected override void OnDraw(GuiSpriteBatch graphics, GameTime gameTime)
 		{
 			base.OnDraw(graphics, gameTime);

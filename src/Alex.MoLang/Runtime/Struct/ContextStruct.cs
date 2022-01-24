@@ -18,16 +18,11 @@ namespace Alex.MoLang.Runtime.Struct
 				Map = value;
 			}
 		}
-		public ContextStruct() : base()
-		{
-			
-		}
-		
-		public ContextStruct(IEnumerable<KeyValuePair<string, IMoValue>> values) : base(values)
-		{
-			
-		}
-		
+
+		public ContextStruct() : base() { }
+
+		public ContextStruct(IEnumerable<KeyValuePair<string, IMoValue>> values) : base(values) { }
+
 		/// <inheritdoc />
 		public override void Set(MoPath key, IMoValue value)
 		{

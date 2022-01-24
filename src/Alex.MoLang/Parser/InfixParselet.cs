@@ -10,7 +10,7 @@ namespace Alex.MoLang.Parser
 		{
 			Precedence = precedence;
 		}
-		
+
 		public abstract IExpression Parse(MoLangParser parser, Token token, IExpression leftExpr);
 	}
 

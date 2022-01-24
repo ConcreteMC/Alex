@@ -30,12 +30,13 @@ public class WorldInfo
 	public string Name { get; }
 	private readonly IStorageSystem _storageSystem;
 	public WorldType Type { get; private set; } = WorldType.Anvil;
-	
+
 	public LevelInfo LevelInfo { get; set; }
 	public byte[] IconData { get; set; }
 
 	public bool IsCompatible { get; set; } = false;
 	public string GameVersion { get; set; } = "N/A";
+
 	public WorldInfo(IStorageSystem storageSystem, string name)
 	{
 		Name = name;
@@ -43,6 +44,7 @@ public class WorldInfo
 	}
 
 	private const string LevelDat = "level.dat";
+
 	public bool Initiate()
 	{
 		if (_storageSystem.Exists(LevelDat))
@@ -52,9 +54,10 @@ public class WorldInfo
 				//LevelDB?
 				return true;
 			}
-			
+
 			return LoadAnvil();
 		}
+
 		return false;
 	}
 
@@ -64,15 +67,11 @@ public class WorldInfo
 		{
 			using (var fs = _storageSystem.OpenFileStream(LevelDat, FileMode.Open))
 			{
-				var file = new NbtFile
-				{
-					BigEndian = false,
-					UseVarInt = false
-				};
+				var file = new NbtFile { BigEndian = false, UseVarInt = false };
 
 				fs.Seek(8, SeekOrigin.Begin);
 				file.LoadFromStream(fs, NbtCompression.None);
-				
+
 				var levelInfo = file.RootTag.Deserialize<LevelInfoBedrock>();
 
 				LevelInfo = new LevelInfo()
@@ -97,7 +96,7 @@ public class WorldInfo
 				GameVersion = levelInfo.BaseGameVersion;
 				//IsCompatible = LevelInfo.DataVersion <= 922; //Anvil 1.11
 			}
-			
+
 			if (_storageSystem.TryReadBytes("world_icon.jpeg", out var iconData))
 			{
 				IconData = iconData;
@@ -115,12 +114,13 @@ public class WorldInfo
 
 		return false;
 	}
-	
+
 	private bool LoadAnvil()
 	{
 		try
 		{
 			NbtFile file = new NbtFile();
+
 			using (var fs = _storageSystem.OpenFileStream(LevelDat, FileMode.Open))
 			{
 				file.LoadFromStream(fs, NbtCompression.AutoDetect);
@@ -134,7 +134,7 @@ public class WorldInfo
 			{
 				IconData = iconData;
 			}
-			
+
 			if (ProtocolVersionInfo.TryGetFromDataVersion(LevelInfo.DataVersion, out var versionInfo))
 			{
 				GameVersion = versionInfo.MinecraftVersion;
@@ -143,7 +143,7 @@ public class WorldInfo
 			{
 				GameVersion = $"Unknown: {LevelInfo.DataVersion}";
 			}
-			
+
 			Type = WorldType.Anvil;
 
 			return LevelInfo != null;
@@ -159,25 +159,17 @@ public class WorldInfo
 
 public class ProtocolVersionInfo
 {
-	[JsonProperty("minecraftVersion")]
-	public string MinecraftVersion { get; set; }
-	
-	[JsonProperty("version")]
-	public int Version { get; set; }
-	
-	[JsonProperty("dataVersion")]
-	public int DataVersion { get; set; }
-	
-	[JsonProperty("usesNetty")]
-	public bool UsesNetty { get; set; }
-	
-	[JsonProperty("majorVersion")]
-	public string MajorVersion { get; set; }
-	
-	public ProtocolVersionInfo()
-	{
-		
-	}
+	[JsonProperty("minecraftVersion")] public string MinecraftVersion { get; set; }
+
+	[JsonProperty("version")] public int Version { get; set; }
+
+	[JsonProperty("dataVersion")] public int DataVersion { get; set; }
+
+	[JsonProperty("usesNetty")] public bool UsesNetty { get; set; }
+
+	[JsonProperty("majorVersion")] public string MajorVersion { get; set; }
+
+	public ProtocolVersionInfo() { }
 
 	private static ProtocolVersionInfo[] _versions;
 
@@ -201,7 +193,7 @@ public class ProtocolVersionInfo
 
 		return false;
 	}
-	
+
 	public static bool TryGetFromVersion(int version, out ProtocolVersionInfo versionInfo)
 	{
 		versionInfo = default;
@@ -221,14 +213,15 @@ public class ProtocolVersionInfo
 public class WorldListEntry : ListItem
 {
 	public WorldInfo WorldInfo { get; }
-	
-	private readonly TextureElement     _serverIcon;
-	private readonly StackContainer     _textWrapper;
-        
-	private          TextElement _worldName;
+
+	private readonly TextureElement _serverIcon;
+	private readonly StackContainer _textWrapper;
+
+	private TextElement _worldName;
 	private readonly TextElement _serverMotd;
 
 	private WorldStatusIcon _statusElement;
+
 	public WorldListEntry(WorldInfo worldInfo)
 	{
 		WorldInfo = worldInfo;
@@ -238,42 +231,39 @@ public class WorldListEntry : ListItem
 		Padding = Thickness.One;
 		Anchor = Alignment.TopFill;
 
-		AddChild( _serverIcon = new TextureElement()
-		{
-			Width = GuiServerListEntryElement.ServerIconSize,
-			Height = GuiServerListEntryElement.ServerIconSize,
-                
-			Anchor = Alignment.TopLeft
-		});
-		
-		AddChild(_statusElement = new WorldStatusIcon(worldInfo.IsCompatible ? $"{worldInfo.Type}" : $"{ChatColors.Red}Not Supported")
-		{
-			Anchor = Alignment.TopRight,
-		});
+		AddChild(
+			_serverIcon = new TextureElement()
+			{
+				Width = GuiServerListEntryElement.ServerIconSize,
+				Height = GuiServerListEntryElement.ServerIconSize,
+				Anchor = Alignment.TopLeft
+			});
 
-		AddChild( _textWrapper = new StackContainer()
-		{
-			ChildAnchor = Alignment.TopFill,
-			Anchor = Alignment.TopLeft
-		});
-		_textWrapper.Padding = new Thickness(0,0);
+		AddChild(
+			_statusElement =
+				new WorldStatusIcon(worldInfo.IsCompatible ? $"{worldInfo.Type}" : $"{ChatColors.Red}Not Supported")
+				{
+					Anchor = Alignment.TopRight,
+				});
+
+		AddChild(_textWrapper = new StackContainer() { ChildAnchor = Alignment.TopFill, Anchor = Alignment.TopLeft });
+		_textWrapper.Padding = new Thickness(0, 0);
 		_textWrapper.Margin = new Thickness(GuiServerListEntryElement.ServerIconSize + 5, 0, 0, 0);
 
-		_textWrapper.AddChild(_worldName = new TextElement()
-		{
-			Text = worldInfo.Name,
-			Margin = Thickness.Zero
-		});
+		_textWrapper.AddChild(_worldName = new TextElement() { Text = worldInfo.Name, Margin = Thickness.Zero });
 
-		_textWrapper.AddChild(_serverMotd = new TextElement()
-		{
-			Margin = new Thickness(0, 0, 5, 0),
-			Text = $"{worldInfo.LevelInfo.LevelName} ({DateTimeOffset.FromUnixTimeMilliseconds(worldInfo.LevelInfo.LastPlayed).DateTime.ToString("g")})\n{((GameMode)worldInfo.LevelInfo.GameType).ToString()}, Version: {worldInfo.GameVersion}"
-		});
+		_textWrapper.AddChild(
+			_serverMotd = new TextElement()
+			{
+				Margin = new Thickness(0, 0, 5, 0),
+				Text =
+					$"{worldInfo.LevelInfo.LevelName} ({DateTimeOffset.FromUnixTimeMilliseconds(worldInfo.LevelInfo.LastPlayed).DateTime.ToString("g")})\n{((GameMode)worldInfo.LevelInfo.GameType).ToString()}, Version: {worldInfo.GameVersion}"
+			});
 	}
 
 
 	private Texture2D _texture = null;
+
 	/// <inheritdoc />
 	protected override void OnInit(IGuiRenderer renderer)
 	{

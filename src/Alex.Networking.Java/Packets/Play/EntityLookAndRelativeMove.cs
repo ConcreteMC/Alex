@@ -20,8 +20,8 @@ namespace Alex.Networking.Java.Packets.Play
 			DeltaX = stream.ReadShort();
 			DeltaY = stream.ReadShort();
 			DeltaZ = stream.ReadShort();
-			Yaw = (sbyte) stream.ReadByte();
-			Pitch = (sbyte) stream.ReadByte();
+			Yaw = (sbyte)stream.ReadByte();
+			Pitch = (sbyte)stream.ReadByte();
 			OnGround = stream.ReadBool();
 		}
 

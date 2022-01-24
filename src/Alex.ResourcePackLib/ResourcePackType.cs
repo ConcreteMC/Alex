@@ -1,9 +1,9 @@
 ﻿namespace Alex.ResourcePackLib
 {
-    public enum ResourcePackType
-    {
+	public enum ResourcePackType
+	{
 		Java,
 		Bedrock,
 		Unknown
-    }
+	}
 }

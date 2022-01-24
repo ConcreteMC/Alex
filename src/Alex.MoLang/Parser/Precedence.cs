@@ -1,6 +1,7 @@
 namespace Alex.MoLang.Parser
 {
-	public enum Precedence {
+	public enum Precedence
+	{
 		Anything,
 		Scope,
 

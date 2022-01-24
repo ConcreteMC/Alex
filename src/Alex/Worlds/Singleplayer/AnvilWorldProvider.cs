@@ -15,11 +15,14 @@ namespace Alex.Worlds.Singleplayer
 		private static uint GetBlockStateId(string name)
 		{
 			var res = BlockFactory.GetBlockState(name);
+
 			if (res == null) return 0;
+
 			return res.Id;
 		}
 
 		public static Dictionary<uint, uint> BlockStateMapper = new Dictionary<uint, uint>();
+
 		public static void LoadBlockConverter()
 		{
 			if (BlockStateMapper.Count > 0) return;
@@ -42,12 +45,31 @@ namespace Alex.Worlds.Singleplayer
 			BlockStateMapper.Add(BlockFactory.GetBlockStateID(5, 3), GetBlockStateId("minecraft:jungle_planks"));
 			BlockStateMapper.Add(BlockFactory.GetBlockStateID(5, 4), GetBlockStateId("minecraft:acacia_planks"));
 			BlockStateMapper.Add(BlockFactory.GetBlockStateID(5, 5), GetBlockStateId("minecraft:dark_oak_planks"));
-			for (byte Índice_Data = 0; Índice_Data < 16; Índice_Data += 8) BlockStateMapper.Add(BlockFactory.GetBlockStateID(6, Índice_Data), GetBlockStateId("minecraft:oak_sapling"));
-			for (byte Índice_Data = 1; Índice_Data < 16; Índice_Data += 8) BlockStateMapper.Add(BlockFactory.GetBlockStateID(6, Índice_Data), GetBlockStateId("minecraft:spruce_sapling"));
-			for (byte Índice_Data = 2; Índice_Data < 16; Índice_Data += 8) BlockStateMapper.Add(BlockFactory.GetBlockStateID(6, Índice_Data), GetBlockStateId("minecraft:birch_sapling"));
-			for (byte Índice_Data = 3; Índice_Data < 16; Índice_Data += 8) BlockStateMapper.Add(BlockFactory.GetBlockStateID(6, Índice_Data), GetBlockStateId("minecraft:jungle_sapling"));
-			for (byte Índice_Data = 4; Índice_Data < 16; Índice_Data += 8) BlockStateMapper.Add(BlockFactory.GetBlockStateID(6, Índice_Data), GetBlockStateId("minecraft:acacia_sapling"));
-			for (byte Índice_Data = 5; Índice_Data < 16; Índice_Data += 8) BlockStateMapper.Add(BlockFactory.GetBlockStateID(6, Índice_Data), GetBlockStateId("minecraft:dark_oak_sapling"));
+
+			for (byte Índice_Data = 0; Índice_Data < 16; Índice_Data += 8)
+				BlockStateMapper.Add(
+					BlockFactory.GetBlockStateID(6, Índice_Data), GetBlockStateId("minecraft:oak_sapling"));
+
+			for (byte Índice_Data = 1; Índice_Data < 16; Índice_Data += 8)
+				BlockStateMapper.Add(
+					BlockFactory.GetBlockStateID(6, Índice_Data), GetBlockStateId("minecraft:spruce_sapling"));
+
+			for (byte Índice_Data = 2; Índice_Data < 16; Índice_Data += 8)
+				BlockStateMapper.Add(
+					BlockFactory.GetBlockStateID(6, Índice_Data), GetBlockStateId("minecraft:birch_sapling"));
+
+			for (byte Índice_Data = 3; Índice_Data < 16; Índice_Data += 8)
+				BlockStateMapper.Add(
+					BlockFactory.GetBlockStateID(6, Índice_Data), GetBlockStateId("minecraft:jungle_sapling"));
+
+			for (byte Índice_Data = 4; Índice_Data < 16; Índice_Data += 8)
+				BlockStateMapper.Add(
+					BlockFactory.GetBlockStateID(6, Índice_Data), GetBlockStateId("minecraft:acacia_sapling"));
+
+			for (byte Índice_Data = 5; Índice_Data < 16; Índice_Data += 8)
+				BlockStateMapper.Add(
+					BlockFactory.GetBlockStateID(6, Índice_Data), GetBlockStateId("minecraft:dark_oak_sapling"));
+
 			BlockStateMapper.Add(BlockFactory.GetBlockStateID(7, 0), GetBlockStateId("minecraft:bedrock"));
 			BlockStateMapper.Add(BlockFactory.GetBlockStateID(8, 0), GetBlockStateId("minecraft:flowing_water"));
 			BlockStateMapper.Add(BlockFactory.GetBlockStateID(9, 0), GetBlockStateId("minecraft:water"));
@@ -59,14 +81,39 @@ namespace Alex.Worlds.Singleplayer
 			BlockStateMapper.Add(BlockFactory.GetBlockStateID(14, 0), GetBlockStateId("minecraft:gold_ore"));
 			BlockStateMapper.Add(BlockFactory.GetBlockStateID(15, 0), GetBlockStateId("minecraft:iron_ore"));
 			BlockStateMapper.Add(BlockFactory.GetBlockStateID(16, 0), GetBlockStateId("minecraft:coal_ore"));
-			for (byte Índice_Data = 0; Índice_Data < 16; Índice_Data += 4) BlockStateMapper.Add(BlockFactory.GetBlockStateID(17, Índice_Data), GetBlockStateId("minecraft:oak_log"));
-			for (byte Índice_Data = 1; Índice_Data < 16; Índice_Data += 4) BlockStateMapper.Add(BlockFactory.GetBlockStateID(17, Índice_Data), GetBlockStateId("minecraft:spruce_log"));
-			for (byte Índice_Data = 2; Índice_Data < 16; Índice_Data += 4) BlockStateMapper.Add(BlockFactory.GetBlockStateID(17, Índice_Data), GetBlockStateId("minecraft:birch_log"));
-			for (byte Índice_Data = 3; Índice_Data < 16; Índice_Data += 4) BlockStateMapper.Add(BlockFactory.GetBlockStateID(17, Índice_Data), GetBlockStateId("minecraft:jungle_log"));
-			for (byte Índice_Data = 0; Índice_Data < 16; Índice_Data += 4) BlockStateMapper.Add(BlockFactory.GetBlockStateID(18, Índice_Data), GetBlockStateId("minecraft:oak_leaves"));
-			for (byte Índice_Data = 1; Índice_Data < 16; Índice_Data += 4) BlockStateMapper.Add(BlockFactory.GetBlockStateID(18, Índice_Data), GetBlockStateId("minecraft:spruce_leaves"));
-			for (byte Índice_Data = 2; Índice_Data < 16; Índice_Data += 4) BlockStateMapper.Add(BlockFactory.GetBlockStateID(18, Índice_Data), GetBlockStateId("minecraft:birch_leaves"));
-			for (byte Índice_Data = 3; Índice_Data < 16; Índice_Data += 4) BlockStateMapper.Add(BlockFactory.GetBlockStateID(18, Índice_Data), GetBlockStateId("minecraft:jungle_leaves"));
+
+			for (byte Índice_Data = 0; Índice_Data < 16; Índice_Data += 4)
+				BlockStateMapper.Add(
+					BlockFactory.GetBlockStateID(17, Índice_Data), GetBlockStateId("minecraft:oak_log"));
+
+			for (byte Índice_Data = 1; Índice_Data < 16; Índice_Data += 4)
+				BlockStateMapper.Add(
+					BlockFactory.GetBlockStateID(17, Índice_Data), GetBlockStateId("minecraft:spruce_log"));
+
+			for (byte Índice_Data = 2; Índice_Data < 16; Índice_Data += 4)
+				BlockStateMapper.Add(
+					BlockFactory.GetBlockStateID(17, Índice_Data), GetBlockStateId("minecraft:birch_log"));
+
+			for (byte Índice_Data = 3; Índice_Data < 16; Índice_Data += 4)
+				BlockStateMapper.Add(
+					BlockFactory.GetBlockStateID(17, Índice_Data), GetBlockStateId("minecraft:jungle_log"));
+
+			for (byte Índice_Data = 0; Índice_Data < 16; Índice_Data += 4)
+				BlockStateMapper.Add(
+					BlockFactory.GetBlockStateID(18, Índice_Data), GetBlockStateId("minecraft:oak_leaves"));
+
+			for (byte Índice_Data = 1; Índice_Data < 16; Índice_Data += 4)
+				BlockStateMapper.Add(
+					BlockFactory.GetBlockStateID(18, Índice_Data), GetBlockStateId("minecraft:spruce_leaves"));
+
+			for (byte Índice_Data = 2; Índice_Data < 16; Índice_Data += 4)
+				BlockStateMapper.Add(
+					BlockFactory.GetBlockStateID(18, Índice_Data), GetBlockStateId("minecraft:birch_leaves"));
+
+			for (byte Índice_Data = 3; Índice_Data < 16; Índice_Data += 4)
+				BlockStateMapper.Add(
+					BlockFactory.GetBlockStateID(18, Índice_Data), GetBlockStateId("minecraft:jungle_leaves"));
+
 			BlockStateMapper.Add(BlockFactory.GetBlockStateID(19, 0), GetBlockStateId("minecraft:sponge"));
 			BlockStateMapper.Add(BlockFactory.GetBlockStateID(19, 1), GetBlockStateId("minecraft:wet_sponge"));
 			BlockStateMapper.Add(BlockFactory.GetBlockStateID(20, 0), GetBlockStateId("minecraft:glass"));
@@ -129,14 +176,39 @@ namespace Alex.Worlds.Singleplayer
 			BlockStateMapper.Add(BlockFactory.GetBlockStateID(43, 8), GetBlockStateId("minecraft:smooth_stone"));
 			BlockStateMapper.Add(BlockFactory.GetBlockStateID(43, 9), GetBlockStateId("minecraft:smooth_sandstone"));
 			BlockStateMapper.Add(BlockFactory.GetBlockStateID(43, 14), GetBlockStateId("minecraft:smooth_quartz"));
-			for (byte Índice_Data = 0; Índice_Data < 16; Índice_Data += 8) BlockStateMapper.Add(BlockFactory.GetBlockStateID(44, Índice_Data), GetBlockStateId("minecraft:stone_slab"));
-			for (byte Índice_Data = 1; Índice_Data < 16; Índice_Data += 8) BlockStateMapper.Add(BlockFactory.GetBlockStateID(44, Índice_Data), GetBlockStateId("minecraft:sandstone_slab"));
-			for (byte Índice_Data = 2; Índice_Data < 16; Índice_Data += 8) BlockStateMapper.Add(BlockFactory.GetBlockStateID(44, Índice_Data), GetBlockStateId("minecraft:petrified_oak_slab"));
-			for (byte Índice_Data = 3; Índice_Data < 16; Índice_Data += 8) BlockStateMapper.Add(BlockFactory.GetBlockStateID(44, Índice_Data), GetBlockStateId("minecraft:cobblestone_slab"));
-			for (byte Índice_Data = 4; Índice_Data < 16; Índice_Data += 8) BlockStateMapper.Add(BlockFactory.GetBlockStateID(44, Índice_Data), GetBlockStateId("minecraft:brick_slab"));
-			for (byte Índice_Data = 5; Índice_Data < 16; Índice_Data += 8) BlockStateMapper.Add(BlockFactory.GetBlockStateID(44, Índice_Data), GetBlockStateId("minecraft:stone_brick_slab"));
-			for (byte Índice_Data = 6; Índice_Data < 16; Índice_Data += 8) BlockStateMapper.Add(BlockFactory.GetBlockStateID(44, Índice_Data), GetBlockStateId("minecraft:quartz_slab"));
-			for (byte Índice_Data = 7; Índice_Data < 16; Índice_Data += 8) BlockStateMapper.Add(BlockFactory.GetBlockStateID(44, Índice_Data), GetBlockStateId("minecraft:nether_brick_slab"));
+
+			for (byte Índice_Data = 0; Índice_Data < 16; Índice_Data += 8)
+				BlockStateMapper.Add(
+					BlockFactory.GetBlockStateID(44, Índice_Data), GetBlockStateId("minecraft:stone_slab"));
+
+			for (byte Índice_Data = 1; Índice_Data < 16; Índice_Data += 8)
+				BlockStateMapper.Add(
+					BlockFactory.GetBlockStateID(44, Índice_Data), GetBlockStateId("minecraft:sandstone_slab"));
+
+			for (byte Índice_Data = 2; Índice_Data < 16; Índice_Data += 8)
+				BlockStateMapper.Add(
+					BlockFactory.GetBlockStateID(44, Índice_Data), GetBlockStateId("minecraft:petrified_oak_slab"));
+
+			for (byte Índice_Data = 3; Índice_Data < 16; Índice_Data += 8)
+				BlockStateMapper.Add(
+					BlockFactory.GetBlockStateID(44, Índice_Data), GetBlockStateId("minecraft:cobblestone_slab"));
+
+			for (byte Índice_Data = 4; Índice_Data < 16; Índice_Data += 8)
+				BlockStateMapper.Add(
+					BlockFactory.GetBlockStateID(44, Índice_Data), GetBlockStateId("minecraft:brick_slab"));
+
+			for (byte Índice_Data = 5; Índice_Data < 16; Índice_Data += 8)
+				BlockStateMapper.Add(
+					BlockFactory.GetBlockStateID(44, Índice_Data), GetBlockStateId("minecraft:stone_brick_slab"));
+
+			for (byte Índice_Data = 6; Índice_Data < 16; Índice_Data += 8)
+				BlockStateMapper.Add(
+					BlockFactory.GetBlockStateID(44, Índice_Data), GetBlockStateId("minecraft:quartz_slab"));
+
+			for (byte Índice_Data = 7; Índice_Data < 16; Índice_Data += 8)
+				BlockStateMapper.Add(
+					BlockFactory.GetBlockStateID(44, Índice_Data), GetBlockStateId("minecraft:nether_brick_slab"));
+
 			BlockStateMapper.Add(BlockFactory.GetBlockStateID(45, 0), GetBlockStateId("minecraft:bricks"));
 			BlockStateMapper.Add(BlockFactory.GetBlockStateID(46, 0), GetBlockStateId("minecraft:tnt"));
 			BlockStateMapper.Add(BlockFactory.GetBlockStateID(47, 0), GetBlockStateId("minecraft:bookshelf"));
@@ -162,7 +234,10 @@ namespace Alex.Worlds.Singleplayer
 			BlockStateMapper.Add(BlockFactory.GetBlockStateID(67, 0), GetBlockStateId("minecraft:cobblestone_stairs"));
 			BlockStateMapper.Add(BlockFactory.GetBlockStateID(68, 0), GetBlockStateId("minecraft:sign"));
 			BlockStateMapper.Add(BlockFactory.GetBlockStateID(69, 0), GetBlockStateId("minecraft:lever"));
-			BlockStateMapper.Add(BlockFactory.GetBlockStateID(70, 0), GetBlockStateId("minecraft:stone_pressure_plate"));
+
+			BlockStateMapper.Add(
+				BlockFactory.GetBlockStateID(70, 0), GetBlockStateId("minecraft:stone_pressure_plate"));
+
 			BlockStateMapper.Add(BlockFactory.GetBlockStateID(71, 0), GetBlockStateId("minecraft:iron_door"));
 			BlockStateMapper.Add(BlockFactory.GetBlockStateID(72, 0), GetBlockStateId("minecraft:oak_pressure_plate"));
 			BlockStateMapper.Add(BlockFactory.GetBlockStateID(73, 0), GetBlockStateId("minecraft:redstone_ore"));
@@ -188,33 +263,74 @@ namespace Alex.Worlds.Singleplayer
 			BlockStateMapper.Add(BlockFactory.GetBlockStateID(93, 0), GetBlockStateId("minecraft:repeater"));
 			BlockStateMapper.Add(BlockFactory.GetBlockStateID(94, 0), GetBlockStateId("minecraft:repeater"));
 			BlockStateMapper.Add(BlockFactory.GetBlockStateID(95, 0), GetBlockStateId("minecraft:white_stained_glass"));
-			BlockStateMapper.Add(BlockFactory.GetBlockStateID(95, 1), GetBlockStateId("minecraft:orange_stained_glass"));
-			BlockStateMapper.Add(BlockFactory.GetBlockStateID(95, 2), GetBlockStateId("minecraft:magenta_stained_glass"));
-			BlockStateMapper.Add(BlockFactory.GetBlockStateID(95, 3), GetBlockStateId("minecraft:light_blue_stained_glass"));
-			BlockStateMapper.Add(BlockFactory.GetBlockStateID(95, 4), GetBlockStateId("minecraft:yellow_stained_glass"));
+
+			BlockStateMapper.Add(
+				BlockFactory.GetBlockStateID(95, 1), GetBlockStateId("minecraft:orange_stained_glass"));
+
+			BlockStateMapper.Add(
+				BlockFactory.GetBlockStateID(95, 2), GetBlockStateId("minecraft:magenta_stained_glass"));
+
+			BlockStateMapper.Add(
+				BlockFactory.GetBlockStateID(95, 3), GetBlockStateId("minecraft:light_blue_stained_glass"));
+
+			BlockStateMapper.Add(
+				BlockFactory.GetBlockStateID(95, 4), GetBlockStateId("minecraft:yellow_stained_glass"));
+
 			BlockStateMapper.Add(BlockFactory.GetBlockStateID(95, 5), GetBlockStateId("minecraft:lime_stained_glass"));
 			BlockStateMapper.Add(BlockFactory.GetBlockStateID(95, 6), GetBlockStateId("minecraft:pink_stained_glass"));
 			BlockStateMapper.Add(BlockFactory.GetBlockStateID(95, 7), GetBlockStateId("minecraft:gray_stained_glass"));
-			BlockStateMapper.Add(BlockFactory.GetBlockStateID(95, 8), GetBlockStateId("minecraft:light_gray_stained_glass"));
+
+			BlockStateMapper.Add(
+				BlockFactory.GetBlockStateID(95, 8), GetBlockStateId("minecraft:light_gray_stained_glass"));
+
 			BlockStateMapper.Add(BlockFactory.GetBlockStateID(95, 9), GetBlockStateId("minecraft:cyan_stained_glass"));
-			BlockStateMapper.Add(BlockFactory.GetBlockStateID(95, 10), GetBlockStateId("minecraft:purple_stained_glass"));
+
+			BlockStateMapper.Add(
+				BlockFactory.GetBlockStateID(95, 10), GetBlockStateId("minecraft:purple_stained_glass"));
+
 			BlockStateMapper.Add(BlockFactory.GetBlockStateID(95, 11), GetBlockStateId("minecraft:blue_stained_glass"));
-			BlockStateMapper.Add(BlockFactory.GetBlockStateID(95, 12), GetBlockStateId("minecraft:brown_stained_glass"));
-			BlockStateMapper.Add(BlockFactory.GetBlockStateID(95, 13), GetBlockStateId("minecraft:green_stained_glass"));
+
+			BlockStateMapper.Add(
+				BlockFactory.GetBlockStateID(95, 12), GetBlockStateId("minecraft:brown_stained_glass"));
+
+			BlockStateMapper.Add(
+				BlockFactory.GetBlockStateID(95, 13), GetBlockStateId("minecraft:green_stained_glass"));
+
 			BlockStateMapper.Add(BlockFactory.GetBlockStateID(95, 14), GetBlockStateId("minecraft:red_stained_glass"));
-			BlockStateMapper.Add(BlockFactory.GetBlockStateID(95, 15), GetBlockStateId("minecraft:black_stained_glass"));
+
+			BlockStateMapper.Add(
+				BlockFactory.GetBlockStateID(95, 15), GetBlockStateId("minecraft:black_stained_glass"));
+
 			BlockStateMapper.Add(BlockFactory.GetBlockStateID(96, 0), GetBlockStateId("minecraft:oak_trapdoor"));
 			BlockStateMapper.Add(BlockFactory.GetBlockStateID(97, 0), GetBlockStateId("minecraft:infested_stone"));
-			BlockStateMapper.Add(BlockFactory.GetBlockStateID(97, 1), GetBlockStateId("minecraft:infested_cobblestone"));
-			BlockStateMapper.Add(BlockFactory.GetBlockStateID(97, 2), GetBlockStateId("minecraft:infested_stone_bricks"));
-			BlockStateMapper.Add(BlockFactory.GetBlockStateID(97, 3), GetBlockStateId("minecraft:infested_mossy_stone_bricks"));
-			BlockStateMapper.Add(BlockFactory.GetBlockStateID(97, 4), GetBlockStateId("minecraft:infested_cracked_stone_bricks"));
-			BlockStateMapper.Add(BlockFactory.GetBlockStateID(97, 5), GetBlockStateId("minecraft:infested_chiseled_stone_bricks"));
+
+			BlockStateMapper.Add(
+				BlockFactory.GetBlockStateID(97, 1), GetBlockStateId("minecraft:infested_cobblestone"));
+
+			BlockStateMapper.Add(
+				BlockFactory.GetBlockStateID(97, 2), GetBlockStateId("minecraft:infested_stone_bricks"));
+
+			BlockStateMapper.Add(
+				BlockFactory.GetBlockStateID(97, 3), GetBlockStateId("minecraft:infested_mossy_stone_bricks"));
+
+			BlockStateMapper.Add(
+				BlockFactory.GetBlockStateID(97, 4), GetBlockStateId("minecraft:infested_cracked_stone_bricks"));
+
+			BlockStateMapper.Add(
+				BlockFactory.GetBlockStateID(97, 5), GetBlockStateId("minecraft:infested_chiseled_stone_bricks"));
+
 			BlockStateMapper.Add(BlockFactory.GetBlockStateID(98, 0), GetBlockStateId("minecraft:stone_bricks"));
 			BlockStateMapper.Add(BlockFactory.GetBlockStateID(98, 1), GetBlockStateId("minecraft:mossy_stone_bricks"));
-			BlockStateMapper.Add(BlockFactory.GetBlockStateID(98, 3), GetBlockStateId("minecraft:chiseled_stone_bricks"));
-			BlockStateMapper.Add(BlockFactory.GetBlockStateID(98, 4), GetBlockStateId("minecraft:cracked_stone_bricks"));
-			BlockStateMapper.Add(BlockFactory.GetBlockStateID(99, 0), GetBlockStateId("minecraft:brown_mushroom_block"));
+
+			BlockStateMapper.Add(
+				BlockFactory.GetBlockStateID(98, 3), GetBlockStateId("minecraft:chiseled_stone_bricks"));
+
+			BlockStateMapper.Add(
+				BlockFactory.GetBlockStateID(98, 4), GetBlockStateId("minecraft:cracked_stone_bricks"));
+
+			BlockStateMapper.Add(
+				BlockFactory.GetBlockStateID(99, 0), GetBlockStateId("minecraft:brown_mushroom_block"));
+
 			BlockStateMapper.Add(BlockFactory.GetBlockStateID(100, 0), GetBlockStateId("minecraft:red_mushroom_block"));
 			BlockStateMapper.Add(BlockFactory.GetBlockStateID(101, 0), GetBlockStateId("minecraft:iron_bars"));
 			BlockStateMapper.Add(BlockFactory.GetBlockStateID(102, 0), GetBlockStateId("minecraft:glass_pane"));
@@ -229,7 +345,10 @@ namespace Alex.Worlds.Singleplayer
 			BlockStateMapper.Add(BlockFactory.GetBlockStateID(111, 0), GetBlockStateId("minecraft:lily_pad"));
 			BlockStateMapper.Add(BlockFactory.GetBlockStateID(112, 0), GetBlockStateId("minecraft:nether_bricks"));
 			BlockStateMapper.Add(BlockFactory.GetBlockStateID(113, 0), GetBlockStateId("minecraft:nether_brick_fence"));
-			BlockStateMapper.Add(BlockFactory.GetBlockStateID(114, 0), GetBlockStateId("minecraft:nether_brick_stairs"));
+
+			BlockStateMapper.Add(
+				BlockFactory.GetBlockStateID(114, 0), GetBlockStateId("minecraft:nether_brick_stairs"));
+
 			BlockStateMapper.Add(BlockFactory.GetBlockStateID(115, 0), GetBlockStateId("minecraft:nether_wart"));
 			BlockStateMapper.Add(BlockFactory.GetBlockStateID(116, 0), GetBlockStateId("minecraft:enchanting_table"));
 			BlockStateMapper.Add(BlockFactory.GetBlockStateID(117, 0), GetBlockStateId("minecraft:brewing_stand"));
@@ -246,12 +365,31 @@ namespace Alex.Worlds.Singleplayer
 			BlockStateMapper.Add(BlockFactory.GetBlockStateID(125, 3), GetBlockStateId("minecraft:jungle_planks"));
 			BlockStateMapper.Add(BlockFactory.GetBlockStateID(125, 4), GetBlockStateId("minecraft:acacia_planks"));
 			BlockStateMapper.Add(BlockFactory.GetBlockStateID(125, 5), GetBlockStateId("minecraft:dark_oak_planks"));
-			for (byte Índice_Data = 0; Índice_Data < 16; Índice_Data += 8) BlockStateMapper.Add(BlockFactory.GetBlockStateID(126, Índice_Data), GetBlockStateId("minecraft:oak_slab"));
-			for (byte Índice_Data = 1; Índice_Data < 16; Índice_Data += 8) BlockStateMapper.Add(BlockFactory.GetBlockStateID(126, Índice_Data), GetBlockStateId("minecraft:spruce_slab"));
-			for (byte Índice_Data = 2; Índice_Data < 16; Índice_Data += 8) BlockStateMapper.Add(BlockFactory.GetBlockStateID(126, Índice_Data), GetBlockStateId("minecraft:birch_slab"));
-			for (byte Índice_Data = 3; Índice_Data < 16; Índice_Data += 8) BlockStateMapper.Add(BlockFactory.GetBlockStateID(126, Índice_Data), GetBlockStateId("minecraft:jungle_slab"));
-			for (byte Índice_Data = 4; Índice_Data < 16; Índice_Data += 8) BlockStateMapper.Add(BlockFactory.GetBlockStateID(126, Índice_Data), GetBlockStateId("minecraft:acacia_slab"));
-			for (byte Índice_Data = 5; Índice_Data < 16; Índice_Data += 8) BlockStateMapper.Add(BlockFactory.GetBlockStateID(126, Índice_Data), GetBlockStateId("minecraft:dark_oak_slab"));
+
+			for (byte Índice_Data = 0; Índice_Data < 16; Índice_Data += 8)
+				BlockStateMapper.Add(
+					BlockFactory.GetBlockStateID(126, Índice_Data), GetBlockStateId("minecraft:oak_slab"));
+
+			for (byte Índice_Data = 1; Índice_Data < 16; Índice_Data += 8)
+				BlockStateMapper.Add(
+					BlockFactory.GetBlockStateID(126, Índice_Data), GetBlockStateId("minecraft:spruce_slab"));
+
+			for (byte Índice_Data = 2; Índice_Data < 16; Índice_Data += 8)
+				BlockStateMapper.Add(
+					BlockFactory.GetBlockStateID(126, Índice_Data), GetBlockStateId("minecraft:birch_slab"));
+
+			for (byte Índice_Data = 3; Índice_Data < 16; Índice_Data += 8)
+				BlockStateMapper.Add(
+					BlockFactory.GetBlockStateID(126, Índice_Data), GetBlockStateId("minecraft:jungle_slab"));
+
+			for (byte Índice_Data = 4; Índice_Data < 16; Índice_Data += 8)
+				BlockStateMapper.Add(
+					BlockFactory.GetBlockStateID(126, Índice_Data), GetBlockStateId("minecraft:acacia_slab"));
+
+			for (byte Índice_Data = 5; Índice_Data < 16; Índice_Data += 8)
+				BlockStateMapper.Add(
+					BlockFactory.GetBlockStateID(126, Índice_Data), GetBlockStateId("minecraft:dark_oak_slab"));
+
 			BlockStateMapper.Add(BlockFactory.GetBlockStateID(127, 0), GetBlockStateId("minecraft:cocoa"));
 			BlockStateMapper.Add(BlockFactory.GetBlockStateID(128, 0), GetBlockStateId("minecraft:sandstone_stairs"));
 			BlockStateMapper.Add(BlockFactory.GetBlockStateID(129, 0), GetBlockStateId("minecraft:emerald_ore"));
@@ -265,13 +403,19 @@ namespace Alex.Worlds.Singleplayer
 			BlockStateMapper.Add(BlockFactory.GetBlockStateID(137, 0), GetBlockStateId("minecraft:command_block"));
 			BlockStateMapper.Add(BlockFactory.GetBlockStateID(138, 0), GetBlockStateId("minecraft:beacon"));
 			BlockStateMapper.Add(BlockFactory.GetBlockStateID(139, 0), GetBlockStateId("minecraft:cobblestone_wall"));
-			BlockStateMapper.Add(BlockFactory.GetBlockStateID(139, 1), GetBlockStateId("minecraft:mossy_cobblestone_wall"));
+
+			BlockStateMapper.Add(
+				BlockFactory.GetBlockStateID(139, 1), GetBlockStateId("minecraft:mossy_cobblestone_wall"));
+
 			BlockStateMapper.Add(BlockFactory.GetBlockStateID(140, 0), GetBlockStateId("minecraft:flower_pot"));
 			BlockStateMapper.Add(BlockFactory.GetBlockStateID(141, 0), GetBlockStateId("minecraft:carrots"));
 			BlockStateMapper.Add(BlockFactory.GetBlockStateID(142, 0), GetBlockStateId("minecraft:potatoes"));
 			BlockStateMapper.Add(BlockFactory.GetBlockStateID(143, 0), GetBlockStateId("minecraft:oak_button"));
 			BlockStateMapper.Add(BlockFactory.GetBlockStateID(144, 0), GetBlockStateId("minecraft:skeleton_skull"));
-			BlockStateMapper.Add(BlockFactory.GetBlockStateID(144, 1), GetBlockStateId("minecraft:wither_skeleton_skull"));
+
+			BlockStateMapper.Add(
+				BlockFactory.GetBlockStateID(144, 1), GetBlockStateId("minecraft:wither_skeleton_skull"));
+
 			BlockStateMapper.Add(BlockFactory.GetBlockStateID(144, 2), GetBlockStateId("minecraft:zombie_head"));
 			BlockStateMapper.Add(BlockFactory.GetBlockStateID(144, 3), GetBlockStateId("minecraft:player_head"));
 			BlockStateMapper.Add(BlockFactory.GetBlockStateID(144, 4), GetBlockStateId("minecraft:creeper_head"));
@@ -280,8 +424,13 @@ namespace Alex.Worlds.Singleplayer
 			BlockStateMapper.Add(BlockFactory.GetBlockStateID(145, 1), GetBlockStateId("minecraft:chipped_anvil"));
 			BlockStateMapper.Add(BlockFactory.GetBlockStateID(145, 2), GetBlockStateId("minecraft:damaged_anvil"));
 			BlockStateMapper.Add(BlockFactory.GetBlockStateID(146, 0), GetBlockStateId("minecraft:trapped_chest"));
-			BlockStateMapper.Add(BlockFactory.GetBlockStateID(147, 0), GetBlockStateId("minecraft:light_weighted_pressure_plate"));
-			BlockStateMapper.Add(BlockFactory.GetBlockStateID(148, 0), GetBlockStateId("minecraft:heavy_weighted_pressure_plate"));
+
+			BlockStateMapper.Add(
+				BlockFactory.GetBlockStateID(147, 0), GetBlockStateId("minecraft:light_weighted_pressure_plate"));
+
+			BlockStateMapper.Add(
+				BlockFactory.GetBlockStateID(148, 0), GetBlockStateId("minecraft:heavy_weighted_pressure_plate"));
+
 			BlockStateMapper.Add(BlockFactory.GetBlockStateID(149, 0), GetBlockStateId("minecraft:comparator"));
 			BlockStateMapper.Add(BlockFactory.GetBlockStateID(150, 0), GetBlockStateId("minecraft:comparator"));
 			BlockStateMapper.Add(BlockFactory.GetBlockStateID(151, 0), GetBlockStateId("minecraft:daylight_detector"));
@@ -289,7 +438,10 @@ namespace Alex.Worlds.Singleplayer
 			BlockStateMapper.Add(BlockFactory.GetBlockStateID(153, 0), GetBlockStateId("minecraft:nether_quartz_ore"));
 			BlockStateMapper.Add(BlockFactory.GetBlockStateID(154, 0), GetBlockStateId("minecraft:hopper"));
 			BlockStateMapper.Add(BlockFactory.GetBlockStateID(155, 0), GetBlockStateId("minecraft:quartz_block"));
-			BlockStateMapper.Add(BlockFactory.GetBlockStateID(155, 1), GetBlockStateId("minecraft:chiseled_quartz_block"));
+
+			BlockStateMapper.Add(
+				BlockFactory.GetBlockStateID(155, 1), GetBlockStateId("minecraft:chiseled_quartz_block"));
+
 			BlockStateMapper.Add(BlockFactory.GetBlockStateID(155, 2), GetBlockStateId("minecraft:quartz_pillar"));
 			BlockStateMapper.Add(BlockFactory.GetBlockStateID(156, 0), GetBlockStateId("minecraft:quartz_stairs"));
 			BlockStateMapper.Add(BlockFactory.GetBlockStateID(157, 0), GetBlockStateId("minecraft:activator_rail"));
@@ -297,12 +449,18 @@ namespace Alex.Worlds.Singleplayer
 			BlockStateMapper.Add(BlockFactory.GetBlockStateID(159, 0), GetBlockStateId("minecraft:white_terracotta"));
 			BlockStateMapper.Add(BlockFactory.GetBlockStateID(159, 1), GetBlockStateId("minecraft:orange_terracotta"));
 			BlockStateMapper.Add(BlockFactory.GetBlockStateID(159, 2), GetBlockStateId("minecraft:magenta_terracotta"));
-			BlockStateMapper.Add(BlockFactory.GetBlockStateID(159, 3), GetBlockStateId("minecraft:light_blue_terracotta"));
+
+			BlockStateMapper.Add(
+				BlockFactory.GetBlockStateID(159, 3), GetBlockStateId("minecraft:light_blue_terracotta"));
+
 			BlockStateMapper.Add(BlockFactory.GetBlockStateID(159, 4), GetBlockStateId("minecraft:yellow_terracotta"));
 			BlockStateMapper.Add(BlockFactory.GetBlockStateID(159, 5), GetBlockStateId("minecraft:lime_terracotta"));
 			BlockStateMapper.Add(BlockFactory.GetBlockStateID(159, 6), GetBlockStateId("minecraft:pink_terracotta"));
 			BlockStateMapper.Add(BlockFactory.GetBlockStateID(159, 7), GetBlockStateId("minecraft:gray_terracotta"));
-			BlockStateMapper.Add(BlockFactory.GetBlockStateID(159, 8), GetBlockStateId("minecraft:light_gray_terracotta"));
+
+			BlockStateMapper.Add(
+				BlockFactory.GetBlockStateID(159, 8), GetBlockStateId("minecraft:light_gray_terracotta"));
+
 			BlockStateMapper.Add(BlockFactory.GetBlockStateID(159, 9), GetBlockStateId("minecraft:cyan_terracotta"));
 			BlockStateMapper.Add(BlockFactory.GetBlockStateID(159, 10), GetBlockStateId("minecraft:purple_terracotta"));
 			BlockStateMapper.Add(BlockFactory.GetBlockStateID(159, 11), GetBlockStateId("minecraft:blue_terracotta"));
@@ -310,26 +468,71 @@ namespace Alex.Worlds.Singleplayer
 			BlockStateMapper.Add(BlockFactory.GetBlockStateID(159, 13), GetBlockStateId("minecraft:green_terracotta"));
 			BlockStateMapper.Add(BlockFactory.GetBlockStateID(159, 14), GetBlockStateId("minecraft:red_terracotta"));
 			BlockStateMapper.Add(BlockFactory.GetBlockStateID(159, 15), GetBlockStateId("minecraft:black_terracotta"));
-			BlockStateMapper.Add(BlockFactory.GetBlockStateID(160, 0), GetBlockStateId("minecraft:white_stained_glass_pane"));
-			BlockStateMapper.Add(BlockFactory.GetBlockStateID(160, 1), GetBlockStateId("minecraft:orange_stained_glass_pane"));
-			BlockStateMapper.Add(BlockFactory.GetBlockStateID(160, 2), GetBlockStateId("minecraft:magenta_stained_glass_pane"));
-			BlockStateMapper.Add(BlockFactory.GetBlockStateID(160, 3), GetBlockStateId("minecraft:light_blue_stained_glass_pane"));
-			BlockStateMapper.Add(BlockFactory.GetBlockStateID(160, 4), GetBlockStateId("minecraft:yellow_stained_glass_pane"));
-			BlockStateMapper.Add(BlockFactory.GetBlockStateID(160, 5), GetBlockStateId("minecraft:lime_stained_glass_pane"));
-			BlockStateMapper.Add(BlockFactory.GetBlockStateID(160, 6), GetBlockStateId("minecraft:pink_stained_glass_pane"));
-			BlockStateMapper.Add(BlockFactory.GetBlockStateID(160, 7), GetBlockStateId("minecraft:gray_stained_glass_pane"));
-			BlockStateMapper.Add(BlockFactory.GetBlockStateID(160, 8), GetBlockStateId("minecraft:light_gray_stained_glass_pane"));
-			BlockStateMapper.Add(BlockFactory.GetBlockStateID(160, 9), GetBlockStateId("minecraft:cyan_stained_glass_pane"));
-			BlockStateMapper.Add(BlockFactory.GetBlockStateID(160, 10), GetBlockStateId("minecraft:purple_stained_glass_pane"));
-			BlockStateMapper.Add(BlockFactory.GetBlockStateID(160, 11), GetBlockStateId("minecraft:blue_stained_glass_pane"));
-			BlockStateMapper.Add(BlockFactory.GetBlockStateID(160, 12), GetBlockStateId("minecraft:brown_stained_glass_pane"));
-			BlockStateMapper.Add(BlockFactory.GetBlockStateID(160, 13), GetBlockStateId("minecraft:green_stained_glass_pane"));
-			BlockStateMapper.Add(BlockFactory.GetBlockStateID(160, 14), GetBlockStateId("minecraft:red_stained_glass_pane"));
-			BlockStateMapper.Add(BlockFactory.GetBlockStateID(160, 15), GetBlockStateId("minecraft:black_stained_glass_pane"));
-			for (byte Índice_Data = 0; Índice_Data < 16; Índice_Data += 2) BlockStateMapper.Add(BlockFactory.GetBlockStateID(161, Índice_Data), GetBlockStateId("minecraft:acacia_leaves"));
-			for (byte Índice_Data = 1; Índice_Data < 16; Índice_Data += 2) BlockStateMapper.Add(BlockFactory.GetBlockStateID(161, Índice_Data), GetBlockStateId("minecraft:dark_oak_leaves"));
-			for (byte Índice_Data = 0; Índice_Data < 16; Índice_Data += 2) BlockStateMapper.Add(BlockFactory.GetBlockStateID(162, Índice_Data), GetBlockStateId("minecraft:acacia_log"));
-			for (byte Índice_Data = 1; Índice_Data < 16; Índice_Data += 2) BlockStateMapper.Add(BlockFactory.GetBlockStateID(162, Índice_Data), GetBlockStateId("minecraft:dark_oak_log"));
+
+			BlockStateMapper.Add(
+				BlockFactory.GetBlockStateID(160, 0), GetBlockStateId("minecraft:white_stained_glass_pane"));
+
+			BlockStateMapper.Add(
+				BlockFactory.GetBlockStateID(160, 1), GetBlockStateId("minecraft:orange_stained_glass_pane"));
+
+			BlockStateMapper.Add(
+				BlockFactory.GetBlockStateID(160, 2), GetBlockStateId("minecraft:magenta_stained_glass_pane"));
+
+			BlockStateMapper.Add(
+				BlockFactory.GetBlockStateID(160, 3), GetBlockStateId("minecraft:light_blue_stained_glass_pane"));
+
+			BlockStateMapper.Add(
+				BlockFactory.GetBlockStateID(160, 4), GetBlockStateId("minecraft:yellow_stained_glass_pane"));
+
+			BlockStateMapper.Add(
+				BlockFactory.GetBlockStateID(160, 5), GetBlockStateId("minecraft:lime_stained_glass_pane"));
+
+			BlockStateMapper.Add(
+				BlockFactory.GetBlockStateID(160, 6), GetBlockStateId("minecraft:pink_stained_glass_pane"));
+
+			BlockStateMapper.Add(
+				BlockFactory.GetBlockStateID(160, 7), GetBlockStateId("minecraft:gray_stained_glass_pane"));
+
+			BlockStateMapper.Add(
+				BlockFactory.GetBlockStateID(160, 8), GetBlockStateId("minecraft:light_gray_stained_glass_pane"));
+
+			BlockStateMapper.Add(
+				BlockFactory.GetBlockStateID(160, 9), GetBlockStateId("minecraft:cyan_stained_glass_pane"));
+
+			BlockStateMapper.Add(
+				BlockFactory.GetBlockStateID(160, 10), GetBlockStateId("minecraft:purple_stained_glass_pane"));
+
+			BlockStateMapper.Add(
+				BlockFactory.GetBlockStateID(160, 11), GetBlockStateId("minecraft:blue_stained_glass_pane"));
+
+			BlockStateMapper.Add(
+				BlockFactory.GetBlockStateID(160, 12), GetBlockStateId("minecraft:brown_stained_glass_pane"));
+
+			BlockStateMapper.Add(
+				BlockFactory.GetBlockStateID(160, 13), GetBlockStateId("minecraft:green_stained_glass_pane"));
+
+			BlockStateMapper.Add(
+				BlockFactory.GetBlockStateID(160, 14), GetBlockStateId("minecraft:red_stained_glass_pane"));
+
+			BlockStateMapper.Add(
+				BlockFactory.GetBlockStateID(160, 15), GetBlockStateId("minecraft:black_stained_glass_pane"));
+
+			for (byte Índice_Data = 0; Índice_Data < 16; Índice_Data += 2)
+				BlockStateMapper.Add(
+					BlockFactory.GetBlockStateID(161, Índice_Data), GetBlockStateId("minecraft:acacia_leaves"));
+
+			for (byte Índice_Data = 1; Índice_Data < 16; Índice_Data += 2)
+				BlockStateMapper.Add(
+					BlockFactory.GetBlockStateID(161, Índice_Data), GetBlockStateId("minecraft:dark_oak_leaves"));
+
+			for (byte Índice_Data = 0; Índice_Data < 16; Índice_Data += 2)
+				BlockStateMapper.Add(
+					BlockFactory.GetBlockStateID(162, Índice_Data), GetBlockStateId("minecraft:acacia_log"));
+
+			for (byte Índice_Data = 1; Índice_Data < 16; Índice_Data += 2)
+				BlockStateMapper.Add(
+					BlockFactory.GetBlockStateID(162, Índice_Data), GetBlockStateId("minecraft:dark_oak_log"));
+
 			BlockStateMapper.Add(BlockFactory.GetBlockStateID(163, 0), GetBlockStateId("minecraft:acacia_stairs"));
 			BlockStateMapper.Add(BlockFactory.GetBlockStateID(164, 0), GetBlockStateId("minecraft:dark_oak_stairs"));
 			BlockStateMapper.Add(BlockFactory.GetBlockStateID(165, 0), GetBlockStateId("minecraft:slime_block"));
@@ -359,12 +562,28 @@ namespace Alex.Worlds.Singleplayer
 			BlockStateMapper.Add(BlockFactory.GetBlockStateID(172, 0), GetBlockStateId("minecraft:terracotta"));
 			BlockStateMapper.Add(BlockFactory.GetBlockStateID(173, 0), GetBlockStateId("minecraft:coal_block"));
 			BlockStateMapper.Add(BlockFactory.GetBlockStateID(174, 0), GetBlockStateId("minecraft:packed_ice"));
+
 			//for (byte Índice_Data = 0; Índice_Data < 16; Índice_Data += 8) BlockStateMapper.Add(BlockFactory.GetBlockStateID(175, Índice_Data), GetBlockStateId("minecraft:sunflower"));
-			for (byte Índice_Data = 1; Índice_Data < 16; Índice_Data += 8) BlockStateMapper.Add(BlockFactory.GetBlockStateID(175, Índice_Data), GetBlockStateId("minecraft:lilac"));
-			for (byte Índice_Data = 2; Índice_Data < 16; Índice_Data += 8) BlockStateMapper.Add(BlockFactory.GetBlockStateID(175, Índice_Data), GetBlockStateId("minecraft:tall_grass"));
-			for (byte Índice_Data = 3; Índice_Data < 16; Índice_Data += 8) BlockStateMapper.Add(BlockFactory.GetBlockStateID(175, Índice_Data), GetBlockStateId("minecraft:large_fern"));
-			for (byte Índice_Data = 4; Índice_Data < 16; Índice_Data += 8) BlockStateMapper.Add(BlockFactory.GetBlockStateID(175, Índice_Data), GetBlockStateId("minecraft:rose_bush"));
-			for (byte Índice_Data = 5; Índice_Data < 16; Índice_Data += 8) BlockStateMapper.Add(BlockFactory.GetBlockStateID(175, Índice_Data), GetBlockStateId("minecraft:peony"));
+			for (byte Índice_Data = 1; Índice_Data < 16; Índice_Data += 8)
+				BlockStateMapper.Add(
+					BlockFactory.GetBlockStateID(175, Índice_Data), GetBlockStateId("minecraft:lilac"));
+
+			for (byte Índice_Data = 2; Índice_Data < 16; Índice_Data += 8)
+				BlockStateMapper.Add(
+					BlockFactory.GetBlockStateID(175, Índice_Data), GetBlockStateId("minecraft:tall_grass"));
+
+			for (byte Índice_Data = 3; Índice_Data < 16; Índice_Data += 8)
+				BlockStateMapper.Add(
+					BlockFactory.GetBlockStateID(175, Índice_Data), GetBlockStateId("minecraft:large_fern"));
+
+			for (byte Índice_Data = 4; Índice_Data < 16; Índice_Data += 8)
+				BlockStateMapper.Add(
+					BlockFactory.GetBlockStateID(175, Índice_Data), GetBlockStateId("minecraft:rose_bush"));
+
+			for (byte Índice_Data = 5; Índice_Data < 16; Índice_Data += 8)
+				BlockStateMapper.Add(
+					BlockFactory.GetBlockStateID(175, Índice_Data), GetBlockStateId("minecraft:peony"));
+
 			BlockStateMapper.Add(BlockFactory.GetBlockStateID(176, 0), GetBlockStateId("minecraft:white_banner"));
 			BlockStateMapper.Add(BlockFactory.GetBlockStateID(176, 1), GetBlockStateId("minecraft:orange_banner"));
 			BlockStateMapper.Add(BlockFactory.GetBlockStateID(176, 2), GetBlockStateId("minecraft:magenta_banner"));
@@ -399,16 +618,28 @@ namespace Alex.Worlds.Singleplayer
 			BlockStateMapper.Add(BlockFactory.GetBlockStateID(177, 15), GetBlockStateId("minecraft:black_banner"));
 			BlockStateMapper.Add(BlockFactory.GetBlockStateID(178, 0), GetBlockStateId("minecraft:daylight_detector"));
 			BlockStateMapper.Add(BlockFactory.GetBlockStateID(179, 0), GetBlockStateId("minecraft:red_sandstone"));
-			BlockStateMapper.Add(BlockFactory.GetBlockStateID(179, 1), GetBlockStateId("minecraft:chiseled_red_sandstone"));
+
+			BlockStateMapper.Add(
+				BlockFactory.GetBlockStateID(179, 1), GetBlockStateId("minecraft:chiseled_red_sandstone"));
+
 			BlockStateMapper.Add(BlockFactory.GetBlockStateID(179, 2), GetBlockStateId("minecraft:cut_red_sandstone"));
-			BlockStateMapper.Add(BlockFactory.GetBlockStateID(180, 0), GetBlockStateId("minecraft:red_sandstone_stairs"));
+
+			BlockStateMapper.Add(
+				BlockFactory.GetBlockStateID(180, 0), GetBlockStateId("minecraft:red_sandstone_stairs"));
+
 			BlockStateMapper.Add(BlockFactory.GetBlockStateID(181, 0), GetBlockStateId("minecraft:red_sandstone"));
-			BlockStateMapper.Add(BlockFactory.GetBlockStateID(181, 8), GetBlockStateId("minecraft:smooth_red_sandstone"));
+
+			BlockStateMapper.Add(
+				BlockFactory.GetBlockStateID(181, 8), GetBlockStateId("minecraft:smooth_red_sandstone"));
+
 			BlockStateMapper.Add(BlockFactory.GetBlockStateID(182, 0), GetBlockStateId("minecraft:red_sandstone_slab"));
 			BlockStateMapper.Add(BlockFactory.GetBlockStateID(183, 0), GetBlockStateId("minecraft:spruce_fence_gate"));
 			BlockStateMapper.Add(BlockFactory.GetBlockStateID(184, 0), GetBlockStateId("minecraft:birch_fence_gate"));
 			BlockStateMapper.Add(BlockFactory.GetBlockStateID(185, 0), GetBlockStateId("minecraft:jungle_fence_gate"));
-			BlockStateMapper.Add(BlockFactory.GetBlockStateID(186, 0), GetBlockStateId("minecraft:dark_oak_fence_gate"));
+
+			BlockStateMapper.Add(
+				BlockFactory.GetBlockStateID(186, 0), GetBlockStateId("minecraft:dark_oak_fence_gate"));
+
 			BlockStateMapper.Add(BlockFactory.GetBlockStateID(187, 0), GetBlockStateId("minecraft:acacia_fence_gate"));
 			BlockStateMapper.Add(BlockFactory.GetBlockStateID(188, 0), GetBlockStateId("minecraft:spruce_fence"));
 			BlockStateMapper.Add(BlockFactory.GetBlockStateID(189, 0), GetBlockStateId("minecraft:birch_fence"));
@@ -432,8 +663,13 @@ namespace Alex.Worlds.Singleplayer
 			BlockStateMapper.Add(BlockFactory.GetBlockStateID(207, 0), GetBlockStateId("minecraft:beetroots"));
 			BlockStateMapper.Add(BlockFactory.GetBlockStateID(208, 0), GetBlockStateId("minecraft:grass_path"));
 			BlockStateMapper.Add(BlockFactory.GetBlockStateID(209, 0), GetBlockStateId("minecraft:end_gateway"));
-			BlockStateMapper.Add(BlockFactory.GetBlockStateID(210, 0), GetBlockStateId("minecraft:repeating_command_block"));
-			BlockStateMapper.Add(BlockFactory.GetBlockStateID(211, 0), GetBlockStateId("minecraft:chain_command_block"));
+
+			BlockStateMapper.Add(
+				BlockFactory.GetBlockStateID(210, 0), GetBlockStateId("minecraft:repeating_command_block"));
+
+			BlockStateMapper.Add(
+				BlockFactory.GetBlockStateID(211, 0), GetBlockStateId("minecraft:chain_command_block"));
+
 			BlockStateMapper.Add(BlockFactory.GetBlockStateID(212, 0), GetBlockStateId("minecraft:frosted_ice"));
 			BlockStateMapper.Add(BlockFactory.GetBlockStateID(213, 0), GetBlockStateId("minecraft:magma_block"));
 			BlockStateMapper.Add(BlockFactory.GetBlockStateID(214, 0), GetBlockStateId("minecraft:nether_wart_block"));
@@ -443,13 +679,21 @@ namespace Alex.Worlds.Singleplayer
 			BlockStateMapper.Add(BlockFactory.GetBlockStateID(218, 0), GetBlockStateId("minecraft:observer"));
 			BlockStateMapper.Add(BlockFactory.GetBlockStateID(219, 0), GetBlockStateId("minecraft:white_shulker_box"));
 			BlockStateMapper.Add(BlockFactory.GetBlockStateID(220, 0), GetBlockStateId("minecraft:orange_shulker_box"));
-			BlockStateMapper.Add(BlockFactory.GetBlockStateID(221, 0), GetBlockStateId("minecraft:magenta_shulker_box"));
-			BlockStateMapper.Add(BlockFactory.GetBlockStateID(222, 0), GetBlockStateId("minecraft:light_blue_shulker_box"));
+
+			BlockStateMapper.Add(
+				BlockFactory.GetBlockStateID(221, 0), GetBlockStateId("minecraft:magenta_shulker_box"));
+
+			BlockStateMapper.Add(
+				BlockFactory.GetBlockStateID(222, 0), GetBlockStateId("minecraft:light_blue_shulker_box"));
+
 			BlockStateMapper.Add(BlockFactory.GetBlockStateID(223, 0), GetBlockStateId("minecraft:yellow_shulker_box"));
 			BlockStateMapper.Add(BlockFactory.GetBlockStateID(224, 0), GetBlockStateId("minecraft:lime_shulker_box"));
 			BlockStateMapper.Add(BlockFactory.GetBlockStateID(225, 0), GetBlockStateId("minecraft:pink_shulker_box"));
 			BlockStateMapper.Add(BlockFactory.GetBlockStateID(226, 0), GetBlockStateId("minecraft:gray_shulker_box"));
-			BlockStateMapper.Add(BlockFactory.GetBlockStateID(227, 0), GetBlockStateId("minecraft:light_gray_shulker_box"));
+
+			BlockStateMapper.Add(
+				BlockFactory.GetBlockStateID(227, 0), GetBlockStateId("minecraft:light_gray_shulker_box"));
+
 			BlockStateMapper.Add(BlockFactory.GetBlockStateID(228, 0), GetBlockStateId("minecraft:cyan_shulker_box"));
 			BlockStateMapper.Add(BlockFactory.GetBlockStateID(229, 0), GetBlockStateId("minecraft:purple_shulker_box"));
 			BlockStateMapper.Add(BlockFactory.GetBlockStateID(230, 0), GetBlockStateId("minecraft:blue_shulker_box"));
@@ -457,31 +701,70 @@ namespace Alex.Worlds.Singleplayer
 			BlockStateMapper.Add(BlockFactory.GetBlockStateID(232, 0), GetBlockStateId("minecraft:green_shulker_box"));
 			BlockStateMapper.Add(BlockFactory.GetBlockStateID(233, 0), GetBlockStateId("minecraft:red_shulker_box"));
 			BlockStateMapper.Add(BlockFactory.GetBlockStateID(234, 0), GetBlockStateId("minecraft:black_shulker_box"));
-			BlockStateMapper.Add(BlockFactory.GetBlockStateID(235, 0), GetBlockStateId("minecraft:white_glazed_terracotta"));
-			BlockStateMapper.Add(BlockFactory.GetBlockStateID(236, 0), GetBlockStateId("minecraft:orange_glazed_terracotta"));
-			BlockStateMapper.Add(BlockFactory.GetBlockStateID(237, 0), GetBlockStateId("minecraft:magenta_glazed_terracotta"));
-			BlockStateMapper.Add(BlockFactory.GetBlockStateID(238, 0), GetBlockStateId("minecraft:light_blue_glazed_terracotta"));
-			BlockStateMapper.Add(BlockFactory.GetBlockStateID(239, 0), GetBlockStateId("minecraft:yellow_glazed_terracotta"));
-			BlockStateMapper.Add(BlockFactory.GetBlockStateID(240, 0), GetBlockStateId("minecraft:lime_glazed_terracotta"));
-			BlockStateMapper.Add(BlockFactory.GetBlockStateID(241, 0), GetBlockStateId("minecraft:pink_glazed_terracotta"));
-			BlockStateMapper.Add(BlockFactory.GetBlockStateID(242, 0), GetBlockStateId("minecraft:gray_glazed_terracotta"));
-			BlockStateMapper.Add(BlockFactory.GetBlockStateID(243, 0), GetBlockStateId("minecraft:light_gray_glazed_terracotta"));
-			BlockStateMapper.Add(BlockFactory.GetBlockStateID(244, 0), GetBlockStateId("minecraft:cyan_glazed_terra cotta"));
-			BlockStateMapper.Add(BlockFactory.GetBlockStateID(245, 0), GetBlockStateId("minecraft:purple_glazed_terracotta"));
-			BlockStateMapper.Add(BlockFactory.GetBlockStateID(246, 0), GetBlockStateId("minecraft:blue_glazed_terracotta"));
-			BlockStateMapper.Add(BlockFactory.GetBlockStateID(247, 0), GetBlockStateId("minecraft:brown_glazed_terracotta"));
-			BlockStateMapper.Add(BlockFactory.GetBlockStateID(248, 0), GetBlockStateId("minecraft:green_glazed_terracotta"));
-			BlockStateMapper.Add(BlockFactory.GetBlockStateID(249, 0), GetBlockStateId("minecraft:red_glazed_terracotta"));
-			BlockStateMapper.Add(BlockFactory.GetBlockStateID(250, 0), GetBlockStateId("minecraft:black_glazed_terracotta"));
+
+			BlockStateMapper.Add(
+				BlockFactory.GetBlockStateID(235, 0), GetBlockStateId("minecraft:white_glazed_terracotta"));
+
+			BlockStateMapper.Add(
+				BlockFactory.GetBlockStateID(236, 0), GetBlockStateId("minecraft:orange_glazed_terracotta"));
+
+			BlockStateMapper.Add(
+				BlockFactory.GetBlockStateID(237, 0), GetBlockStateId("minecraft:magenta_glazed_terracotta"));
+
+			BlockStateMapper.Add(
+				BlockFactory.GetBlockStateID(238, 0), GetBlockStateId("minecraft:light_blue_glazed_terracotta"));
+
+			BlockStateMapper.Add(
+				BlockFactory.GetBlockStateID(239, 0), GetBlockStateId("minecraft:yellow_glazed_terracotta"));
+
+			BlockStateMapper.Add(
+				BlockFactory.GetBlockStateID(240, 0), GetBlockStateId("minecraft:lime_glazed_terracotta"));
+
+			BlockStateMapper.Add(
+				BlockFactory.GetBlockStateID(241, 0), GetBlockStateId("minecraft:pink_glazed_terracotta"));
+
+			BlockStateMapper.Add(
+				BlockFactory.GetBlockStateID(242, 0), GetBlockStateId("minecraft:gray_glazed_terracotta"));
+
+			BlockStateMapper.Add(
+				BlockFactory.GetBlockStateID(243, 0), GetBlockStateId("minecraft:light_gray_glazed_terracotta"));
+
+			BlockStateMapper.Add(
+				BlockFactory.GetBlockStateID(244, 0), GetBlockStateId("minecraft:cyan_glazed_terra cotta"));
+
+			BlockStateMapper.Add(
+				BlockFactory.GetBlockStateID(245, 0), GetBlockStateId("minecraft:purple_glazed_terracotta"));
+
+			BlockStateMapper.Add(
+				BlockFactory.GetBlockStateID(246, 0), GetBlockStateId("minecraft:blue_glazed_terracotta"));
+
+			BlockStateMapper.Add(
+				BlockFactory.GetBlockStateID(247, 0), GetBlockStateId("minecraft:brown_glazed_terracotta"));
+
+			BlockStateMapper.Add(
+				BlockFactory.GetBlockStateID(248, 0), GetBlockStateId("minecraft:green_glazed_terracotta"));
+
+			BlockStateMapper.Add(
+				BlockFactory.GetBlockStateID(249, 0), GetBlockStateId("minecraft:red_glazed_terracotta"));
+
+			BlockStateMapper.Add(
+				BlockFactory.GetBlockStateID(250, 0), GetBlockStateId("minecraft:black_glazed_terracotta"));
+
 			BlockStateMapper.Add(BlockFactory.GetBlockStateID(251, 0), GetBlockStateId("minecraft:white_concrete"));
 			BlockStateMapper.Add(BlockFactory.GetBlockStateID(251, 1), GetBlockStateId("minecraft:orange_concrete"));
 			BlockStateMapper.Add(BlockFactory.GetBlockStateID(251, 2), GetBlockStateId("minecraft:magenta_concrete"));
-			BlockStateMapper.Add(BlockFactory.GetBlockStateID(251, 3), GetBlockStateId("minecraft:light_blue_concrete"));
+
+			BlockStateMapper.Add(
+				BlockFactory.GetBlockStateID(251, 3), GetBlockStateId("minecraft:light_blue_concrete"));
+
 			BlockStateMapper.Add(BlockFactory.GetBlockStateID(251, 4), GetBlockStateId("minecraft:yellow_concrete"));
 			BlockStateMapper.Add(BlockFactory.GetBlockStateID(251, 5), GetBlockStateId("minecraft:lime_concrete"));
 			BlockStateMapper.Add(BlockFactory.GetBlockStateID(251, 6), GetBlockStateId("minecraft:pink_concrete"));
 			BlockStateMapper.Add(BlockFactory.GetBlockStateID(251, 7), GetBlockStateId("minecraft:gray_concrete"));
-			BlockStateMapper.Add(BlockFactory.GetBlockStateID(251, 8), GetBlockStateId("minecraft:light_gray_concrete"));
+
+			BlockStateMapper.Add(
+				BlockFactory.GetBlockStateID(251, 8), GetBlockStateId("minecraft:light_gray_concrete"));
+
 			BlockStateMapper.Add(BlockFactory.GetBlockStateID(251, 9), GetBlockStateId("minecraft:cyan_concrete"));
 			BlockStateMapper.Add(BlockFactory.GetBlockStateID(251, 10), GetBlockStateId("minecraft:purple_concrete"));
 			BlockStateMapper.Add(BlockFactory.GetBlockStateID(251, 11), GetBlockStateId("minecraft:blue_concrete"));
@@ -489,22 +772,55 @@ namespace Alex.Worlds.Singleplayer
 			BlockStateMapper.Add(BlockFactory.GetBlockStateID(251, 13), GetBlockStateId("minecraft:green_concrete"));
 			BlockStateMapper.Add(BlockFactory.GetBlockStateID(251, 14), GetBlockStateId("minecraft:red_concrete"));
 			BlockStateMapper.Add(BlockFactory.GetBlockStateID(251, 15), GetBlockStateId("minecraft:black_concrete"));
-			BlockStateMapper.Add(BlockFactory.GetBlockStateID(252, 0), GetBlockStateId("minecraft:white_concrete_powder"));
-			BlockStateMapper.Add(BlockFactory.GetBlockStateID(252, 1), GetBlockStateId("minecraft:orange_concrete_powder"));
-			BlockStateMapper.Add(BlockFactory.GetBlockStateID(252, 2), GetBlockStateId("minecraft:magenta_concrete_powder"));
-			BlockStateMapper.Add(BlockFactory.GetBlockStateID(252, 3), GetBlockStateId("minecraft:light_blue_concrete_powder"));
-			BlockStateMapper.Add(BlockFactory.GetBlockStateID(252, 4), GetBlockStateId("minecraft:yellow_concrete_powder"));
-			BlockStateMapper.Add(BlockFactory.GetBlockStateID(252, 5), GetBlockStateId("minecraft:lime_concrete_powder"));
-			BlockStateMapper.Add(BlockFactory.GetBlockStateID(252, 6), GetBlockStateId("minecraft:pink_concrete_powder"));
-			BlockStateMapper.Add(BlockFactory.GetBlockStateID(252, 7), GetBlockStateId("minecraft:gray_concrete_powder"));
-			BlockStateMapper.Add(BlockFactory.GetBlockStateID(252, 8), GetBlockStateId("minecraft:light_gray_concrete_powder"));
-			BlockStateMapper.Add(BlockFactory.GetBlockStateID(252, 9), GetBlockStateId("minecraft:cyan_concrete_powder"));
-			BlockStateMapper.Add(BlockFactory.GetBlockStateID(252, 10), GetBlockStateId("minecraft:purple_concrete_powder"));
-			BlockStateMapper.Add(BlockFactory.GetBlockStateID(252, 11), GetBlockStateId("minecraft:blue_concrete_powder"));
-			BlockStateMapper.Add(BlockFactory.GetBlockStateID(252, 12), GetBlockStateId("minecraft:brown_concrete_powder"));
-			BlockStateMapper.Add(BlockFactory.GetBlockStateID(252, 13), GetBlockStateId("minecraft:green_concrete_powder"));
-			BlockStateMapper.Add(BlockFactory.GetBlockStateID(252, 14), GetBlockStateId("minecraft:red_concrete_powder"));
-			BlockStateMapper.Add(BlockFactory.GetBlockStateID(252, 15), GetBlockStateId("minecraft:black_concrete_powder"));
+
+			BlockStateMapper.Add(
+				BlockFactory.GetBlockStateID(252, 0), GetBlockStateId("minecraft:white_concrete_powder"));
+
+			BlockStateMapper.Add(
+				BlockFactory.GetBlockStateID(252, 1), GetBlockStateId("minecraft:orange_concrete_powder"));
+
+			BlockStateMapper.Add(
+				BlockFactory.GetBlockStateID(252, 2), GetBlockStateId("minecraft:magenta_concrete_powder"));
+
+			BlockStateMapper.Add(
+				BlockFactory.GetBlockStateID(252, 3), GetBlockStateId("minecraft:light_blue_concrete_powder"));
+
+			BlockStateMapper.Add(
+				BlockFactory.GetBlockStateID(252, 4), GetBlockStateId("minecraft:yellow_concrete_powder"));
+
+			BlockStateMapper.Add(
+				BlockFactory.GetBlockStateID(252, 5), GetBlockStateId("minecraft:lime_concrete_powder"));
+
+			BlockStateMapper.Add(
+				BlockFactory.GetBlockStateID(252, 6), GetBlockStateId("minecraft:pink_concrete_powder"));
+
+			BlockStateMapper.Add(
+				BlockFactory.GetBlockStateID(252, 7), GetBlockStateId("minecraft:gray_concrete_powder"));
+
+			BlockStateMapper.Add(
+				BlockFactory.GetBlockStateID(252, 8), GetBlockStateId("minecraft:light_gray_concrete_powder"));
+
+			BlockStateMapper.Add(
+				BlockFactory.GetBlockStateID(252, 9), GetBlockStateId("minecraft:cyan_concrete_powder"));
+
+			BlockStateMapper.Add(
+				BlockFactory.GetBlockStateID(252, 10), GetBlockStateId("minecraft:purple_concrete_powder"));
+
+			BlockStateMapper.Add(
+				BlockFactory.GetBlockStateID(252, 11), GetBlockStateId("minecraft:blue_concrete_powder"));
+
+			BlockStateMapper.Add(
+				BlockFactory.GetBlockStateID(252, 12), GetBlockStateId("minecraft:brown_concrete_powder"));
+
+			BlockStateMapper.Add(
+				BlockFactory.GetBlockStateID(252, 13), GetBlockStateId("minecraft:green_concrete_powder"));
+
+			BlockStateMapper.Add(
+				BlockFactory.GetBlockStateID(252, 14), GetBlockStateId("minecraft:red_concrete_powder"));
+
+			BlockStateMapper.Add(
+				BlockFactory.GetBlockStateID(252, 15), GetBlockStateId("minecraft:black_concrete_powder"));
+
 			BlockStateMapper.Add(BlockFactory.GetBlockStateID(255, 0), GetBlockStateId("minecraft:structure_block"));
 			BlockStateMapper.Add(BlockFactory.GetBlockStateID(255, 1), GetBlockStateId("minecraft:structure_block"));
 			BlockStateMapper.Add(BlockFactory.GetBlockStateID(255, 2), GetBlockStateId("minecraft:structure_block"));
@@ -515,13 +831,16 @@ namespace Alex.Worlds.Singleplayer
 			for (short Índice_ID = 0; Índice_ID < 256; Índice_ID++)
 			{
 				uint Índice_ID_Data_Cero = BlockFactory.GetBlockStateID(Índice_ID, 0);
+
 				if (!BlockStateMapper.ContainsKey(Índice_ID_Data_Cero))
 				{
 					BlockStateMapper.Add(Índice_ID_Data_Cero, GetBlockStateId("minecraft:air"));
 				}
+
 				for (byte Índice_Data = 0; Índice_Data < 16; Índice_Data++)
 				{
 					uint Índice_ID_Data = BlockFactory.GetBlockStateID(Índice_ID, Índice_Data);
+
 					if (!BlockStateMapper.ContainsKey(Índice_ID_Data))
 					{
 						BlockStateMapper.Add(Índice_ID_Data, BlockStateMapper[Índice_ID_Data_Cero]);

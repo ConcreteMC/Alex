@@ -33,17 +33,18 @@ namespace Alex.Blocks.Minecraft
 	public class StainedGlass : Glass
 	{
 		public readonly BlockColor Color;
+
 		public StainedGlass(BlockColor color = BlockColor.White)
 		{
 			Color = color;
-			
+
 			Solid = true;
 			Transparent = true;
 			base.IsFullCube = true;
 
 			base.BlockMaterial = Material.Glass.Clone().WithMapColor(color.ToMapColor().WithAlpha(64));
 		}
-		
+
 		/// <inheritdoc />
 		public override bool ShouldRenderFace(BlockFace face, Block other)
 		{
@@ -51,7 +52,7 @@ namespace Alex.Blocks.Minecraft
 			{
 				//if (face == BlockFace.Up || face == BlockFace.Down)
 				{
-				//	return true;
+					//	return true;
 				}
 			}
 

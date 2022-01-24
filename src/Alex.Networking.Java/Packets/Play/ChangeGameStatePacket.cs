@@ -3,22 +3,22 @@ using Alex.Networking.Java.Util;
 
 namespace Alex.Networking.Java.Packets.Play
 {
-    public class ChangeGameStatePacket : Packet<ChangeGameStatePacket>
-    {
-	    public GameStateReason Reason;
-	    public float Value;
+	public class ChangeGameStatePacket : Packet<ChangeGameStatePacket>
+	{
+		public GameStateReason Reason;
+		public float Value;
 
 		public override void Decode(MinecraftStream stream)
 		{
-			Reason = (GameStateReason) stream.ReadByte();
+			Reason = (GameStateReason)stream.ReadByte();
 			Value = stream.ReadFloat();
 		}
 
-	    public override void Encode(MinecraftStream stream)
-	    {
-		    throw new NotImplementedException();
-	    }
-    }
+		public override void Encode(MinecraftStream stream)
+		{
+			throw new NotImplementedException();
+		}
+	}
 
 	public enum GameStateReason : byte
 	{

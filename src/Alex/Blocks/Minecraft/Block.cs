@@ -30,14 +30,14 @@ namespace Alex.Blocks.Minecraft
 {
 	public class Block : IRegistryEntry<Block>
 	{
-		public static           bool   FancyGraphics { get; set; } = true;
-		
+		public static bool FancyGraphics { get; set; } = true;
+
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(Block));
 
 		protected static PropertyBool Lit = new PropertyBool("lit", "true", "false");
 		protected static PropertyBool WaterLogged = new PropertyBool("waterlogged", "true", "false");
 
-		public bool IsWaterLogged => WaterLogged.GetValue(BlockState);// BlockState.GetTypedValue(WaterLogged);
+		public bool IsWaterLogged => WaterLogged.GetValue(BlockState); // BlockState.GetTypedValue(WaterLogged);
 
 		private ushort _flags = 0;
 
@@ -46,7 +46,7 @@ namespace Alex.Blocks.Minecraft
 		private void SetFlagBit(int bit, bool value)
 		{
 			var mask = (ushort)(1 << bit);
-			
+
 			if (value)
 			{
 				_flags |= mask;
@@ -56,7 +56,7 @@ namespace Alex.Blocks.Minecraft
 				_flags = (ushort)(_flags & ~mask);
 			}
 		}
-		
+
 		public bool Solid { get => GetFlagBit(1); set => SetFlagBit(1, value); }
 		public bool Transparent { get => GetFlagBit(2); set => SetFlagBit(2, value); }
 		public bool Renderable { get => GetFlagBit(4); set => SetFlagBit(4, value); }
@@ -67,22 +67,22 @@ namespace Alex.Blocks.Minecraft
 		///		If true, the <see cref="BlockPlaced"/> function gets called whenever a block of this type of placed
 		/// </summary>
 		public bool RequiresUpdate { get => GetFlagBit(9); set => SetFlagBit(9, value); }
-		
+
 		/// <summary>
 		///		If true, clicking this block will send the server an interact event
 		/// </summary>
 		public bool CanInteract { get => GetFlagBit(10); set => SetFlagBit(10, value); }
-		
+
 		/// <summary>
 		///		The amount of light this block emits
 		/// </summary>
-	    public virtual byte Luminance { get; set; } = 0;
-		
+		public virtual byte Luminance { get; set; } = 0;
+
 		/// <summary>
 		///		The amount of light this block blocks.
 		/// </summary>
-	    public int Diffusion { get; set; } = 1;
-	    
+		public int Diffusion { get; set; } = 1;
+
 		public BlockState BlockState { get; set; }
 
 		private IMaterial _material = new Material(MapColor.Stone);
@@ -110,14 +110,16 @@ namespace Alex.Blocks.Minecraft
 		public virtual IEnumerable<BoundingBox> GetBoundingBoxes(Vector3 blockPos)
 		{
 			bool didReturn = false;
+
 			if (BlockState?.VariantMapper?.Model != null)
 			{
 				foreach (var bb in BlockState.VariantMapper.Model.GetBoundingBoxes(BlockState, blockPos))
 				{
 					didReturn = true;
+
 					yield return bb;
 				}
-				
+
 				if (!didReturn)
 					yield return new BoundingBox(blockPos, blockPos + Vector3.One);
 			}
@@ -176,6 +178,7 @@ namespace Alex.Blocks.Minecraft
 				if (Alex.Instance.Resources.TryGetBlockState(BlockState.Name, out blockStateResource))
 				{
 					var state = MultiPartModelHelper.GetBlockState(world, position, BlockState, blockStateResource);
+
 					if (state.Id != BlockState.Id)
 						world.SetBlockState(position, state);
 				}
@@ -191,44 +194,46 @@ namespace Alex.Blocks.Minecraft
 			//BlockCoordinates target = position;
 			var existingBlockState = world.GetBlockState(position);
 			var existingBlock = existingBlockState.Block;
+
 			if (!existingBlock.BlockMaterial.IsReplaceable)
 			{
 				position += face.GetBlockCoordinates();
 			}
-							    
+
 			world.SetBlockState(position, BlockState);
+
 			return true;
 		}
-		
+
 		/// <summary>
 		///		Calculates the required tick time for this block to break.
 		/// </summary>
 		/// <param name="miningTool">The tool used to mine the block</param>
 		/// <returns>The time required for the block to break</returns>
-        public double GetBreakTime(Item miningTool)
-        {
-	        ItemType     toolItemType     = ItemType.Hand;
-	        ItemMaterial toolItemMaterial = ItemMaterial.None;
+		public double GetBreakTime(Item miningTool)
+		{
+			ItemType toolItemType = ItemType.Hand;
+			ItemMaterial toolItemMaterial = ItemMaterial.None;
 
-	        if (miningTool.Count > 0 && !(miningTool is ItemAir))
-	        {
-		        toolItemType = miningTool.ItemType;
-		        toolItemMaterial = miningTool.Material;
-	        }
+			if (miningTool.Count > 0 && !(miningTool is ItemAir))
+			{
+				toolItemType = miningTool.ItemType;
+				toolItemMaterial = miningTool.Material;
+			}
 
-	        double secondsForBreak = BlockMaterial.Hardness;
-			bool         isHarvestable    = true;
-			
+			double secondsForBreak = BlockMaterial.Hardness;
+			bool isHarvestable = true;
+
 			if (BlockMaterial.IsToolRequired)
 			{
 				isHarvestable = BlockMaterial.CanUseTool(toolItemType, toolItemMaterial);
 			}
-			
+
 			if (secondsForBreak <= 0)
 			{
 				secondsForBreak = 0.5f;
 			}
-			
+
 			if (isHarvestable)
 			{
 				secondsForBreak *= 1.5;
@@ -239,24 +244,34 @@ namespace Alex.Blocks.Minecraft
 			}
 
 			int tierMultiplier = 1;
+
 			if (BlockMaterial.CanUseTool(toolItemType, toolItemMaterial))
 			{
 				switch (miningTool.Material)
 				{
 					case ItemMaterial.Wood:
 						tierMultiplier = 2;
+
 						break;
+
 					case ItemMaterial.Stone:
 						tierMultiplier = 4;
+
 						break;
+
 					case ItemMaterial.Gold:
 						tierMultiplier = 12;
+
 						break;
+
 					case ItemMaterial.Iron:
 						tierMultiplier = 6;
+
 						break;
+
 					case ItemMaterial.Diamond:
 						tierMultiplier = 8;
+
 						break;
 				}
 			}
@@ -274,12 +289,15 @@ namespace Alex.Blocks.Minecraft
 						{
 							return secondsForBreak / 15;
 						}
+
 						break;
+
 					case ItemType.Sword:
 						if (this is Cobweb)
 						{
 							return secondsForBreak / 15;
 						}
+
 						return secondsForBreak / 1.5;
 					/*case ItemType.Shovel:
 					case ItemType.Axe:
@@ -298,53 +316,54 @@ namespace Alex.Blocks.Minecraft
 		/// <param name="face">The face</param>
 		/// <param name="neighbor">The block adjacent to this block at specified face</param>
 		/// <returns>True if the face should be rendered</returns>
-        public virtual bool ShouldRenderFace(BlockFace face, Block neighbor)
-        {
-	        if (!neighbor.Renderable)
-		        return true;
+		public virtual bool ShouldRenderFace(BlockFace face, Block neighbor)
+		{
+			if (!neighbor.Renderable)
+				return true;
 
-	        if (Transparent)
-	        {
-		        if (Solid)
-		        {
-			        if (!FancyGraphics)
-			        {
-				        if (neighbor.Solid && neighbor.IsFullCube && neighbor.Transparent) //Was isfullblock
-					        return false;
-			        }
+			if (Transparent)
+			{
+				if (Solid)
+				{
+					if (!FancyGraphics)
+					{
+						if (neighbor.Solid && neighbor.IsFullCube && neighbor.Transparent) //Was isfullblock
+							return false;
+					}
 
-			        //	if (IsFullCube && Name.Equals(block.Name)) return false;
-			        if (neighbor.Solid && (neighbor.Transparent || !neighbor.IsFullCube))
-			        {
-				        //var block = world.GetBlock(pos.X, pos.Y, pos.Z);
-				        if (!BlockMaterial.IsOpaque && !neighbor.BlockMaterial.IsOpaque)
-					        return false;
+					//	if (IsFullCube && Name.Equals(block.Name)) return false;
+					if (neighbor.Solid && (neighbor.Transparent || !neighbor.IsFullCube))
+					{
+						//var block = world.GetBlock(pos.X, pos.Y, pos.Z);
+						if (!BlockMaterial.IsOpaque && !neighbor.BlockMaterial.IsOpaque)
+							return false;
 
-				        //if (!IsFullBlock || !neighbor.IsFullBlock) return true;
-			        }
-			        
-			        //If neighbor is solid & not transparent. Hmmm?
-			        if (neighbor.Solid && !(neighbor.Transparent || !neighbor.IsFullCube)) return false;
-		        }
-		        else
-		        {
-			      //  if (neighbor.Solid && neighbor.Transparent && neighbor.IsFullCube)
-				   //     return true;
-			        
-			        if (neighbor.Solid && !(neighbor.Transparent || neighbor.IsFullCube)) return false;
-		        }
-	        }
+						//if (!IsFullBlock || !neighbor.IsFullBlock) return true;
+					}
+
+					//If neighbor is solid & not transparent. Hmmm?
+					if (neighbor.Solid && !(neighbor.Transparent || !neighbor.IsFullCube)) return false;
+				}
+				else
+				{
+					//  if (neighbor.Solid && neighbor.Transparent && neighbor.IsFullCube)
+					//     return true;
+
+					if (neighbor.Solid && !(neighbor.Transparent || neighbor.IsFullCube)) return false;
+				}
+			}
 
 
-	        if (Solid && (neighbor.Transparent || !neighbor.IsFullCube)) return true;
-	        //   if (me.Transparent && block.Transparent && !block.Solid) return false;
-	        if (Transparent) return true;
-	        if (!Transparent && (neighbor.Transparent || !neighbor.IsFullCube)) return true;
-	        if (neighbor.Solid && !(neighbor.Transparent || !neighbor.IsFullCube)) return false;
-	        if (Solid && neighbor.Solid && neighbor.IsFullCube) return false;
-			
-	        return true;
-        }
+			if (Solid && (neighbor.Transparent || !neighbor.IsFullCube)) return true;
+
+			//   if (me.Transparent && block.Transparent && !block.Solid) return false;
+			if (Transparent) return true;
+			if (!Transparent && (neighbor.Transparent || !neighbor.IsFullCube)) return true;
+			if (neighbor.Solid && !(neighbor.Transparent || !neighbor.IsFullCube)) return false;
+			if (Solid && neighbor.Solid && neighbor.IsFullCube) return false;
+
+			return true;
+		}
 
 		/// <summary>
 		///		Determines whether or not this block can "attach" to an adjacent block.
@@ -353,39 +372,41 @@ namespace Alex.Blocks.Minecraft
 		/// <param name="face"></param>
 		/// <param name="block">The adjacent block</param>
 		/// <returns></returns>
-        public virtual bool CanAttach(BlockFace face, Block block)
-        {
-	        return block.Solid && (block.IsFullCube);
-        }
+		public virtual bool CanAttach(BlockFace face, Block block)
+		{
+			return block.Solid && (block.IsFullCube);
+		}
 
-        protected static string GetShape(BlockState state)
-        {
-	        if (state.TryGetValue("shape", out string facingValue))
-	        {
-		        return facingValue;
-	        }
+		protected static string GetShape(BlockState state)
+		{
+			if (state.TryGetValue("shape", out string facingValue))
+			{
+				return facingValue;
+			}
 
-	        return string.Empty;
-        }
-        
-        protected static BlockFace GetFacing(BlockState state)
-        {
-	        if (state.TryGetValue("facing", out string facingValue) &&
-	            Enum.TryParse<BlockFace>(facingValue, true, out BlockFace face))
-	        {
-		        return face;
-	        }
+			return string.Empty;
+		}
 
-	        return BlockFace.None;
-        }
-        
-        public string DisplayName { get; set; } = null;
-	    public override string ToString()
-	    {
-		    return DisplayName ?? GetType().Name;
-	    }
+		protected static BlockFace GetFacing(BlockState state)
+		{
+			if (state.TryGetValue("facing", out string facingValue)
+			    && Enum.TryParse<BlockFace>(facingValue, true, out BlockFace face))
+			{
+				return face;
+			}
 
-	    public ResourceLocation Location { get; private set; }
+			return BlockFace.None;
+		}
+
+		public string DisplayName { get; set; } = null;
+
+		public override string ToString()
+		{
+			return DisplayName ?? GetType().Name;
+		}
+
+		public ResourceLocation Location { get; private set; }
+
 		public IRegistryEntry<Block> WithLocation(ResourceLocation location)
 		{
 			Location = location;
@@ -394,21 +415,26 @@ namespace Alex.Blocks.Minecraft
 		}
 
 		public Block Value => this;
-		
+
 		public static readonly PropertyFace Facing = new PropertyFace("facing");
+
 		public virtual bool TryGetStateProperty(string prop, out IStateProperty stateProperty)
 		{
 			switch (prop)
 			{
 				case "facing":
 					stateProperty = Facing;
+
 					return true;
+
 				case "waterlogged":
 					stateProperty = WaterLogged;
+
 					return true;
 			}
 
 			stateProperty = new PropertyString(prop);
+
 			return true;
 		}
 

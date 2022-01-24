@@ -9,7 +9,7 @@ namespace Alex.Blocks.Minecraft
 			Solid = true;
 			Transparent = false;
 			IsFullCube = true;
-			
+
 			CanInteract = true;
 
 			BlockMaterial = Material.Stone.Clone().WithHardness(0.8f);

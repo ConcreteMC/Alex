@@ -24,14 +24,11 @@ public class ModelMatrixHolder : IDisposable
 			OnModelChanged(oldValue, value);
 		}
 	}
-	
+
 	private ConcurrentDictionary<string, BoneMatrices> _boneTransforms =
 		new ConcurrentDictionary<string, BoneMatrices>(StringComparer.InvariantCultureIgnoreCase);
-	
-	public ModelMatrixHolder() 
-	{
-		
-	}
+
+	public ModelMatrixHolder() { }
 
 	protected internal void OnModelChanged(IModel oldValue, IModel model)
 	{
@@ -57,9 +54,9 @@ public class ModelMatrixHolder : IDisposable
 			}
 		}
 	}
-	
-	protected virtual void ModelChanged(Model newModel){}
-	
+
+	protected virtual void ModelChanged(Model newModel) { }
+
 	private void CollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
 	{
 		if (e.NewItems != null)
@@ -87,15 +84,17 @@ public class ModelMatrixHolder : IDisposable
 
 	public bool IsMatricesDirty { get; set; } = false;
 	private Matrix[] _transforms = null;
+
 	public Matrix[] GetTransforms()
 	{
 		var model = Model;
+
 		if (model?.Bones == null)
 			return null;
-		
+
 		if (_transforms != null && !IsMatricesDirty && _transforms.Length == model.Bones.Count)
 			return _transforms;
-		
+
 		var source = model.Bones.ImmutableArray;
 		Matrix[] destinationBoneTransforms = new Matrix[source.Length];
 
@@ -135,6 +134,7 @@ public class ModelMatrixHolder : IDisposable
 
 		_transforms = destinationBoneTransforms;
 		IsMatricesDirty = false;
+
 		return destinationBoneTransforms;
 	}
 

@@ -7,7 +7,7 @@ namespace Alex.Blocks.Minecraft
 		public SoulFire()
 		{
 			Luminance = 10;
-			
+
 			BlockMaterial = Material.Fire;
 		}
 	}

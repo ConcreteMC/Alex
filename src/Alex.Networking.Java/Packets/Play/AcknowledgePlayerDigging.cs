@@ -5,17 +5,17 @@ namespace Alex.Networking.Java.Packets.Play
 {
 	public class AcknowledgePlayerDiggingPacket : Packet<AcknowledgePlayerDiggingPacket>
 	{
-		public BlockCoordinates Position   { get; set; }
-		public int              Block      { get; set; }
-		public DigStatus        Status     { get; set; }
-		public bool             Successful { get; set; }
-		
+		public BlockCoordinates Position { get; set; }
+		public int Block { get; set; }
+		public DigStatus Status { get; set; }
+		public bool Successful { get; set; }
+
 		/// <inheritdoc />
 		public override void Decode(MinecraftStream stream)
 		{
 			Position = stream.ReadBlockCoordinates();
 			Block = stream.ReadVarInt();
-			Status = (DigStatus) stream.ReadVarInt();
+			Status = (DigStatus)stream.ReadVarInt();
 			Successful = stream.ReadBool();
 		}
 

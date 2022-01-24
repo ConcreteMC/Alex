@@ -9,7 +9,7 @@ namespace Alex.Blocks.Minecraft
 		{
 			Transparent = true;
 			Solid = false;
-			
+
 			base.BlockMaterial = Material.Plants.Clone().WithMapColor(MapColor.Nether);
 		}
 	}

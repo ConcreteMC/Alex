@@ -17,7 +17,7 @@ namespace Alex.Networking.Java.Packets.Play
 		public byte Flags = 0;
 		public int TeleportId;
 		public bool DismountVehicle = false;
-		
+
 		public override void Decode(MinecraftStream stream)
 		{
 			X = stream.ReadDouble();

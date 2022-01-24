@@ -12,7 +12,7 @@ namespace Alex.Entities.Hostile
 			Height = 0.51000005;
 			Width = 0.51000005;
 		}
-		
+
 		/// <inheritdoc />
 		protected override void HandleJavaMeta(MetaDataEntry entry)
 		{

@@ -4,7 +4,6 @@ namespace Alex.Particles
 {
 	public class ParticleMapping
 	{
-		[JsonProperty("bedrockId")]
-		public string BedrockId { get; set; }
+		[JsonProperty("bedrockId")] public string BedrockId { get; set; }
 	}
 }

@@ -1,7 +1,4 @@
 namespace Alex.Audio
 {
-	public enum Sounds
-	{
-		
-	}
+	public enum Sounds { }
 }

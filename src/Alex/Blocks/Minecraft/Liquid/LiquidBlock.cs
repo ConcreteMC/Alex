@@ -9,10 +9,8 @@ namespace Alex.Blocks.Minecraft.Liquid
 	public class LiquidBlock : Block
 	{
 		public static readonly PropertyInt LEVEL = new PropertyInt("level", 0);
-		protected LiquidBlock()
-		{
-			
-		}
+
+		protected LiquidBlock() { }
 
 		public override bool ShouldRenderFace(BlockFace face, Block neighbor)
 		{
@@ -21,7 +19,7 @@ namespace Alex.Blocks.Minecraft.Liquid
 			if (neighbor.BlockMaterial == Material.WaterPlant
 			    || neighbor.BlockMaterial == Material.ReplaceableWaterPlant)
 				return false;
-			
+
 			if (neighbor.BlockMaterial.IsLiquid || neighbor is LiquidBlock)
 			{
 				int neighborLevel = LEVEL.GetValue(neighbor.BlockState);
@@ -52,9 +50,10 @@ namespace Alex.Blocks.Minecraft.Liquid
 			{
 				case "level":
 					stateProperty = LEVEL;
+
 					return true;
 			}
-			
+
 			return base.TryGetStateProperty(prop, out stateProperty);
 		}
 	}

@@ -9,7 +9,7 @@ namespace Alex.Blocks.Minecraft
 		public SnowBlock()
 		{
 			Solid = true;
-			
+
 			BlockMaterial = Material.Snow.Clone().WithTintType(TintType.Color, Color.Snow);
 		}
 	}

@@ -1,48 +1,48 @@
 <Project>
-	<Choose>
-		<When Condition="$(DefineConstants.Contains(ANDROID))">
-			<PropertyGroup>
-				<TargetFramework>net5.0-android</TargetFramework>
-			</PropertyGroup>
-			<ItemGroup>
-				<PackageReference Include="MonoGame.Framework.Android" Version="3.8.0.1641" />
-			</ItemGroup>
-		</When>
-		<When Condition="$(DefineConstants.Contains(IOS))">
-			<PropertyGroup>
-				<TargetFramework>Xamarin.iOS10</TargetFramework>
-			</PropertyGroup>
-			<ItemGroup>
-				<PackageReference Include="MonoGame.Framework.iOS" Version="3.8.0.1641" />
-			</ItemGroup>
-		</When>
-		<When Condition="'$(Configuration)'=='DirectX'">
-			<PropertyGroup>
-				<TargetFramework>net5.0-windows</TargetFramework>
-				<RuntimeIdentifier>win10-x64</RuntimeIdentifier>
-			</PropertyGroup>
-			<ItemGroup>
-				<PackageReference Include="MonoGame.Framework.WindowsDX" Version="3.8.0.1641" />
-				<PackageReference Include="System.Buffers" Version="4.5.1" />
-				<PackageReference Include="System.Net.NameResolution" Version="4.3.0" />
-				<PackageReference Include="System.Threading.ThreadPool" Version="4.3.0" />
-				<PackageReference Include="System.IO.FileSystem" Version="4.3.0" />
-				<PackageReference Include="System.IO.FileSystem.Primitives" Version="4.3.0" />
-			</ItemGroup>
-		</When>
-		<Otherwise>
-			<PropertyGroup>
-				<TargetFramework>net6.0</TargetFramework>
-				<RuntimeIdentifiers>linux-x64</RuntimeIdentifiers>
-			</PropertyGroup>
-			<ItemGroup>
-				<PackageReference  Include="MonoGame.Framework.Compute.DesktopGL" Version="3.8.1.1" />
-			</ItemGroup>
-		</Otherwise>
-	</Choose>
+    <Choose>
+        <When Condition="$(DefineConstants.Contains(ANDROID))">
+            <PropertyGroup>
+                <TargetFramework>net5.0-android</TargetFramework>
+            </PropertyGroup>
+            <ItemGroup>
+                <PackageReference Include="MonoGame.Framework.Android" Version="3.8.0.1641"/>
+            </ItemGroup>
+        </When>
+        <When Condition="$(DefineConstants.Contains(IOS))">
+            <PropertyGroup>
+                <TargetFramework>Xamarin.iOS10</TargetFramework>
+            </PropertyGroup>
+            <ItemGroup>
+                <PackageReference Include="MonoGame.Framework.iOS" Version="3.8.0.1641"/>
+            </ItemGroup>
+        </When>
+        <When Condition="'$(Configuration)'=='DirectX'">
+            <PropertyGroup>
+                <TargetFramework>net5.0-windows</TargetFramework>
+                <RuntimeIdentifier>win10-x64</RuntimeIdentifier>
+            </PropertyGroup>
+            <ItemGroup>
+                <PackageReference Include="MonoGame.Framework.WindowsDX" Version="3.8.0.1641"/>
+                <PackageReference Include="System.Buffers" Version="4.5.1"/>
+                <PackageReference Include="System.Net.NameResolution" Version="4.3.0"/>
+                <PackageReference Include="System.Threading.ThreadPool" Version="4.3.0"/>
+                <PackageReference Include="System.IO.FileSystem" Version="4.3.0"/>
+                <PackageReference Include="System.IO.FileSystem.Primitives" Version="4.3.0"/>
+            </ItemGroup>
+        </When>
+        <Otherwise>
+            <PropertyGroup>
+                <TargetFramework>net6.0</TargetFramework>
+                <RuntimeIdentifiers>linux-x64</RuntimeIdentifiers>
+            </PropertyGroup>
+            <ItemGroup>
+                <PackageReference Include="MonoGame.Framework.Compute.DesktopGL" Version="3.8.1.1"/>
+            </ItemGroup>
+        </Otherwise>
+    </Choose>
 
-	<PropertyGroup Condition="'$(Configuration)'=='Release'">
-		<DebugSymbols>false</DebugSymbols>
-		<DebugType>none</DebugType>
-	</PropertyGroup>
+    <PropertyGroup Condition="'$(Configuration)'=='Release'">
+        <DebugSymbols>false</DebugSymbols>
+        <DebugType>none</DebugType>
+    </PropertyGroup>
 </Project>

@@ -11,7 +11,7 @@ namespace Alex.MoLang.Parser.Parselet
 	{
 		private const NumberStyles NumberStyle = System.Globalization.NumberStyles.AllowDecimalPoint;
 		private static readonly CultureInfo Culture = System.Globalization.CultureInfo.InvariantCulture;
-		
+
 		/// <inheritdoc />
 		public override IExpression Parse(MoLangParser parser, Token token)
 		{
@@ -21,6 +21,7 @@ namespace Alex.MoLang.Parser.Parselet
 			}
 
 			throw new MoLangParserException($"Could not parse \'{token.Text.ToString()}\' as a double");
+
 			return new NumberExpression(Double.Parse(token.Text));
 		}
 	}

@@ -10,7 +10,7 @@ namespace Alex.Entities.Hostile
 {
 	public class Spider : HostileMob
 	{
-		public Spider(World level) : base( level)
+		public Spider(World level) : base(level)
 		{
 			Height = 0.9;
 			Width = 1.4;
@@ -28,6 +28,7 @@ namespace Alex.Entities.Hostile
 		}
 
 		private bool _wasMoving = false;
+
 		private Stopwatch _timeSinceStartMoving = new Stopwatch();
 		/// <inheritdoc />
 		/*protected override void Animate(float dt, float mvSpeed)

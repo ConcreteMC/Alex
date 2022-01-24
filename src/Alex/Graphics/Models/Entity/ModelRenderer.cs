@@ -24,17 +24,20 @@ namespace Alex.Graphics.Models.Entity
 		public double VisibleBoundsHeight { get; set; } = 0;
 
 		private Vector2? _textureSize = null;
+
 		public Vector2 TextureSize
 		{
 			get
 			{
-				var backupSize = new Vector2(64, 32);// Vector2.One;
+				var backupSize = new Vector2(64, 32); // Vector2.One;
+
 				return _textureSize.GetValueOrDefault(backupSize);
 			}
 			set
 			{
 				if (value.LengthSquared() < 1f)
 					return;
+
 				_textureSize = value;
 
 				if (Effect != null)
@@ -73,11 +76,12 @@ namespace Alex.Graphics.Models.Entity
 		private EntityEffect Effect { get; set; }
 
 		private Texture2D _texture;
+
 		public Texture2D Texture
 		{
 			get
 			{
-				return  _texture;
+				return _texture;
 			}
 			set
 			{
@@ -87,12 +91,12 @@ namespace Alex.Graphics.Models.Entity
 				{
 					_textureSize = new Vector2(value.Width, value.Height);
 				}
-				
+
 				if (value != null && Effect != null)
 				{
 					Effect.Texture = value;
 				}
-				
+
 				UpdateScale();
 			}
 		}
@@ -125,8 +129,9 @@ namespace Alex.Graphics.Models.Entity
 
 			if (matrices == null)
 				return 0;
-			
-			return modelInstance.Draw(worldMatrix, args.Camera.ViewMatrix, args.Camera.ProjectionMatrix, matrices, Effect);
+
+			return modelInstance.Draw(
+				worldMatrix, args.Camera.ViewMatrix, args.Camera.ProjectionMatrix, matrices, Effect);
 		}
 
 		public bool GetBone(string name, out ModelBone bone)
@@ -138,7 +143,7 @@ namespace Alex.Graphics.Models.Entity
 
 			return false;
 		}
-		
+
 		public void SetVisibility(string bone, bool visible)
 		{
 			if (GetBone(bone, out var boneValue))
@@ -150,26 +155,28 @@ namespace Alex.Graphics.Models.Entity
 		protected void Dispose(bool disposing)
 		{
 			var model = Model;
-			
+
 			if (model != null)
 			{
 				model?.Dispose();
 				Model = null;
 			}
-			
+
 			Effect?.Dispose();
 			Effect = null;
 
 			var texture = _texture;
+
 			if (texture != null)
 			{
 				_texture = null;
+
 				if (texture.Tag is Guid guid)
 				{
 					if (guid == EntityFactory.PooledTagIdentifier)
 						return;
 				}
-			//	texture?.Dispose();
+				//	texture?.Dispose();
 			}
 		}
 

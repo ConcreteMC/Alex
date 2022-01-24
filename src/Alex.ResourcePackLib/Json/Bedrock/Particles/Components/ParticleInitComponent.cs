@@ -7,14 +7,11 @@ namespace Alex.ResourcePackLib.Json.Bedrock.Particles.Components
 	public class ParticleInitComponent : ParticleComponent
 	{
 		public const string ComponentName = "minecraft:particle_initialization";
-		
+
 		[JsonProperty("per_render_expression")]
 		public IExpression[] PerRender { get; set; }
-		
-		public ParticleInitComponent()
-		{
-			
-		}
+
+		public ParticleInitComponent() { }
 
 		/// <inheritdoc />
 		public override void PreRender(IParticle particle, MoLangRuntime runtime)

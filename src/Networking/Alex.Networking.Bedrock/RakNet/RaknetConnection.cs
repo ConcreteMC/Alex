@@ -45,16 +45,16 @@ namespace Alex.Networking.Bedrock.RakNet
 	{
 		private static readonly ILogger Log = LogManager.GetCurrentClassLogger();
 
-		private          UdpClient  _listener;
+		private UdpClient _listener;
 		private readonly IPEndPoint _endpoint;
 
 		private Thread _readingThread;
 
 		public const int UdpHeaderSize = 28;
 
-		public          short          MtuSize    { get; set; } = 1400;
-		
-		public RaknetSession              Session        { get; set; } = null;
+		public short MtuSize { get; set; } = 1400;
+
+		public RaknetSession Session { get; set; } = null;
 		public ConnectionInfo ConnectionInfo { get; }
 
 		public bool FoundServer => HaveServer;
@@ -66,22 +66,24 @@ namespace Alex.Networking.Bedrock.RakNet
 		public IPEndPoint RemoteEndpoint { get; set; }
 		public string RemoteServerName { get; set; }
 		public long RemoteServerPing { get; set; } = 0;
-		
+
 		public Func<RaknetSession, ICustomMessageHandler> CustomMessageHandlerFactory { get; set; }
 
 		// RakNet found a remote server using Ping.
 		public bool HaveServer { get; set; }
+
 		// Tell RakNet to automatically connect to any found server.
 		public bool AutoConnect { get; set; } = true;
 
-		public  long             ClientGuid { get; }
+		public long ClientGuid { get; }
 		private CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
+
 		public RaknetConnection()
 		{
 			_endpoint = new IPEndPoint(IPAddress.Any, 0);
 
 			ConnectionInfo = new ConnectionInfo();
-			
+
 			byte[] buffer = new byte[8];
 			FastRandom.Instance.NextBytes(buffer);
 			ClientGuid = BitConverter.ToInt64(buffer, 0);
@@ -96,24 +98,28 @@ namespace Alex.Networking.Bedrock.RakNet
 			//var receiveTask = new Task(
 			//	ReceiveCallback, _cancellationTokenSource.Token, TaskCreationOptions.LongRunning);
 
-		//	receiveTask.Start();
+			//	receiveTask.Start();
 			//_readingThread = new Thread(ReceiveCallback);
 			//_readingThread.Start();
 		}
 
-		public bool TryConnect(IPEndPoint targetEndPoint, int numberOfAttempts = int.MaxValue, short mtuSize = 1400, CancellationToken cancellationToken = default)
+		public bool TryConnect(IPEndPoint targetEndPoint,
+			int numberOfAttempts = int.MaxValue,
+			short mtuSize = 1400,
+			CancellationToken cancellationToken = default)
 		{
 			if (targetEndPoint.AddressFamily != AddressFamily.InterNetwork)
 				return false;
+
 			try
 			{
 				Start(); // Make sure we have started the listener
 
 				SpinWait sw = new SpinWait();
+
 				while (Session == null && numberOfAttempts > 0 && mtuSize >= UdpHeaderSize
 				       && !cancellationToken.IsCancellationRequested)
 				{
-
 					if (!HaveServer)
 					{
 						if (!ConnectionResetEvent.Wait(500, cancellationToken))
@@ -128,11 +134,11 @@ namespace Alex.Networking.Bedrock.RakNet
 							numberOfAttempts--;
 						}
 					}
+
 					sw.SpinOnce();
 				}
 
 				if (Session == null) return false;
-
 			}
 			catch (OperationCanceledException)
 			{
@@ -141,15 +147,11 @@ namespace Alex.Networking.Bedrock.RakNet
 
 			return true;
 		}
-		
+
 		public void SendUnconnectedPingInternal(IPEndPoint targetEndPoint)
 		{
-			byte[] data = new UnconnectedPing()
-			{
-				pingId = DateTime.UtcNow.ToBinary(),
-				guid = ClientGuid
-			}.Encode();
-			
+			byte[] data = new UnconnectedPing() { pingId = DateTime.UtcNow.ToBinary(), guid = ClientGuid }.Encode();
+
 			if (targetEndPoint != null)
 				SendData(data, targetEndPoint);
 			else
@@ -157,6 +159,7 @@ namespace Alex.Networking.Bedrock.RakNet
 		}
 
 		private bool _stopped = false;
+
 		public void Stop()
 		{
 			try
@@ -170,6 +173,7 @@ namespace Alex.Networking.Bedrock.RakNet
 				Session?.Close();
 
 				var listener = _listener;
+
 				if (listener == null) return;
 
 				_listener = null;
@@ -193,13 +197,14 @@ namespace Alex.Networking.Bedrock.RakNet
 				//listener.Ttl = Int16.MaxValue;
 				//listener.Client.SendBufferSize = 1600*64;
 				listener.Client.SendBufferSize = int.MaxValue;
-				
+
 				listener.DontFragment = true;
 				listener.EnableBroadcast = false;
 			}
 
 			listener.Client.Blocking = true;
 			listener.Client.Bind(endpoint);
+
 			return listener;
 		}
 
@@ -209,6 +214,7 @@ namespace Alex.Networking.Bedrock.RakNet
 			_readingThread.Name = $"RaknetConnection Read ({_endpoint})";
 
 			bool hasReadData = false;
+
 			//UdpClient listener;
 			//while (_listener != null)
 			{
@@ -216,9 +222,9 @@ namespace Alex.Networking.Bedrock.RakNet
 
 				if (listener == null)
 					return;
-				
+
 				// Check if we already closed the server
-			//	if (listener?.Client == null) return;
+				//	if (listener?.Client == null) return;
 
 				// WSAECONNRESET:
 				// The virtual circuit was reset by the remote side executing a hard or abortive close. 
@@ -255,7 +261,8 @@ namespace Alex.Networking.Bedrock.RakNet
 					}
 					else
 					{
-						Log.Warn($"Unexpected end of transmission for {RemoteEndpoint} from {senderEndpoint} (Any data received? {hasReadData} Servername: {RemoteServerName})");
+						Log.Warn(
+							$"Unexpected end of transmission for {RemoteEndpoint} from {senderEndpoint} (Any data received? {hasReadData} Servername: {RemoteServerName})");
 					}
 				}
 				catch (ObjectDisposedException e) { }
@@ -266,7 +273,7 @@ namespace Alex.Networking.Bedrock.RakNet
 					if (e.ErrorCode == 10038) return;
 					if (e.ErrorCode == 10004) return;
 					if (e.ErrorCode == 4) return;
-					
+
 					if (Log.IsDebugEnabled) Log.Error(e, "Unexpected end of receive");
 				}
 				catch (NullReferenceException ex)
@@ -288,7 +295,7 @@ namespace Alex.Networking.Bedrock.RakNet
 
 				byte messageId = receivedBytes.Span[0];
 
-				if (messageId <= (byte) DefaultMessageIdTypes.ID_USER_PACKET_ENUM)
+				if (messageId <= (byte)DefaultMessageIdTypes.ID_USER_PACKET_ENUM)
 				{
 					HandleOfflineRakMessage(receivedBytes, clientEndpoint);
 				}
@@ -308,18 +315,19 @@ namespace Alex.Networking.Bedrock.RakNet
 			if (rakSession.Evicted) return;
 
 			rakSession.LastUpdatedTime = DateTime.UtcNow;
-			
+
 			if (header.IsAck)
 			{
 				var ack = Ack.CreateObject();
 				ack.Decode(receivedBytes);
 
 				rakSession.HandleAck(ack);
-				
+
 				ack.PutPool();
+
 				return;
 			}
-			
+
 			if (header.IsNak)
 			{
 				var nak = Nak.CreateObject();
@@ -327,9 +335,10 @@ namespace Alex.Networking.Bedrock.RakNet
 
 				rakSession.HandleNak(nak);
 				nak.PutPool();
+
 				return;
 			}
-			
+
 			var datagram = Datagram.CreateObject();
 
 			try
@@ -339,10 +348,12 @@ namespace Alex.Networking.Bedrock.RakNet
 					datagram.Decode(receivedBytes);
 
 					Session.Acknowledge(datagram);
+
 					{
 						if (datagram.Header.IsPacketPair)
 						{
-							Session.CongestionManager.OnGotPacketPair(datagram.Header.DatagramSequenceNumber.IntValue());
+							Session.CongestionManager.OnGotPacketPair(
+								datagram.Header.DatagramSequenceNumber.IntValue());
 						}
 
 						Interlocked.Increment(ref ConnectionInfo.PacketsIn);
@@ -368,7 +379,9 @@ namespace Alex.Networking.Bedrock.RakNet
 				{
 					rakSession.Disconnect("Bad packet received from server.");
 
-					Log.Warn(e, $"Bad packet: {receivedBytes.Span[0]}\n{Packet.HexDump(receivedBytes)} ({datagram.Header.ToString()})");
+					Log.Warn(
+						e,
+						$"Bad packet: {receivedBytes.Span[0]}\n{Packet.HexDump(receivedBytes)} ({datagram.Header.ToString()})");
 
 					return;
 				}
@@ -402,6 +415,7 @@ namespace Alex.Networking.Bedrock.RakNet
 					if (spp != null) continue;
 
 					haveAllParts = false;
+
 					break;
 				}
 			}
@@ -413,6 +427,7 @@ namespace Alex.Networking.Bedrock.RakNet
 			Session.Splits.TryRemove(spId, out SplitPartPacket[] _);
 
 			int contiguousLength = 0;
+
 			foreach (SplitPartPacket spp in splitPartList)
 			{
 				contiguousLength += spp.Message.Length;
@@ -420,13 +435,14 @@ namespace Alex.Networking.Bedrock.RakNet
 
 			var buffer = new Memory<byte>(new byte[contiguousLength]);
 
-			Reliability headerReliability           = splitPart.ReliabilityHeader.Reliability;
-			var         headerReliableMessageNumber = splitPart.ReliabilityHeader.ReliableMessageNumber;
-			var         headerOrderingChannel       = splitPart.ReliabilityHeader.OrderingChannel;
-			var         headerOrderingIndex         = splitPart.ReliabilityHeader.OrderingIndex;
-			var         headerSequencingIndex       = splitPart.ReliabilityHeader.SequencingIndex;
+			Reliability headerReliability = splitPart.ReliabilityHeader.Reliability;
+			var headerReliableMessageNumber = splitPart.ReliabilityHeader.ReliableMessageNumber;
+			var headerOrderingChannel = splitPart.ReliabilityHeader.OrderingChannel;
+			var headerOrderingIndex = splitPart.ReliabilityHeader.OrderingIndex;
+			var headerSequencingIndex = splitPart.ReliabilityHeader.SequencingIndex;
 
 			int position = 0;
+
 			foreach (SplitPartPacket spp in splitPartList)
 			{
 				spp.Message.CopyTo(buffer.Slice(position));
@@ -436,8 +452,8 @@ namespace Alex.Networking.Bedrock.RakNet
 
 			try
 			{
-				Packet fullMessage = PacketFactory.Create(buffer.Span[0], buffer, "raknet") ??
-									new UnknownPacket(buffer.Span[0], buffer.ToArray());
+				Packet fullMessage = PacketFactory.Create(buffer.Span[0], buffer, "raknet")
+				                     ?? new UnknownPacket(buffer.Span[0], buffer.ToArray());
 
 				fullMessage.ReliabilityHeader = new ReliabilityHeader()
 				{
@@ -448,7 +464,7 @@ namespace Alex.Networking.Bedrock.RakNet
 					SequencingIndex = headerSequencingIndex
 				};
 
-			//	if (Log.IsTraceEnabled) Log.Trace($"Assembled split packet {fullMessage.ReliabilityHeader.Reliability} message #{fullMessage.ReliabilityHeader.ReliableMessageNumber}, OrdIdx: #{fullMessage.ReliabilityHeader.OrderingIndex}");
+				//	if (Log.IsTraceEnabled) Log.Trace($"Assembled split packet {fullMessage.ReliabilityHeader.Reliability} message #{fullMessage.ReliabilityHeader.ReliableMessageNumber}, OrdIdx: #{fullMessage.ReliabilityHeader.OrderingIndex}");
 
 				return fullMessage;
 			}
@@ -468,22 +484,28 @@ namespace Alex.Networking.Bedrock.RakNet
 			{
 				Log.Warn($"Failed to send #{datagram.Header.DatagramSequenceNumber.IntValue()}");
 				datagram.PutPool();
+
 				return 0;
 			}
 
 			if (datagram.TransmissionCount > 10)
 			{
-				if (Log.IsDebugEnabled) Log.Warn($"Retransmission count exceeded. No more resend of #{datagram.Header.DatagramSequenceNumber.IntValue()} Type: {datagram.FirstMessageId} (0x{datagram.FirstMessageId:x2})");
+				if (Log.IsDebugEnabled)
+					Log.Warn(
+						$"Retransmission count exceeded. No more resend of #{datagram.Header.DatagramSequenceNumber.IntValue()} Type: {datagram.FirstMessageId} (0x{datagram.FirstMessageId:x2})");
 
 				datagram.PutPool();
 
 				Interlocked.Increment(ref ConnectionInfo.Fails);
+
 				//TODO: Disconnect! Because of encryption, this connection can't be used after this point
 				return 0;
 			}
 
-			var sequenceNumber = (int)session.CongestionManager.GetAndIncrementNextDatagramSequenceNumber();// Interlocked.Increment(ref session.DatagramSequenceNumber);
-			
+			var sequenceNumber =
+				(int)session.CongestionManager
+				   .GetAndIncrementNextDatagramSequenceNumber(); // Interlocked.Increment(ref session.DatagramSequenceNumber);
+
 			long rto = session.CongestionManager.GetRtoForRetransmission();
 			datagram.TransmissionCount++;
 			datagram.RetransmissionTimeOut = rto;
@@ -495,6 +517,7 @@ namespace Alex.Networking.Bedrock.RakNet
 			//datagram.Header.IsContinuousSend = session.SlidingWindow.
 
 			byte[] buffer = null;
+
 			try
 			{
 				if (!session.WaitingForAckQueue.TryAdd(sequenceNumber, datagram))
@@ -508,15 +531,15 @@ namespace Alex.Networking.Bedrock.RakNet
 				}
 
 				buffer = ArrayPool<byte>.Shared.Rent(1600);
-				
-				int length = (int) datagram.GetEncoded(ref buffer);
+
+				int length = (int)datagram.GetEncoded(ref buffer);
 				//byte[] buffer = datagram.Encode();
 				//int length = buffer.Length;
 				//session.UnackedBytes += datagram.Size;
-				
+
 				Interlocked.Increment(ref ConnectionInfo.PacketsOut);
 				SendData(buffer, length, session.EndPoint);
-				
+
 				datagram.Timer.Restart();
 
 				return length;
@@ -535,11 +558,12 @@ namespace Alex.Networking.Bedrock.RakNet
 		}
 
 		private object _sendSync = new object();
+
 		private void SendData(byte[] data, int length, IPEndPoint targetEndPoint)
 		{
 			if (length <= 0)
 				return;
-			
+
 			//Monitor.Enter(_sendSync);
 
 			try
@@ -568,26 +592,29 @@ namespace Alex.Networking.Bedrock.RakNet
 				}
 				catch (Exception e)
 				{
-					Log.Warn(e, $"Error. Data length={data.Length} Length={length} Target={targetEndPoint} Family: {targetEndPoint.AddressFamily.ToString()}");
+					Log.Warn(
+						e,
+						$"Error. Data length={data.Length} Length={length} Target={targetEndPoint} Family: {targetEndPoint.AddressFamily.ToString()}");
 					//if(_listener == null || _listener.Client != null) Log.Error(string.Format("Send data lenght: {0}", data.Length), e);
 				}
 			}
 			finally
 			{
-			//	Monitor.Exit(_sendSync);
+				//	Monitor.Exit(_sendSync);
 			}
 		}
-		
-		
+
+
 		internal void HandleOfflineRakMessage(ReadOnlyMemory<byte> receiveBytes, IPEndPoint senderEndpoint)
 		{
 			byte messageId = receiveBytes.Span[0];
-			var messageType = (DefaultMessageIdTypes) messageId;
+			var messageType = (DefaultMessageIdTypes)messageId;
 
 			// Increase fast, decrease slow on 1s ticks.
 			//if (_connectionInfo.NumberOfPlayers < _connectionInfo.RakSessions.Count) _connectionInfo.NumberOfPlayers = _connectionInfo.RakSessions.Count;
 
 			Packet message = null;
+
 			try
 			{
 				try
@@ -601,40 +628,55 @@ namespace Alex.Networking.Bedrock.RakNet
 
 				if (message == null)
 				{
-					Log.Error($"Receive bad packet with ID: {messageId} (0x{messageId:x2}) {messageType} from {senderEndpoint.Address}");
+					Log.Error(
+						$"Receive bad packet with ID: {messageId} (0x{messageId:x2}) {messageType} from {senderEndpoint.Address}");
 
 					return;
 				}
 
-			//	TraceReceive(Log, message);
+				//	TraceReceive(Log, message);
 
 				switch (messageType)
 				{
 					case DefaultMessageIdTypes.ID_NO_FREE_INCOMING_CONNECTIONS:
 						// Stop this client connection
 						Stop();
+
 						break;
+
 					case DefaultMessageIdTypes.ID_UNCONNECTED_PING:
 					case DefaultMessageIdTypes.ID_UNCONNECTED_PING_OPEN_CONNECTIONS:
 						//HandleRakNetMessage(senderEndpoint, (UnconnectedPing) message);
 						break;
+
 					case DefaultMessageIdTypes.ID_UNCONNECTED_PONG:
-						HandleRakNetMessage(senderEndpoint, (UnconnectedPong) message);
+						HandleRakNetMessage(senderEndpoint, (UnconnectedPong)message);
+
 						break;
+
 					case DefaultMessageIdTypes.ID_OPEN_CONNECTION_REQUEST_1:
 						//HandleRakNetMessage(senderEndpoint, (OpenConnectionRequest1) message);
 						break;
+
 					case DefaultMessageIdTypes.ID_OPEN_CONNECTION_REPLY_1:
-						HandleRakNetMessage(senderEndpoint, (OpenConnectionReply1) message);
+						HandleRakNetMessage(senderEndpoint, (OpenConnectionReply1)message);
+
 						break;
+
 					case DefaultMessageIdTypes.ID_OPEN_CONNECTION_REQUEST_2:
 						//HandleRakNetMessage(senderEndpoint, (OpenConnectionRequest2) message);
 						break;
+
 					case DefaultMessageIdTypes.ID_OPEN_CONNECTION_REPLY_2:
-						HandleRakNetMessage(senderEndpoint, (OpenConnectionReply2) message);
+						HandleRakNetMessage(senderEndpoint, (OpenConnectionReply2)message);
+
 						break;
+
 					default:
-						if (Log.IsInfoEnabled) Log.Error($"Receive unexpected packet with ID: {messageId} (0x{messageId:x2}) {messageType} from {senderEndpoint.Address}");
+						if (Log.IsInfoEnabled)
+							Log.Error(
+								$"Receive unexpected packet with ID: {messageId} (0x{messageId:x2}) {messageType} from {senderEndpoint.Address}");
+
 						break;
 				}
 			}
@@ -665,28 +707,29 @@ namespace Alex.Networking.Bedrock.RakNet
 				RemoteEndpoint = senderEndpoint;
 				RemoteServerName = message.serverName;
 				RemoteServerPing = (long)Math.Round(elapsedTime.TotalMilliseconds);
-				
+
 				HaveServer = true;
 			}
 		}
 
 		public ManualResetEventSlim ConnectionResetEvent = new ManualResetEventSlim(false);
+
 		public void SendOpenConnectionRequest1(IPEndPoint targetEndPoint, short mtuSize)
 		{
 			//if (ConnectionResetEvent.IsSet) return;
 
 			var packet = OpenConnectionRequest1.CreateObject();
 			packet.raknetProtocolVersion = 10;
-			packet.mtuSize = (short) (mtuSize);
-			
+			packet.mtuSize = (short)(mtuSize);
+
 			byte[] data = packet.Encode();
 
-			MtuSize = mtuSize;// (short) (mtuSize + (data.Length - mtuSize)); // This is what we will use from connections this point forward
-			
+			MtuSize = mtuSize; // (short) (mtuSize + (data.Length - mtuSize)); // This is what we will use from connections this point forward
+
 			//TraceSend(packet);
-			
+
 			SendData(data, targetEndPoint);
-			
+
 			packet.PutPool();
 		}
 
@@ -694,7 +737,7 @@ namespace Alex.Networking.Bedrock.RakNet
 		{
 			//if (HaveServer)
 			//	return;
-			
+
 			if (message.mtuSize != MtuSize)
 			{
 				Log.Warn($"Error, mtu differ from what we sent. Received {message.mtuSize}, expected {MtuSize}");
@@ -716,34 +759,36 @@ namespace Alex.Networking.Bedrock.RakNet
 			packet.clientGuid = ClientGuid;
 
 			byte[] data = packet.Encode();
-			
+
 			SendData(data, targetEndPoint);
-			
+
 			packet.PutPool();
 		}
-		
+
 		private void HandleRakNetMessage(IPEndPoint senderEndpoint, OpenConnectionReply2 message)
 		{
 			HaveServer = true;
 
 			SendConnectionRequest(senderEndpoint, message.mtuSize);
 		}
-		
+
 		//public ConcurrentDictionary<IPEndPoint, RakSession> _sessions = new ConcurrentDictionary<IPEndPoint, RakSession>();
 		private void SendConnectionRequest(IPEndPoint targetEndPoint, short mtuSize)
 		{
 			RaknetSession session = Session;
-		//	lock (session)
+
+			//	lock (session)
 			{
 				if (session != null)
 				{
 					Log.Warn($"Session already exist, ignoring");
+
 					return;
 				}
-				
+
 				MtuSize = mtuSize;
 				Log.Warn($"MTU Size: {mtuSize} Endpoint: {targetEndPoint}");
-				
+
 				session = new RaknetSession(ConnectionInfo, this, targetEndPoint, mtuSize)
 				{
 					State = ConnectionState.Connecting,

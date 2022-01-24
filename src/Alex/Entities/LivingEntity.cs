@@ -18,6 +18,7 @@ namespace Alex.Entities
 	{
 		public bool IsLeftHanded { get; set; } = false;
 		private bool _hasPhysics = true;
+
 		internal bool HasPhysics
 		{
 			get => _hasPhysics;
@@ -25,12 +26,12 @@ namespace Alex.Entities
 			{
 				PhysicsComponent.Enabled = value;
 				_hasPhysics = value;
-				
+
 				if (!value)
 					Velocity = Vector3.Zero;
 			}
 		}
-		
+
 		/*internal override PlayerLocation RenderLocation
 		{
 			get
@@ -49,26 +50,23 @@ namespace Alex.Entities
 				}
 			}
 		}*/
-		
+
 		protected PhysicsComponent PhysicsComponent { get; }
+
 		/// <inheritdoc />
-		public LivingEntity(World level) : base(
-			level)
+		public LivingEntity(World level) : base(level)
 		{
 			_hasPhysics = false;
-			EntityComponents.Push(PhysicsComponent = new PhysicsComponent(this)
-			{
-				Enabled = false
-			});
+			EntityComponents.Push(PhysicsComponent = new PhysicsComponent(this) { Enabled = false });
 		}
-		
+
 		public Item GetItemInHand(bool mainHand)
 		{
 			return mainHand ? Inventory.MainHand : Inventory.OffHand;
 		}
-		
+
 		//TODO: Handle hand animations
-		
+
 		/// <inheritdoc />
 		protected override void HandleJavaMeta(MetaDataEntry entry)
 		{
@@ -92,7 +90,7 @@ namespace Alex.Entities
 						else if (item.ItemType == ItemType.Sword || item.ItemType == ItemType.Shield)
 						{
 							IsBlocking = true;
-						} 
+						}
 						else if (!(item is ItemAir) && item.Count > 0)
 						{
 							IsUsingItem = true;
@@ -111,11 +109,11 @@ namespace Alex.Entities
 				HealthManager.Health = flt.Value;
 			}
 		}
-		
+
 		private bool _waitingOnChunk = true;
 		public bool HasChunk => !_waitingOnChunk;
 
-		
+
 		/// <inheritdoc />
 		public override void OnTick()
 		{
@@ -126,17 +124,17 @@ namespace Alex.Entities
 					_waitingOnChunk = false;
 				}
 			}
-			
+
 			if (_isHit && Age > _hitAnimationEnd)
 			{
 				_isHit = false;
-				
+
 				if (ModelRenderer != null)
 					ModelRenderer.EntityColor = Color.White.ToVector3();
 			}
-			
+
 			base.OnTick();
-			
+
 			if (NoAi || _waitingOnChunk) return;
 			//	IsMoving = Velocity.LengthSquared() > 0f;
 
@@ -171,12 +169,13 @@ namespace Alex.Entities
 			bool feetInLava = false;
 			bool headInWater = false;
 			bool headInLava = false;
+
 			foreach (var corner in entityBoundingBox.GetCorners())
 			{
 				if (Math.Abs(corner.Y - entityBoundingBox.Min.Y) < 0.001f) //Check feet.
 				{
 					var blockcoords = new BlockCoordinates(
-						new PlayerLocation(corner.X, (float) (corner.Y + (Height * 0.5f)), corner.Z));
+						new PlayerLocation(corner.X, (float)(corner.Y + (Height * 0.5f)), corner.Z));
 
 					var feetBlock = Level?.GetBlockState(blockcoords.X, blockcoords.Y, blockcoords.Z);
 
@@ -248,26 +247,28 @@ namespace Alex.Entities
 
 			HeadInWater = headInWater;
 			HeadInLava = headInLava;
-			
+
 			IsInWater = FeetInWater || HeadInWater;
 			IsInLava = FeetInLava || HeadInLava;
 
 			if (IsSwimming && (!feetInWater || !headInWater))
 				IsSwimming = false;
 		}
-		
+
 		private long _hitAnimationEnd = 0;
 		private bool _isHit = false;
+
 		/// <inheritdoc />
 		public override void EntityHurt()
 		{
 			base.EntityHurt();
+
 			if (ModelRenderer == null)
 				return;
 
 			_isHit = true;
 			_hitAnimationEnd = Age + 5;
-		
+
 			ModelRenderer.EntityColor = Color.Red.ToVector3();
 		}
 
@@ -277,13 +278,16 @@ namespace Alex.Entities
 			if (status == 2) // Plays the hurt animation and hurt sound 
 			{
 				EntityHurt();
+
 				return;
 			}
 			else if (status == 3) // Plays the death sound and death animation 
 			{
 				EntityDied();
+
 				return;
 			}
+
 			base.HandleEntityStatus(status);
 		}
 	}

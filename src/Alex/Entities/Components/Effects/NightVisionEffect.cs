@@ -3,10 +3,7 @@ namespace Alex.Entities.Components.Effects
 	public class NightVisionEffect : Effect
 	{
 		/// <inheritdoc />
-		public NightVisionEffect() : base(EffectType.NightVision)
-		{
-			
-		}
+		public NightVisionEffect() : base(EffectType.NightVision) { }
 
 		/// <inheritdoc />
 		public override void ApplyTo(Entity entity)

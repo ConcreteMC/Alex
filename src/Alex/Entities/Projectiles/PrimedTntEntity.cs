@@ -37,7 +37,7 @@ namespace Alex.Entities.Projectiles
 			set
 			{
 				_fuse = value;
-				
+
 				var modelRenderer = ModelRenderer;
 
 				if (modelRenderer != null)
@@ -58,7 +58,7 @@ namespace Alex.Entities.Projectiles
 		public override void OnSpawn()
 		{
 			base.OnSpawn();
-			
+
 			if (ItemFactory.TryGetItem("minecraft:tnt", out var tnt))
 			{
 				SetItem(tnt);
@@ -74,7 +74,7 @@ namespace Alex.Entities.Projectiles
 
 				return;
 			}
-			
+
 			base.HandleJavaMeta(entry);
 		}
 
@@ -84,8 +84,10 @@ namespace Alex.Entities.Projectiles
 			if (flag == MiNET.Entities.Entity.MetadataFlags.DataFuseLength && entry is MetadataInt fuseData)
 			{
 				Fuse = fuseData.Value;
+
 				return true;
 			}
+
 			return base.HandleMetadata(flag, entry);
 		}
 
@@ -94,7 +96,7 @@ namespace Alex.Entities.Projectiles
 		{
 			if (!IsSpawned)
 				return;
-			
+
 			base.OnTick();
 
 			if (Fuse > 0)

@@ -13,7 +13,10 @@ public class CachedBlockAccess : IBlockAccess, IDisposable
 	private readonly IBlockAccess _source;
 
 	private record CachedEntry(BlockState BlockState, byte SkyLight, byte BlockLight, Biome Biome);
-	private ConcurrentDictionary<BlockCoordinates, CachedEntry> _cached = new ConcurrentDictionary<BlockCoordinates, CachedEntry>();
+
+	private ConcurrentDictionary<BlockCoordinates, CachedEntry> _cached =
+		new ConcurrentDictionary<BlockCoordinates, CachedEntry>();
+
 	public CachedBlockAccess(IBlockAccess source)
 	{
 		_source = source;
@@ -97,7 +100,7 @@ public class CachedBlockAccess : IBlockAccess, IDisposable
 		int storage,
 		BlockUpdatePriority priority = BlockUpdatePriority.High)
 	{
-		_source.SetBlockState(x,y,z, block, storage, priority);
+		_source.SetBlockState(x, y, z, block, storage, priority);
 	}
 
 	/// <inheritdoc />
@@ -108,12 +111,13 @@ public class CachedBlockAccess : IBlockAccess, IDisposable
 
 	private CachedEntry GetCachedEntry(BlockCoordinates coordinates)
 	{
-		return _cached.GetOrAdd(coordinates, v =>
-		{
-			_source.GetLight(v, out var blockLight, out var skyLight);
+		return _cached.GetOrAdd(
+			coordinates, v =>
+			{
+				_source.GetLight(v, out var blockLight, out var skyLight);
 
-			return new CachedEntry(_source.GetBlockState(v), skyLight, blockLight, _source.GetBiome(v));
-		});
+				return new CachedEntry(_source.GetBlockState(v), skyLight, blockLight, _source.GetBiome(v));
+			});
 	}
 
 	/// <inheritdoc />

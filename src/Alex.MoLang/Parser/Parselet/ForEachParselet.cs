@@ -12,9 +12,12 @@ namespace Alex.MoLang.Parser.Parselet
 		{
 			List<IExpression> args = parser.ParseArgs();
 
-			if (args.Count != 3) {
+			if (args.Count != 3)
+			{
 				throw new Exception("ForEach: Expected 3 argument, " + args.Count + " argument given");
-			} else {
+			}
+			else
+			{
 				return new ForEachExpression(args[0], args[1], args[2]);
 			}
 		}

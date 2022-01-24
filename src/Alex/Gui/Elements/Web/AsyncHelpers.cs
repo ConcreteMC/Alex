@@ -16,22 +16,26 @@ namespace Alex.Gui.Elements.Web
 			var oldContext = SynchronizationContext.Current;
 			var synch = new ExclusiveSynchronizationContext();
 			SynchronizationContext.SetSynchronizationContext(synch);
-			synch.Post(async _ =>
-			{
-				try
+
+			synch.Post(
+				async _ =>
 				{
-					await task();
-				}
-				catch (Exception e)
-				{
-					synch.InnerException = e;
-					throw;
-				}
-				finally
-				{
-					synch.EndMessageLoop();
-				}
-			}, null);
+					try
+					{
+						await task();
+					}
+					catch (Exception e)
+					{
+						synch.InnerException = e;
+
+						throw;
+					}
+					finally
+					{
+						synch.EndMessageLoop();
+					}
+				}, null);
+
 			synch.BeginMessageLoop();
 
 			SynchronizationContext.SetSynchronizationContext(oldContext);
@@ -49,24 +53,29 @@ namespace Alex.Gui.Elements.Web
 			var synch = new ExclusiveSynchronizationContext();
 			SynchronizationContext.SetSynchronizationContext(synch);
 			T ret = default(T);
-			synch.Post(async _ =>
-			{
-				try
+
+			synch.Post(
+				async _ =>
 				{
-					ret = await task();
-				}
-				catch (Exception e)
-				{
-					synch.InnerException = e;
-					throw;
-				}
-				finally
-				{
-					synch.EndMessageLoop();
-				}
-			}, null);
+					try
+					{
+						ret = await task();
+					}
+					catch (Exception e)
+					{
+						synch.InnerException = e;
+
+						throw;
+					}
+					finally
+					{
+						synch.EndMessageLoop();
+					}
+				}, null);
+
 			synch.BeginMessageLoop();
 			SynchronizationContext.SetSynchronizationContext(oldContext);
+
 			return ret;
 		}
 
@@ -75,8 +84,7 @@ namespace Alex.Gui.Elements.Web
 			private bool done;
 			public Exception InnerException { get; set; }
 			readonly AutoResetEvent workItemsWaiting = new AutoResetEvent(false);
-			readonly Queue<Tuple<SendOrPostCallback, object>> items =
-				new Queue<Tuple<SendOrPostCallback, object>>();
+			readonly Queue<Tuple<SendOrPostCallback, object>> items = new Queue<Tuple<SendOrPostCallback, object>>();
 
 			public override void Send(SendOrPostCallback d, object state)
 			{
@@ -89,6 +97,7 @@ namespace Alex.Gui.Elements.Web
 				{
 					items.Enqueue(Tuple.Create(d, state));
 				}
+
 				workItemsWaiting.Set();
 			}
 
@@ -102,6 +111,7 @@ namespace Alex.Gui.Elements.Web
 				while (!done)
 				{
 					Tuple<SendOrPostCallback, object> task = null;
+
 					lock (items)
 					{
 						if (items.Count > 0)
@@ -109,9 +119,11 @@ namespace Alex.Gui.Elements.Web
 							task = items.Dequeue();
 						}
 					}
+
 					if (task != null)
 					{
 						task.Item1(task.Item2);
+
 						if (InnerException != null) // the method threw an exeption
 						{
 							throw new AggregateException("AsyncHelpers.Run method threw an exception.", InnerException);

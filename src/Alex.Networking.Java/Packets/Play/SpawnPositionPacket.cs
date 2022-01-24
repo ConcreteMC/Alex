@@ -6,7 +6,7 @@ namespace Alex.Networking.Java.Packets.Play
 	public class SpawnPositionPacket : Packet<SpawnPositionPacket>
 	{
 		public Vector3 SpawnPosition { get; set; }
-		
+
 		/// <inheritdoc />
 		public override void Decode(MinecraftStream stream)
 		{

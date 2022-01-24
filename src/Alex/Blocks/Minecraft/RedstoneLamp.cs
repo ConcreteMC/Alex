@@ -23,10 +23,7 @@ namespace Alex.Blocks.Minecraft
 
 				return 0;
 			}
-			set
-			{
-				
-			}
+			set { }
 		}
 	}
 }

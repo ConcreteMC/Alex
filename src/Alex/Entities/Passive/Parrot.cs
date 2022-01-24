@@ -17,7 +17,7 @@ namespace Alex.Entities.Passive
 			set
 			{
 				_variant = value;
-				
+
 				string texture = _variant.ToString().ToLower();
 
 				if (_variant == ParrotType.RedBlue)
@@ -42,7 +42,7 @@ namespace Alex.Entities.Passive
 
 			if (entry.Index == 19 && entry is MetadataVarInt varint)
 			{
-				Variant = (ParrotType) varint.Value;
+				Variant = (ParrotType)varint.Value;
 			}
 		}
 

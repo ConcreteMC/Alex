@@ -17,7 +17,8 @@ namespace Alex.MoLang.Parser.Expressions.BinaryOp
 			{
 				return new DoubleValue(
 					Left.Evaluate(scope, environment).AsDouble() / Right.Evaluate(scope, environment).AsDouble());
-			}catch (Exception ex)
+			}
+			catch (Exception ex)
 			{
 				throw new MoLangRuntimeException("An unexpected error occured.", ex);
 			}

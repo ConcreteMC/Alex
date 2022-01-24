@@ -2,11 +2,11 @@
 
 namespace Alex.Blocks.Minecraft
 {
-    public class BubbleColumn : Block
+	public class BubbleColumn : Block
 	{
-	    public BubbleColumn() : base()
-	    {
-		    base.BlockMaterial = Material.BubbleColumn;
-	    }
-    }
+		public BubbleColumn() : base()
+		{
+			base.BlockMaterial = Material.BubbleColumn;
+		}
+	}
 }

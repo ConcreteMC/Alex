@@ -19,7 +19,7 @@ namespace Alex.Graphics.Models.Items
 			_entityRenderer = entityRenderer;
 			_texture = texture;
 		}
-		
+
 		private DisplayPosition _displayPosition = ResourcePackLib.Json.Models.Items.DisplayPosition.Undefined;
 
 		public DisplayPosition DisplayPosition
@@ -42,79 +42,81 @@ namespace Alex.Graphics.Models.Items
 		private void UpdateDisplay()
 		{
 			return;
+
 			try
 			{
-				if (ResourcePackModel.Display.TryGetValue(DisplayPositionHelper.ToString(_displayPosition), out var display))
+				if (ResourcePackModel.Display.TryGetValue(
+					    DisplayPositionHelper.ToString(_displayPosition), out var display))
 				{
 					ActiveDisplayItem = display;
 
 					return;
 				}
 			}
-			catch(ArgumentOutOfRangeException)
-			{
-                
-			}
-            
+			catch (ArgumentOutOfRangeException) { }
+
 			//ActiveDisplayItem = DisplayElement.Default;
 		}
 
 		/// <inheritdoc />
 		public IModel Model { get; set; } = null;
+
 		/// <inheritdoc />
 		//public IHoldAttachment Parent { get; set; }
 		public Vector3 Scale { get; set; } = new Vector3(1f / 16f, 1f / 16f, 1f / 16f);
-		
-		protected Matrix GetWorldMatrix(DisplayElement activeDisplayItem, Matrix characterMatrix)
-        {
-            if ((DisplayPosition & ResourcePackLib.Json.Models.Items.DisplayPosition.Ground) != 0)
-            {
-                return Matrix.CreateScale(activeDisplayItem.Scale * Scale)
-                       * MatrixHelper.CreateRotationDegrees(activeDisplayItem.Rotation)
-                       * Matrix.CreateTranslation(activeDisplayItem.Translation)
-                       * characterMatrix;
-            }
-            
-            if ((DisplayPosition & ResourcePackLib.Json.Models.Items.DisplayPosition.FirstPerson) != 0)
-            {
-                var translate = activeDisplayItem.Translation;
-                return Matrix.CreateScale(activeDisplayItem.Scale * (Scale / 2f))
-                       * MatrixHelper.CreateRotationDegrees(new Vector3(-67.5f, 0f, 0f))
-                       * MatrixHelper.CreateRotationDegrees(activeDisplayItem.Rotation)
-                       * Matrix.CreateTranslation(new Vector3(translate.X + 4f, translate.Y + 18f, translate.Z - 2f))
-                       * characterMatrix;
-            }
-            
-            if ((DisplayPosition & ResourcePackLib.Json.Models.Items.DisplayPosition.ThirdPerson) != 0)
-            {
-                var translate = activeDisplayItem.Translation;
-                return Matrix.CreateScale(activeDisplayItem.Scale * Scale)
-                       * MatrixHelper.CreateRotationDegrees(new Vector3(-67.5f, 0f, 0f))
-                       * MatrixHelper.CreateRotationDegrees(activeDisplayItem.Rotation)
-                       * Matrix.CreateTranslation(new Vector3(translate.X + 2f, translate.Y + (8f), translate.Z - 2f))
-                       * characterMatrix;
-            }
-            
-            if ((DisplayPosition & ResourcePackLib.Json.Models.Items.DisplayPosition.Gui) != 0)
-            {
-                return Matrix.CreateScale(activeDisplayItem.Scale)
-                       * MatrixHelper.CreateRotationDegrees(new Vector3(25f, 45f, 0f))
-                       * Matrix.CreateTranslation(activeDisplayItem.Translation) 
-                       * Matrix.CreateTranslation(new Vector3(0f, 0.25f, 0f))
-                       * characterMatrix;
-            }
 
-            return characterMatrix;
-        }
+		protected Matrix GetWorldMatrix(DisplayElement activeDisplayItem, Matrix characterMatrix)
+		{
+			if ((DisplayPosition & ResourcePackLib.Json.Models.Items.DisplayPosition.Ground) != 0)
+			{
+				return Matrix.CreateScale(activeDisplayItem.Scale * Scale)
+				       * MatrixHelper.CreateRotationDegrees(activeDisplayItem.Rotation)
+				       * Matrix.CreateTranslation(activeDisplayItem.Translation) * characterMatrix;
+			}
+
+			if ((DisplayPosition & ResourcePackLib.Json.Models.Items.DisplayPosition.FirstPerson) != 0)
+			{
+				var translate = activeDisplayItem.Translation;
+
+				return Matrix.CreateScale(activeDisplayItem.Scale * (Scale / 2f))
+				       * MatrixHelper.CreateRotationDegrees(new Vector3(-67.5f, 0f, 0f))
+				       * MatrixHelper.CreateRotationDegrees(activeDisplayItem.Rotation)
+				       * Matrix.CreateTranslation(new Vector3(translate.X + 4f, translate.Y + 18f, translate.Z - 2f))
+				       * characterMatrix;
+			}
+
+			if ((DisplayPosition & ResourcePackLib.Json.Models.Items.DisplayPosition.ThirdPerson) != 0)
+			{
+				var translate = activeDisplayItem.Translation;
+
+				return Matrix.CreateScale(activeDisplayItem.Scale * Scale)
+				       * MatrixHelper.CreateRotationDegrees(new Vector3(-67.5f, 0f, 0f))
+				       * MatrixHelper.CreateRotationDegrees(activeDisplayItem.Rotation)
+				       * Matrix.CreateTranslation(new Vector3(translate.X + 2f, translate.Y + (8f), translate.Z - 2f))
+				       * characterMatrix;
+			}
+
+			if ((DisplayPosition & ResourcePackLib.Json.Models.Items.DisplayPosition.Gui) != 0)
+			{
+				return Matrix.CreateScale(activeDisplayItem.Scale)
+				       * MatrixHelper.CreateRotationDegrees(new Vector3(25f, 45f, 0f))
+				       * Matrix.CreateTranslation(activeDisplayItem.Translation)
+				       * Matrix.CreateTranslation(new Vector3(0f, 0.25f, 0f)) * characterMatrix;
+			}
+
+			return characterMatrix;
+		}
 
 		Matrix _worldMatrix = Matrix.Identity;
+
 		/// <inheritdoc />
 		public int Render(IRenderArgs args, Matrix worldMatrix)
 		{
 			if (_entityRenderer == null)
 				return 0;
-			
+
 			_worldMatrix = GetWorldMatrix(ActiveDisplayItem, worldMatrix);
+
 			return _entityRenderer.Render(args, _worldMatrix);
 		}
 

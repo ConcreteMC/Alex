@@ -15,12 +15,14 @@ namespace Alex.ResourcePackLib.IO
 		public IReadOnlyCollection<IFile> Entries { get; }
 
 		private string Root { get; }
+
 		public DiskFileSystem(string path)
 		{
 			Root = path;
-			Name = path;// Path.GetDirectoryName(path);
-			
+			Name = path; // Path.GetDirectoryName(path);
+
 			List<IFile> entries = new List<IFile>();
+
 			foreach (var file in Directory.EnumerateFiles(Root, "*", SearchOption.AllDirectories))
 			{
 				entries.Add(new FileSystemEntry(new FileInfo(file), Path.GetRelativePath(path, file)));
@@ -47,10 +49,7 @@ namespace Alex.ResourcePackLib.IO
 		}
 
 		/// <inheritdoc />
-		public void Dispose()
-		{
-			
-		}
+		public void Dispose() { }
 
 		public class FileSystemEntry : IFile
 		{
@@ -64,6 +63,7 @@ namespace Alex.ResourcePackLib.IO
 			public long Length => _fileInfo.Length;
 
 			private FileInfo _fileInfo;
+
 			public FileSystemEntry(FileInfo fileInfo, string relativePath)
 			{
 				_fileInfo = fileInfo;

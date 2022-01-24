@@ -21,10 +21,10 @@ namespace Alex.Gamestates.MainMenu.Options.Ui
 			var hudButton = CreateLinkButton<HudOptionsState>("options.ui.hud", "Hud");
 			var minimapButton = CreateLinkButton<MinimapOptionsState>("options.ui.minimap", "Minimap");
 			var chatButton = CreateLinkButton<ChatOptionsState>("options.ui.chat", "Chat");
-			
+
 			scoreboardButton.Enabled = false;
 			hudButton.Enabled = false;
-			
+
 			AddGuiRow(minimapButton, chatButton);
 			AddGuiRow(scoreboardButton, hudButton);
 		}

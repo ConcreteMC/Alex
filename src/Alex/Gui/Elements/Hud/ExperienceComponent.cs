@@ -21,10 +21,11 @@ namespace Alex.Gui.Elements.Hud
 		private Vector2 _textSize = Vector2.Zero;
 
 		private ITexture2D _bg;
-		public ExperienceComponent(Player player )
+
+		public ExperienceComponent(Player player)
 		{
 			Player = player;
-			
+
 			Background = AlexGuiTextures.ExperienceBackground;
 			BackgroundOverlay = AlexGuiTextures.Experience;
 
@@ -37,7 +38,7 @@ namespace Alex.Gui.Elements.Hud
 		{
 			base.OnInit(renderer);
 			_bg = renderer.GetTexture(AlexGuiTextures.Experience);
-			
+
 			Background.Scale = new Vector2(182f / Background.Width, 5f / Background.Height);
 			BackgroundOverlay.Scale = new Vector2(182f / BackgroundOverlay.Width, 5f / BackgroundOverlay.Height);
 		}
@@ -45,16 +46,19 @@ namespace Alex.Gui.Elements.Hud
 		protected override void OnUpdate(GameTime gameTime)
 		{
 			base.OnUpdate(gameTime);
+
 			if (Math.Abs(Player.Experience - Experience) > 0.001f)
 			{
 				Experience = Player.Experience;
 				var source = _bg.ClipBounds.Location;
 				var sourceSize = _bg.ClipBounds.Size;
-				
-				BackgroundOverlay = _bg.Texture.Slice(source.X, source.Y, (int) (Experience * sourceSize.X), sourceSize.Y);
+
+				BackgroundOverlay = _bg.Texture.Slice(
+					source.X, source.Y, (int)(Experience * sourceSize.X), sourceSize.Y);
+
 				BackgroundOverlay.Scale = new Vector2(182f / BackgroundOverlay.Width, 5f / BackgroundOverlay.Height);
 			}
-			
+
 			if (Math.Abs(Player.ExperienceLevel - ExperienceLevel) > 0.001f)
 			{
 				ExperienceLevel = Player.ExperienceLevel;
@@ -70,17 +74,19 @@ namespace Alex.Gui.Elements.Hud
 
 			//var source = BackgroundOverlay.Texture.ClipBounds.Location;
 			//var size = BackgroundOverlay.Texture.ClipBounds.Size;
-			
+
 			graphics.FillRectangle(RenderBounds, BackgroundOverlay);
-			
+
 			if (_sizeDirty)
 			{
 				_sizeDirty = false;
 				_textSize = graphics.Font.MeasureString(_text);
 			}
-			
+
 			if (ExperienceLevel >= 1f)
-				graphics.DrawString(RectangleExtensions.BottomCenter(RenderBounds) - new Vector2(_textSize.X / 2f, _textSize.Y), _text, TextColor.BrightGreen.ForegroundColor, FontStyle.DropShadow, 1f);
+				graphics.DrawString(
+					RectangleExtensions.BottomCenter(RenderBounds) - new Vector2(_textSize.X / 2f, _textSize.Y), _text,
+					TextColor.BrightGreen.ForegroundColor, FontStyle.DropShadow, 1f);
 		}
 	}
 }

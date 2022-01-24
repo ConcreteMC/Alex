@@ -31,9 +31,9 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 	public class BedrockServerType : ServerTypeImplementation<BedrockServerQueryProvider>
 	{
 		public const string Identifier = "bedrock";
-		
-		private static readonly Logger Log         = LogManager.GetCurrentClassLogger(typeof(BedrockServerType));
-		
+
+		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(BedrockServerType));
+
 		private Alex Alex { get; }
 		private XboxAuthService XboxAuthService { get; }
 
@@ -59,33 +59,36 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 		}
 
 		/// <inheritdoc />
-		public override bool TryGetWorldProvider(ServerConnectionDetails connectionDetails, PlayerProfile profile,
+		public override bool TryGetWorldProvider(ServerConnectionDetails connectionDetails,
+			PlayerProfile profile,
 			out WorldProvider worldProvider,
 			out NetworkProvider networkProvider)
 		{
-			var wp = new BedrockWorldProvider(Alex, connectionDetails,
-				profile);
-				
+			var wp = new BedrockWorldProvider(Alex, connectionDetails, profile);
+
 			wp.Init(out networkProvider);
 
 			worldProvider = wp;
+
 			return true;
 		}
 
 		private PlayerProfile Process(bool success, PlayerProfile profile)
 		{
 			profile.Authenticated = success;
+
 			if (ProfileProvider is ProfileManager pm)
 			{
 				pm.CreateOrUpdateProfile(profile, true);
 			}
-			
+
 			return profile;
 		}
 
 		private async Task<PlayerProfile> ReAuthenticate(PlayerProfile profile)
 		{
-			string deviceId = Guid.NewGuid().ToString();// profile.ClientToken ?? Alex.Resources.DeviceID;
+			string deviceId = Guid.NewGuid().ToString(); // profile.ClientToken ?? Alex.Resources.DeviceID;
+
 			try
 			{
 				return await XboxAuthService.RefreshTokenAsync(profile.RefreshToken, deviceId).ContinueWith(
@@ -93,8 +96,9 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 					{
 						if (task.IsFaulted)
 						{
-							Log.Error( task.Exception, $"Failed to refresh xbox token");
+							Log.Error(task.Exception, $"Failed to refresh xbox token");
 							profile.AuthError = task?.Exception?.Message ?? "Unknown error.";
+
 							return profile;
 						}
 
@@ -120,7 +124,9 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 		}
 
 		/// <inheritdoc />
-		public override Task Authenticate(GuiPanoramaSkyBox skyBox,  UserSelectionState.ProfileSelected callBack, PlayerProfile currentProfile)
+		public override Task Authenticate(GuiPanoramaSkyBox skyBox,
+			UserSelectionState.ProfileSelected callBack,
+			PlayerProfile currentProfile)
 		{
 			BedrockLoginState loginState = new BedrockLoginState(
 				skyBox, callBack, XboxAuthService, this, currentProfile);
@@ -129,7 +135,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			{
 				loginState.LoginFailed(currentProfile.AuthError);
 			}
-			
+
 			Alex.GameStateManager.SetActiveState(loginState, true);
 
 			return Task.CompletedTask;
@@ -166,10 +172,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			return await ReAuthenticate(profile);
 		}
 
-		private void OnCancel()
-		{
-			
-		}
+		private void OnCancel() { }
 
 		/// <inheritdoc />
 		public override Task<ProfileUpdateResult> UpdateProfile(PlayerProfile session)

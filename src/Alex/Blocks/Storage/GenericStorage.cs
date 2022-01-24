@@ -13,25 +13,26 @@ public abstract class GenericStorage<TValue> : IDisposable where TValue : class,
 	private int _bits;
 	private readonly int _size;
 	protected IPallete<TValue> Pallette { get; set; }
-        
+
 	private object _lock = new object();
 	protected int MaxBitsPerEntry = 8;
 	protected int SmallestValue = 4;
+
 	public GenericStorage(TValue defaultValue, int bitsPerBlock = 8, int size = 4096)
 	{
 		_bits = bitsPerBlock;
 		_size = size;
-            
+
 		Storage = new FlexibleStorage(_bits, size);
 		Pallette = new IntIdentityHashBiMap<TValue>((1 << _bits));
-            
+
 		Pallette.Add(defaultValue);
 	}
 
 	protected int X = 16, Y = 16, Z = 16;
 
 	protected abstract DirectPallete<TValue> GetGlobalPalette();
-	
+
 	public void Set(int x, int y, int z, TValue state)
 	{
 		var idx = GetIndex(x, y, z);
@@ -59,6 +60,7 @@ public abstract class GenericStorage<TValue> : IDisposable where TValue : class,
 			if (i >= (1 << this._bits))
 			{
 				var newBits = _bits + 1;
+
 				if (newBits < MaxBitsPerEntry)
 				{
 					var old = Storage;
@@ -67,7 +69,7 @@ public abstract class GenericStorage<TValue> : IDisposable where TValue : class,
 					{
 						Storage = new FlexibleStorage(newBits, _size);
 						_bits = newBits;
-						
+
 						for (int s = 0; s < _size; s++)
 						{
 							Storage[s] = old[s];
@@ -140,6 +142,7 @@ public abstract class GenericStorage<TValue> : IDisposable where TValue : class,
 	{
 		int palleteLength = ms.ReadVarInt();
 		uint[] pallette = new uint[palleteLength];
+
 		for (int i = 0; i < palleteLength; i++)
 		{
 			pallette[i] = (uint)ms.ReadVarInt();
@@ -163,6 +166,7 @@ public abstract class GenericStorage<TValue> : IDisposable where TValue : class,
 	{
 		var value = ms.ReadVarInt();
 		var directPalette = GetGlobalPalette();
+
 		return new SinglePallete<TValue>(directPalette.Get((uint)value));
 	}
 
@@ -180,6 +184,7 @@ public abstract class GenericStorage<TValue> : IDisposable where TValue : class,
 			return ReadSingleValuedPalette(ms);
 
 		bitsPerEntry = CalculateDirectPaletteSize();
+
 		return ReadDirectPalette(ms);
 	}
 
@@ -187,16 +192,16 @@ public abstract class GenericStorage<TValue> : IDisposable where TValue : class,
 	{
 		var oldStorage = Storage;
 		var oldPalette = Pallette;
-		
-		int bitsPerEntry = (byte) ms.ReadUnsignedByte();
-		
+
+		int bitsPerEntry = (byte)ms.ReadUnsignedByte();
+
 		if (bitsPerEntry <= SmallestValue)
 			bitsPerEntry = SmallestValue;
 
 		var palette = ReadPalette(ms, ref bitsPerEntry);
 		var storage = ReadStorage(ms, bitsPerEntry);
 		_bits = bitsPerEntry;
-		
+
 		try
 		{
 			Pallette = palette;
@@ -220,10 +225,11 @@ public abstract class GenericStorage<TValue> : IDisposable where TValue : class,
 		}
 
 		IStorage storage;
+
 		if (bitsPerEntry == 0)
 		{
 			storage = new FlexibleStorage(MaxBitsPerEntry, _size);
-			
+
 			return storage;
 			bitsPerEntry = 1;
 		}

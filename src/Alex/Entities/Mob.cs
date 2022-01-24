@@ -18,8 +18,7 @@ namespace Alex.Entities
 			Height = 1.80;
 		}
 
-		[MoProperty("death_ticks")]
-		public int DeathTicks => HealthManager.IsDying ? HealthManager.DyingTime : 0;
+		[MoProperty("death_ticks")] public int DeathTicks => HealthManager.IsDying ? HealthManager.DyingTime : 0;
 
 		[MoProperty("variant")]
 		public int Variant
@@ -35,17 +34,13 @@ namespace Alex.Entities
 		}
 
 		public bool IsAggressive { get; set; } = false;
-		
-		protected virtual void VariantChanged(int oldVariant, int newVariant)
-		{
-			
-		}
+
+		protected virtual void VariantChanged(int oldVariant, int newVariant) { }
 
 		/// <inheritdoc />
 		protected override void OnModelUpdated()
 		{
 			base.OnModelUpdated();
-			
 		}
 
 		/// <inheritdoc />
@@ -57,7 +52,7 @@ namespace Alex.Entities
 
 				return true;
 			}
-			
+
 			return base.HandleMetadata(flag, entry);
 		}
 

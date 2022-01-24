@@ -4,12 +4,10 @@ namespace Alex.Utils.Commands
 	{
 		public float MinValue { get; set; }
 		public float MaxValue { get; set; }
+
 		/// <inheritdoc />
-		public FloatCommandProperty(string name, bool required = true) : base(name, required, "float")
-		{
-			
-		}
-		
+		public FloatCommandProperty(string name, bool required = true) : base(name, required, "float") { }
+
 		/// <inheritdoc />
 		public override bool TryParse(SeekableTextReader reader)
 		{

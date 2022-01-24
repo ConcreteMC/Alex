@@ -19,44 +19,41 @@ namespace Alex.ResourcePackLib.Bedrock
 	public class SkinModule : MCPackModule, ITextureProvider
 	{
 		private static readonly ILogger Log = LogManager.GetCurrentClassLogger();
-		
-		private static PngDecoder PngDecoder { get; } = new PngDecoder()
-		{
-			IgnoreMetadata = true
-		};
+
+		private static PngDecoder PngDecoder { get; } = new PngDecoder() { IgnoreMetadata = true };
 
 		/// <inheritdoc />
-		public override string Name {
+		public override string Name
+		{
 			get
 			{
 				return Info?.LocalizationName ?? "Unknown";
 			}
-		} 
-			
+		}
+
 
 		public MCPackSkins Info { get; private set; }
 		//public LoadedSkin[] Skins { get; private set; }
-		
+
 		public IReadOnlyDictionary<string, EntityModel> EntityModels { get; private set; }
-		
+
 		/// <inheritdoc />
-		internal SkinModule(IFilesystem entry) : base(entry)
-		{
-			
-		}
-		
+		internal SkinModule(IFilesystem entry) : base(entry) { }
+
 		/// <inheritdoc />
 		internal override bool Load()
 		{
 			try
 			{
 				var archive = Entry;
+
 				//using (var archive = new ZipFileSystem(Entry.Open(), Entry.Name))
 				{
 					var skinsEntry = archive.GetEntry("skins.json");
+
 					if (skinsEntry == null)
 						return false;
-						
+
 					Info = MCJsonConvert.DeserializeObject<MCPackSkins>(skinsEntry.ReadAsString());
 
 					var geometryEntry = archive.GetEntry("geometry.json");
@@ -130,8 +127,8 @@ namespace Alex.ResourcePackLib.Bedrock
 
 	public class LoadedSkin
 	{
-		public string        Name    { get; }
-		public EntityModel   Model   { get; }
+		public string Name { get; }
+		public EntityModel Model { get; }
 		public Image<Rgba32> Texture { get; }
 
 		public LoadedSkin(string name, EntityModel model, Image<Rgba32> texture)

@@ -4,8 +4,5 @@ using System.Linq;
 
 namespace Alex.MoLang.Utils
 {
-    public class FastNumberParser
-    {
-       
-    }
+	public class FastNumberParser { }
 }

@@ -4,9 +4,6 @@ namespace Alex.ResourcePackLib.Exceptions
 {
 	public class InvalidMCPackException : Exception
 	{
-		public InvalidMCPackException(string message) : base(message)
-		{
-			
-		}
+		public InvalidMCPackException(string message) : base(message) { }
 	}
 }

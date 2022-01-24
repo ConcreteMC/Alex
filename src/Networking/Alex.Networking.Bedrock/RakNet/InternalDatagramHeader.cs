@@ -4,7 +4,8 @@ namespace Alex.Networking.Bedrock.RakNet
 {
 	public class InternalDatagramHeader : DatagramHeader
 	{
-		private static bool GetBit(byte b, int bitNumber) {
+		private static bool GetBit(byte b, int bitNumber)
+		{
 			return ((b >> bitNumber) & 1) != 0;
 		}
 
@@ -38,16 +39,14 @@ namespace Alex.Networking.Bedrock.RakNet
 				}
 			}
 		}
-		
-		public InternalDatagramHeader() : this(0)
-		{
-			
-		}
+
+		public InternalDatagramHeader() : this(0) { }
 
 		/// <inheritdoc />
 		public override string ToString()
 		{
-			return $"{{IsContinuousSend={IsContinuousSend}, IsPacketPair={IsPacketPair}, NeedsBAndAs={NeedsBAndAs}, IsACK={IsAck}, IsNAK={IsNak}, IsValid={IsValid}}}";
+			return
+				$"{{IsContinuousSend={IsContinuousSend}, IsPacketPair={IsPacketPair}, NeedsBAndAs={NeedsBAndAs}, IsACK={IsAck}, IsNAK={IsNak}, IsValid={IsValid}}}";
 		}
 	}
 }

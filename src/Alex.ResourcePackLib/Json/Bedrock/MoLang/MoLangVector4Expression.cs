@@ -16,7 +16,7 @@ namespace Alex.ResourcePackLib.Json.Bedrock.MoLang
 	public class MoLangVector4Expression
 	{
 		private IExpression[] _x, _y, _z, _w;
-		
+
 		public MoLangVector4Expression(IExpression[][] values)
 		{
 			if (values.Length == 4)
@@ -33,6 +33,7 @@ namespace Alex.ResourcePackLib.Json.Bedrock.MoLang
 		}
 
 		private IReadOnlyDictionary<double, AnimationChannelData> _keyFrames;
+
 		public MoLangVector4Expression(Dictionary<string, AnimationChannelData> keyframes)
 		{
 			var newKeyFrames = new Dictionary<double, AnimationChannelData>();
@@ -44,11 +45,16 @@ namespace Alex.ResourcePackLib.Json.Bedrock.MoLang
 					newKeyFrames.TryAdd(time, keyframe.Value);
 				}
 			}
-			
+
 			_keyFrames = newKeyFrames;
 		}
 
-		private Vector4 Evaluate(MoLangRuntime runtime, IExpression[] xExpressions, IExpression[] yExpressions, IExpression[] zExpressions, IExpression[] wExpressions, Vector4 currentValue)
+		private Vector4 Evaluate(MoLangRuntime runtime,
+			IExpression[] xExpressions,
+			IExpression[] yExpressions,
+			IExpression[] zExpressions,
+			IExpression[] wExpressions,
+			Vector4 currentValue)
 		{
 			runtime.Environment.ThisVariable = new DoubleValue(currentValue.X);
 			IMoValue x = runtime.Execute(xExpressions);
@@ -71,44 +77,51 @@ namespace Alex.ResourcePackLib.Json.Bedrock.MoLang
 
 			if (expressions.Length == 3)
 			{
-				return Evaluate(runtime, expressions[0], expressions[1], expressions[2], new IExpression[]
-				{
-					new NumberExpression(1d)
-				}, currentValue);
+				return Evaluate(
+					runtime, expressions[0], expressions[1], expressions[2],
+					new IExpression[] { new NumberExpression(1d) }, currentValue);
 			}
-			
+
 			return Evaluate(runtime, expressions[0], expressions[0], expressions[0], expressions[0], currentValue);
 		}
-		
-		private Vector4 Evaluate(MoLangRuntime runtime, AnimationChannelData complex, bool lookAHead, Vector4 currentValue)
+
+		private Vector4 Evaluate(MoLangRuntime runtime,
+			AnimationChannelData complex,
+			bool lookAHead,
+			Vector4 currentValue)
 		{
 			if (complex == null)
 				return Vector4.Zero;
 
-			
+
 			if (complex.Expressions != null)
 			{
 				var expressions = complex.Expressions;
+
 				return Evaluate(runtime, expressions, currentValue);
 			}
 
 			if (lookAHead)
 				return Evaluate(runtime, complex.KeyFrame.Pre, currentValue);
-			
+
 			return Evaluate(runtime, complex.KeyFrame.Post, currentValue);
 		}
 
-		public Vector4 Evaluate(MoLangRuntime runtime, Vector4 currentValue, double interpolator = -1d, double animationTime = 0d)
+		public Vector4 Evaluate(MoLangRuntime runtime,
+			Vector4 currentValue,
+			double interpolator = -1d,
+			double animationTime = 0d)
 		{
 			if (_keyFrames != null)
 			{
-				var elapsedTime = (interpolator >= 0d ? interpolator :animationTime) % _keyFrames.Max(x => x.Key);
+				var elapsedTime = (interpolator >= 0d ? interpolator : animationTime) % _keyFrames.Max(x => x.Key);
 
 				AnimationChannelData previous = null;
 				double previousKey = 0d;
 				AnimationChannelData next = null;
 				double nextKey = 0d;
-				foreach (var keyframe in _keyFrames.OrderBy(x=> x.Key))
+
+				foreach (var keyframe in _keyFrames.OrderBy(x => x.Key))
 				{
 					if (keyframe.Key >= elapsedTime)
 					{
@@ -129,7 +142,7 @@ namespace Alex.ResourcePackLib.Json.Bedrock.MoLang
 				Vector4 previousVector = Evaluate(runtime, previous, false, currentValue);
 				Vector4 nextVector = Evaluate(runtime, next, true, currentValue);
 
-				return Vector4.Lerp(previousVector, nextVector, (float) ((1f / timeBetweenFrames) * accumulator));
+				return Vector4.Lerp(previousVector, nextVector, (float)((1f / timeBetweenFrames) * accumulator));
 			}
 
 			return Evaluate(runtime, _x, _y, _z, _w, currentValue);

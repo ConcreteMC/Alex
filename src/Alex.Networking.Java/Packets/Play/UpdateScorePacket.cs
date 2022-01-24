@@ -4,16 +4,16 @@ namespace Alex.Networking.Java.Packets.Play
 {
 	public class UpdateScorePacket : Packet<UpdateScorePacket>
 	{
-		public string            EntityName    { get; set; }
-		public UpdateScoreAction Action        { get; set; }
-		public string            ObjectiveName { get; set; }
-		public int               Value         { get; set; }
-		
+		public string EntityName { get; set; }
+		public UpdateScoreAction Action { get; set; }
+		public string ObjectiveName { get; set; }
+		public int Value { get; set; }
+
 		/// <inheritdoc />
 		public override void Decode(MinecraftStream stream)
 		{
 			EntityName = stream.ReadString();
-			Action = (UpdateScoreAction) stream.ReadByte();
+			Action = (UpdateScoreAction)stream.ReadByte();
 			ObjectiveName = stream.ReadString();
 
 			if (Action == UpdateScoreAction.CreateOrUpdate)

@@ -6,11 +6,12 @@ namespace Alex.MoLang.Runtime.Struct
 	public class FieldAccessor : ValueAccessor
 	{
 		private FieldInfo _propertyInfo;
+
 		public FieldAccessor(FieldInfo propertyInfo)
 		{
 			_propertyInfo = propertyInfo;
 		}
-		
+
 		/// <inheritdoc />
 		public override IMoValue Get(object instance)
 		{

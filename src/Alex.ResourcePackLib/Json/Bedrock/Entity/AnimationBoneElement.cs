@@ -13,13 +13,13 @@ namespace Alex.ResourcePackLib.Json.Bedrock.Entity
 		/// </summary>
 		[JsonProperty("position")]
 		public MoLangVector3Expression Position { get; set; }
-		
+
 		/// <summary>
 		///		The rotation to apply to the bone
 		/// </summary>
 		[JsonProperty("rotation")]
 		public MoLangVector3Expression Rotation { get; set; }
-		
+
 		/// <summary>
 		///		The scale of the bone.
 		/// </summary>

@@ -24,17 +24,14 @@ namespace Alex.Utils.Threading
 	public class TaskCreatedEventArgs : TaskEventArgs
 	{
 		/// <inheritdoc />
-		public TaskCreatedEventArgs(ManagedTask task) : base(task)
-		{
-			
-		}
+		public TaskCreatedEventArgs(ManagedTask task) : base(task) { }
 	}
-	
+
 	public class TaskFinishedEventArgs : TaskEventArgs
 	{
 		public TimeSpan ExecutionTime { get; }
 		public TimeSpan TimeTillExecution { get; }
-		
+
 		/// <inheritdoc />
 		public TaskFinishedEventArgs(ManagedTask task, TimeSpan executionTime, TimeSpan timeTillExecution) : base(task)
 		{
@@ -52,7 +49,7 @@ namespace Alex.Utils.Threading
 			Task = task;
 		}
 	}
-	
+
 	public class ManagedTaskManager : GameComponent
 	{
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(ManagedTaskManager));
@@ -63,12 +60,13 @@ namespace Alex.Utils.Threading
 		public int Pending => _queue.Count;
 		public float AverageExecutionTime => _executionTimeMovingAverage.Average;
 		public float AverageTimeTillExecution => _timeTillExecutionMovingAverage.Average;
-		
+
 		private ConcurrentQueue<ManagedTask> _queue = new ConcurrentQueue<ManagedTask>();
 		private MovingAverage _executionTimeMovingAverage = new MovingAverage();
 		private MovingAverage _timeTillExecutionMovingAverage = new MovingAverage();
 
 		private bool _skipFrames = true;
+
 		public ManagedTaskManager(Alex game) : base(game)
 		{
 			game.Options.AlexOptions.MiscelaneousOptions.SkipFrames.Bind(ListenerDelegate);
@@ -81,9 +79,11 @@ namespace Alex.Utils.Threading
 		}
 
 		private uint _taskId = 0;
+
 		private uint GetTaskId()
 		{
 			Interlocked.CompareExchange(ref _taskId, 0, uint.MaxValue);
+
 			return Interlocked.Increment(ref _taskId);
 		}
 
@@ -109,7 +109,7 @@ namespace Alex.Utils.Threading
 				var bufferUploads = Interlocked.Exchange(ref ChunkData.BufferUploads, 0);
 				var bufferCreations = Interlocked.Exchange(ref ChunkData.BufferCreations, 0);
 
-			//	Log.Info(
+				//	Log.Info(
 				//	$"Tasks enqueued (#/s){enqueued}, Tasks executed (#/s){executed}, Frames Skipped (#/s){framesSkipped}, Time (ms) {executionTime:F2}, BufferUpdates (#/s) {bufferUploads}");
 
 				_accumulator = 0;
@@ -120,15 +120,16 @@ namespace Alex.Utils.Threading
 				Interlocked.Increment(ref _framesSkipped);
 				_frameSkip--;
 
-			//	return;
+				//	return;
 			}
 
 			Stopwatch sw = Stopwatch.StartNew();
+
 			if (_queue.TryDequeue(out var a))
 			{
 				if (a.IsCancelled)
 					return;
-				
+
 				var beforeRun = sw.Elapsed;
 
 				TimeSpan timeTillExecution = a.TimeSinceCreation;
@@ -155,7 +156,8 @@ namespace Alex.Utils.Threading
 				{
 					if (executionTime.TotalMilliseconds > Alex.DeltaTimeSpan.TotalMilliseconds)
 					{
-						var framesToSkip = (int)Math.Ceiling(executionTime.TotalMilliseconds / Alex.DeltaTimeSpan.TotalMilliseconds);
+						var framesToSkip = (int)Math.Ceiling(
+							executionTime.TotalMilliseconds / Alex.DeltaTimeSpan.TotalMilliseconds);
 
 						_frameSkip += framesToSkip;
 
@@ -179,7 +181,7 @@ namespace Alex.Utils.Threading
 			//task.Execute();
 			_queue.Enqueue(task);
 		}
-		
+
 		public ManagedTask Enqueue(Action action)
 		{
 			ManagedTask task = new ManagedTask(GetTaskId(), action);
@@ -196,7 +198,7 @@ namespace Alex.Utils.Threading
 
 			return task;
 		}
-		
+
 		public ManagedTask Enqueue(Action<object> action, object state)
 		{
 			ManagedTask task = new ManagedTask(GetTaskId(), action, state);

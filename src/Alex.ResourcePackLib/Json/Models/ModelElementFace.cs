@@ -9,7 +9,7 @@ namespace Alex.ResourcePackLib.Json.Models
 		/// Defines the area of the texture to use according to the scheme [x1, y1, x2, y2]. If unset, it defaults to values equal to xyz position of the element. The texture behavior will be inconsistent if UV extends below 0 or above 16. If the numbers of x1 and x2 are swapped (e.g. from 0, 0, 16, 16 to 16, 0, 0, 16), the texture will be flipped. UV is optional, and if not supplied it will automatically generate based on the element's position.
 		/// </summary>
 		[JsonProperty("uv")]
-		public ModelUV Uv { get; set; } = null;//new BlockModelElementFaceUV(0, 0, 16, 16);
+		public ModelUV Uv { get; set; } = null; //new BlockModelElementFaceUV(0, 0, 16, 16);
 
 		/// <summary>
 		/// Specifies the texture in form of the texture variable prepended with a #.
@@ -43,7 +43,7 @@ namespace Alex.ResourcePackLib.Json.Models
 			clone.CullFace = CullFace;
 			clone.Rotation = Rotation;
 			clone.TintIndex = TintIndex;
-			
+
 			return clone;
 		}
 	}

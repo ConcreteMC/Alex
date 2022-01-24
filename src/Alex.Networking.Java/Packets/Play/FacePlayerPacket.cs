@@ -5,12 +5,12 @@ namespace Alex.Networking.Java.Packets.Play
 {
 	public class FacePlayerPacket : Packet<FacePlayerPacket>
 	{
-		public Vector3 Target      { get; set; } = Vector3.Zero;
-		public bool    LookAtEyes  { get; set; } = false;
-		public bool    IsEntity    { get; set; } = false;
-		public int     EntityId    { get; set; } = 0;
-		public bool    AimWithHead { get; set; } = false;	
-		
+		public Vector3 Target { get; set; } = Vector3.Zero;
+		public bool LookAtEyes { get; set; } = false;
+		public bool IsEntity { get; set; } = false;
+		public int EntityId { get; set; } = 0;
+		public bool AimWithHead { get; set; } = false;
+
 		/// <inheritdoc />
 		public override void Decode(MinecraftStream stream)
 		{

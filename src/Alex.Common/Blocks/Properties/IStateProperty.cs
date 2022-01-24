@@ -16,12 +16,14 @@ namespace Alex.Common.Blocks.Properties
 	public interface IStateProperty<TType> : IStateProperty
 	{
 		TType Value { get; }
+
 		TType ParseValue(string value);
 
 		/// <inheritdoc />
 		string IStateProperty.StringValue => Value.ToString();
+
 		IStateProperty<TType> WithValue(TType value);
-		
+
 		IStateProperty IStateProperty.WithValue(object value)
 		{
 			if (value is TType val)

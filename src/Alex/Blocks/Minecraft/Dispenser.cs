@@ -10,7 +10,7 @@ namespace Alex.Blocks.Minecraft
 			Transparent = false;
 
 			BlockMaterial = Material.Decoration;
-			
+
 			CanInteract = true;
 		}
 	}

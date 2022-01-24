@@ -17,24 +17,26 @@ namespace Alex.Gui.Elements.Web
 		public string Homepage { get; set; } = "https://google.com/";
 		public Point TargetResolution { get; set; } = new Point(1920, 1080);
 		public float Transparency { get; set; } = 0f;
+
 		public WebElement()
 		{
 			_browserRenderer = new OffscreenBrowserRenderer();
-		//	_browserRenderer.DataChanged += BrowserRenderer_DataChanged;
+			//	_browserRenderer.DataChanged += BrowserRenderer_DataChanged;
 
 			CanFocus = true;
 			CanHighlight = true;
 		}
 
 		private bool _didInit = false;
+
 		/// <inheritdoc />
 		protected override void OnInit(IGuiRenderer renderer)
 		{
 			if (_didInit)
 				return;
-			
+
 			base.OnInit(renderer);
-			
+
 			var size = RenderBounds;
 
 			AsyncHelpers.RunSync(
@@ -54,11 +56,12 @@ namespace Alex.Gui.Elements.Web
 			{
 				_browserRenderer.Dispose();
 			}
-			
+
 			base.Dispose(disposing);
 		}
 
 		private Point _previousSize = Point.Zero;
+
 		/// <inheritdoc />
 		protected override void OnUpdateLayout()
 		{
@@ -71,9 +74,10 @@ namespace Alex.Gui.Elements.Web
 			if (Focused)
 			{
 				_browserRenderer.OnKeyInput(character, key);
+
 				return true;
 			}
-			
+
 			return base.OnKeyInput(character, key);
 		}
 
@@ -84,14 +88,14 @@ namespace Alex.Gui.Elements.Web
 			using (var branch = graphics.BranchContext(BlendState.NonPremultiplied))
 			{
 				graphics.Begin();
-				
+
 				var frame = _browserRenderer.CurrentFrame;
 
 				if (frame != null)
 				{
 					graphics.SpriteBatch.Draw(frame, RenderBounds, frame.Bounds, Color.White * (1f - Transparency));
 				}
-				
+
 				graphics.End();
 			}
 			//graphics.FillRectangle(RenderBounds, _webViewTexture, TextureRepeatMode.Stretch);
@@ -99,6 +103,7 @@ namespace Alex.Gui.Elements.Web
 
 
 		private MouseState _lastMouseState;
+
 		/// <inheritdoc />
 		protected override void OnUpdate(GameTime gameTime)
 		{
@@ -121,8 +126,8 @@ namespace Alex.Gui.Elements.Web
 				mousePosition -= GuiRenderer.Project(RenderPosition);
 				//mousePosition = GuiRenderer.Unproject(mousePosition);
 				_browserRenderer.HandleMouseMove(mousePosition.X, mousePosition.Y);
-				
-				
+
+
 				if (mouseState.LeftButton != _lastMouseState.LeftButton)
 				{
 					if (mouseState.LeftButton == ButtonState.Pressed)

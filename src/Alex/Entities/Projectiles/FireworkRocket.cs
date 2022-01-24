@@ -15,10 +15,10 @@ namespace Alex.Entities.Projectiles
 		{
 			Width = 0.25;
 			Height = 0.25;
-			
+
 			Gravity = 0.0;
 			Drag = 0.01;
-			
+
 			HasCollision = false;
 			IsAffectedByGravity = true;
 			StopOnImpact = true;
@@ -43,19 +43,22 @@ namespace Alex.Entities.Projectiles
 		public override void HandleEntityEvent(byte eventId, int data)
 		{
 			if (eventId == 25)
-			{ 
+			{
 				//Explode();
 				return;
 			}
+
 			base.HandleEntityEvent(eventId, data);
 		}
 
 		private bool _exploded = false;
+
 		private void Explode()
 		{
 			_exploded = true;
-			
+
 			var center = KnownPosition.ToVector3();
+
 			foreach (var position in GetParticlePositions(10f))
 			{
 				Alex.Instance?.ParticleManager?.SpawnParticle(
@@ -68,7 +71,8 @@ namespace Alex.Entities.Projectiles
 		{
 			for (var degree = 0f; degree < 1f; degree += 0.1f)
 			{
-				yield return new Vector3(MathF.Sin(degree) * radius, MathF.Cos((degree * 2f) - 1f) * radius, MathF.Cos(degree) * radius);
+				yield return new Vector3(
+					MathF.Sin(degree) * radius, MathF.Cos((degree * 2f) - 1f) * radius, MathF.Cos(degree) * radius);
 			}
 		}
 

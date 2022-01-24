@@ -13,10 +13,7 @@ using NLog;
 namespace Alex.ResourcePackLib.Json.Converters
 {
 	[JsonConverter(typeof(MobsModelConverter))]
-	public class MobsModelDefinition : Dictionary<string, EntityModel>
-	{
-		
-	}
+	public class MobsModelDefinition : Dictionary<string, EntityModel> { }
 
 	public enum FormatVersion
 	{
@@ -33,9 +30,11 @@ namespace Alex.ResourcePackLib.Json.Converters
 	public static class FormatVersionHelpers
 	{
 		private static IReadOnlyDictionary<string, FormatVersion> _helper;
+
 		static FormatVersionHelpers()
 		{
-			Dictionary<string, FormatVersion> versions = new Dictionary<string, FormatVersion>(StringComparer.OrdinalIgnoreCase);
+			Dictionary<string, FormatVersion> versions =
+				new Dictionary<string, FormatVersion>(StringComparer.OrdinalIgnoreCase);
 
 			foreach (FieldInfo fi in typeof(FormatVersion).GetFields())
 			{
@@ -46,23 +45,23 @@ namespace Alex.ResourcePackLib.Json.Converters
 					versions.Add(valueAttribute.Value, (FormatVersion)fi.GetValue(null));
 				}
 			}
-			
+
 			_helper = versions;
 		}
-		
+
 		public static FormatVersion FromString(string value)
 		{
 			if (_helper.TryGetValue(value, out FormatVersion v))
 				return v;
-			
+
 			return FormatVersion.Unknown;
 		}
 	}
-	
+
 	internal class MobsModelConverter : JsonConverter
 	{
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(MobsModelConverter));
-		
+
 		/// <inheritdoc />
 		public override void WriteJson(JsonWriter writer, object? value, JsonSerializer serializer)
 		{
@@ -74,30 +73,39 @@ namespace Alex.ResourcePackLib.Json.Converters
 			EntityModel model = new EntityModel();
 			model.FormatVersion = version;
 			model.Description = new ModelDescription();
+
 			foreach (var prop in jObject)
 			{
 				if (prop.Key.Equals("format_version"))
 					continue;
 
 				var property = prop.Value;
+
 				if (property == null)
 					continue;
-				
+
 				if (property.Type == JTokenType.Integer || property.Type == JTokenType.Float)
 				{
 					switch (prop.Key.ToLower())
 					{
 						case "texturewidth":
 							model.Description.TextureWidth = property.Value<long>();
+
 							break;
+
 						case "textureheight":
 							model.Description.TextureHeight = property.Value<long>();
+
 							break;
+
 						case "visible_bounds_width":
 							model.Description.VisibleBoundsWidth = property.Value<double>();
+
 							break;
+
 						case "visible_bounds_height":
 							model.Description.VisibleBoundsHeight = property.Value<double>();
+
 							break;
 					}
 				}
@@ -107,6 +115,7 @@ namespace Alex.ResourcePackLib.Json.Converters
 					{
 						case "visible_bounds_offset":
 							model.Description.VisibleBoundsOffset = property.ToObject<Vector3>(serializer);
+
 							break;
 
 						case "bones":
@@ -122,7 +131,7 @@ namespace Alex.ResourcePackLib.Json.Converters
 							}
 							else
 							{*/
-								model.Bones = property.ToObject<EntityModelBone[]>(serializer);
+							model.Bones = property.ToObject<EntityModelBone[]>(serializer);
 							//}
 
 							break;
@@ -135,11 +144,12 @@ namespace Alex.ResourcePackLib.Json.Converters
 					{
 						case "description":
 							model.Description = property.ToObject<ModelDescription>(serializer);
+
 							break;
 					}
 				}
 			}
-			
+
 			if (model.Bones != null)
 			{
 				foreach (var bone in model.Bones)
@@ -148,25 +158,26 @@ namespace Alex.ResourcePackLib.Json.Converters
 					{
 						bone.Pivot *= new Vector3(-1f, 1f, 1f);
 					}
-								
+
 					//bone.BindPoseRotation
 					if (bone.Rotation.HasValue)
 					{
 						bone.Rotation *= new Vector3(-1f, -1f, 1f);
 					}
-					
+
 					if (bone.BindPoseRotation.HasValue)
 					{
 						bone.BindPoseRotation *= new Vector3(-1f, -1f, 1f);
 					}
-								
+
 					if (bone.Cubes != null)
 					{
 						foreach (var cube in bone.Cubes)
 						{
 							var original = cube.Origin;
-							
+
 							cube.Origin = new Vector3(-(original.X + cube.Size.X), original.Y, original.Z);
+
 							if (cube.Pivot.HasValue)
 							{
 								cube.Pivot *= new Vector3(-1f, 1f, 1f);
@@ -184,7 +195,9 @@ namespace Alex.ResourcePackLib.Json.Converters
 			return model;
 		}
 
-		private IEnumerable<EntityModel> DecodeGeneric(JObject jObject, JsonSerializer serializer, FormatVersion formatVersion)
+		private IEnumerable<EntityModel> DecodeGeneric(JObject jObject,
+			JsonSerializer serializer,
+			FormatVersion formatVersion)
 		{
 			//EntityModel model = new EntityModel();
 			//model.Description = new ModelDescription();
@@ -194,6 +207,7 @@ namespace Alex.ResourcePackLib.Json.Converters
 					continue;
 
 				var property = prop.Value;
+
 				if (property == null)
 					continue;
 
@@ -205,18 +219,18 @@ namespace Alex.ResourcePackLib.Json.Converters
 						{
 							if (geo.Type == JTokenType.Object)
 							{
-								yield return DecodeSingle((JObject) geo, serializer, formatVersion);
+								yield return DecodeSingle((JObject)geo, serializer, formatVersion);
 							}
 						}
 					}
 					else if (property.Type == JTokenType.Object)
 					{
-						yield return DecodeSingle((JObject) property, serializer, formatVersion);
+						yield return DecodeSingle((JObject)property, serializer, formatVersion);
 					}
 				}
 			}
 		}
-		
+
 		private IEnumerable<EntityModel> Decode180(JObject jObject, JsonSerializer serializer)
 		{
 			//EntityModel model = new EntityModel();
@@ -238,7 +252,7 @@ namespace Alex.ResourcePackLib.Json.Converters
 					{
 						if (geo.Type == JTokenType.Object)
 						{
-							var singleDecode = DecodeSingle((JObject) geo, serializer, FormatVersion.V1_8_0);
+							var singleDecode = DecodeSingle((JObject)geo, serializer, FormatVersion.V1_8_0);
 
 							if (singleDecode != null)
 							{
@@ -251,7 +265,7 @@ namespace Alex.ResourcePackLib.Json.Converters
 				}
 				else if (property.Type == JTokenType.Object)
 				{
-					var singleDecode = DecodeSingle((JObject) property, serializer, FormatVersion.V1_8_0);
+					var singleDecode = DecodeSingle((JObject)property, serializer, FormatVersion.V1_8_0);
 
 					if (singleDecode != null)
 					{
@@ -264,7 +278,7 @@ namespace Alex.ResourcePackLib.Json.Converters
 
 			//return model;
 		}
-		
+
 		private IEnumerable<EntityModel> Decode1100(JObject jObject, JsonSerializer serializer)
 		{
 			//EntityModel model = new EntityModel();
@@ -286,7 +300,7 @@ namespace Alex.ResourcePackLib.Json.Converters
 					{
 						if (geo.Type == JTokenType.Object)
 						{
-							var singleDecode = DecodeSingle((JObject) geo, serializer, FormatVersion.V1_10_0);
+							var singleDecode = DecodeSingle((JObject)geo, serializer, FormatVersion.V1_10_0);
 
 							if (singleDecode != null)
 							{
@@ -299,7 +313,7 @@ namespace Alex.ResourcePackLib.Json.Converters
 				}
 				else if (property.Type == JTokenType.Object)
 				{
-					var singleDecode = DecodeSingle((JObject) property, serializer, FormatVersion.V1_10_0);
+					var singleDecode = DecodeSingle((JObject)property, serializer, FormatVersion.V1_10_0);
 
 					if (singleDecode != null)
 					{
@@ -312,20 +326,24 @@ namespace Alex.ResourcePackLib.Json.Converters
 
 			//return model;
 		}
-		
+
 		/// <inheritdoc />
-		public override object? ReadJson(JsonReader reader, Type objectType, object? existingValue, JsonSerializer serializer)
+		public override object? ReadJson(JsonReader reader,
+			Type objectType,
+			object? existingValue,
+			JsonSerializer serializer)
 		{
 			var obj = JToken.Load(reader);
 
-			if (obj.Type != JTokenType.Object) 
+			if (obj.Type != JTokenType.Object)
 				return null;
 
 			FormatVersion formatVersion = FormatVersion.Unknown;
-			var                 jObject       = (JObject)obj;
-			MobsModelDefinition result        = new MobsModelDefinition();
+			var jObject = (JObject)obj;
+			MobsModelDefinition result = new MobsModelDefinition();
+
 			if (jObject.TryGetValue(
-				"format_version", StringComparison.InvariantCultureIgnoreCase, out var versionToken))
+				    "format_version", StringComparison.InvariantCultureIgnoreCase, out var versionToken))
 			{
 				formatVersion = FormatVersionHelpers.FromString(versionToken.Value<string>());
 			}
@@ -368,13 +386,13 @@ namespace Alex.ResourcePackLib.Json.Converters
 
 				case FormatVersion.V1_12_0:
 				{
-					foreach (var model in DecodeGeneric(jObject, serializer,  FormatVersion.V1_12_0))
+					foreach (var model in DecodeGeneric(jObject, serializer, FormatVersion.V1_12_0))
 					{
 						//TODO: Fix cube pivot Note that in 1.12 this is flipped upside-down, but is fixed in 1.14.
 
 						result.TryAdd(model.Description.Identifier, model);
 					}
-						
+
 					break;
 				}
 
@@ -384,27 +402,30 @@ namespace Alex.ResourcePackLib.Json.Converters
 					{
 						result.TryAdd(model.Description.Identifier, model);
 					}
+
 					break;
 				}
-				
+
 				case FormatVersion.V1_16_0:
 				{
 					foreach (var model in DecodeGeneric(jObject, serializer, FormatVersion.V1_16_0))
 					{
 						result.TryAdd(model.Description.Identifier, model);
 					}
+
 					break;
 				}
-				
+
 				case FormatVersion.V1_17_10:
 				{
 					foreach (var model in DecodeGeneric(jObject, serializer, FormatVersion.V1_17_10))
 					{
 						result.TryAdd(model.Description.Identifier, model);
 					}
+
 					break;
 				}
-				
+
 				default:
 					if (!string.IsNullOrWhiteSpace(versionToken?.Value<string>()))
 					{
@@ -415,6 +436,7 @@ namespace Alex.ResourcePackLib.Json.Converters
 					{
 						result.TryAdd(model.Description.Identifier, model);
 					}
+
 					break;
 			}
 

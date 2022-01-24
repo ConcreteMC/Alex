@@ -11,10 +11,10 @@ namespace Alex.Blocks.Minecraft
 		{
 			Solid = true;
 			Transparent = true;
-			
+
 			BlockMaterial = Material.Metal.Clone().WithHardness(5);
 		}
-		
+
 		public override bool TryGetStateProperty(string prop, out IStateProperty stateProperty)
 		{
 			switch (prop)
@@ -25,8 +25,10 @@ namespace Alex.Blocks.Minecraft
 				case "south":
 				case "west":
 					stateProperty = new PropertyBool(prop, "true", "false");
+
 					return true;
 			}
+
 			return base.TryGetStateProperty(prop, out stateProperty);
 		}
 	}

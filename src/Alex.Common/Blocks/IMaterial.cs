@@ -22,23 +22,33 @@ namespace Alex.Common.Blocks
 		bool IsSolid { get; }
 		bool IsToolRequired { get; }
 		bool IsWatterLoggable { get; }
-		
+
 		IMaterial WithSoundCategory(string soundCategory);
+
 		IMaterial WithTintType(TintType type, Color color);
+
 		IMaterial WithMapColor(IMapColor color, int index = 2);
+
 		IMaterial WithSlipperiness(double value);
+
 		IMaterial WithHardness(float hardness);
 
 		IMaterial SetCollisionBehavior(BlockCollisionBehavior collisionBehavior);
+
 		IMaterial SetReplaceable();
+
 		IMaterial SetWaterLoggable();
+
 		IMaterial SetTranslucent();
+
 		IMaterial SetRequiresTool();
+
 		IMaterial SetFlammable();
-		
+
 		bool CanUseTool(ItemType type, ItemMaterial material);
+
 		IMaterial SetRequiredTool(ItemType type, ItemMaterial material);
-		
+
 		IMaterial Clone();
 	}
 
@@ -46,6 +56,7 @@ namespace Alex.Common.Blocks
 	{
 		int Index { get; }
 		Color BaseColor { get; }
+
 		Color GetMapColor(int index);
 
 		IMapColor WithAlpha(byte alpha);

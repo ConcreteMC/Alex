@@ -30,7 +30,7 @@ namespace Alex.MoLang.Parser
 
 		/// <inheritdoc />
 		public IExpression Next { get; set; }
-		
+
 		public override string ToString()
 		{
 			StringBuilder sb = new StringBuilder(255);

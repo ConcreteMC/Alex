@@ -14,7 +14,7 @@ namespace Alex.Blocks.Minecraft
 
 
 			IsFullCube = false;
-			
+
 			BlockMaterial = Material.Wood.Clone().WithHardness(0.4f);
 			//Hardness = 0.4f;
 			HasHitbox = true;

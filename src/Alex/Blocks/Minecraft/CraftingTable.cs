@@ -10,7 +10,7 @@ namespace Alex.Blocks.Minecraft
 			Transparent = false;
 
 			CanInteract = true;
-			
+
 			BlockMaterial = Material.Wood.WithHardness(2.5f);
 		}
 	}

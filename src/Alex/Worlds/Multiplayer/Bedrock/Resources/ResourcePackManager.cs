@@ -21,7 +21,10 @@ namespace Alex.Worlds.Multiplayer.Bedrock.Resources
 		private ConcurrentDictionary<string, ResourcePackEntry> _resourcePackEntries;
 		private ResourceManager _resourceManager;
 		private ResourcePackCache _resourcePackCache;
-		public ResourcePackManager(BedrockClient client, ResourceManager resourceManager, ResourcePackCache resourcePackCache)
+
+		public ResourcePackManager(BedrockClient client,
+			ResourceManager resourceManager,
+			ResourcePackCache resourcePackCache)
 		{
 			_resourcePackCache = resourcePackCache;
 			_client = client;
@@ -31,8 +34,9 @@ namespace Alex.Worlds.Multiplayer.Bedrock.Resources
 
 		//public bool Loading { get; private set; } = false;
 		public EventHandler<ResourceStatusChangedEventArgs> StatusChanged = null;
-		
+
 		private ResourceManagerStatus _status = ResourceManagerStatus.Initialized;
+
 		public ResourceManagerStatus Status
 		{
 			get
@@ -68,24 +72,24 @@ namespace Alex.Worlds.Multiplayer.Bedrock.Resources
 		//	private ResourcePackIds _resourcePackIds;
 		//	private ResourcePackIdVersions _resourcePackIdVersions;
 		//	private ResourcePackIdVersions _texturePackIdVersions;
-		
+
 		private static bool AcceptServerResources =>
 			Alex.Instance.Options.AlexOptions.MiscelaneousOptions.LoadServerResources.Value;
 
 		public int LoadingProgress { get; private set; } = 0;
-		
+
 		/// <summary>
 		///		If true, client will try to download & decrypt server resources. Otherwise we will ignore encrypted packs.
 		/// </summary>
 		public static bool AcceptEncrypted { get; set; } = false;
-		
+
 		public void HandleMcpeResourcePackStack(McpeResourcePackStack message)
 		{
-		//	Log.Info(
-		//		$"Received ResourcePackStack/ (ForcedToAccept={message.mustAccept} Gameversion={message.gameVersion} Behaviorpacks={message.behaviorpackidversions.Count} Resourcepacks={message.resourcepackidversions.Count})");
+			//	Log.Info(
+			//		$"Received ResourcePackStack/ (ForcedToAccept={message.mustAccept} Gameversion={message.gameVersion} Behaviorpacks={message.behaviorpackidversions.Count} Resourcepacks={message.resourcepackidversions.Count})");
 
 			McpeResourcePackClientResponse response = McpeResourcePackClientResponse.CreateObject();
-			response.responseStatus = (byte) McpeResourcePackClientResponse.ResponseStatus.Completed;
+			response.responseStatus = (byte)McpeResourcePackClientResponse.ResponseStatus.Completed;
 			//	response.resourcepackids = resourcePackIds;
 
 			_client.SendPacket(response);
@@ -101,6 +105,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock.Resources
 				if (!AcceptEncrypted && !string.IsNullOrWhiteSpace(packInfo.ContentKey))
 				{
 					Log.Info($"Skipping encrypted resourcepack: {packInfo.ContentIdentity}");
+
 					continue;
 				}
 
@@ -135,13 +140,13 @@ namespace Alex.Worlds.Multiplayer.Bedrock.Resources
 
 			if (AcceptServerResources && resourcePackIds.Count > 0)
 			{
-				response.responseStatus = (byte) McpeResourcePackClientResponse.ResponseStatus.SendPacks;
+				response.responseStatus = (byte)McpeResourcePackClientResponse.ResponseStatus.SendPacks;
 				Status = ResourceManagerStatus.ReceivingResources;
 				//Log.Info($"Received resourcepack info, requesting data for {message.texturepacks.Count} texture packs & {message.behahaviorpackinfos.Count} behavior packs.");
 			}
 			else
 			{
-				response.responseStatus = (byte) McpeResourcePackClientResponse.ResponseStatus.HaveAllPacks;
+				response.responseStatus = (byte)McpeResourcePackClientResponse.ResponseStatus.HaveAllPacks;
 				Status = ResourceManagerStatus.Ready;
 				//Log.Info($"Received resourcepack info, marking as HaveAllPacks");
 			}
@@ -158,19 +163,21 @@ namespace Alex.Worlds.Multiplayer.Bedrock.Resources
 				Log.Warn($"Unknown resourcepack download: {message.packageId}");
 
 				McpeResourcePackClientResponse response = new McpeResourcePackClientResponse();
-				response.responseStatus = (byte) McpeResourcePackClientResponse.ResponseStatus.Completed;
+				response.responseStatus = (byte)McpeResourcePackClientResponse.ResponseStatus.Completed;
 				_client.SendPacket(response);
 
 				return;
 			}
 
-			packEntry.SetDataInfo((ResourcePackType)message.packType, message.hash, message.chunkCount, message.maxChunkSize, message.compressedPackageSize, message.packageId);
-			
+			packEntry.SetDataInfo(
+				(ResourcePackType)message.packType, message.hash, message.chunkCount, message.maxChunkSize,
+				message.compressedPackageSize, message.packageId);
+
 			if (_resourcePackCache.TryGet(packEntry.Identifier, out byte[] data))
 			{
 				packEntry.SetData(data);
 			}
-			
+
 			CheckCompletion(packEntry);
 			//McpeResourcePackClientResponse response = new McpeResourcePackClientResponse();
 			//	response.responseStatus = (byte) McpeResourcePackClientResponse.ResponseStatus.Completed;
@@ -182,12 +189,13 @@ namespace Alex.Worlds.Multiplayer.Bedrock.Resources
 			if (entry.IsComplete)
 			{
 				McpeResourcePackClientResponse response = McpeResourcePackClientResponse.CreateObject();
-				response.responseStatus = (byte) McpeResourcePackClientResponse.ResponseStatus.Completed;
-				response.resourcepackids = new ResourcePackIds() {entry.Identifier};
+				response.responseStatus = (byte)McpeResourcePackClientResponse.ResponseStatus.Completed;
+				response.resourcepackids = new ResourcePackIds() { entry.Identifier };
 				_client.SendPacket(response);
 
 				//_client.WorldProvider.Alex.Resources.
-				Log.Info($"Completed pack, Identifier={entry.Identifier} (Received: {FormattingUtils.GetBytesReadable(entry.TotalReceived)}, Expected: {FormattingUtils.GetBytesReadable(entry.ExpectedSize)})");
+				Log.Info(
+					$"Completed pack, Identifier={entry.Identifier} (Received: {FormattingUtils.GetBytesReadable(entry.TotalReceived)}, Expected: {FormattingUtils.GetBytesReadable(entry.ExpectedSize)})");
 				//TODO: Load the newly received resourcepack iinto the resourcemanager.
 
 				if (entry is TexturePackEntry tpe)
@@ -199,12 +207,13 @@ namespace Alex.Worlds.Multiplayer.Bedrock.Resources
 				{
 					LoadingProgress = 0;
 					Status = ResourceManagerStatus.StartLoading;
+
 					ThreadPool.QueueUserWorkItem(
 						_ =>
 						{
-							_resourceManager.ReloadBedrockResources(this); 
+							_resourceManager.ReloadBedrockResources(this);
 							Status = ResourceManagerStatus.FinishedLoading;
-					
+
 							Status = ResourceManagerStatus.Ready;
 							LoadingProgress = 0;
 						});
@@ -237,7 +246,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock.Resources
 			if (packEntry.SetChunkData(message.chunkIndex, message.payload, out byte[] completedData))
 			{
 				_resourcePackCache.TryStore(packEntry.Identifier, completedData);
-				
+
 				CheckCompletion(packEntry);
 			}
 
@@ -257,10 +266,10 @@ namespace Alex.Worlds.Multiplayer.Bedrock.Resources
 			{
 				if (entry.Value.IsComplete)
 					anyComplete = true;
-				
+
 				entry.Value?.Dispose();
 			}
-			
+
 			//if (anyComplete)
 			//	_resourceManager.ReloadBedrockResources(null);
 		}
@@ -268,6 +277,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock.Resources
 		public class ResourceStatusChangedEventArgs : EventArgs
 		{
 			public ResourceManagerStatus Status { get; }
+
 			public ResourceStatusChangedEventArgs(ResourceManagerStatus status)
 			{
 				Status = status;

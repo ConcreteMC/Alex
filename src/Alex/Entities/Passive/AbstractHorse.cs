@@ -11,23 +11,20 @@ namespace Alex.Entities.Passive
 	public abstract class AbstractHorse : PassiveMob
 	{
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(AbstractHorse));
+
 		protected static readonly string[] PartOfSaddle = new string[]
 		{
-			"Saddle",
-			"SaddleMouthL",
-			"SaddleMouthR",
-			"SaddleMouthLine",
-			"SaddleMouthLineR",
-			"HeadSaddle"
+			"Saddle", "SaddleMouthL", "SaddleMouthR", "SaddleMouthLine", "SaddleMouthLineR", "HeadSaddle"
 		};
+
 		public MiNET.Utils.UUID Owner { get; set; }
-		
+
 		public bool HasBred { get; set; }
 		public bool IsRearing { get; set; }
 		public bool IsMouthOpen { get; set; }
 
 		private bool _isSaddled = false;
-		
+
 		[MoProperty("is_saddled")]
 		public bool IsSaddled
 		{
@@ -92,6 +89,7 @@ namespace Alex.Entities.Passive
 			{
 				default:
 					Log.Debug($"Unknown armor texture slot: {slotIndex}");
+
 					break;
 			}
 

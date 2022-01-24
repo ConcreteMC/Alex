@@ -11,9 +11,12 @@ namespace Alex.MoLang.Parser.Parselet
 		{
 			List<IExpression> exprs = new List<IExpression>();
 
-			if (!parser.MatchToken(TokenType.CurlyBracketRight)) {
-				do {
-					if (parser.MatchToken(TokenType.CurlyBracketRight, false)) {
+			if (!parser.MatchToken(TokenType.CurlyBracketRight))
+			{
+				do
+				{
+					if (parser.MatchToken(TokenType.CurlyBracketRight, false))
+					{
 						break;
 					}
 

@@ -9,7 +9,7 @@ namespace Alex.ResourcePackLib.Json.Converters
 	public class FontDefinitionConverter : JsonConverter
 	{
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(FontDefinitionConverter));
-		
+
 		/// <inheritdoc />
 		public override void WriteJson(JsonWriter writer, object? value, JsonSerializer serializer)
 		{
@@ -17,35 +17,40 @@ namespace Alex.ResourcePackLib.Json.Converters
 		}
 
 		/// <inheritdoc />
-		public override object ReadJson(JsonReader reader, Type objectType, object? existingValue, JsonSerializer serializer)
+		public override object ReadJson(JsonReader reader,
+			Type objectType,
+			object? existingValue,
+			JsonSerializer serializer)
 		{
 			var obj = JToken.Load(reader);
 
-			if (obj.Type != JTokenType.Object) 
+			if (obj.Type != JTokenType.Object)
 				return null;
 
 			FontDefinition fontDefinition = null;
-			
+
 			//var jObject = (JObject)obj;
 
 			//	return Decode180(jObject, serializer);
 			var jObject = (JObject)obj;
 
-			if (jObject.TryGetValue(
-				"type", StringComparison.InvariantCultureIgnoreCase, out var definitionType))
+			if (jObject.TryGetValue("type", StringComparison.InvariantCultureIgnoreCase, out var definitionType))
 			{
 				switch (definitionType.Value<string>())
 				{
 					case "bitmap":
 						fontDefinition = jObject.ToObject<BitmapFontDefinition>();
+
 						break;
-					
+
 					case "legacy_unicode":
 						fontDefinition = jObject.ToObject<LegacyFontDefinition>();
+
 						break;
-					
+
 					default:
 						Log.Warn($"Unknown font definition type: {definitionType.Value<string>()}");
+
 						return null;
 				}
 			}

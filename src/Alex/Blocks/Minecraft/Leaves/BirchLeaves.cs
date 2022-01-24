@@ -2,9 +2,6 @@ namespace Alex.Blocks.Minecraft.Leaves
 {
 	public class BirchLeaves : Leaves
 	{
-		public BirchLeaves() : base(122)
-		{
-			
-		}
+		public BirchLeaves() : base(122) { }
 	}
 }

@@ -9,16 +9,14 @@ namespace Alex.Items
 	public class ItemBow : Item, ITickableItem
 	{
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(ItemBow));
-		
+
 		private static readonly string[] Textures = new string[]
 		{
-			"default",
-			"bow_pulling_0",
-			"bow_pulling_1",
-			"bow_pulling_2",
+			"default", "bow_pulling_0", "bow_pulling_1", "bow_pulling_2",
 		};
-		
+
 		private bool _itemInUse = false;
+
 		public ItemBow()
 		{
 			base.Material = ItemMaterial.Wood;
@@ -38,7 +36,7 @@ namespace Alex.Items
 			Log.Info($"Set force: {_pullForce} ({value})");
 			//TryUpdateTexture("minecraft:bow", value);
 		}
-		
+
 		private void ResetDefault()
 		{
 			_pullForce = 0;
@@ -76,21 +74,21 @@ namespace Alex.Items
 			ResetDefault();
 		}
 
-	/*	private int _ticks = 0;
-		/// <inheritdoc />
-		public override bool UseItem(Player player, MouseButton button, ButtonState state)
-		{
-			if (state == ButtonState.Pressed)
+		/*	private int _ticks = 0;
+			/// <inheritdoc />
+			public override bool UseItem(Player player, MouseButton button, ButtonState state)
 			{
-				_itemInUse = true;
-				_ticks = 0;
-			}
-			else if (state == ButtonState.Released)
-			{
-				_itemInUse = false;
-				Released(player);
-			}
-			return true;
-		}*/
+				if (state == ButtonState.Pressed)
+				{
+					_itemInUse = true;
+					_ticks = 0;
+				}
+				else if (state == ButtonState.Released)
+				{
+					_itemInUse = false;
+					Released(player);
+				}
+				return true;
+			}*/
 	}
 }

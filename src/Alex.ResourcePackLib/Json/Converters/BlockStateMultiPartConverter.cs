@@ -23,16 +23,21 @@ namespace Alex.ResourcePackLib.Json.Converters
 			}
 		}
 
-		public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
+		public override object ReadJson(JsonReader reader,
+			Type objectType,
+			object existingValue,
+			JsonSerializer serializer)
 		{
 			if (reader.TokenType == JsonToken.StartArray)
 			{
 				var v = serializer.Deserialize<BlockStateModel[]>(reader);
+
 				return v;
 			}
 			else
 			{
-				var v = new BlockStateModel[] {serializer.Deserialize<BlockStateModel>(reader)};
+				var v = new BlockStateModel[] { serializer.Deserialize<BlockStateModel>(reader) };
+
 				return v;
 			}
 		}
@@ -46,7 +51,7 @@ namespace Alex.ResourcePackLib.Json.Converters
 	public class BlockStateMultipartRuleConverter : JsonConverter
 	{
 		private static readonly ILogger Log = LogManager.GetCurrentClassLogger();
-		
+
 		public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
 		{
 			var v = value as MultiPartRule[];
@@ -61,11 +66,15 @@ namespace Alex.ResourcePackLib.Json.Converters
 			}
 		}
 
-		public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
+		public override object ReadJson(JsonReader reader,
+			Type objectType,
+			object existingValue,
+			JsonSerializer serializer)
 		{
 			MultiPartRule rule = new MultiPartRule();
 
 			JObject obj = JObject.Load(reader);
+
 			foreach (var prop in obj)
 			{
 				switch (prop.Key.ToLower())
@@ -77,12 +86,11 @@ namespace Alex.ResourcePackLib.Json.Converters
 						}
 						else
 						{
-							rule.Or = new MultiPartRule[]
-							{
-								prop.Value.ToObject<MultiPartRule>(serializer)
-							};
+							rule.Or = new MultiPartRule[] { prop.Value.ToObject<MultiPartRule>(serializer) };
 						}
+
 						break;
+
 					case "and":
 						if (prop.Value.Type == JTokenType.Array)
 						{
@@ -90,12 +98,11 @@ namespace Alex.ResourcePackLib.Json.Converters
 						}
 						else
 						{
-							rule.And = new MultiPartRule[]
-							{
-								prop.Value.ToObject<MultiPartRule>(serializer)
-							};
+							rule.And = new MultiPartRule[] { prop.Value.ToObject<MultiPartRule>(serializer) };
 						}
+
 						break;
+
 					default:
 						if (prop.Value.Type == JTokenType.String || prop.Value.Type == JTokenType.Boolean)
 						{
@@ -109,8 +116,8 @@ namespace Alex.ResourcePackLib.Json.Converters
 						break;
 				}
 			}
-			
-			
+
+
 			/*if (reader.TokenType == JsonToken.StartArray)
 			{
 				var v = serializer.Deserialize<MultiPartRule[]>(reader);

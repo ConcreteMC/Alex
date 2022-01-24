@@ -6,51 +6,52 @@ using NLog;
 
 namespace Alex.Plugins
 {
-    public abstract class Plugin
-    {
-        private static readonly ILogger Log = LogManager.GetCurrentClassLogger(typeof(Plugin));
+	public abstract class Plugin
+	{
+		private static readonly ILogger Log = LogManager.GetCurrentClassLogger(typeof(Plugin));
 
-        public PluginInfo Info { get; internal set; }
+		public PluginInfo Info { get; internal set; }
 
-        protected Plugin()
-        {
-            Info = LoadPluginInfo();
-            //    Log.Info(JsonConvert.SerializeObject(Info, Formatting.Indented));
-        }
+		protected Plugin()
+		{
+			Info = LoadPluginInfo();
+			//    Log.Info(JsonConvert.SerializeObject(Info, Formatting.Indented));
+		}
 
-        public abstract void Enabled();
-        public abstract void Disabled();
+		public abstract void Enabled();
 
-        #region Plugin Initialisation
+		public abstract void Disabled();
 
-        private PluginInfo LoadPluginInfo()
-        {
-            var type = GetType();
+		#region Plugin Initialisation
 
-            //var info = new OpenPluginInfo();
-            var info = type.GetCustomAttribute<PluginInfo>();
-            if (info == null) info = new PluginInfo();
+		private PluginInfo LoadPluginInfo()
+		{
+			var type = GetType();
 
-            // Fill info from the plugin's type/assembly
-            var assembly = type.Assembly;
+			//var info = new OpenPluginInfo();
+			var info = type.GetCustomAttribute<PluginInfo>();
+			if (info == null) info = new PluginInfo();
 
-            if (string.IsNullOrWhiteSpace(info.Name))
-                info.Name = type.FullName;
+			// Fill info from the plugin's type/assembly
+			var assembly = type.Assembly;
 
-            if (string.IsNullOrWhiteSpace(info.Version) && !string.IsNullOrEmpty(assembly.Location))
-                info.Version = AssemblyName.GetAssemblyName(assembly.Location)?.Version?.ToString() ?? "";
+			if (string.IsNullOrWhiteSpace(info.Name))
+				info.Name = type.FullName;
 
-            //info.Version = assembly.GetCustomAttribute<AssemblyVersionAttribute>()?.Version ?? "";
+			if (string.IsNullOrWhiteSpace(info.Version) && !string.IsNullOrEmpty(assembly.Location))
+				info.Version = AssemblyName.GetAssemblyName(assembly.Location)?.Version?.ToString() ?? "";
 
-            if (string.IsNullOrWhiteSpace(info.Description))
-                info.Description = assembly.GetCustomAttribute<AssemblyDescriptionAttribute>()?.Description ?? "";
+			//info.Version = assembly.GetCustomAttribute<AssemblyVersionAttribute>()?.Version ?? "";
 
-            if (string.IsNullOrWhiteSpace(info.Author))
-                info.Author = assembly.GetCustomAttribute<AssemblyCompanyAttribute>()?.Company ?? "";
+			if (string.IsNullOrWhiteSpace(info.Description))
+				info.Description = assembly.GetCustomAttribute<AssemblyDescriptionAttribute>()?.Description ?? "";
 
-            return info;
-        }
+			if (string.IsNullOrWhiteSpace(info.Author))
+				info.Author = assembly.GetCustomAttribute<AssemblyCompanyAttribute>()?.Company ?? "";
 
-        #endregion
-    }
+			return info;
+		}
+
+		#endregion
+	}
 }

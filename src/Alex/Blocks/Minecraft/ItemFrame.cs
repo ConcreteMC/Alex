@@ -8,8 +8,8 @@ namespace Alex.Blocks.Minecraft
 	public class ItemFrame : Block
 	{
 		public static readonly PropertyBool MAP = new PropertyBool("map");
-		public bool HasMap => MAP.GetValue(BlockState);// BlockState.GetTypedValue(MAP);
-		
+		public bool HasMap => MAP.GetValue(BlockState); // BlockState.GetTypedValue(MAP);
+
 		public ItemFrame()
 		{
 			Transparent = true;
@@ -22,8 +22,10 @@ namespace Alex.Blocks.Minecraft
 			if (prop == "map")
 			{
 				stateProperty = MAP.WithValue(HasMap);
+
 				return true;
 			}
+
 			return base.TryGetStateProperty(prop, out stateProperty);
 		}
 	}

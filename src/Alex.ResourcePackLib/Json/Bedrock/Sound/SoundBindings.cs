@@ -7,31 +7,27 @@ namespace Alex.ResourcePackLib.Json.Bedrock.Sound
 {
 	public class SoundBindingsCollection
 	{
-		[JsonProperty("block_sounds")]
-		public Dictionary<string, SoundBinding> BlockSounds { get; set; }
-		
-		[JsonProperty("entity_sounds")]
-		public EntitySoundBindings EntitySounds { get; set; }
-		
+		[JsonProperty("block_sounds")] public Dictionary<string, SoundBinding> BlockSounds { get; set; }
+
+		[JsonProperty("entity_sounds")] public EntitySoundBindings EntitySounds { get; set; }
+
 		[JsonProperty("individual_event_sounds")]
 		public BindingBase IndividualEventSounds { get; set; }
-		
-		[JsonProperty("interactive_sounds")]
-		public InteractiveSoundMappings InteractiveSounds { get; set; }
+
+		[JsonProperty("interactive_sounds")] public InteractiveSoundMappings InteractiveSounds { get; set; }
 	}
 
 	public class EntitySoundBindings
 	{
-		[JsonProperty("defaults")]
-		public SoundBinding Defaults { get; set; }
+		[JsonProperty("defaults")] public SoundBinding Defaults { get; set; }
 
-		[JsonProperty("entities")]
-		public Dictionary<string, SoundBinding> Entities { get; set; }
+		[JsonProperty("entities")] public Dictionary<string, SoundBinding> Entities { get; set; }
 	}
-	
+
 	public partial class SoundBinding : BindingBase
 	{
-		[JsonProperty("pitch"), JsonConverter(typeof(SingleOrArrayConverter<double>))] public double[] Pitch { get; set; } = new double[] {1.0};
+		[JsonProperty("pitch"), JsonConverter(typeof(SingleOrArrayConverter<double>))]
+		public double[] Pitch { get; set; } = new double[] { 1.0 };
 
 		[JsonProperty("volume")] public double Volume { get; set; } = 1.0;
 	}
@@ -42,7 +38,7 @@ namespace Alex.ResourcePackLib.Json.Bedrock.Sound
 		[JsonProperty("sound")] public string Sound { get; set; } = null;
 
 		[JsonProperty("pitch"), JsonConverter(typeof(SingleOrArrayConverter<double>))]
-		public double[] Pitch { get; set; } = new double[] {1.0};
+		public double[] Pitch { get; set; } = new double[] { 1.0 };
 
 		[JsonProperty("volume")] public double Volume { get; set; } = 1.0;
 	}
@@ -54,10 +50,8 @@ namespace Alex.ResourcePackLib.Json.Bedrock.Sound
 
 	public class InteractiveSoundMappings
 	{
-		[JsonProperty("block_sounds")]
-		public Dictionary<string, SoundBinding> BlockSounds { get; set; }
-		
-		[JsonProperty("entity_sounds")]
-		public EntitySoundBindings EntitySounds { get; set; }
+		[JsonProperty("block_sounds")] public Dictionary<string, SoundBinding> BlockSounds { get; set; }
+
+		[JsonProperty("entity_sounds")] public EntitySoundBindings EntitySounds { get; set; }
 	}
 }

@@ -11,14 +11,16 @@ namespace Alex.Common.Utils
 			{
 				Directory.CreateDirectory(baseDir);
 			}
-			
+
 			string loggerConfigFile = Path.Combine(baseDir, "NLog.config");
+
 			if (!File.Exists(loggerConfigFile))
 			{
 				File.WriteAllText(loggerConfigFile, defaultConfiguration);
 			}
 
 			string logsDir = Path.Combine(baseDir, "logs");
+
 			if (!Directory.Exists(logsDir))
 			{
 				Directory.CreateDirectory(logsDir);

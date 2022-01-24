@@ -11,8 +11,8 @@ namespace Alex.Common.Utils.Vectors
 		{
 			X = Z = value;
 		}
-		
-		
+
+
 		public ChunkCoordinates(int x, int z)
 		{
 			X = x;
@@ -31,7 +31,7 @@ namespace Alex.Common.Utils.Vectors
 			X = coordinates.X >> 4;
 			Z = coordinates.Z >> 4;
 		}
-		
+
 		public ChunkCoordinates(Vector3 location)
 		{
 			X = ((int)Math.Floor(location.X)) >> 4;
@@ -62,8 +62,7 @@ namespace Alex.Common.Utils.Vectors
 		/// </summary>
 		public double DistanceTo(ChunkCoordinates other)
 		{
-			return Math.Sqrt(Square(other.X - X) +
-							 Square(other.Z - Z));
+			return Math.Sqrt(Square(other.X - X) + Square(other.Z - Z));
 		}
 
 		/// <summary>
@@ -84,18 +83,12 @@ namespace Alex.Common.Utils.Vectors
 
 		public static ChunkCoordinates Min(ChunkCoordinates value1, ChunkCoordinates value2)
 		{
-			return new ChunkCoordinates(
-				Math.Min(value1.X, value2.X),
-				Math.Min(value1.Z, value2.Z)
-			);
+			return new ChunkCoordinates(Math.Min(value1.X, value2.X), Math.Min(value1.Z, value2.Z));
 		}
 
 		public static ChunkCoordinates Max(ChunkCoordinates value1, ChunkCoordinates value2)
 		{
-			return new ChunkCoordinates(
-				Math.Max(value1.X, value2.X),
-				Math.Max(value1.Z, value2.Z)
-			);
+			return new ChunkCoordinates(Math.Max(value1.X, value2.X), Math.Max(value1.Z, value2.Z));
 		}
 
 		#endregion
@@ -124,9 +117,7 @@ namespace Alex.Common.Utils.Vectors
 
 		public static ChunkCoordinates operator -(ChunkCoordinates a)
 		{
-			return new ChunkCoordinates(
-				-a.X,
-				-a.Z);
+			return new ChunkCoordinates(-a.X, -a.Z);
 		}
 
 		public static ChunkCoordinates operator *(ChunkCoordinates a, ChunkCoordinates b)
@@ -141,7 +132,7 @@ namespace Alex.Common.Utils.Vectors
 
 		public static ChunkCoordinates operator %(ChunkCoordinates a, ChunkCoordinates b)
 		{
-			return new ChunkCoordinates(a.X % b.X,a.Z % b.Z);
+			return new ChunkCoordinates(a.X % b.X, a.Z % b.Z);
 		}
 
 		public static ChunkCoordinates operator +(ChunkCoordinates a, int b)
@@ -210,10 +201,10 @@ namespace Alex.Common.Utils.Vectors
 
 		public static readonly ChunkCoordinates Forward = new ChunkCoordinates(0, 1);
 		public static readonly ChunkCoordinates Backward = new ChunkCoordinates(0, -1);
-		
+
 		public static readonly ChunkCoordinates Left = new ChunkCoordinates(-1, 0);
 		public static readonly ChunkCoordinates Right = new ChunkCoordinates(1, 0);
-		
+
 		#endregion
 
 		public bool Equals(ChunkCoordinates other)
@@ -221,18 +212,18 @@ namespace Alex.Common.Utils.Vectors
 			return X == other.X && Z == other.Z;
 		}
 
-        public override bool Equals(object obj)
-        {
-            return obj is ChunkCoordinates coordinates && Equals(coordinates);
-        }
+		public override bool Equals(object obj)
+		{
+			return obj is ChunkCoordinates coordinates && Equals(coordinates);
+		}
 
-        /// <inheritdoc />
-        public override int GetHashCode()
-        {
-	        //var zHash = Z.GetHashCode();
+		/// <inheritdoc />
+		public override int GetHashCode()
+		{
+			//var zHash = Z.GetHashCode();
 
-	       // return X.GetHashCode() ^ (zHash >> 4) ^ (zHash << 28);
-	        return HashCode.Combine(X, Z);
-        }
-    }
+			// return X.GetHashCode() ^ (zHash >> 4) ^ (zHash << 28);
+			return HashCode.Combine(X, Z);
+		}
+	}
 }

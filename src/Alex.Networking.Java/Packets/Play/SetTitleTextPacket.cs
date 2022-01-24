@@ -5,7 +5,7 @@ namespace Alex.Networking.Java.Packets.Play
 	public class SetTitleTextPacket : Packet<SetTitleTextPacket>
 	{
 		public string Text { get; set; }
-		
+
 		/// <inheritdoc />
 		public override void Decode(MinecraftStream stream)
 		{

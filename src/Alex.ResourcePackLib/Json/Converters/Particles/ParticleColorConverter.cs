@@ -21,7 +21,7 @@ namespace Alex.ResourcePackLib.Json.Converters.Particles
 		{
 			_expression = expression;
 		}
-		
+
 		public ParticleColor(GradientColors gradientColors)
 		{
 			_gradientColors = gradientColors;
@@ -39,7 +39,7 @@ namespace Alex.ResourcePackLib.Json.Converters.Particles
 
 			if (_expression != null)
 				return new Color(_expression.Evaluate(runtime, new Vector4(1, 1, 1, 1f)));
-			
+
 			if (_gradientColors != null)
 				return _gradientColors.GetValue(runtime);
 
@@ -49,20 +49,19 @@ namespace Alex.ResourcePackLib.Json.Converters.Particles
 
 	public class GradientColors
 	{
-		[JsonProperty("gradient")]
-		public MoLangVector4Expression[] Gradient { get; set; }
-		
-		[JsonProperty("interpolant")]
-		public IExpression[] Interpolant { get; set; }
+		[JsonProperty("gradient")] public MoLangVector4Expression[] Gradient { get; set; }
+
+		[JsonProperty("interpolant")] public IExpression[] Interpolant { get; set; }
 
 		public Color GetValue(MoLangRuntime runtime)
 		{
-			return Color.White;;
+			return Color.White;
+			;
 			//var interpolationValue = runtime.Execute(Interpolant).AsDouble();
 			//return 
 		}
 	}
-	
+
 	public class ParticleColorConverter : JsonConverter<ParticleColor>
 	{
 		/// <inheritdoc />
@@ -85,7 +84,7 @@ namespace Alex.ResourcePackLib.Json.Converters.Particles
 
 			if (obj.Type == JTokenType.Object)
 			{
-				var gradientValue = ((JObject) obj).ToObject<GradientColors>(serializer);
+				var gradientValue = ((JObject)obj).ToObject<GradientColors>(serializer);
 
 				return new ParticleColor(gradientValue);
 			}

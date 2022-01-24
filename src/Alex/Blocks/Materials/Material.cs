@@ -10,154 +10,109 @@ namespace Alex.Blocks.Materials
 	{
 		public static readonly IMaterial Air = new MaterialTransparent(Utils.MapColor.Air);
 
-		public static readonly IMaterial Grass = new Material(Utils.MapColor.Grass)
-		   .WithTintType(TintType.Grass)
-		   .WithHardness(0.6f)
-		   .WithSoundCategory("grass");
+		public static readonly IMaterial Grass = new Material(Utils.MapColor.Grass).WithTintType(TintType.Grass)
+		   .WithHardness(0.6f).WithSoundCategory("grass");
 
-		public static readonly IMaterial Dirt = new Material(Utils.MapColor.Dirt)
-		   .WithHardness(0.5f);
+		public static readonly IMaterial Dirt = new Material(Utils.MapColor.Dirt).WithHardness(0.5f);
 
-		public static readonly IMaterial Wood = (new Material(Utils.MapColor.Wood))
-		   .SetFlammable()
-		   .WithHardness(2f)
+		public static readonly IMaterial Wood = (new Material(Utils.MapColor.Wood)).SetFlammable().WithHardness(2f)
 		   .WithSoundCategory("wood");
 
-		public static readonly IMaterial Wool = (new Material(Utils.MapColor.Cloth))
-		   .SetFlammable()
-		   .WithHardness(0.8f)
+		public static readonly IMaterial Wool = (new Material(Utils.MapColor.Cloth)).SetFlammable().WithHardness(0.8f)
 		   .WithSoundCategory("wool");
 
-		public static readonly IMaterial Stone = (new Material(Utils.MapColor.Stone))
-		   .SetRequiresTool()
-		   .SetRequiredTool(ItemType.PickAxe, ItemMaterial.AnyMaterial)
-		   .WithHardness(3f)
-		   .WithSoundCategory("normal");
+		public static readonly IMaterial Stone = (new Material(Utils.MapColor.Stone)).SetRequiresTool()
+		   .SetRequiredTool(ItemType.PickAxe, ItemMaterial.AnyMaterial).WithHardness(3f).WithSoundCategory("normal");
 
-		public static readonly IMaterial Ore = new Material(Utils.MapColor.Stone)
-		   .SetRequiresTool()
-		   .SetRequiredTool(ItemType.PickAxe, ItemMaterial.Any)
-		   .WithHardness(3);
+		public static readonly IMaterial Ore = new Material(Utils.MapColor.Stone).SetRequiresTool()
+		   .SetRequiredTool(ItemType.PickAxe, ItemMaterial.Any).WithHardness(3);
 
-		public static readonly IMaterial Metal = (new Material(Utils.MapColor.Iron))
-		   .SetRequiresTool()
-		   .WithHardness(5f)
+		public static readonly IMaterial Metal = (new Material(Utils.MapColor.Iron)).SetRequiresTool().WithHardness(5f)
 		   .WithSoundCategory("metal");
 
-		public static readonly IMaterial Anvil = (new Material(Utils.MapColor.Iron))
-		   .SetRequiresTool()
-		   .WithHardness(5f);
+		public static readonly IMaterial Anvil = (new Material(Utils.MapColor.Iron)).SetRequiresTool().WithHardness(5f);
 
-		public static readonly IMaterial Water = (new MaterialLiquid(Utils.MapColor.Water))
-		   .SetTranslucent()
+		public static readonly IMaterial Water = (new MaterialLiquid(Utils.MapColor.Water)).SetTranslucent()
 		   .WithTintType(TintType.Water, new Color(68, 175, 245));
 
 		public static readonly IMaterial Lava = (new MaterialLiquid(Utils.MapColor.Fire));
 
-		public static readonly IMaterial Leaves = (new Material(Utils.MapColor.Foliage))
-		   .WithTintType(TintType.Foliage)
-		   .SetFlammable()
-		   .WithHardness(0.2f);
+		public static readonly IMaterial Leaves = (new Material(Utils.MapColor.Foliage)).WithTintType(TintType.Foliage)
+		   .SetFlammable().WithHardness(0.2f);
 
 		public static readonly IMaterial Plants = (new MaterialLogic(Utils.MapColor.Foliage))
-		   .WithTintType(TintType.Foliage)
-		   .WithHardness(0.6f);
+		   .WithTintType(TintType.Foliage).WithHardness(0.6f);
 
 		public static readonly IMaterial Vine = (new MaterialLogic(Utils.MapColor.Foliage))
-		   .WithTintType(TintType.Foliage)
-		   .SetFlammable()
-		   .SetReplaceable()
-		   .WithHardness(0.2f);
+		   .WithTintType(TintType.Foliage).SetFlammable().SetReplaceable().WithHardness(0.2f);
 
 		public static readonly IMaterial Sponge = new Material(Utils.MapColor.Yellow);
-		public static readonly IMaterial Cloth = (new Material(Utils.MapColor.Cloth))
-		   .SetFlammable();
-		
+		public static readonly IMaterial Cloth = (new Material(Utils.MapColor.Cloth)).SetFlammable();
+
 		public static readonly IMaterial Fire = (new MaterialTransparent(Utils.MapColor.Fire));
 		public static readonly IMaterial Sand = new Material(Utils.MapColor.Sand);
-		public static readonly IMaterial Decoration = (new MaterialLogic(Utils.MapColor.Air))
-		   .WithHardness(0.2f);
+		public static readonly IMaterial Decoration = (new MaterialLogic(Utils.MapColor.Air)).WithHardness(0.2f);
 
-		public static readonly IMaterial Carpet = (new MaterialLogic(Utils.MapColor.Cloth))
-		   .SetFlammable()
+		public static readonly IMaterial Carpet = (new MaterialLogic(Utils.MapColor.Cloth)).SetFlammable()
 		   .WithHardness(0.1f);
 
-		public static readonly IMaterial Glass = (new Material(Utils.MapColor.Air))
-		   .SetTranslucent()
-		   .WithHardness(0.3f);
-		
+		public static readonly IMaterial Glass = (new Material(Utils.MapColor.Air)).SetTranslucent().WithHardness(0.3f);
+
 		public static readonly IMaterial RedstoneLight = (new Material(Utils.MapColor.Air));
-		public static readonly IMaterial Explosive = (new Material(Utils.MapColor.Fire))
-		   .SetFlammable();
-		
+		public static readonly IMaterial Explosive = (new Material(Utils.MapColor.Fire)).SetFlammable();
+
 		public static readonly IMaterial Coral = (new Material(Utils.MapColor.Foliage));
 
-		public static readonly IMaterial Ice = (new Material(Utils.MapColor.Ice))
-		   .SetTranslucent()
+		public static readonly IMaterial Ice = (new Material(Utils.MapColor.Ice)).SetTranslucent()
 		   .WithSlipperiness(0.98d);
 
 		public static readonly IMaterial BlueIce = (new Material(Utils.MapColor.Ice))
-		   .SetTranslucent()
-		   .WithSlipperiness(0.989d);
+		   .SetTranslucent().WithSlipperiness(0.989d);
 
-		public static readonly IMaterial PackedIce = (new Material(Utils.MapColor.Ice))
-		   .WithSlipperiness(0.989d);
+		public static readonly IMaterial PackedIce = (new Material(Utils.MapColor.Ice)).WithSlipperiness(0.989d);
 
-		public static readonly IMaterial Snow = (new MaterialLogic(Utils.MapColor.Snow))
-		   .SetReplaceable()
-		   .SetRequiresTool()
-		   .WithTintType(TintType.Color, Color.Snow);
+		public static readonly IMaterial Snow = (new MaterialLogic(Utils.MapColor.Snow)).SetReplaceable()
+		   .SetRequiresTool().WithTintType(TintType.Color, Color.Snow);
 
-		public static readonly IMaterial CraftedSnow = (new Material(Utils.MapColor.Snow))
-		   .SetRequiresTool();
-		
-		public static readonly IMaterial Cactus = (new Material(Utils.MapColor.Foliage))
-		   .WithHardness(0.4f);
-		
+		public static readonly IMaterial CraftedSnow = (new Material(Utils.MapColor.Snow)).SetRequiresTool();
+
+		public static readonly IMaterial Cactus = (new Material(Utils.MapColor.Foliage)).WithHardness(0.4f);
+
 		public static readonly IMaterial Clay = new Material(Utils.MapColor.Clay);
 		public static readonly IMaterial Gourd = (new Material(Utils.MapColor.Foliage));
 		public static readonly IMaterial DragonEgg = (new Material(Utils.MapColor.Foliage));
-		public static readonly IMaterial Portal = (new MaterialPortal(Utils.MapColor.Air))
-		   .SetTranslucent();
-		
+		public static readonly IMaterial Portal = (new MaterialPortal(Utils.MapColor.Air)).SetTranslucent();
+
 		public static readonly IMaterial Cake = (new Material(Utils.MapColor.Air));
-		public static readonly IMaterial Web = (new Material(Utils.MapColor.Cloth))
-		   .SetRequiresTool();
-		
+		public static readonly IMaterial Web = (new Material(Utils.MapColor.Cloth)).SetRequiresTool();
+
 		public static readonly IMaterial Piston = (new Material(Utils.MapColor.Stone));
-		public static readonly IMaterial Barrier = (new Material(Utils.MapColor.Air))
-		   .SetRequiresTool();
-		
+		public static readonly IMaterial Barrier = (new Material(Utils.MapColor.Air)).SetRequiresTool();
+
 		public static readonly IMaterial StructureVoid = new MaterialTransparent(Utils.MapColor.Air);
 
-		public static readonly IMaterial Slime = new Material(Utils.MapColor.Green)
-		   .SetTranslucent()
+		public static readonly IMaterial Slime = new Material(Utils.MapColor.Green).SetTranslucent()
 		   .WithSlipperiness(0.8d);
 
-		public static readonly IMaterial WaterPlant = new Material(Utils.MapColor.Water)
-		   .SetWaterLoggable();
+		public static readonly IMaterial WaterPlant = new Material(Utils.MapColor.Water).SetWaterLoggable();
 
 		public static readonly IMaterial ReplaceableWaterPlant =
-			new Material(Utils.MapColor.Water)
-			   .SetReplaceable()
-			   .SetWaterLoggable();
+			new Material(Utils.MapColor.Water).SetReplaceable().SetWaterLoggable();
 
-		public static readonly IMaterial Bamboo = new Material(Utils.MapColor.Brown)
-		   .SetFlammable();
+		public static readonly IMaterial Bamboo = new Material(Utils.MapColor.Brown).SetFlammable();
 
-		public static readonly IMaterial BambooSapling = new Material(Utils.MapColor.Brown)
-		   .SetFlammable()
+		public static readonly IMaterial BambooSapling = new Material(Utils.MapColor.Brown).SetFlammable()
 		   .SetCollisionBehavior(BlockCollisionBehavior.None);
 
 		public static readonly IMaterial BubbleColumn = new MaterialLiquid(Utils.MapColor.Water);
 
 		private ItemType _requiredTool = ItemType.Any;
 		private ItemMaterial _requiredMaterial = ItemMaterial.Any;
-		
+
 		public IMapColor MapColor { get; set; }
 		public TintType TintType { get; protected set; } = TintType.Default;
 		public Color TintColor { get; protected set; } = Color.White;
-		
+
 		public Material(IMapColor color)
 		{
 			MapColor = color;

@@ -14,7 +14,7 @@ namespace Alex.Utils.Threading
 			{
 				var previousState = _state;
 				_state = value;
-				
+
 				StateChanged?.Invoke(this, new TaskStateUpdatedEventArgs(previousState, value));
 			}
 		}
@@ -22,12 +22,13 @@ namespace Alex.Utils.Threading
 		public bool IsCancelled => State == TaskState.Cancelled;
 		public TimeSpan ExecutionTime => _executionStopwatch.Elapsed;
 		public TimeSpan TimeSinceCreation => DateTime.UtcNow - _enqueueTime;
-		
+
 		public object Tag { get; set; } = null;
 		public uint Identifier { get; } = 0;
-		
+
 		private Stopwatch _executionStopwatch = new Stopwatch();
 		private readonly Action _action;
+
 		public ManagedTask(uint identifier, Action action)
 		{
 			Identifier = identifier;
@@ -45,7 +46,7 @@ namespace Alex.Utils.Threading
 			_parameterizedTask = (t, s) => action(s);
 			Data = state;
 		}
-		
+
 		public ManagedTask(uint identifier, Action<ManagedTask, object> action, object state)
 		{
 			Identifier = identifier;
@@ -70,16 +71,17 @@ namespace Alex.Utils.Threading
 		{
 			if (State != TaskState.Enqueued)
 				return false;
-			
+
 			State = TaskState.Running;
 			_executionStopwatch.Start();
-			
+
 			try
 			{
 				if (_action != null)
 				{
 					_action?.Invoke();
-				}else if (_parameterizedTask != null)
+				}
+				else if (_parameterizedTask != null)
 				{
 					_parameterizedTask?.Invoke(this, Data);
 				}

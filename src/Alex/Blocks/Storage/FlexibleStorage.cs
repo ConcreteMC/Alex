@@ -14,10 +14,7 @@ namespace Alex.Blocks.Storage
 		private long _maxEntryValue;
 
 		public FlexibleStorage(int bitsPerEntry, int size) : this(
-			bitsPerEntry, new long[RoundUp(size * bitsPerEntry, 64) / 64])
-		{
-			
-		}
+			bitsPerEntry, new long[RoundUp(size * bitsPerEntry, 64) / 64]) { }
 
 		public FlexibleStorage(int bitsPerEntry, long[] data)
 		{
@@ -49,18 +46,21 @@ namespace Alex.Blocks.Storage
 
 				long value = (long)((ulong)_data[startIndex] >> i1);
 				int i2 = i1 + _bitsPerEntry;
+
 				// The value is divided over two long values
-				if (i2 > 64) {
+				if (i2 > 64)
+				{
 					value |= _data[++startIndex] << 64 - i1;
 				}
 
-				return (uint) (value & _maxEntryValue);
+				return (uint)(value & _maxEntryValue);
 			}
 			set
 			{
 				if (index < 0 || index > this._size - 1)
 				{
-					throw new IndexOutOfRangeException($"{index} falls outside of our current range (0 - {this._size - 1})");
+					throw new IndexOutOfRangeException(
+						$"{index} falls outside of our current range (0 - {this._size - 1})");
 				}
 
 				if (value > this._maxEntryValue)
@@ -72,17 +72,24 @@ namespace Alex.Blocks.Storage
 				int bitStartIndex = bitIndex >> 6;
 				int bitEndIndex = bitIndex & 0x3f;
 
-				_data[bitStartIndex] = this._data[bitStartIndex] & ~(this._maxEntryValue << bitEndIndex) | (value & _maxEntryValue) << bitEndIndex;
+				_data[bitStartIndex] = this._data[bitStartIndex] & ~(this._maxEntryValue << bitEndIndex)
+				                       | (value & _maxEntryValue) << bitEndIndex;
+
 				int bitSize = bitEndIndex + _bitsPerEntry;
+
 				// The value is divided over two long values
-				if (bitSize > 64) {
+				if (bitSize > 64)
+				{
 					bitStartIndex++;
-					_data[bitStartIndex] = _data[bitStartIndex] & ~((1L << bitSize - 64) - 1L) | value >> 64 - bitEndIndex;
+
+					_data[bitStartIndex] =
+						_data[bitStartIndex] & ~((1L << bitSize - 64) - 1L) | value >> 64 - bitEndIndex;
 				}
 			}
 		}
 
 		public int Length => _size - 1;
+
 		private static int RoundUp(int value, int roundTo)
 		{
 			if (roundTo == 0)
@@ -101,6 +108,7 @@ namespace Alex.Blocks.Storage
 				}
 
 				int remainder = value % roundTo;
+
 				return remainder == 0 ? value : value + roundTo - remainder;
 			}
 		}
@@ -108,8 +116,8 @@ namespace Alex.Blocks.Storage
 		/// <inheritdoc />
 		public void Dispose()
 		{
-		//	ArrayPool<long>.Shared.Return(_data, true);
-	//		_data = null;
+			//	ArrayPool<long>.Shared.Return(_data, true);
+			//		_data = null;
 		}
 	}
 }

@@ -12,13 +12,10 @@ namespace Alex.Entities.Passive
 			Width = 0.6;
 		}
 	}
-	
+
 	public class Villager : AbstractVillager
 	{
-		public Villager(World level) : base(level)
-		{
-			
-		}
+		public Villager(World level) : base(level) { }
 
 		/// <inheritdoc />
 		protected override void HandleJavaMeta(MetaDataEntry entry)

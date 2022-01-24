@@ -15,9 +15,9 @@ namespace Alex.Entities.Passive
 			set
 			{
 				_hasSaddle = value;
-				
+
 				InvokeControllerUpdate();
-			//	var modelRenderer = ModelRenderer;
+				//	var modelRenderer = ModelRenderer;
 
 				//if (modelRenderer != null)
 				//{

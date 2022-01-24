@@ -8,9 +8,9 @@ namespace Alex.Blocks.Minecraft
 		{
 			Solid = true;
 			Transparent = false;
-			
+
 			BlockMaterial = Material.Decoration.Clone().WithHardness(3.5f);
-			
+
 			CanInteract = true;
 		}
 	}

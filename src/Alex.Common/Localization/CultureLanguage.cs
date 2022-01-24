@@ -3,117 +3,118 @@ using System.Collections.Generic;
 
 namespace Alex.Common.Localization
 {
-    public class CultureLanguage
-    {
-        public string this[string key]
-        {
-            get { return GetString(key); }
-        }
+	public class CultureLanguage
+	{
+		public string this[string key]
+		{
+			get { return GetString(key); }
+		}
 
-        private readonly Dictionary<string, string> _translations = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+		private readonly Dictionary<string, string> _translations =
+			new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
 
-        public bool Loaded { get; private set; } = false;
-        public CultureLanguage()
-        {
-            
-        }
+		public bool Loaded { get; private set; } = false;
 
-        public void Load(IDictionary<string, string> translations)
-        {
-            //if (Loaded)
-             //   return;
-            
-            foreach (var translation in translations)
-            {
+		public CultureLanguage() { }
+
+		public void Load(IDictionary<string, string> translations)
+		{
+			//if (Loaded)
+			//   return;
+
+			foreach (var translation in translations)
+			{
 				if (_translations.ContainsKey(translation.Key)) continue;
-                _translations[translation.Key] = translation.Value;
-            }
+				_translations[translation.Key] = translation.Value;
+			}
 
-           // Loaded = true;
-        }
+			// Loaded = true;
+		}
 
-        public string GetString(string key)
-        {
-            if (_translations.TryGetValue(key, out var value))
-            {
-                return value;
-            }
+		public string GetString(string key)
+		{
+			if (_translations.TryGetValue(key, out var value))
+			{
+				return value;
+			}
 
-            return key;//$"[Translation={key}]";
-        }
+			return key; //$"[Translation={key}]";
+		}
 
-        private string _displayName = null;
-        public string DisplayName
-        {
-            get
-            {
-                if (_displayName != null)
-                    return _displayName;
-                
-                string name = GetString("language.name");
-                string region = GetString("language.region");
-                if (!string.IsNullOrWhiteSpace(region))
-                {
-                    return $"{name} ({region})";
-                }
+		private string _displayName = null;
 
-                return name;
-            }
-            set
-            {
-                _displayName = value;
-            }
-        }
+		public string DisplayName
+		{
+			get
+			{
+				if (_displayName != null)
+					return _displayName;
 
-        private string _name = null;
+				string name = GetString("language.name");
+				string region = GetString("language.region");
 
-        public string Name
-        {
-            get
-            {
-                if (_name == null)
-                    return GetString("language.name");
-                
-                return _name;
-            }
-            set
-            {
-                _name = value;
-            }
-        }
-        
-        private string _region = null;
+				if (!string.IsNullOrWhiteSpace(region))
+				{
+					return $"{name} ({region})";
+				}
 
-        public string Region
-        {
-            get
-            {
-                if (_region == null)
-                    return GetString("language.region");
-                
-                return _region;
-            }
-            set
-            {
-                _region = value;
-            }
-        }
+				return name;
+			}
+			set
+			{
+				_displayName = value;
+			}
+		}
 
-        private string _code = null;
+		private string _name = null;
 
-        public string Code
-        {
-            get
-            {
-                if (_code == null)
-                    return GetString("language.code");
+		public string Name
+		{
+			get
+			{
+				if (_name == null)
+					return GetString("language.name");
 
-                return _code;
-            }
-            set
-            {
-                _code = value;
-            }
-        }
-    }
+				return _name;
+			}
+			set
+			{
+				_name = value;
+			}
+		}
+
+		private string _region = null;
+
+		public string Region
+		{
+			get
+			{
+				if (_region == null)
+					return GetString("language.region");
+
+				return _region;
+			}
+			set
+			{
+				_region = value;
+			}
+		}
+
+		private string _code = null;
+
+		public string Code
+		{
+			get
+			{
+				if (_code == null)
+					return GetString("language.code");
+
+				return _code;
+			}
+			set
+			{
+				_code = value;
+			}
+		}
+	}
 }

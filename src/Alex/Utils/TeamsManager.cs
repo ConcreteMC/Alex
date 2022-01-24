@@ -7,11 +7,8 @@ namespace Alex.Utils
 	public class TeamsManager
 	{
 		private ConcurrentDictionary<string, Team> _teams = new ConcurrentDictionary<string, Team>();
-		
-		public TeamsManager()
-		{
-			
-		}
+
+		public TeamsManager() { }
 
 		public void AddOrUpdateTeam(string name, Team team)
 		{
@@ -43,6 +40,7 @@ namespace Alex.Utils
 			}
 
 			team = null;
+
 			return false;
 		}
 	}

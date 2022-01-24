@@ -8,7 +8,8 @@ namespace Alex.Utils
 	{
 		//private byte[] _data;
 
-		internal StreamingContentManager(IServiceProvider serviceProvider, string rootDirectory) : base(serviceProvider, rootDirectory)
+		internal StreamingContentManager(IServiceProvider serviceProvider, string rootDirectory) : base(
+			serviceProvider, rootDirectory)
 		{
 			//_data = data;
 		}

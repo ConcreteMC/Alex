@@ -3,27 +3,29 @@ using Microsoft.Xna.Framework;
 
 namespace Alex.Common.GameStates
 {
-    public interface IGameState
-    {
-        //string Identifier { get; set; }
-        StateBehavior StateBehavior { get; set; }
-        
-        IGameState ParentState { get; set; }
+	public interface IGameState
+	{
+		//string Identifier { get; set; }
+		StateBehavior StateBehavior { get; set; }
 
-        void Load(IRenderArgs args);
-        void Unload();
+		IGameState ParentState { get; set; }
 
-        void Draw(IRenderArgs args);
+		void Load(IRenderArgs args);
 
-        void Update(GameTime gameTime);
+		void Unload();
 
-        void Show();
-        void Hide();
-    }
+		void Draw(IRenderArgs args);
 
-    public enum StateBehavior
-    {
-        Referenced,
-        Unload
-    }
+		void Update(GameTime gameTime);
+
+		void Show();
+
+		void Hide();
+	}
+
+	public enum StateBehavior
+	{
+		Referenced,
+		Unload
+	}
 }

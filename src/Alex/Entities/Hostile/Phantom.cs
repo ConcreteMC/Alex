@@ -8,7 +8,7 @@ namespace Alex.Entities.Hostile
 	{
 		private const double BoundingWidth = 0.9;
 		private const double BoundingHeight = 0.5;
-		
+
 		private int _size;
 
 		public int Size
@@ -25,16 +25,16 @@ namespace Alex.Entities.Hostile
 				Width = BoundingWidth + 0.2 * value;
 				Height = BoundingHeight + 0.1 * value;
 
-				Scale = (float) (Width / BoundingWidth);
+				Scale = (float)(Width / BoundingWidth);
 			}
 		}
-		
+
 		/// <inheritdoc />
 		public Phantom(World level) : base(level)
 		{
 			IsAffectedByGravity = false;
 		}
-		
+
 		/// <inheritdoc />
 		protected override void HandleJavaMeta(MetaDataEntry entry)
 		{

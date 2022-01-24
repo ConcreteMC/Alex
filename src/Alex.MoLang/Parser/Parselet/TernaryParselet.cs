@@ -11,14 +11,20 @@ namespace Alex.MoLang.Parser.Parselet
 		/// <inheritdoc />
 		public override IExpression Parse(MoLangParser parser, Token token, IExpression leftExpr)
 		{
-			if (parser.MatchToken(TokenType.Colon)) {
+			if (parser.MatchToken(TokenType.Colon))
+			{
 				return new TernaryExpression(leftExpr, null, parser.ParseExpression(Precedence));
-			} else {
+			}
+			else
+			{
 				IExpression thenExpr = parser.ParseExpression(Precedence);
 
-				if (!parser.MatchToken(TokenType.Colon)) {
+				if (!parser.MatchToken(TokenType.Colon))
+				{
 					return new TernaryExpression(leftExpr, thenExpr, null);
-				} else {
+				}
+				else
+				{
 					return new TernaryExpression(leftExpr, thenExpr, parser.ParseExpression(Precedence));
 				}
 			}

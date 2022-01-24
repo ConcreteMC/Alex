@@ -31,7 +31,7 @@ namespace Alex.ResourcePackLib.Json.Converters.MoLang
 
 		public override void WriteJson(JsonWriter writer, object untypedValue, JsonSerializer serializer)
 		{
-			var value = (AnnoyingMolangElement) untypedValue;
+			var value = (AnnoyingMolangElement)untypedValue;
 
 			if (value.StringValue != null)
 			{

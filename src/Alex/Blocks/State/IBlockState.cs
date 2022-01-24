@@ -17,10 +17,16 @@ namespace Alex.Blocks.State
 		T GetTypedValue<T>(IStateProperty<T> property);
 
 		object GetValue(string property);
+
 		//IBlockState WithProperty(IStateProperty property, object value);
-		IBlockState WithProperty(string property, string value, bool prioritize = false, params string[] requiredMatches);
+		IBlockState WithProperty(string property,
+			string value,
+			bool prioritize = false,
+			params string[] requiredMatches);
+
 		//IBlockState WithProperty<T>(IStateProperty<T> property, T value);
 		IDictionary<string, string> ToDictionary();
+
 		IBlockState Clone();
 
 		//bool TryGetValue(IStateProperty property, out object value);

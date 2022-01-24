@@ -8,9 +8,11 @@ namespace Alex.Worlds.Singleplayer.Generators
 	public class EmptyWorldGenerator : IWorldGenerator
 	{
 		private ChunkColumn _sharedChunk;
+
 		public EmptyWorldGenerator()
 		{
-			_sharedChunk = new ChunkColumn(0,0);
+			_sharedChunk = new ChunkColumn(0, 0);
+
 			//_sharedChunk.IsAllAir = true;
 			for (int x = 0; x < ChunkColumn.ChunkWidth; x++)
 			{
@@ -18,7 +20,7 @@ namespace Alex.Worlds.Singleplayer.Generators
 				{
 					for (int y = 0; y < 256; y++)
 					{
-					//	_sharedChunk.SetBlockState(x, y, z, new Air());
+						//	_sharedChunk.SetBlockState(x, y, z, new Air());
 						_sharedChunk.SetSkyLight(x, y, z, 15);
 					}
 
@@ -37,9 +39,6 @@ namespace Alex.Worlds.Singleplayer.Generators
 			return Vector3.Zero;
 		}
 
-		public void Initialize()
-		{
-
-		}
+		public void Initialize() { }
 	}
 }

@@ -8,6 +8,7 @@ public class SinglePallete<TValue> : IPallete<TValue> where TValue : class, IHas
 	{
 		_value = value;
 	}
+
 	public uint GetId(TValue state)
 	{
 		return state.Id;
@@ -20,13 +21,10 @@ public class SinglePallete<TValue> : IPallete<TValue> where TValue : class, IHas
 
 	public TValue Get(uint id)
 	{
-		return _value;// BlockFactory.GetBlockState(id);
+		return _value; // BlockFactory.GetBlockState(id);
 	}
 
-	public void Put(TValue objectIn, uint intKey)
-	{
-            
-	}
+	public void Put(TValue objectIn, uint intKey) { }
 
 	/// <inheritdoc />
 	public void Dispose() { }

@@ -14,27 +14,36 @@ namespace Alex.ResourcePackLib.Json.Sound
 				case JsonToken.String:
 				case JsonToken.Date:
 					var stringValue = serializer.Deserialize<string>(reader);
+
 					return new SoundElement { Path = stringValue };
+
 				case JsonToken.StartObject:
 					var objectValue = serializer.Deserialize<SoundMetadata>(reader);
+
 					return new SoundElement { SoundMetadata = objectValue };
 			}
+
 			throw new Exception("Cannot unmarshal type SoundElement");
 		}
 
 		public override void WriteJson(JsonWriter writer, object untypedValue, JsonSerializer serializer)
 		{
 			var value = (SoundElement)untypedValue;
+
 			if (value.Path != null)
 			{
 				serializer.Serialize(writer, value.Path);
+
 				return;
 			}
+
 			if (value.SoundMetadata != null)
 			{
 				serializer.Serialize(writer, value.SoundMetadata);
+
 				return;
 			}
+
 			throw new Exception("Cannot marshal type SoundElement");
 		}
 

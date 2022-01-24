@@ -8,6 +8,7 @@ namespace Alex.Gui.Elements
 	{
 		private LoadingIndicator _loadingIndicator;
 		private TextElement _textElement;
+
 		public string Text
 		{
 			get
@@ -27,26 +28,23 @@ namespace Alex.Gui.Elements
 
 			var container = new StackContainer()
 			{
-				Anchor = Alignment.MiddleCenter,
-				Orientation = Orientation.Vertical
+				Anchor = Alignment.MiddleCenter, Orientation = Orientation.Vertical
 			};
-			
-			container.AddChild(_textElement = new TextElement("Authenticating...")
-			{
-				Anchor = Alignment.MiddleCenter
-			});
-			
-			container.AddChild(_loadingIndicator = new LoadingIndicator()
-			{
-				Anchor = Alignment.MiddleCenter,
-				Width = 300,
-				Height = 10,
-				ForegroundColor = Color.Red,
-				BackgroundColor = Color.Black,
-				Margin = new Thickness(30, 30),
-				Padding = new Thickness(0, 25, 0, 0)
-			});
-			
+
+			container.AddChild(_textElement = new TextElement("Authenticating...") { Anchor = Alignment.MiddleCenter });
+
+			container.AddChild(
+				_loadingIndicator = new LoadingIndicator()
+				{
+					Anchor = Alignment.MiddleCenter,
+					Width = 300,
+					Height = 10,
+					ForegroundColor = Color.Red,
+					BackgroundColor = Color.Black,
+					Margin = new Thickness(30, 30),
+					Padding = new Thickness(0, 25, 0, 0)
+				});
+
 			AddChild(container);
 		}
 

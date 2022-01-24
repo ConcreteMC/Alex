@@ -2,9 +2,6 @@ namespace Alex.Blocks.Minecraft.Slabs
 {
 	public class BrickSlab : Slab
 	{
-		public BrickSlab() : base()
-		{
-			
-		}
+		public BrickSlab() : base() { }
 	}
 }

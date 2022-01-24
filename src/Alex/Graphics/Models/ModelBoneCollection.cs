@@ -21,15 +21,17 @@ namespace Alex.Graphics.Models
 		private ObservableCollection<ModelBone> _items;
 
 		private ImmutableArray<ModelBone> _bones = new ImmutableArray<ModelBone>();
+
 		private object _boneLock = new object();
 		//public ModelBone[] Data => Items.
 
 		public EventHandler<NotifyCollectionChangedEventArgs> CollectionChanged;
+
 		public ModelBoneCollection(IList<ModelBone> list)
 		{
 			_items = new ObservableCollection<ModelBone>();
 			_items.CollectionChanged += ItemsChanged;
-			
+
 			foreach (var modelBone in list)
 				_items.Add(modelBone);
 		}
@@ -46,6 +48,7 @@ namespace Alex.Graphics.Models
 			if (e.Action == NotifyCollectionChangedAction.Add && e.NewItems != null)
 			{
 				int startIndex = e.NewStartingIndex;
+
 				foreach (ModelBone item in e.NewItems)
 				{
 					item.Index = startIndex++;
@@ -71,28 +74,28 @@ namespace Alex.Graphics.Models
 					}
 				}
 			}
-			
+
 			CollectionChanged?.Invoke(this, e);
 			//SetIndexes();
 		}
 
-		
+
 		internal void Add(ModelBone item)
 		{
-		//	lock (_boneLock)
+			//	lock (_boneLock)
 			{
 				_items.Add(item);
 			}
 		}
-		
+
 		internal void Remove(ModelBone item)
 		{
-		//	lock (_boneLock)
+			//	lock (_boneLock)
 			{
 				_items.Remove(item);
 			}
 		}
-		
+
 		/// <summary>
 		/// Retrieves a ModelBone from the collection, given the name of the bone.
 		/// </summary>
@@ -102,8 +105,10 @@ namespace Alex.Graphics.Models
 			get
 			{
 				ModelBone ret;
+
 				if (!TryGetValue(boneName, out ret))
 					throw new KeyNotFoundException();
+
 				return ret;
 			}
 		}
@@ -132,11 +137,13 @@ namespace Alex.Graphics.Models
 				if (string.Equals(bone.Name, boneName, StringComparison.OrdinalIgnoreCase))
 				{
 					value = bone;
+
 					return true;
 				}
 			}
 
 			value = null;
+
 			return false;
 		}
 
@@ -187,6 +194,7 @@ namespace Alex.Graphics.Models
 			public bool MoveNext()
 			{
 				_position++;
+
 				return (_position < _collection.Count);
 			}
 
@@ -195,9 +203,7 @@ namespace Alex.Graphics.Models
 			/// <summary>
 			/// Immediately releases the unmanaged resources used by this object.
 			/// </summary>
-			public void Dispose()
-			{
-			}
+			public void Dispose() { }
 
 			#endregion
 

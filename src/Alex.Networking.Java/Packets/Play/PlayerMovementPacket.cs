@@ -5,11 +5,12 @@ namespace Alex.Networking.Java.Packets.Play
 	public class PlayerMovementPacket : Packet<PlayerMovementPacket>
 	{
 		public bool OnGround { get; set; }
+
 		public PlayerMovementPacket()
 		{
 			PacketId = 0x14;
 		}
-		
+
 		/// <inheritdoc />
 		public override void Decode(MinecraftStream stream)
 		{

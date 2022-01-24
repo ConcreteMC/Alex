@@ -9,7 +9,7 @@ namespace Alex.Graphics.Models.Blocks
 		/// <inheritdoc />
 		public override IEnumerable<BoundingBox> GetBoundingBoxes(BlockState bs, Vector3 blockPos)
 		{
-			return new BoundingBox[] {new BoundingBox(blockPos, blockPos + Vector3.One)};
+			return new BoundingBox[] { new BoundingBox(blockPos, blockPos + Vector3.One) };
 		}
 	}
 }

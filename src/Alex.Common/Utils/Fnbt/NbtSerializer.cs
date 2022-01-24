@@ -8,7 +8,8 @@ namespace Alex.Common.Utils.Fnbt
 {
 	public static class NbtSerializer
 	{
-		private const BindingFlags MemberBindingFlags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.Instance;
+		private const BindingFlags MemberBindingFlags =
+			BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.Instance;
 
 		public static NbtCompound SerializeObject(object value)
 		{
@@ -31,10 +32,12 @@ namespace Alex.Common.Utils.Fnbt
 			{
 				normalValue = (NbtTag)normalValue.Clone();
 				normalValue.Name = name;
+
 				return normalValue;
 			}
 
 			var tag = CreateBaseTag(name, value);
+
 			if (tag != null) return tag;
 
 			if (value is IList list)
@@ -76,11 +79,13 @@ namespace Alex.Common.Utils.Fnbt
 		private static NbtTag SerializeMember(MemberInfo memberInfo, object value)
 		{
 			var attribute = GetAttribute(memberInfo);
+
 			if (attribute == null) return null;
 
 			if (attribute.HideDefault && value.Equals(GetDefaultValue(value))) return null;
 
 			string childName = attribute.Name ?? memberInfo.Name;
+
 			return SerializeChild(childName, value);
 		}
 
@@ -88,11 +93,9 @@ namespace Alex.Common.Utils.Fnbt
 		{
 			var type = value.GetType();
 
-			if (type == typeof(byte) || type == typeof(sbyte) ||
-				type == typeof(short) || type == typeof(ushort) ||
-				type == typeof(int) || type == typeof(uint) ||
-				type == typeof(long) || type == typeof(ulong) ||
-				type == typeof(double) || type == typeof(float))
+			if (type == typeof(byte) || type == typeof(sbyte) || type == typeof(short) || type == typeof(ushort)
+			    || type == typeof(int) || type == typeof(uint) || type == typeof(long) || type == typeof(ulong)
+			    || type == typeof(double) || type == typeof(float))
 				return 0;
 			else if (type == typeof(bool))
 				return false;
@@ -106,10 +109,12 @@ namespace Alex.Common.Utils.Fnbt
 			{
 				tag = (NbtTag)tag.Clone();
 				tag.Name = null;
+
 				return tag;
 			}
 
 			var value = GetValueFromTag(tag, type);
+
 			if (value != null) return value;
 
 			if (typeof(IList).IsAssignableFrom(type))
@@ -144,6 +149,7 @@ namespace Alex.Common.Utils.Fnbt
 				if (property.SetMethod == null)
 				{
 					FillObject(property.GetValue(value), property.PropertyType, child);
+
 					continue;
 				}
 
@@ -162,27 +168,32 @@ namespace Alex.Common.Utils.Fnbt
 			tag = null;
 
 			var attribute = GetAttribute(memberInfo);
+
 			if (attribute == null) return false;
 
 			string childName = attribute.Name ?? memberInfo.Name;
+
 			return compound.TryGet(childName, out tag);
 		}
 
 		private static void FillObject(object value, Type type, NbtTag tag)
 		{
 			var baseTypeValue = GetValueFromTag(tag, type);
+
 			if (baseTypeValue != null) return;
 
 			if (value is IList list)
 			{
 				list.Clear();
 				FillList(list, list.GetType(), (NbtList)tag);
+
 				return;
 			}
 			else if (value is IDictionary dictionary)
 			{
 				dictionary.Clear();
 				FillDictionary(dictionary, dictionary.GetType(), (NbtCompound)tag);
+
 				return;
 			}
 
@@ -229,26 +240,36 @@ namespace Alex.Common.Utils.Fnbt
 						return Convert.ToBoolean(value.Value);
 					else if (type == typeof(sbyte))
 						return (sbyte)value.Value;
+
 					return value.Value;
+
 				case NbtShort value:
 					if (type == typeof(ushort))
 						return (ushort)value.Value;
+
 					return value.Value;
+
 				case NbtInt value:
 					if (type == typeof(uint))
 						return (uint)value.Value;
+
 					return value.Value;
+
 				case NbtLong value:
 					if (type == typeof(ulong))
 						return (ulong)value.Value;
+
 					return value.Value;
-				case NbtDouble value: return value.Value;
-				case NbtFloat value: return value.Value;
-				case NbtString value: return value.Value;
+
+				case NbtDouble value:    return value.Value;
+				case NbtFloat value:     return value.Value;
+				case NbtString value:    return value.Value;
 				case NbtByteArray value: return value.Value;
-				case NbtIntArray value: return value.Value;
-				default: return null;
-			};
+				case NbtIntArray value:  return value.Value;
+				default:                 return null;
+			}
+
+			;
 		}
 
 		private static NbtList GetNbtList(string name, IList list)
@@ -271,6 +292,7 @@ namespace Alex.Common.Utils.Fnbt
 			var list = (IList)Activator.CreateInstance(type);
 
 			FillList(list, type, tag);
+
 			return list;
 		}
 
@@ -311,6 +333,7 @@ namespace Alex.Common.Utils.Fnbt
 			var dictionary = (IDictionary)Activator.CreateInstance(type);
 
 			FillDictionary(dictionary, type, tag);
+
 			return dictionary;
 		}
 

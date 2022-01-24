@@ -13,9 +13,10 @@ namespace Alex.Common.Utils.Vectors
 		public static double GetPitch(this Vector3 vector)
 		{
 			var distance = Math.Sqrt((vector.X * vector.X) + (vector.Z * vector.Z));
+
 			return ToDegrees(Math.Atan2(vector.Y, distance));
 		}
-		
+
 		public static float ToRadians(this float angle)
 		{
 			return (MathF.PI / 180.0F) * angle;
@@ -25,7 +26,7 @@ namespace Alex.Common.Utils.Vectors
 		{
 			return angle * (180.0f / MathF.PI);
 		}
-		
+
 		public static double ToRadians(this double angle)
 		{
 			return (Math.PI / 180.0D) * angle;

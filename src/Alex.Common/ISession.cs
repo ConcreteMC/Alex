@@ -9,7 +9,7 @@ namespace Alex.Common
 		string? UUID { get; set; }
 		string? ClientToken { get; set; }
 		string RefreshToken { get; set; }
-		
+
 		public DateTime? ExpiryTime { get; set; }
 	}
 }

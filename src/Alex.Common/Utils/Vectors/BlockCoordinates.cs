@@ -42,9 +42,7 @@ namespace Alex.Common.Utils.Vectors
 		/// </summary>
 		public double DistanceTo(BlockCoordinates other)
 		{
-			return Math.Sqrt(Square(other.X - X) +
-							 Square(other.Y - Y) +
-							 Square(other.Z - Z));
+			return Math.Sqrt(Square(other.X - X) + Square(other.Y - Y) + Square(other.Z - Z));
 		}
 
 		/// <summary>
@@ -57,11 +55,7 @@ namespace Alex.Common.Utils.Vectors
 
 		public BlockCoordinates Abs()
 		{
-			return new BlockCoordinates(
-				Math.Abs(X),
-				Math.Abs(Y),
-				Math.Abs(Z)
-				);
+			return new BlockCoordinates(Math.Abs(X), Math.Abs(Y), Math.Abs(Z));
 		}
 
 		/// <summary>
@@ -76,20 +70,14 @@ namespace Alex.Common.Utils.Vectors
 		public static BlockCoordinates Min(BlockCoordinates value1, BlockCoordinates value2)
 		{
 			return new BlockCoordinates(
-				Math.Min(value1.X, value2.X),
-				Math.Min(value1.Y, value2.Y),
-				Math.Min(value1.Z, value2.Z)
-				);
+				Math.Min(value1.X, value2.X), Math.Min(value1.Y, value2.Y), Math.Min(value1.Z, value2.Z));
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static BlockCoordinates Max(BlockCoordinates value1, BlockCoordinates value2)
 		{
 			return new BlockCoordinates(
-				Math.Max(value1.X, value2.X),
-				Math.Max(value1.Y, value2.Y),
-				Math.Max(value1.Z, value2.Z)
-				);
+				Math.Max(value1.X, value2.X), Math.Max(value1.Y, value2.Y), Math.Max(value1.Z, value2.Z));
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -108,31 +96,31 @@ namespace Alex.Common.Utils.Vectors
 		{
 			return new BlockCoordinates(a.X + b.X, a.Y + b.Y, a.Z + b.Z);
 		}
-		
+
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static BlockCoordinates operator -(BlockCoordinates a, BlockCoordinates b)
 		{
 			return new BlockCoordinates(a.X - b.X, a.Y - b.Y, a.Z - b.Z);
 		}
-		
+
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static BlockCoordinates operator -(BlockCoordinates a)
 		{
 			return new BlockCoordinates(-a.X, -a.Y, -a.Z);
 		}
-		
+
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static BlockCoordinates operator *(BlockCoordinates a, BlockCoordinates b)
 		{
 			return new BlockCoordinates(a.X * b.X, a.Y * b.Y, a.Z * b.Z);
 		}
-		
+
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static BlockCoordinates operator /(BlockCoordinates a, BlockCoordinates b)
 		{
 			return new BlockCoordinates(a.X / b.X, a.Y / b.Y, a.Z / b.Z);
 		}
-		
+
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static BlockCoordinates operator %(BlockCoordinates a, BlockCoordinates b)
 		{
@@ -144,7 +132,7 @@ namespace Alex.Common.Utils.Vectors
 		{
 			return new BlockCoordinates(a.X + b, a.Y + b, a.Z + b);
 		}
-		
+
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static BlockCoordinates operator -(BlockCoordinates a, int b)
 		{
@@ -174,19 +162,19 @@ namespace Alex.Common.Utils.Vectors
 		{
 			return new BlockCoordinates(a + b.X, a + b.Y, a + b.Z);
 		}
-		
+
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static BlockCoordinates operator -(int a, BlockCoordinates b)
 		{
 			return new BlockCoordinates(a - b.X, a - b.Y, a - b.Z);
 		}
-		
+
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static BlockCoordinates operator *(int a, BlockCoordinates b)
 		{
 			return new BlockCoordinates(a * b.X, a * b.Y, a * b.Z);
 		}
-		
+
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static BlockCoordinates operator /(int a, BlockCoordinates b)
 		{
@@ -227,27 +215,27 @@ namespace Alex.Common.Utils.Vectors
 		///		Returns a <see cref="BlockCoordinates"/> with components 0, 1, 0
 		/// </summary>
 		public static readonly BlockCoordinates Up = new BlockCoordinates(0, 1, 0);
-		
+
 		/// <summary>
 		///		Returns a <see cref="BlockCoordinates"/> with components 0, -1, 0
 		/// </summary>
 		public static readonly BlockCoordinates Down = new BlockCoordinates(0, -1, 0);
-		
+
 		/// <summary>
 		///		Returns a <see cref="BlockCoordinates"/> with components -1, 0, 0
 		/// </summary>
 		public static readonly BlockCoordinates Left = new BlockCoordinates(-1, 0, 0);
-		
+
 		/// <summary>
 		///		Returns a <see cref="BlockCoordinates"/> with components 1, 0, 0
 		/// </summary>
 		public static readonly BlockCoordinates Right = new BlockCoordinates(1, 0, 0);
-		
+
 		/// <summary>
 		///		Returns a <see cref="BlockCoordinates"/> with components 0, 0, -1
 		/// </summary>
 		public static readonly BlockCoordinates Backwards = new BlockCoordinates(0, 0, -1);
-		
+
 		/// <summary>
 		///		Returns a <see cref="BlockCoordinates"/> with components 0, 0, 1
 		/// </summary>
@@ -257,17 +245,17 @@ namespace Alex.Common.Utils.Vectors
 		///		Returns a <see cref="BlockCoordinates"/> with components 1, 0, 0
 		/// </summary>
 		public static readonly BlockCoordinates East = new BlockCoordinates(1, 0, 0);
-		
+
 		/// <summary>
 		///		Returns a <see cref="BlockCoordinates"/> with components -1, 0, 0
 		/// </summary>
 		public static readonly BlockCoordinates West = new BlockCoordinates(-1, 0, 0);
-		
+
 		/// <summary>
 		///		Returns a <see cref="BlockCoordinates"/> with components 0, 0, -1
 		/// </summary>
 		public static readonly BlockCoordinates North = new BlockCoordinates(0, 0, -1);
-		
+
 		/// <summary>
 		///		Returns a <see cref="BlockCoordinates"/> with components 0, 0, 1
 		/// </summary>
@@ -276,18 +264,18 @@ namespace Alex.Common.Utils.Vectors
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public bool Equals(BlockCoordinates other)
 		{
-			return X.Equals(other.X)&& Y.Equals(other.Y) & Z.Equals(other.Z);
+			return X.Equals(other.X) && Y.Equals(other.Y) & Z.Equals(other.Z);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public override bool Equals(object obj)
 		{
 			if (ReferenceEquals(null, obj)) return false;
+
 			return obj is BlockCoordinates coordinates && Equals(coordinates);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-
 		public override int GetHashCode()
 		{
 			var yHash = Y.GetHashCode();
@@ -330,7 +318,7 @@ namespace Alex.Common.Utils.Vectors
 		{
 			return this + Backwards;
 		}
-		
+
 		public BlockCoordinates BlockWest()
 		{
 			return this + West;

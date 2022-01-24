@@ -4,11 +4,8 @@ namespace Alex.Entities
 {
 	public class PlayerSkinFlags
 	{
-		public static PlayerSkinFlags Default => new PlayerSkinFlags()
-		{
-			Value = byte.MaxValue
-		};
-		
+		public static PlayerSkinFlags Default => new PlayerSkinFlags() { Value = byte.MaxValue };
+
 		public byte Value { get; set; } = 0;
 
 		public bool CapeEnabled

@@ -15,6 +15,7 @@ namespace Alex.Graphics.Models.Entity.Animations
 	public interface IAnimation
 	{
 		void Tick();
+
 		void UpdateBindings(ModelRenderer renderer);
 	}
 
@@ -24,7 +25,7 @@ namespace Alex.Graphics.Models.Entity.Animations
 		private readonly AnimationComponent _parent;
 		private readonly Animation _definition;
 		private bool _loop;
-		
+
 		public EntityAnimation(AnimationComponent parent, Animation definition, string name)
 		{
 			_parent = parent;
@@ -57,11 +58,12 @@ namespace Alex.Graphics.Models.Entity.Animations
 		private BoneComp[] _components;
 
 		private Stopwatch _elapsedTimer = new Stopwatch();
+
 		public void Tick()
 		{
 			if (!Playing)
 				return;
-			
+
 			try
 			{
 				var entity = _parent.Entity;
@@ -76,22 +78,25 @@ namespace Alex.Graphics.Models.Entity.Animations
 				}
 
 				_animationTime = entity.AnimationTime = animTimeUpdate;
-				
+
 				foreach (var bone in _components)
 				{
 					if (bone == null || bone.Bone == null) continue;
-					
-					bone.Tick(_parent.Runtime, _elapsedTimer.Elapsed.TotalSeconds, _animationTime, anim.OverridePreviousAnimation);
+
+					bone.Tick(
+						_parent.Runtime, _elapsedTimer.Elapsed.TotalSeconds, _animationTime,
+						anim.OverridePreviousAnimation);
 				}
 			}
 			finally
 			{
 				_elapsedTimer.Restart();
 			}
-			
+
 			if (_animationLength > 0 && _animationTime >= _animationLength)
 			{
 				Stop();
+
 				if (_loop)
 				{
 					Play();
@@ -120,7 +125,7 @@ namespace Alex.Graphics.Models.Entity.Animations
 			{
 				bone.Start();
 			}
-			
+
 			Playing = true;
 			_animationTime = 0d;
 			_elapsedTimer.Restart();
@@ -135,6 +140,7 @@ namespace Alex.Graphics.Models.Entity.Animations
 					bone.Stop();
 				}
 			}
+
 			Playing = false;
 			_animationTime = 0d;
 			_elapsedTimer.Stop();
@@ -160,10 +166,11 @@ namespace Alex.Graphics.Models.Entity.Animations
 		private Vector3 _startRotation = Vector3.Zero;
 		private Vector3 _startPosition = Vector3.Zero;
 		private Vector3 _startScale = Vector3.Zero;
+
 		public void Start()
 		{
 			if (_started) return;
-			
+
 			var bone = Bone;
 
 			if (bone == null)
@@ -180,7 +187,7 @@ namespace Alex.Graphics.Models.Entity.Animations
 		{
 			if (!_started)
 				return;
-			
+
 			var bone = Bone;
 
 			if (bone == null)
@@ -192,10 +199,10 @@ namespace Alex.Graphics.Models.Entity.Animations
 			bone.Rotation = _startRotation;
 			bone.Position = _startPosition;
 			bone.Scale = _startScale;
-			
+
 			_started = false;
 		}
-		
+
 		public void Tick(MoLangRuntime runtime, double elapsedTime, double animationTime, bool overrideOthers)
 		{
 			var bone = Bone;
@@ -207,7 +214,8 @@ namespace Alex.Graphics.Models.Entity.Animations
 
 			if (value.Rotation != null)
 			{
-				var targetRotation = value.Rotation.Evaluate(runtime, Vector3.Zero, _animation.AnimationLength, animationTime, true);
+				var targetRotation = value.Rotation.Evaluate(
+					runtime, Vector3.Zero, _animation.AnimationLength, animationTime, true);
 
 				bone.RotateOverTime(targetRotation, elapsedTime, overrideOthers);
 			}
@@ -215,10 +223,10 @@ namespace Alex.Graphics.Models.Entity.Animations
 
 			if (value.Position != null)
 			{
-				var targetPosition = value.Position.Evaluate(runtime, Vector3.Zero, _animation.AnimationLength, animationTime);
+				var targetPosition = value.Position.Evaluate(
+					runtime, Vector3.Zero, _animation.AnimationLength, animationTime);
 
-				bone.TranslateOverTime(
-					targetPosition, elapsedTime, overrideOthers);
+				bone.TranslateOverTime(targetPosition, elapsedTime, overrideOthers);
 			}
 
 			if (value.Scale != null)
@@ -227,13 +235,13 @@ namespace Alex.Graphics.Models.Entity.Animations
 
 				if (targetScale.X < 0.001d)
 					targetScale.X = 0;
-				
+
 				if (targetScale.Y < 0.001d)
 					targetScale.Y = 0;
-				
+
 				if (targetScale.Z < 0.001d)
 					targetScale.Z = 0;
-				
+
 				bone.ScaleOverTime(targetScale, elapsedTime, true);
 			}
 		}

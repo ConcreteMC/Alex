@@ -16,27 +16,36 @@ namespace Alex.Entities.Passive
 		public void SetVariant(int variant)
 		{
 			var texture = "creamy";
+
 			switch (variant)
 			{
 				case 0:
 					texture = "creamy";
+
 					break;
+
 				case 1:
 					texture = "white";
+
 					break;
+
 				case 2:
 					texture = "brown";
+
 					break;
+
 				case 3:
 					texture = "gray";
+
 					break;
+
 				default:
 					return;
 			}
 
 			//TryUpdateTexture("minecraft:llama", texture);
 		}
-		
+
 		/// <inheritdoc />
 		protected override void HandleJavaMeta(MetaDataEntry entry)
 		{

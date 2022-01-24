@@ -2,8 +2,8 @@ namespace Alex.Common.Entities.Properties
 {
 	public class Modifier
 	{
-		public MiNET.Utils.UUID         Uuid;
-		public double       Amount;
+		public MiNET.Utils.UUID Uuid;
+		public double Amount;
 		public ModifierMode Operation;
 
 		public Modifier() { }

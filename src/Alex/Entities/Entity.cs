@@ -56,9 +56,9 @@ namespace Alex.Entities
 	public class Entity : MoLangEnvironment
 	{
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(Entity));
-		
+
 		internal EntityDescription Description { get; set; } = null;
-		
+
 		public ResourceLocation Type { get; set; } = null;
 		private ModelRenderer _modelRenderer;
 
@@ -99,14 +99,14 @@ namespace Alex.Entities
 				}
 			}
 		}
-		
+
 		public MovementComponent Movement { get; }
 		public World Level { get; set; }
 
 		public long EntityId { get; internal set; } = -1;
 		public bool IsSpawned { get; set; } = false;
 
-		private        PlayerLocation _knownPosition = new PlayerLocation();
+		private PlayerLocation _knownPosition = new PlayerLocation();
 
 		public virtual PlayerLocation KnownPosition
 		{
@@ -123,8 +123,8 @@ namespace Alex.Entities
 
 		internal virtual PlayerLocation RenderLocation { get; set; }
 
-		public float   Slipperines { get; set; } = 0.6f;
-		public Vector3 Velocity    { get; set; } = Vector3.Zero;
+		public float Slipperines { get; set; } = 0.6f;
+		public Vector3 Velocity { get; set; } = Vector3.Zero;
 
 		//public HealthManager HealthManager { get; set; }
 		public string NameTag
@@ -138,13 +138,15 @@ namespace Alex.Entities
 		}
 
 		private string[] _nameTagLines = null;
+
 		internal string[] NameTagLines
 		{
 			get
 			{
 				if (_nameTagLines == null && _nameTag != null)
 				{
-					_nameTagLines = _nameTag.Split('\n').Where(x => !string.IsNullOrWhiteSpace(x)).Reverse().Select(x => x.Trim()).ToArray();
+					_nameTagLines = _nameTag.Split('\n').Where(x => !string.IsNullOrWhiteSpace(x)).Reverse()
+					   .Select(x => x.Trim()).ToArray();
 				}
 
 				return _nameTagLines;
@@ -157,28 +159,26 @@ namespace Alex.Entities
 			set
 			{
 				_noAi = value;
-				
+
 				if (_noAi)
 					Velocity = Vector3.Zero;
 			}
 		}
 
 		public bool HideNameTag { get; set; } = false;
-		
-		public bool HeadInBlock  { get; set; } = false;
-		public bool AboveWater   { get; set; } = false;
-		public bool HeadInWater  { get; set; } = false;
-		public bool FeetInWater  { get; set; } = false;
-		
-		[MoProperty("is_in_water")]
-		public bool IsInWater    { get; set; } = false;
 
-		[MoProperty("is_in_water_or_rain")]
-		public bool IsInWaterOrRain => IsInWater || Level.Raining;
-		
-		public bool HeadInLava  { get; set; } = false;
-		public bool FeetInLava  { get; set; } = false;
-		public bool IsInLava     { get; set; } = false;
+		public bool HeadInBlock { get; set; } = false;
+		public bool AboveWater { get; set; } = false;
+		public bool HeadInWater { get; set; } = false;
+		public bool FeetInWater { get; set; } = false;
+
+		[MoProperty("is_in_water")] public bool IsInWater { get; set; } = false;
+
+		[MoProperty("is_in_water_or_rain")] public bool IsInWaterOrRain => IsInWater || Level.Raining;
+
+		public bool HeadInLava { get; set; } = false;
+		public bool FeetInLava { get; set; } = false;
+		public bool IsInLava { get; set; } = false;
 		public bool IsOutOfWater => !IsInWater;
 		public bool Invulnerable { get; set; } = false;
 
@@ -187,7 +187,7 @@ namespace Alex.Entities
 		private float _scale = 1f;
 
 		[MoProperty("model_scale")] public float ModelScale { get; set; } = 1f;
-		
+
 		public float Scale
 		{
 			get
@@ -200,18 +200,18 @@ namespace Alex.Entities
 				ScaleChanged();
 			}
 		}
+
 		public double Height { get; set; } = 1;
-		public double Width  { get; set; } = 1;
-		
-		public double Drag   { get; set; } = 0.02f;// 8f;
+		public double Width { get; set; } = 1;
+
+		public double Drag { get; set; } = 0.02f; // 8f;
 
 		public double Gravity { get; set; } = 0.08f; //16.8f; //9.81f; //1.6f;
 		//Drag & gravity etc is Vanilla * 400
-		
+
 		public MiNET.Utils.UUID UUID { get; set; }
 
-		[MoProperty("can_fly")]
-		public bool CanFly { get; set; } = false;
+		[MoProperty("can_fly")] public bool CanFly { get; set; } = false;
 		public bool IsFlying { get; set; } = false;
 
 		private bool _isRendered = false;
@@ -219,7 +219,7 @@ namespace Alex.Entities
 		public bool IsWorldImmutable { get; set; } = false;
 		public bool IsNoPvP { get; set; } = true;
 		public bool IsNoPvM { get; set; } = true;
-		
+
 		[MoProperty("is_on_screen")]
 		public bool IsRendered
 		{
@@ -238,9 +238,9 @@ namespace Alex.Entities
 				}
 			}
 		}
-		
+
 		//public Color? EntityColor { get; set; } = null;
-		
+
 		public Inventory Inventory { get; protected set; }
 
 		public IItemRenderer ItemRenderer
@@ -255,9 +255,9 @@ namespace Alex.Entities
 			}
 		}
 
-		public  HealthManager HealthManager { get; }
-		
-		private bool          _isFirstPersonMode = false;
+		public HealthManager HealthManager { get; }
+
+		private bool _isFirstPersonMode = false;
 
 		public bool IsFirstPersonMode
 		{
@@ -277,66 +277,64 @@ namespace Alex.Entities
 			}
 		}
 
-		private Dictionary<string, EntityProperty> _entityProperties = new Dictionary<string, EntityProperty>()
-		{
-			
-		};
+		private Dictionary<string, EntityProperty> _entityProperties = new Dictionary<string, EntityProperty>() { };
 
 		public IReadOnlyDictionary<string, EntityProperty> EntityProperties
 		{
 			get => _entityProperties;
 			//set => _entityProperties = value;
 		}
-		
+
 		public AnimationComponent AnimationController { get; }
 		public TimeSpan LifeTime => DateTime.UtcNow - _timeOfCreation;
 		private readonly DateTime _timeOfCreation;
 		private Stopwatch _lifeTime;
 
 		public float Experience { get; set; } = 0;
-		public float ExperienceLevel { get; set; } = 0; 
+		public float ExperienceLevel { get; set; } = 0;
 		protected Stack<IEntityComponent> EntityComponents { get; }
 		public EffectManagerComponent Effects { get; }
+
 		public Entity(World level)
 		{
 			Structs.Add("query", new ObjectStruct(this));
-			
+
 			_timeOfCreation = DateTime.UtcNow;
 			EntityComponents = new Stack<IEntityComponent>();
-			
-			_lifeTime = Stopwatch.StartNew();
-			
-			EntityId = -1;
-            Level = level;
-            KnownPosition = new PlayerLocation();
-            RenderLocation = new PlayerLocation();
-            //Inventory = new Inventory(46);
-            SetInventory(new Inventory(46));
-            //	HealthManager = new HealthManager(this);
 
-            HideNameTag = false;
+			_lifeTime = Stopwatch.StartNew();
+
+			EntityId = -1;
+			Level = level;
+			KnownPosition = new PlayerLocation();
+			RenderLocation = new PlayerLocation();
+			//Inventory = new Inventory(46);
+			SetInventory(new Inventory(46));
+			//	HealthManager = new HealthManager(this);
+
+			HideNameTag = false;
 			//ServerEntity = true;
 			IsAffectedByGravity = true;
 			//HasPhysics = true;
-			
+
 			HealthManager = new HealthManager(this);
 			EntityComponents.Push(HealthManager);
-			
+
 			UUID = new MiNET.Utils.UUID(Guid.NewGuid().ToByteArray());
-			
+
 			//BaseMovementSpeed = 4.317D;
-			
+
 			AddOrUpdateProperty(new FlyingSpeedProperty(this));
 			AddOrUpdateProperty(new MovementSpeedProperty(this));
 			AddOrUpdateProperty(new AttackSpeedProperty(this));
-			
+
 			Movement = new MovementComponent(this);
 			EntityComponents.Push(Movement);
 			AnimationController = new AnimationComponent(this);
 			//EntityComponents.Push(Movement = new EntityMovement(this));
 			EntityComponents.Push(AnimationController);
 			EntityComponents.Push(Effects = new EffectManagerComponent(this));
-			
+
 			//Effect = new EntityEffect();
 			//Effect.Texture = _texture;
 			//Effect.VertexColorEnabled = true;
@@ -355,7 +353,7 @@ namespace Alex.Entities
 				_entityProperties[Networking.Java.Packets.Play.EntityProperties.FlyingSpeed].Value = value;
 			}
 		}
-		
+
 		//private double
 		public double MovementSpeed
 		{
@@ -397,7 +395,7 @@ namespace Alex.Entities
 				{
 					_entityProperties[property.Key].ApplyModifier(modifier.Value);
 				}*/
-			//	_entityProperties[property.Key].ApplyModifier();
+				//	_entityProperties[property.Key].ApplyModifier();
 			}
 			else
 			{
@@ -414,11 +412,12 @@ namespace Alex.Entities
 
 			//if (IsSneaking)
 			//	modifier *= 0.29997683577f;
-			
+
 			return (modifier);
 		}
 
 		private bool _skipRendering = false;
+
 		private void ScaleChanged()
 		{
 			var modelRenderer = ModelRenderer;
@@ -429,7 +428,7 @@ namespace Alex.Entities
 
 				if (root != null)
 					root.BaseScale = Vector3.One * _scale;
-					
+
 				if (_scale <= 0.01f)
 				{
 					_skipRendering = true;
@@ -442,6 +441,7 @@ namespace Alex.Entities
 		}
 
 		public EventHandler<Inventory> OnInventoryChanged;
+
 		public void SetInventory(Inventory inventory)
 		{
 			var oldInventory = Inventory;
@@ -454,18 +454,17 @@ namespace Alex.Entities
 
 			Inventory = inventory;
 			//	HealthManager = new HealthManager(this);
-			
+
 			Inventory.SlotChanged += OnInventorySlotChanged;
 			Inventory.SelectedHotbarSlotChanged += InventoryOnSelectedHotbarSlotChanged;
 
 			OnInventoryChanged?.Invoke(this, inventory);
-			
+
 			CheckHeldItem();
 		}
 
 		private void CheckHeldItem()
 		{
-
 			if (_isUsingItem && Inventory.SelectedSlot != _usingSlot)
 			{
 				IsUsingItem = false;
@@ -473,8 +472,7 @@ namespace Alex.Entities
 
 			var inHand = Inventory.MainHand;
 
-			if ((inHand == null || inHand.IsAir()) && ItemRenderer != null
-			                                                            && ModelRenderer != null)
+			if ((inHand == null || inHand.IsAir()) && ItemRenderer != null && ModelRenderer != null)
 			{
 				ItemRenderer = null;
 
@@ -509,51 +507,50 @@ namespace Alex.Entities
 		}
 
 		protected virtual ModelBone GetPrimaryArm()
-        {
-	        var modelRenderer = ModelRenderer;
+		{
+			var modelRenderer = ModelRenderer;
 
-	        if (modelRenderer == null)
-		        return null;
-	        
-	        ModelBone arm = null;
+			if (modelRenderer == null)
+				return null;
 
-	        if (modelRenderer.GetBone("rightItem", out arm) 
-	            || modelRenderer.GetBone("leftItem", out arm))
-	        {
-		        return arm;
-	        }
+			ModelBone arm = null;
 
-	        return null;
-        }
+			if (modelRenderer.GetBone("rightItem", out arm) || modelRenderer.GetBone("leftItem", out arm))
+			{
+				return arm;
+			}
 
-        protected virtual void UpdateItemPosition(IItemRenderer oldValue, IItemRenderer renderer)
-        {
-	        //ModelBone arm = GetPrimaryArm();
-	        
-	        if (oldValue != renderer)
-	        {
-		        if (oldValue != null)
-		        {
-			        //oldValue.Dispose();
-			        //arm?.Remove(oldValue);
-		        }
-	        }
+			return null;
+		}
 
-	        if (renderer?.Model == null)
-		        return;
+		protected virtual void UpdateItemPosition(IItemRenderer oldValue, IItemRenderer renderer)
+		{
+			//ModelBone arm = GetPrimaryArm();
 
-	        renderer.DisplayPosition = DisplayPosition.ThirdPersonRightHand;
+			if (oldValue != renderer)
+			{
+				if (oldValue != null)
+				{
+					//oldValue.Dispose();
+					//arm?.Remove(oldValue);
+				}
+			}
 
-	       // if (oldValue != renderer)
-	        {
+			if (renderer?.Model == null)
+				return;
+
+			renderer.DisplayPosition = DisplayPosition.ThirdPersonRightHand;
+
+			// if (oldValue != renderer)
+			{
 				//	arm?.AddChild(renderer);
-	        }
-        }
+			}
+		}
 
-        private void InventoryOnSelectedHotbarSlotChanged(object? sender, SelectedSlotChangedEventArgs e)
-        {
-	        CheckHeldItem();
-        }
+		private void InventoryOnSelectedHotbarSlotChanged(object? sender, SelectedSlotChangedEventArgs e)
+		{
+			CheckHeldItem();
+		}
 
 		protected virtual void OnInventorySlotChanged(object sender, SlotChangedEventArgs e)
 		{
@@ -563,9 +560,9 @@ namespace Alex.Entities
 		public bool CanPowerJump { get; set; } = false;
 		public bool CanClimb { get; set; } = false;
 		public bool CanSwim { get; set; } = false;
-		
+
 		public double AttackTime => -1d;
-		
+
 		[MoProperty("is_onfire"), MoProperty("is_on_fire")]
 		public bool IsOnFire { get; set; } = false;
 
@@ -585,10 +582,11 @@ namespace Alex.Entities
 			}
 		}
 
-		[MoProperty("is_riding")]
-		public bool IsRiding { get; set; }
+		[MoProperty("is_riding")] public bool IsRiding { get; set; }
 
-		private static readonly MiNET.Utils.UUID SprintingModifierGuid = new MiNET.Utils.UUID("662A6B8D-DA3E-4C1C-8813-96EA6097278D");
+		private static readonly MiNET.Utils.UUID SprintingModifierGuid =
+			new MiNET.Utils.UUID("662A6B8D-DA3E-4C1C-8813-96EA6097278D");
+
 		[MoProperty("is_sprinting")]
 		public virtual bool IsSprinting
 		{
@@ -605,6 +603,7 @@ namespace Alex.Entities
 
 		private DateTime _startOfItemUse = DateTime.UtcNow;
 		private int _usingSlot = 0;
+
 		[MoProperty("is_using_item")]
 		public bool IsUsingItem
 		{
@@ -636,121 +635,88 @@ namespace Alex.Entities
 		}
 
 		public bool IsInvisible { get; set; }
-		
-		[MoProperty("is_tempted")]
-		public bool IsTempted { get; set; }
-		
-		[MoProperty("is_in_love")]
-		public bool IsInLove { get; set; }
-		
-		[MoProperty("is_powered")]
-		public bool IsPowered { get; set; }
-		
-		[MoProperty("is_ignited")]
-		public bool IsIgnited { get; set; }
-		
-		[MoProperty("is_baby")]
-		public bool IsBaby { get; set; }
-		
-		[MoProperty("is_converting")]
-		public bool IsConverting { get; set; }
-		
-		[MoProperty("is_critical")]
-		public bool IsCritical { get; set; }
+
+		[MoProperty("is_tempted")] public bool IsTempted { get; set; }
+
+		[MoProperty("is_in_love")] public bool IsInLove { get; set; }
+
+		[MoProperty("is_powered")] public bool IsPowered { get; set; }
+
+		[MoProperty("is_ignited")] public bool IsIgnited { get; set; }
+
+		[MoProperty("is_baby")] public bool IsBaby { get; set; }
+
+		[MoProperty("is_converting")] public bool IsConverting { get; set; }
+
+		[MoProperty("is_critical")] public bool IsCritical { get; set; }
 		public bool IsShowName => !HideNameTag;
 		public bool IsAlwaysShowName { get; set; }
-		
-		[MoProperty("is_silent")]
-		public bool IsSilent { get; set; }
-		
-		[MoProperty("is_wall_climbing")]
-		public virtual bool IsWallClimbing { get; set; }
-		
-		[MoProperty("is_resting")]
-		public bool IsResting { get; set; }
-		
-		[MoProperty("is_sitting")]
-		public bool IsSitting { get; set; }
-		
-		[MoProperty("is_charging")]
-		public bool IsCharging { get; set; }
-		
-		[MoProperty("is_angry")]
-		public bool IsAngry { get; set; }
-		
-		[MoProperty("is_interested")]
-		public bool IsInterested { get; set; }
 
-		[MoProperty("is_tamed")]
-		public bool IsTamed { get; set; }
-		
-		[MoProperty("is_leashed")]
-		public bool IsLeashed { get; set; }
-		
-		[MoProperty("is_sheared")]
-		public bool IsSheared { get; set; }
+		[MoProperty("is_silent")] public bool IsSilent { get; set; }
+
+		[MoProperty("is_wall_climbing")] public virtual bool IsWallClimbing { get; set; }
+
+		[MoProperty("is_resting")] public bool IsResting { get; set; }
+
+		[MoProperty("is_sitting")] public bool IsSitting { get; set; }
+
+		[MoProperty("is_charging")] public bool IsCharging { get; set; }
+
+		[MoProperty("is_angry")] public bool IsAngry { get; set; }
+
+		[MoProperty("is_interested")] public bool IsInterested { get; set; }
+
+		[MoProperty("is_tamed")] public bool IsTamed { get; set; }
+
+		[MoProperty("is_leashed")] public bool IsLeashed { get; set; }
+
+		[MoProperty("is_sheared")] public bool IsSheared { get; set; }
 		public bool IsFlagAllFlying { get; set; }
-		
-		[MoProperty("is_elder")]
-		public bool IsElder { get; set; }
-		
-		[MoProperty("is_moving")]
-		public bool IsMoving { get; set; }
-		
-		[MoProperty("is_breathing")]
-		public bool IsBreathing => !IsInWater;
-		
-		[MoProperty("is_chested")]
-		public virtual bool IsChested { get; set; }
-		
-		[MoProperty("is_stackable")]
-		public bool IsStackable { get; set; }
-		
-		[MoProperty("is_eating")]
-		public bool IsEating { get; set; }
-		
+
+		[MoProperty("is_elder")] public bool IsElder { get; set; }
+
+		[MoProperty("is_moving")] public bool IsMoving { get; set; }
+
+		[MoProperty("is_breathing")] public bool IsBreathing => !IsInWater;
+
+		[MoProperty("is_chested")] public virtual bool IsChested { get; set; }
+
+		[MoProperty("is_stackable")] public bool IsStackable { get; set; }
+
+		[MoProperty("is_eating")] public bool IsEating { get; set; }
+
 		[MoProperty("blocking"), MoProperty("is_blocking")]
 		public bool IsBlocking { get; set; }
+
 		public bool IsSpinAttacking { get; set; }
-		
-		[MoProperty("has_collision")]
-		public bool HasCollision { get; set; } = true;
-		
-		[MoProperty("has_gravity")]
-		public bool IsAffectedByGravity { get; set; } = true;
-		
-		[MoProperty("is_swimming")]
-		public virtual bool IsSwimming { get; set; }
-		
-		[MoProperty("is_sleeping")]
-		public bool IsSleeping { get; set; }
-		
-		[MoProperty("is_standing")]
-		public bool IsStanding { get; set; } = true;
-		
-		[MoProperty("is_emoting")]
-		public bool IsEmoting { get; set; } = false;
-		
-		[MoProperty("is_gliding")]
-		public bool IsGliding { get; set; } = false;
-		
-		[MoProperty("is_levitating")]
-		public bool IsLevitating { get; set; } = false;
 
-		[MoProperty("is_alive")]
-		public bool IsAlive => HealthManager.Health > 0;
+		[MoProperty("has_collision")] public bool HasCollision { get; set; } = true;
 
-		[MoProperty("is_on_ground")]
-		public bool IsOnGround => _knownPosition.OnGround;
+		[MoProperty("has_gravity")] public bool IsAffectedByGravity { get; set; } = true;
+
+		[MoProperty("is_swimming")] public virtual bool IsSwimming { get; set; }
+
+		[MoProperty("is_sleeping")] public bool IsSleeping { get; set; }
+
+		[MoProperty("is_standing")] public bool IsStanding { get; set; } = true;
+
+		[MoProperty("is_emoting")] public bool IsEmoting { get; set; } = false;
+
+		[MoProperty("is_gliding")] public bool IsGliding { get; set; } = false;
+
+		[MoProperty("is_levitating")] public bool IsLevitating { get; set; } = false;
+
+		[MoProperty("is_alive")] public bool IsAlive => HealthManager.Health > 0;
+
+		[MoProperty("is_on_ground")] public bool IsOnGround => _knownPosition.OnGround;
 
 		/// <summary>
 		///		Returns the time in seconds since the current animation started, else 0.0 if not called within an animation
 		/// </summary>
 		[MoProperty("anim_time")]
 		public double AnimationTime { get; set; } = 0d;
-		
-		[MoProperty("is_grazing")]
-		public bool IsGrazing { get; set; } = false;
+
+		[MoProperty("is_grazing")] public bool IsGrazing { get; set; } = false;
 
 		[MoProperty("key_frame_lerp_time")]
 		public double KeyframeLerpTime
@@ -759,30 +725,23 @@ namespace Alex.Entities
 			set;
 		}
 
-		[MoProperty("swell_amount")]
-		public double SwellAmount { get; set; } = 0d;
+		[MoProperty("swell_amount")] public double SwellAmount { get; set; } = 0d;
 
-		[MoProperty("invulnerable_ticks")]
-		public double InvulnerableTicks { get; set; } = 0d;
-		
+		[MoProperty("invulnerable_ticks")] public double InvulnerableTicks { get; set; } = 0d;
+
 		public Pose Pose { get; set; } = Pose.Standing;
-		
+
 		public bool RenderEntity { get; set; } = true;
+
 		//public bool ShowItemInHand { get; set; } = false;
 		public long TargetEntityId { get; set; } = -1;
 		public long OwnerEntityId { get; set; } = -1;
 		public Vector2 TargetRotation { get; private set; } = Vector2.Zero;
 
-		protected virtual void OnSneakingChanged(bool newValue)
-		{
-			
-		}
+		protected virtual void OnSneakingChanged(bool newValue) { }
 
-		protected virtual void OnSprintingChanged(bool newValue)
-		{
-			
-		}
-		
+		protected virtual void OnSprintingChanged(bool newValue) { }
+
 		public void HandleJavaMetadata(MetaDataEntry entry)
 		{
 			if (entry.Index == 0 && entry is MetadataByte flags)
@@ -823,14 +782,16 @@ namespace Alex.Entities
 						IsSleeping = false;
 						IsSwimming = false;
 						IsSpinAttacking = false;
+
 						break;
-					
+
 					case Pose.Sleeping:
 						IsSneaking = false;
 						IsStanding = false;
 						IsSleeping = true;
 						IsSwimming = false;
 						IsSpinAttacking = false;
+
 						break;
 
 					case Pose.Swimming:
@@ -839,6 +800,7 @@ namespace Alex.Entities
 						IsSleeping = false;
 						IsSwimming = true;
 						IsSpinAttacking = false;
+
 						break;
 
 					case Pose.SpinAttack:
@@ -847,6 +809,7 @@ namespace Alex.Entities
 						IsSleeping = false;
 						IsSwimming = false;
 						IsSpinAttacking = true;
+
 						break;
 
 					case Pose.Sneaking:
@@ -855,11 +818,12 @@ namespace Alex.Entities
 						IsSleeping = false;
 						IsSwimming = false;
 						IsSpinAttacking = false;
+
 						break;
 
 					case Pose.Dying:
 						break;
-					
+
 					case Pose.FallFlying:
 						break;
 				}
@@ -870,105 +834,123 @@ namespace Alex.Entities
 			}
 		}
 
-		protected virtual void HandleJavaMeta(MetaDataEntry entry)
-		{
-			
-		}
-		
+		protected virtual void HandleJavaMeta(MetaDataEntry entry) { }
+
 		public Vector3 RiderSeatPosition { get; set; } = Vector3.Zero;
 		public float RiderMinRotation { get; set; } = 0f;
 		public float RiderMaxRotation { get; set; } = 360f;
 		public bool RiderRotationLocked { get; set; } = true;
+
 		public void HandleMetadata(MetadataDictionary metadata)
 		{
 			foreach (var meta in metadata._entries)
 			{
-				switch ((int) (MiNET.Entities.Entity.MetadataFlags) meta.Key)
+				switch ((int)(MiNET.Entities.Entity.MetadataFlags)meta.Key)
 				{
-					case (int) MiNET.Entities.Entity.MetadataFlags.CollisionBoxHeight:
+					case (int)MiNET.Entities.Entity.MetadataFlags.CollisionBoxHeight:
 					{
 						if (meta.Value is MiNET.Utils.Metadata.MetadataFloat flt)
 						{
 							Height = flt.Value;
 						}
-					} break;
-					
-					case (int) MiNET.Entities.Entity.MetadataFlags.CollisionBoxWidth:
+					}
+
+						break;
+
+					case (int)MiNET.Entities.Entity.MetadataFlags.CollisionBoxWidth:
 					{
 						if (meta.Value is MiNET.Utils.Metadata.MetadataFloat fltw)
 						{
 							Width = fltw.Value;
-						//	Length = fltw.Value;
+							//	Length = fltw.Value;
 						}
-					} break;
-					
-					case (int) MiNET.Entities.Entity.MetadataFlags.Scale:
+					}
+
+						break;
+
+					case (int)MiNET.Entities.Entity.MetadataFlags.Scale:
 					{
 						if (meta.Value is MiNET.Utils.Metadata.MetadataFloat flt)
 						{
 							Scale = flt.Value;
 						}
-					} break;
+					}
 
-					case (int) MiNET.Entities.Entity.MetadataFlags.RiderSeatPosition:
+						break;
+
+					case (int)MiNET.Entities.Entity.MetadataFlags.RiderSeatPosition:
 					{
 						if (meta.Value is MiNET.Utils.Metadata.MetadataVector3 seatPosition)
 						{
 							var val = seatPosition.Value;
 							RiderSeatPosition = new Vector3(val.X, val.Y, val.Z);
-						}	
-					} break;
+						}
+					}
 
-					case (int) MiNET.Entities.Entity.MetadataFlags.RiderMinRotation:
+						break;
+
+					case (int)MiNET.Entities.Entity.MetadataFlags.RiderMinRotation:
 					{
 						if (meta.Value is MiNET.Utils.Metadata.MetadataFloat mdf)
 						{
 							RiderMinRotation = mdf.Value;
-						}	
-					} break;
-					
-					case (int) MiNET.Entities.Entity.MetadataFlags.RiderMaxRotation:
+						}
+					}
+
+						break;
+
+					case (int)MiNET.Entities.Entity.MetadataFlags.RiderMaxRotation:
 					{
 						if (meta.Value is MiNET.Utils.Metadata.MetadataFloat mdf)
 						{
 							RiderMaxRotation = mdf.Value;
-						}	
-					} break;
-					
-					case (int) MiNET.Entities.Entity.MetadataFlags.RiderRotationLocked:
+						}
+					}
+
+						break;
+
+					case (int)MiNET.Entities.Entity.MetadataFlags.RiderRotationLocked:
 					{
 						if (meta.Value is MiNET.Utils.Metadata.MetadataByte mdf)
 						{
 							RiderRotationLocked = mdf.Value == 1;
-						}	
-					} break;
-					
+						}
+					}
+
+						break;
+
 					//case (int) MiNET.Entities.Entity.MetadataFlags.EntityFlags2:
-					case 92://((int) MiNET.Entities.Entity.MetadataFlags.EntityFlags2):
+					case 92: //((int) MiNET.Entities.Entity.MetadataFlags.EntityFlags2):
 					{
 						if (meta.Value is MiNET.Utils.Metadata.MetadataLong lng)
 						{
 							_extendedData = lng.Value;
 							HandleEntityFlags(_data, _extendedData);
 						}
-					} break;
-					
-					case (int) MiNET.Entities.Entity.MetadataFlags.EntityFlags:
+					}
+
+						break;
+
+					case (int)MiNET.Entities.Entity.MetadataFlags.EntityFlags:
 					{
 						if (meta.Value is MiNET.Utils.Metadata.MetadataLong lng)
 						{
 							_data = lng.Value;
 							HandleEntityFlags(_data, _extendedData);
 						}
-					} break;
-					
-					case (int) MiNET.Entities.Entity.MetadataFlags.NameTag:
+					}
+
+						break;
+
+					case (int)MiNET.Entities.Entity.MetadataFlags.NameTag:
 					{
 						if (meta.Value is MiNET.Utils.Metadata.MetadataString nametag)
 						{
 							NameTag = nametag.Value;
 						}
-					} break;
+					}
+
+						break;
 
 					/*case (int) MiNET.Entities.Entity.MetadataFlags.HideNameTag:
 					{
@@ -979,21 +961,25 @@ namespace Alex.Entities
 						break;
 					}*/
 
-					case (int) MiNET.Entities.Entity.MetadataFlags.MaxAir:
+					case (int)MiNET.Entities.Entity.MetadataFlags.MaxAir:
 					{
 						if (meta.Value is MiNET.Utils.Metadata.MetadataShort airTag)
 						{
 							HealthManager.MaxAir = airTag.Value;
 						}
-					} break;
-					
-					case (int) MiNET.Entities.Entity.MetadataFlags.AvailableAir:
+					}
+
+						break;
+
+					case (int)MiNET.Entities.Entity.MetadataFlags.AvailableAir:
 					{
 						if (meta.Value is MiNET.Utils.Metadata.MetadataShort airTag)
 						{
 							HealthManager.AvailableAir = airTag.Value;
 						}
-					} break;
+					}
+
+						break;
 
 					case 5: //Owner Entity ID
 					{
@@ -1001,42 +987,52 @@ namespace Alex.Entities
 						{
 							OwnerEntityId = targetTag.Value;
 						}
-					} break;
-					
+					}
+
+						break;
+
 					case 6: //Target Entity ID
 					{
 						if (meta.Value is MiNET.Utils.Metadata.MetadataLong targetTag)
 						{
 							TargetEntityId = targetTag.Value;
 						}
-					} break;
+					}
+
+						break;
 
 					case 81:
 					{
 						if (meta.Value is MiNET.Utils.Metadata.MetadataByte alwaysShowNameTag)
 						{
 							IsAlwaysShowName = alwaysShowNameTag.Value == 1;
-						}	
-					} break;
+						}
+					}
 
-					case (int) MiNET.Entities.Entity.MetadataFlags.Color:
+						break;
+
+					case (int)MiNET.Entities.Entity.MetadataFlags.Color:
 					{
 						if (meta.Value is MiNET.Utils.Metadata.MetadataInt color)
 						{
 							if (_modelRenderer != null)
 							{
-								_modelRenderer.EntityColor = new Microsoft.Xna.Framework.Color((uint)color.Value).ToVector3();
+								_modelRenderer.EntityColor =
+									new Microsoft.Xna.Framework.Color((uint)color.Value).ToVector3();
 							}
 
-						//	EntityColor = new Microsoft.Xna.Framework.Color((uint) color.Value);
+							//	EntityColor = new Microsoft.Xna.Framework.Color((uint) color.Value);
 						}
-					} break;
+					}
+
+						break;
 
 					default:
-						if (!HandleMetadata((MiNET.Entities.Entity.MetadataFlags) meta.Key, meta.Value))
+						if (!HandleMetadata((MiNET.Entities.Entity.MetadataFlags)meta.Key, meta.Value))
 						{
 							if (LoggingConstants.LogUnimplementedEntityFlags)
-								Log.Debug($"({GetType().Name}) Unimplemented flag: {(MiNET.Entities.Entity.MetadataFlags) meta.Key}");
+								Log.Debug(
+									$"({GetType().Name}) Unimplemented flag: {(MiNET.Entities.Entity.MetadataFlags)meta.Key}");
 						}
 
 						break;
@@ -1049,19 +1045,18 @@ namespace Alex.Entities
 			return false;
 		}
 
-		public virtual void HandleEntityStatus(byte status)
-		{
-			
-		}
+		public virtual void HandleEntityStatus(byte status) { }
+
 		public bool IsAttacking
 		{
 			get => _isAttacking;
 			set
 			{
 				var oldValue = _isAttacking;
-				
+
 				if (!oldValue && value)
-				{ //_attackStart = DateTime.UtcNow;
+				{
+					//_attackStart = DateTime.UtcNow;
 					_isAttacking = true;
 				}
 				else if (oldValue && !value)
@@ -1073,6 +1068,7 @@ namespace Alex.Entities
 
 		private long _eatingEndTime = 0;
 		private long _grazingEndTime = 0;
+
 		public virtual void HandleEntityEvent(byte eventId, int data)
 		{
 			if (eventId == 1) //Entity Jump
@@ -1110,15 +1106,15 @@ namespace Alex.Entities
 			{
 				IsGrazing = true;
 				_grazingEndTime = Age + 40;
-				
-			//	Log.Info($"Grazing: {IsGrazing} | {data}");
+
+				//	Log.Info($"Grazing: {IsGrazing} | {data}");
 			}
 			else if (eventId == 57) //Eat item
 			{
 				IsEating = true;
 				_eatingEndTime = Age + 40;
-				
-			//	Log.Info($"Eating: {IsEating} | {data}");
+
+				//	Log.Info($"Eating: {IsEating} | {data}");
 			}
 			else
 			{
@@ -1128,52 +1124,55 @@ namespace Alex.Entities
 
 		private long _extendedData = 0;
 		private long _data = 0;
-		
+
 		private void HandleEntityFlags(long rawData, long extendedData)
 		{
 			BitArray data = new BitArray(
 				BitConverter.GetBytes(rawData).Concat(BitConverter.GetBytes(extendedData)).ToArray());
-			
-			IsInvisible = data[(int) MiNET.Entities.Entity.DataFlags.Invisible];// (data & ((int) MiNET.Entities.Entity.DataFlags.Invisible)) != 0;
-			IsSneaking = data[(int) MiNET.Entities.Entity.DataFlags.Sneaking];
-			IsSitting = data[(int) MiNET.Entities.Entity.DataFlags.Sitting];
-			
-			IsOnFire = data[(int) MiNET.Entities.Entity.DataFlags.OnFire];
-			
-			IsSprinting = data[(int) MiNET.Entities.Entity.DataFlags.Sprinting];
-			
-			NoAi = data[(int) MiNET.Entities.Entity.DataFlags.NoAi];
-			IsAffectedByGravity = data[(int) MiNET.Entities.Entity.DataFlags.AffectedByGravity];
+
+			IsInvisible =
+				data
+					[(int)MiNET.Entities.Entity.DataFlags.Invisible]; // (data & ((int) MiNET.Entities.Entity.DataFlags.Invisible)) != 0;
+
+			IsSneaking = data[(int)MiNET.Entities.Entity.DataFlags.Sneaking];
+			IsSitting = data[(int)MiNET.Entities.Entity.DataFlags.Sitting];
+
+			IsOnFire = data[(int)MiNET.Entities.Entity.DataFlags.OnFire];
+
+			IsSprinting = data[(int)MiNET.Entities.Entity.DataFlags.Sprinting];
+
+			NoAi = data[(int)MiNET.Entities.Entity.DataFlags.NoAi];
+			IsAffectedByGravity = data[(int)MiNET.Entities.Entity.DataFlags.AffectedByGravity];
 			//HasCollision = data[(int) MiNET.Entities.Entity.DataFlags.HasCollision];
-			
+
 			//HideNameTag = !data[(int) MiNET.Entities.Entity.DataFlags.ShowName];
-			IsAlwaysShowName = data[(int) MiNET.Entities.Entity.DataFlags.AlwaysShowName];
-			IsBaby = data[(int) MiNET.Entities.Entity.DataFlags.Baby];
-			IsUsingItem = data[(int) MiNET.Entities.Entity.DataFlags.UsingItem];
-			IsAngry = data[(int) MiNET.Entities.Entity.DataFlags.Angry];
-			IsInLove = data[(int) MiNET.Entities.Entity.DataFlags.InLove];
-			IsRiding = data[(int) MiNET.Entities.Entity.DataFlags.Riding];
-			IsTempted = data[(int) MiNET.Entities.Entity.DataFlags.Tempted];
-			IsTamed = data[(int) MiNET.Entities.Entity.DataFlags.Tamed];
-			IsLeashed = data[(int) MiNET.Entities.Entity.DataFlags.Leashed];
-			IsSheared = data[(int) MiNET.Entities.Entity.DataFlags.Sheared];
-			IsChested = data[(int) MiNET.Entities.Entity.DataFlags.Chested];
-			IsFlagAllFlying = data[(int) MiNET.Entities.Entity.DataFlags.FlagAllFlying];
-			IsSilent = data[(int) MiNET.Entities.Entity.DataFlags.Silent];
-			IsWallClimbing = data[(int) MiNET.Entities.Entity.DataFlags.WallClimbing];
-			IsResting = data[(int) MiNET.Entities.Entity.DataFlags.Resting];
-			IsMoving = data[(int) MiNET.Entities.Entity.DataFlags.Moving];
-			IsElder = data[(int) MiNET.Entities.Entity.DataFlags.Elder];
+			IsAlwaysShowName = data[(int)MiNET.Entities.Entity.DataFlags.AlwaysShowName];
+			IsBaby = data[(int)MiNET.Entities.Entity.DataFlags.Baby];
+			IsUsingItem = data[(int)MiNET.Entities.Entity.DataFlags.UsingItem];
+			IsAngry = data[(int)MiNET.Entities.Entity.DataFlags.Angry];
+			IsInLove = data[(int)MiNET.Entities.Entity.DataFlags.InLove];
+			IsRiding = data[(int)MiNET.Entities.Entity.DataFlags.Riding];
+			IsTempted = data[(int)MiNET.Entities.Entity.DataFlags.Tempted];
+			IsTamed = data[(int)MiNET.Entities.Entity.DataFlags.Tamed];
+			IsLeashed = data[(int)MiNET.Entities.Entity.DataFlags.Leashed];
+			IsSheared = data[(int)MiNET.Entities.Entity.DataFlags.Sheared];
+			IsChested = data[(int)MiNET.Entities.Entity.DataFlags.Chested];
+			IsFlagAllFlying = data[(int)MiNET.Entities.Entity.DataFlags.FlagAllFlying];
+			IsSilent = data[(int)MiNET.Entities.Entity.DataFlags.Silent];
+			IsWallClimbing = data[(int)MiNET.Entities.Entity.DataFlags.WallClimbing];
+			IsResting = data[(int)MiNET.Entities.Entity.DataFlags.Resting];
+			IsMoving = data[(int)MiNET.Entities.Entity.DataFlags.Moving];
+			IsElder = data[(int)MiNET.Entities.Entity.DataFlags.Elder];
 			IsEating = data[62];
 			IsSleeping = data[75];
 			IsBlocking = data[71];
 			IsSpinAttacking = data[55];
 			IsSwimming = data[56];
 
-			CanSwim = data[(int) MiNET.Entities.Entity.DataFlags.CanSwim];
-			CanClimb = data[(int) MiNET.Entities.Entity.DataFlags.CanClimb];
+			CanSwim = data[(int)MiNET.Entities.Entity.DataFlags.CanSwim];
+			CanClimb = data[(int)MiNET.Entities.Entity.DataFlags.CanClimb];
 			//CanFly = data[(int) MiNET.Entities.Entity.DataFlags.CanFly];
-			CanPowerJump = data[(int) MiNET.Entities.Entity.DataFlags.CanPowerJump];
+			CanPowerJump = data[(int)MiNET.Entities.Entity.DataFlags.CanPowerJump];
 			//IsFlying = data[(int) MiNET.Entities.Entity.DataFlags.fl]
 		}
 
@@ -1189,7 +1188,7 @@ namespace Alex.Entities
 			{
 				//if (value == _texture)
 				//	return;
-				
+
 				Texture2D oldValue = _texture;
 
 				try
@@ -1197,6 +1196,7 @@ namespace Alex.Entities
 					_texture = value;
 
 					var modelRenderer = _modelRenderer;
+
 					if (modelRenderer != null)
 					{
 						modelRenderer.Texture = value;
@@ -1222,7 +1222,7 @@ namespace Alex.Entities
 				}
 			}
 		}
-		
+
 		//internal EntityEffect    Effect       { get; }
 
 		///  <summary>
@@ -1235,15 +1235,14 @@ namespace Alex.Entities
 		{
 			if (IsInvisible || _skipRendering)
 				return 0;
-		//	if (_disposed)
+			//	if (_disposed)
 			//	return 0;
-			
-			
-			int renderCount = 0;
-			var  renderer = ModelRenderer;
 
-			var worldMatrix = Matrix.CreateScale((ModelScale / 16f))
-			                  * RenderLocation.CalculateWorldMatrix();
+
+			int renderCount = 0;
+			var renderer = ModelRenderer;
+
+			var worldMatrix = Matrix.CreateScale((ModelScale / 16f)) * RenderLocation.CalculateWorldMatrix();
 
 			if (renderer != null)
 			{
@@ -1260,6 +1259,7 @@ namespace Alex.Entities
 		{
 			int count = 0;
 			var itemRenderer = _itemRenderer;
+
 			if (itemRenderer != null)
 			{
 				Matrix matrix = worldMatrix;
@@ -1285,9 +1285,10 @@ namespace Alex.Entities
 
 			return count;
 		}
-		
+
 		private bool _doUseItemAnimation = false;
 		public DateTime LastUpdate { get; set; }
+
 		public virtual void Update(IUpdateArgs args)
 		{
 			var elapsed = Alex.DeltaTime;
@@ -1310,12 +1311,12 @@ namespace Alex.Entities
 					UseItemIntervalProgress = 0d;
 				}
 			}
-			
+
 			foreach (var entityComponent in EntityComponents)
 			{
 				if (!entityComponent.Enabled)
 					continue;
-				
+
 				if (entityComponent is IUpdated updateable)
 				{
 					updateable.Update(args.GameTime);
@@ -1329,6 +1330,7 @@ namespace Alex.Entities
 			//if (((!RenderEntity || IsInvisible) && !ShowItemInHand) || renderer == null || _skipRendering) return;
 
 			var head = _headBone;
+
 			if (head != null)
 			{
 				var headYaw = (KnownPosition.HeadYaw - KnownPosition.Yaw);
@@ -1337,26 +1339,20 @@ namespace Alex.Entities
 				head.Rotation = new Vector3(-pitch, headYaw, 0f);
 				//_head.Rotation = Quaternion.CreateFromYawPitchRoll(MathUtils.ToRadians(headYaw), MathUtils.ToRadians(pitch), 0f);
 			}
-			
+
 			renderer.Update(args);
 		}
-		
-		public virtual void EntityHurt()
-		{
-			
-		}
 
-		public virtual void EntityDied()
-		{
-			
-		}
-		
+		public virtual void EntityHurt() { }
+
+		public virtual void EntityDied() { }
+
 		protected bool DoRotationCalculations = true;
 
 		public void SwingArm(bool broadcast = false)
 		{
 			bool isLeftHand = false;
-			
+
 			if (this is LivingEntity e)
 			{
 				if (e.IsLeftHanded)
@@ -1368,14 +1364,15 @@ namespace Alex.Entities
 					isLeftHand = false;
 				}
 			}
-			
+
 			SwingArm(broadcast, isLeftHand);
 		}
 
 		private static readonly MoPath _useItemIntervalProgressMoPath =
 			new MoPath("variable.use_item_interval_progress");
-		
+
 		private double _useItemProgress = 0d;
+
 		private double UseItemIntervalProgress
 		{
 			get
@@ -1385,14 +1382,16 @@ namespace Alex.Entities
 			set
 			{
 				_useItemProgress = Math.Clamp(value, 0d, 1d);
-				AnimationController.Runtime?.Environment?.SetValue(_useItemIntervalProgressMoPath, new DoubleValue(_useItemProgress));
+
+				AnimationController.Runtime?.Environment?.SetValue(
+					_useItemIntervalProgressMoPath, new DoubleValue(_useItemProgress));
 			}
 		}
-		
-		private static readonly MoPath _useItemStartupProgressMoPath =
-			new MoPath("variable.use_item_startup_progress");
-		
+
+		private static readonly MoPath _useItemStartupProgressMoPath = new MoPath("variable.use_item_startup_progress");
+
 		private double _useItemStartupProgress = 0d;
+
 		private double UseItemStartupProgress
 		{
 			get
@@ -1402,7 +1401,9 @@ namespace Alex.Entities
 			set
 			{
 				_useItemStartupProgress = Math.Clamp(value, 0d, 1d);
-				AnimationController.Runtime?.Environment?.SetValue(_useItemStartupProgressMoPath, new DoubleValue(_useItemStartupProgress));
+
+				AnimationController.Runtime?.Environment?.SetValue(
+					_useItemStartupProgressMoPath, new DoubleValue(_useItemStartupProgress));
 			}
 		}
 
@@ -1420,6 +1421,7 @@ namespace Alex.Entities
 		private Vector3 _delta = Vector3.Zero;
 		private Stopwatch _deltaStopwatch = Stopwatch.StartNew();
 		public long Age { get; set; } = 0;
+
 		public virtual void OnTick()
 		{
 			Age++;
@@ -1433,14 +1435,14 @@ namespace Alex.Entities
 			{
 				IsGrazing = false;
 			}
-			
+
 			_deltaTime = _deltaStopwatch.Elapsed;
 			_deltaStopwatch.Restart();
-			
+
 			var pos = RenderLocation.ToVector3();
 			_delta = pos - _previousKnownPosition;
 			_previousKnownPosition = pos;
-			
+
 			//Age++;
 			if (TargetEntityId != -1)
 			{
@@ -1451,16 +1453,16 @@ namespace Alex.Entities
 					TargetRotation = rotationVector;
 				}
 			}
-			
+
 			foreach (var entityComponent in EntityComponents)
 			{
 				if (!entityComponent.Enabled)
 					continue;
-				
+
 				if (entityComponent is ITicked ticked)
 					ticked.OnTick();
 			}
-			
+
 			if (DoRotationCalculations)
 			{
 				UpdateRotations();
@@ -1477,7 +1479,7 @@ namespace Alex.Entities
 		private Vector3 _previousPosition = Vector3.Zero;
 		protected bool SnapHeadYawRotationOnMovement { get; set; } = true;
 		protected bool SnapYawRotationOnMovement { get; set; } = false;
-		
+
 		private void UpdateRotations()
 		{
 			var known = KnownPosition.ToVector3();
@@ -1489,20 +1491,21 @@ namespace Alex.Entities
 
 			float maximumHeadBodyAngleDifference = 75f;
 			const float movementThresholdSq = 2.5f;
+
 			// if moving:
 			// 1) snap the body yaw (renderYawOffset) to the movement direction (rotationYaw)
 			// 2) constrain the head yaw (rotationYawHead) to be within +/- 90 of the body yaw (renderYawOffset)
 			if (distSQ > movementThresholdSq)
 			{
 				//dragon.renderYawOffset = dragon.rotationYaw;
-				float newRotationYawHead = MathUtils.ConstrainAngle(KnownPosition.Yaw, KnownPosition.HeadYaw,
-					maximumHeadBodyAngleDifference);
-				
+				float newRotationYawHead = MathUtils.ConstrainAngle(
+					KnownPosition.Yaw, KnownPosition.HeadYaw, maximumHeadBodyAngleDifference);
+
 				if (SnapHeadYawRotationOnMovement)
 				{
 					//KnownPosition.HeadYaw = newRotationYawHead;
 				}
-				
+
 				if (SnapYawRotationOnMovement)
 				{
 					KnownPosition.Yaw = KnownPosition.HeadYaw;
@@ -1514,6 +1517,7 @@ namespace Alex.Entities
 			else
 			{
 				var changeInHeadYaw = Math.Abs(KnownPosition.HeadYaw - _lastRotationYawHead);
+
 				if (changeInHeadYaw > 15f)
 				{
 					_turnTicks = 0;
@@ -1522,23 +1526,27 @@ namespace Alex.Entities
 				else
 				{
 					_turnTicks++;
+
 					if (_turnTicks > turnTicksLimit)
 					{
-						maximumHeadBodyAngleDifference =
-							Math.Max(1f - ((float)(_turnTicks - turnTicksLimit) / (float)turnTicksLimit), 0f) *
-							maximumHeadBodyAngleDifference;
+						maximumHeadBodyAngleDifference = Math.Max(
+							                                 1f - ((float)(_turnTicks - turnTicksLimit)
+							                                       / (float)turnTicksLimit), 0f)
+						                                 * maximumHeadBodyAngleDifference;
 					}
 				}
 
-				KnownPosition.Yaw = MathUtils.ConstrainAngle(KnownPosition.Yaw, KnownPosition.HeadYaw,
-					maximumHeadBodyAngleDifference);
+				KnownPosition.Yaw = MathUtils.ConstrainAngle(
+					KnownPosition.Yaw, KnownPosition.HeadYaw, maximumHeadBodyAngleDifference);
 			}
+
 			Movement?.UpdateTarget();
-			
+
 			_previousPosition = known;
 		}
 
 		private BoneMatrices _headBone = null;
+
 		protected virtual void UpdateModelParts()
 		{
 			var modelRenderer = ModelRenderer;
@@ -1546,6 +1554,7 @@ namespace Alex.Entities
 			if (modelRenderer == null)
 			{
 				_headBone = null;
+
 				return;
 			}
 
@@ -1561,10 +1570,7 @@ namespace Alex.Entities
 			}
 		}
 
-		protected virtual void OnModelUpdated()
-		{
-			
-		}
+		protected virtual void OnModelUpdated() { }
 
 		private BoundingBox _boundingBox = new BoundingBox();
 		public BoundingBox BoundingBox => _boundingBox;
@@ -1578,9 +1584,9 @@ namespace Alex.Entities
 
 		public virtual BoundingBox GetBoundingBox(Vector3 pos)
 		{
-			var    length     = Width;
-			var    width     = Width;
-			var    height    = Height;
+			var length = Width;
+			var width = Width;
+			var height = Height;
 
 			if (IsSwimming)
 			{
@@ -1588,22 +1594,23 @@ namespace Alex.Entities
 				width = Width;
 				length = Height;
 			}
-			
+
 			double halfWidth = (width * Scale) / 2D;
 			double halfLength = (length * Scale) / 2D;
 
 			return new BoundingBox(
-				new Vector3((float) (pos.X - halfWidth), pos.Y, (float) (pos.Z - halfLength)),
+				new Vector3((float)(pos.X - halfWidth), pos.Y, (float)(pos.Z - halfLength)),
 				new Vector3(
-					(float) (pos.X + halfWidth), (float) (pos.Y + (height * Scale)), (float) (pos.Z + halfLength)));
+					(float)(pos.X + halfWidth), (float)(pos.Y + (height * Scale)), (float)(pos.Z + halfLength)));
 		}
 
 		public virtual BoundingBox GetVisibilityBoundingBox(Vector3 pos)
 		{
-			var width  = Width;
+			var width = Width;
 			var height = Height;
 
 			var renderer = ModelRenderer;
+
 			if (renderer != null)
 			{
 				width = renderer.VisibleBoundsWidth;
@@ -1614,9 +1621,8 @@ namespace Alex.Entities
 			double halfDepth = (width * Scale) / 2D;
 
 			return new BoundingBox(
-				new Vector3((float) (pos.X - halfWidth), pos.Y, (float) (pos.Z - halfDepth)),
-				new Vector3(
-					(float) (pos.X + halfWidth), (float) (pos.Y + (height * Scale)), (float) (pos.Z + halfDepth)));
+				new Vector3((float)(pos.X - halfWidth), pos.Y, (float)(pos.Z - halfDepth)),
+				new Vector3((float)(pos.X + halfWidth), (float)(pos.Y + (height * Scale)), (float)(pos.Z + halfDepth)));
 		}
 
 		public virtual float CollidedWithWorld(Vector3 direction, Vector3 position, float impactVelocity)
@@ -1628,17 +1634,18 @@ namespace Alex.Entities
 			}
 			else if (direction == Vector3.Left || direction == Vector3.Right)
 			{
-			//	Velocity = new Vector3(0, Velocity.Y, Velocity.Z);
+				//	Velocity = new Vector3(0, Velocity.Y, Velocity.Z);
 			}
 			else if (direction == Vector3.Forward || direction == Vector3.Backward)
 			{
-			//	Velocity = new Vector3(Velocity.X, Velocity.Y, 0);
+				//	Velocity = new Vector3(Velocity.X, Velocity.Y, 0);
 			}
 
 			return 0;
 		}
 
 		private bool _disposed = false;
+
 		public void Dispose()
 		{
 			if (_disposed)
@@ -1648,7 +1655,7 @@ namespace Alex.Entities
 			{
 				ItemRenderer?.Dispose();
 				ItemRenderer = null;
-				
+
 				ModelRenderer?.Dispose();
 				ModelRenderer = null;
 
@@ -1668,18 +1675,16 @@ namespace Alex.Entities
 			}
 		}
 
-		protected virtual void OnDispose()
-		{
-			
-		}
-		
+		protected virtual void OnDispose() { }
+
 		/// <inheritdoc />
 		public override string ToString()
 		{
-			return $"{{Type: \"{GetType().Name}\", Def: \"{AnimationController?.EntityDefinition?.Identifier}\", EntityId: {EntityId}}}";
+			return
+				$"{{Type: \"{GetType().Name}\", Def: \"{AnimationController?.EntityDefinition?.Identifier}\", EntityId: {EntityId}}}";
 		}
-		
-		private IItemRenderer                            _itemRenderer    = null;
+
+		private IItemRenderer _itemRenderer = null;
 		private bool _noAi = false;
 		private string _nameTag;
 		private bool _isUsingItem;
@@ -1689,12 +1694,13 @@ namespace Alex.Entities
 		private bool _hasRider = false;
 
 		public bool CanSurface { get; set; } = false;
-		public const float   JumpVelocity = 0.42f;
+		public const float JumpVelocity = 0.42f;
+
 		public virtual void Jump()
 		{
 			HealthManager.IncreaseExhaustion(IsSprinting ? 0.2f : 0.05f);
 			var jumpVelocity = JumpVelocity;
-			
+
 			if (IsInWater || IsInLava)
 			{
 				if (((FeetInWater && !HeadInWater) || (FeetInLava && !HeadInLava)) && CanSurface)
@@ -1713,11 +1719,11 @@ namespace Alex.Entities
 
 			Movement.Push(new Vector3(0f, jumpVelocity, 0f));
 		}
-		
+
 		public virtual void OnSpawn()
 		{
 			IsSpawned = true;
-			
+
 			//HandleEntityFlags(_data, _extendedData);
 		}
 
@@ -1729,29 +1735,30 @@ namespace Alex.Entities
 		public Vector3 CalculateForwardVector()
 		{
 			return new Vector3(
-				MathF.Cos(KnownPosition.Pitch) * MathF.Sin(KnownPosition.Yaw), 
-				-MathF.Sin(KnownPosition.Pitch),
+				MathF.Cos(KnownPosition.Pitch) * MathF.Sin(KnownPosition.Yaw), -MathF.Sin(KnownPosition.Pitch),
 				MathF.Cos(KnownPosition.Pitch) * MathF.Cos(KnownPosition.Yaw));
 		}
-		
+
 		public void LookAt(Vector3 targetPosition, bool aimWithHead)
 		{
-			var    view        = targetPosition - KnownPosition.ToVector3();
-			var    dz          = view.Z;
-			var    dx          = view.X;
-		    
-			float tanOutput   = 90f - MathUtils.RadianToDegree(MathF.Atan(dx / (dz)));
+			var view = targetPosition - KnownPosition.ToVector3();
+			var dz = view.Z;
+			var dx = view.X;
+
+			float tanOutput = 90f - MathUtils.RadianToDegree(MathF.Atan(dx / (dz)));
 			float thetaOffset = 270f;
+
 			if (dz < 0)
 			{
 				thetaOffset = 90;
 			}
+
 			var yaw = thetaOffset + tanOutput;
 
 			if (aimWithHead)
 			{
 				var bDiff = MathF.Sqrt((dx * dx) + (dz * dz));
-				var dy    = (KnownPosition.Y + (float)Height) - (targetPosition.Y);
+				var dy = (KnownPosition.Y + (float)Height) - (targetPosition.Y);
 				KnownPosition.Pitch = MathUtils.RadianToDegree(MathF.Atan(dy / (bDiff)));
 			}
 
@@ -1778,7 +1785,7 @@ namespace Alex.Entities
 
 
 			var bDiff = MathF.Sqrt((dx * dx) + (dz * dz));
-			var dy = (float)(KnownPosition.Y ) - (targetPosition.Y);
+			var dy = (float)(KnownPosition.Y) - (targetPosition.Y);
 			var pitch = MathUtils.RadianToDegree(MathF.Atan(dy / (bDiff)));
 
 			return new Vector2(pitch, yaw);
@@ -1792,42 +1799,59 @@ namespace Alex.Entities
 				{
 					case "minecraft:player.level":
 						ExperienceLevel = attribute.Value.Value;
+
 						break;
+
 					case "minecraft:player.experience":
 						Experience = attribute.Value.Value;
+
 						break;
+
 					case "minecraft:player.saturation":
-						HealthManager.Saturation = (int) attribute.Value.Value;
-						HealthManager.MaxSaturation = (int) attribute.Value.MaxValue;
+						HealthManager.Saturation = (int)attribute.Value.Value;
+						HealthManager.MaxSaturation = (int)attribute.Value.MaxValue;
+
 						break;
+
 					case "minecraft:player.exhaustion":
-						HealthManager.Exhaustion = (int) attribute.Value.Value;
-						HealthManager.MaxExhaustion = (int) attribute.Value.MaxValue;
+						HealthManager.Exhaustion = (int)attribute.Value.Value;
+						HealthManager.MaxExhaustion = (int)attribute.Value.MaxValue;
+
 						break;
+
 					case "minecraft:player.hunger":
 						HealthManager.Hunger = (int)attribute.Value.Value;
 						HealthManager.MaxHunger = (int)attribute.Value.MaxValue;
+
 						break;
+
 					case "minecraft:movement":
 						MovementSpeed = attribute.Value.Value;
+
 						break;
+
 					case "health":
 					case "minecraft:health":
 						if (this is Player)
 						{
-							Log.Info(
-								$"Player health update! {attribute.Value.ToString()}");
+							Log.Info($"Player health update! {attribute.Value.ToString()}");
 						}
+
 						HealthManager.Health = attribute.Value.Value;
 						HealthManager.MaxHealth = attribute.Value.MaxValue;
+
 						break;
+
 					case "minecraft:absorption":
 						HealthManager.Absorption = attribute.Value.Value;
+
 						//HealthManager.
 						break;
+
 					default:
 						if (!TryUpdateAttribute(attribute.Value))
 							Log.Warn($"Unknown attribute! {attribute.Value.ToString()})");
+
 						break;
 				}
 			}
@@ -1876,7 +1900,7 @@ namespace Alex.Entities
 
 			return item.Name.Replace("minecraft:", "");
 		}
-		
+
 		/// <summary>
 		///		Takes one argument that represents the desired axis (0 == x-axis, 1 == y-axis, 2 == z-axis).
 		/// </summary>
@@ -1917,19 +1941,25 @@ namespace Alex.Entities
 		public double PositionDelta(int axis)
 		{
 			double amount = 0d;
+
 			switch (axis)
 			{
 				case 0: //X-Axis
 					amount = _delta.X;
+
 					break;
+
 				case 1: //Y-Axis
 					amount = _delta.Y;
+
 					break;
+
 				case 2: //Z-Axis
 					amount = _delta.Z;
+
 					break;
 			}
-				
+
 			return amount;
 		}
 
@@ -1978,6 +2008,7 @@ namespace Alex.Entities
 						isMainHand = false;
 				}
 			}
+
 			Item item = isMainHand ? Inventory.MainHand : Inventory.OffHand;
 
 			return item != null && item.Count > 0 && !(item is ItemAir);
@@ -1994,24 +2025,28 @@ namespace Alex.Entities
 			var p1 = mo.Get(0);
 
 			ModelBone bone = null;
+
 			if (p1 is StringValue sv)
 			{
 				if (_modelRenderer.GetBone(sv.Value, out bone))
 				{
 					int axis = 0;
+
 					if (mo.Contains(1))
 					{
 						axis = mo.GetInt(1);
 					}
-					
+
 					var pivot = bone.Pivot.GetValueOrDefault(Vector3.Zero);
 
 					switch (axis)
 					{
 						case 0:
 							return pivot.X;
+
 						case 1:
 							return pivot.Y;
+
 						case 2:
 							return pivot.Z;
 					}
@@ -2033,8 +2068,9 @@ namespace Alex.Entities
 
 				if (MathF.Abs(sp) < 0.01f)
 					return 0;
-			
+
 				var maxSpeed = 4.317f;
+
 				if (IsSneaking)
 				{
 					maxSpeed *= 0.3f;
@@ -2046,80 +2082,94 @@ namespace Alex.Entities
 
 				maxSpeed *= 10f;
 				maxSpeed *= (float)CalculateMovementFactor();
-			
+
 				return sp / maxSpeed;
 			}
 		}
-		
+
 		/// <summary>
 		///		Returns the distance of the root of this actor or particle emitter from the camera
 		/// </summary>
-		[MoProperty("distance_from_camera")] public double DistanceFromCamera => Vector3.Distance(Level.Camera.Position, KnownPosition);
-		
+		[MoProperty("distance_from_camera")]
+		public double DistanceFromCamera => Vector3.Distance(Level.Camera.Position, KnownPosition);
+
 		/// <summary>
 		/// Returns the time in seconds since the current animation started, else 0.0 if not called within an animation
 		/// </summary>
-		[MoProperty("life_time")] public double GetLifeTime => _lifeTime.Elapsed.TotalSeconds;
-		
+		[MoProperty("life_time")]
+		public double GetLifeTime => _lifeTime.Elapsed.TotalSeconds;
+
 		/// <summary>
 		/// Returns the total distance the entity has moved horizontally in meters (since the entity was last loaded, not necessarily since it was originally created) modified along the way by status flags such as is_baby or on_fire
 		/// </summary>
-		[MoProperty("modified_distance_moved")] public double ModifiedDistanceMoved => Movement.TotalDistanceMoved;
-		
+		[MoProperty("modified_distance_moved")]
+		public double ModifiedDistanceMoved => Movement.TotalDistanceMoved;
+
 		/// <summary>
 		/// Returns the current time stamp of the level
 		/// </summary>
-		[MoProperty("time_stamp")] public double TimeStamp => (double)Level.Time;
-		
+		[MoProperty("time_stamp")]
+		public double TimeStamp => (double)Level.Time;
+
 		/// <summary>
 		///		Returns the ratio (from 0 to 1) of how much between AI ticks this frame is being rendered
 		/// </summary>
-		[MoProperty("frame_alpha")] public double FrameAlpha => (1f / 50f) * _deltaTime.TotalMilliseconds;
-		
+		[MoProperty("frame_alpha")]
+		public double FrameAlpha => (1f / 50f) * _deltaTime.TotalMilliseconds;
+
 		/// <summary>
 		///		Returns the time in seconds since the previous frame
 		/// </summary>
-		[MoProperty("delta_time")] public double DeltaTime => _deltaTime.TotalSeconds;
-		
+		[MoProperty("delta_time")]
+		public double DeltaTime => _deltaTime.TotalSeconds;
+
 		/// <summary>
 		///		Returns the ground speed of the entity in metres/second
 		/// </summary>
-		[MoProperty("ground_speed")] public double GroundSpeed => Movement.MetersPerSecond;
-		
+		[MoProperty("ground_speed")]
+		public double GroundSpeed => Movement.MetersPerSecond;
+
 		/// <summary>
 		///		Returns the walk distance of the entity.
 		/// </summary>
-		[MoProperty("walk_distance")] public double WalkDistance => Movement.DistanceMoved;
-		
+		[MoProperty("walk_distance")]
+		public double WalkDistance => Movement.DistanceMoved;
+
 		/// <summary>
 		///		Returns the speed of the entity up or down in metres/second, where positive is up
 		/// </summary>
-		[MoProperty("vertical_speed")] public double VerticalSpeed => Movement.VerticalSpeed;
-		
+		[MoProperty("vertical_speed")]
+		public double VerticalSpeed => Movement.VerticalSpeed;
+
 		/// <summary>
 		///		Returns the time of day (midnight=0.0, sunrise=0.25, noon=0.5, sunset=0.75) of the dimension the entity is in.
 		/// </summary>
-		[MoProperty("time_of_day")] public double TimeOfDay => ((1f / 24000f) * Level.TimeOfDay);
-		
+		[MoProperty("time_of_day")]
+		public double TimeOfDay => ((1f / 24000f) * Level.TimeOfDay);
+
 		/// <summary>
 		///		Returns 1.0 if the entity has a target, else it returns 0.0
 		/// </summary>
-		[MoProperty("has_target")] public bool HasTarget => TargetEntityId != -1;
-		
+		[MoProperty("has_target")]
+		public bool HasTarget => TargetEntityId != -1;
+
 		/// <summary>
 		///		Returns true if the entity has an owner ID else it returns false
 		/// </summary>
-		[MoProperty("has_owner")] public bool HasOwner => OwnerEntityId != -1;
-		
+		[MoProperty("has_owner")]
+		public bool HasOwner => OwnerEntityId != -1;
+
 		/// <summary>
 		///		Returns the x rotation required to aim at the entity's current target if it has one, else it returns 0.0
 		/// </summary>
-		[MoProperty("target_x_rotation")] public double TargetXRotation => TargetRotation.X;
-		
+		[MoProperty("target_x_rotation")]
+		public double TargetXRotation => TargetRotation.X;
+
 		/// <summary>
 		/// Returns the y rotation required to aim at the entity's current target if it has one, else it returns 0.0
 		/// </summary>
-		[MoProperty("target_y_rotation")] public double TargetYRotation => TargetRotation.Y;
+		[MoProperty("target_y_rotation")]
+		public double TargetYRotation => TargetRotation.Y;
 
 		/// <summary>
 		///		Returns true if the entity has a rider, else it returns false
@@ -2138,28 +2188,33 @@ namespace Alex.Entities
 		/// <summary>
 		///		Returns true if the player has selected an item in the inventory
 		/// </summary>
-		[MoProperty("is_selected_item")] public bool IsSelectedItem => Inventory.MainHand.Count > 0 && !(Inventory.MainHand is ItemAir);
-		
+		[MoProperty("is_selected_item")]
+		public bool IsSelectedItem => Inventory.MainHand.Count > 0 && !(Inventory.MainHand is ItemAir);
+
 		/// <summary>
 		///		Returns the use time for the main hand item.
 		/// </summary>
-		[MoProperty("main_hand_item_use_duration")] public double MainHandItemUseDuration => ItemInUseDuration;
+		[MoProperty("main_hand_item_use_duration")]
+		public double MainHandItemUseDuration => ItemInUseDuration;
 
 		/// <summary>
 		///		Returns the use time maximum duration for the main hand item if it makes sense, else it returns 0.0
 		/// </summary>
-		[MoProperty("main_hand_item_max_duration")] public double MainHandItemMaxDuration { get; set; } = 1d;
+		[MoProperty("main_hand_item_max_duration")]
+		public double MainHandItemMaxDuration { get; set; } = 1d;
 
 		/// <summary>
 		///		returns value between 0.0 and 1.0 with 0.0 meaning cape is fully down and 1.0 is cape is fully up
 		/// </summary>
-		[MoProperty("cape_flap_amount")] public double CapeFlapAmount { get; set; } = 0d;
+		[MoProperty("cape_flap_amount")]
+		public double CapeFlapAmount { get; set; } = 0d;
 
 		/// <summary>
 		///			returns the hurt time for the actor, otherwise returns 0
 		/// </summary>
-		[MoProperty("hurt_time")] public double HurtTime { get; set; } = 0d;
-		
+		[MoProperty("hurt_time")]
+		public double HurtTime { get; set; } = 0d;
+
 		/// <summary>
 		///		Gets specified axis of the specified locator offset of the root model
 		/// </summary>
@@ -2171,7 +2226,7 @@ namespace Alex.Entities
 			//Log.Info($"Root locator params: {param.ToString()}");
 			return 0d;
 		}
-		
+
 		/// <summary>
 		///		Takes one argument as a parameter. Returns the nth head x rotation of the entity if it makes sense, else it returns 0.0
 		/// </summary>
@@ -2186,14 +2241,15 @@ namespace Alex.Entities
 			{
 				headNumber = moParams.GetInt(0);
 			}
-			
+
 			if (ModelRenderer.GetBoneTransform(headNumber > 0 ? $"head{headNumber}" : "head", out var bone))
 			{
 				return bone.Rotation.X;
 			}
+
 			return 0d;
 		}
-		
+
 		/// <summary>
 		///		Takes one argument as a parameter. Returns the nth head y rotation of the entity if it makes sense, else it returns 0.0
 		/// </summary>
@@ -2208,11 +2264,12 @@ namespace Alex.Entities
 			{
 				headNumber = moParams.GetInt(0);
 			}
-			
+
 			if (ModelRenderer.GetBoneTransform(headNumber > 0 ? $"head{headNumber}" : "head", out var bone))
 			{
 				return bone.Rotation.Y;
 			}
+
 			return 0d;
 		}
 
@@ -2246,15 +2303,17 @@ namespace Alex.Entities
 		/// <summary>
 		///		Returns the maximum amount of time the item can be used, else 0.0 if it doesn't make sense
 		/// </summary>
-		[MoProperty("item_max_use_duration")] 
-		public double ItemMaxUseDuration => 0d;//MainHandItemMaxDuration;
-		
+		[MoProperty("item_max_use_duration")]
+		public double ItemMaxUseDuration => 0d; //MainHandItemMaxDuration;
+
 		/// <summary>
 		///		Returns the amount of time an item has left to use, else 0.0 if it doesn't make sense.
 		///		Item queried is specified by the slot name 'main_hand' or 'off_hand'.
 		///		Time remaining is normalized using the normalization value, only if one is given, else it is returned in seconds.
 		/// </summary>
-		[MoProperty("item_remaining_use_duration")] public double ItemRemainingUseDuration => ItemMaxUseDuration > 0d ? (ItemMaxUseDuration - ItemInUseDuration) : 0d;
+		[MoProperty("item_remaining_use_duration")]
+		public double ItemRemainingUseDuration =>
+			ItemMaxUseDuration > 0d ? (ItemMaxUseDuration - ItemInUseDuration) : 0d;
 
 		/// <summary>
 		///		Returns the list of entities within the specified distance, taking an optional second argument as a filter for which mob types to accept (eg: 'minecraft:pig').
@@ -2266,8 +2325,9 @@ namespace Alex.Entities
 		public IEnumerable<Entity> GetNearbyEntities(double maxDistance, string type = "")
 		{
 			var resourceLocation = new ResourceLocation(type);
-			
+
 			bool checkType = !string.IsNullOrWhiteSpace(type);
+
 			foreach (var entity in Level.EntityManager.GetEntities(_knownPosition.ToVector3(), maxDistance))
 			{
 				if (!checkType || (entity.Type != null && entity.Type.Equals(resourceLocation)))
@@ -2282,7 +2342,7 @@ namespace Alex.Entities
 		{
 			return (int)Level.MoonPhase;
 		}
-		
+
 		[MoFunction("moon_brightness")]
 		public double GetMoonBrightness()
 		{

@@ -16,24 +16,23 @@ namespace Alex.Entities
 		}
 
 		public ResourceLocation Location { get; private set; }
+
 		public IRegistryEntry<EntityModel> WithLocation(ResourceLocation location)
 		{
 			Location = location;
+
 			return this;
 		}
-		
 	}
+
 	public class EntityModelRegistry : RegistryBase<EntityModel>
 	{
 		/// <inheritdoc />
 		public EntityModelRegistry() : base("EntityModel")
 		{
-			RegisterBuiltIn();	
+			RegisterBuiltIn();
 		}
 
-		private void RegisterBuiltIn()
-		{
-			
-		}
+		private void RegisterBuiltIn() { }
 	}
 }

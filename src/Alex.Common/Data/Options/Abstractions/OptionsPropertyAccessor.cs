@@ -2,41 +2,42 @@
 
 namespace Alex.Common.Data.Options
 {
+	public class OptionsPropertyAccessor<TProperty> : IDisposable
+	{
+		private readonly OptionsProperty<TProperty> _property;
 
-    public class OptionsPropertyAccessor<TProperty> : IDisposable
-    {
-        private readonly OptionsProperty<TProperty> _property;
+		private readonly OptionsPropertyChangedDelegate<TProperty> _delegate;
 
-        private readonly OptionsPropertyChangedDelegate<TProperty> _delegate;
+		public TProperty Value => _property.Value;
 
-        public TProperty Value => _property.Value;
-        internal OptionsPropertyAccessor(OptionsProperty<TProperty> property, OptionsPropertyChangedDelegate<TProperty> listenDelegate)
-        {
-            _property = property;
-            _delegate = listenDelegate;
-        }
+		internal OptionsPropertyAccessor(OptionsProperty<TProperty> property,
+			OptionsPropertyChangedDelegate<TProperty> listenDelegate)
+		{
+			_property = property;
+			_delegate = listenDelegate;
+		}
 
-        internal void Invoke(TProperty oldValue, TProperty newValue)
-        {
-            _delegate?.Invoke(oldValue, newValue);
-        }
-        
-        protected void Dispose(bool disposing)
-        {
-            if (disposing)
-            {
-                _property.Unbind(this);
-            }
-        }
+		internal void Invoke(TProperty oldValue, TProperty newValue)
+		{
+			_delegate?.Invoke(oldValue, newValue);
+		}
 
-        public void Dispose()
-        {
-            Dispose(true);
-        }
+		protected void Dispose(bool disposing)
+		{
+			if (disposing)
+			{
+				_property.Unbind(this);
+			}
+		}
 
-        ~OptionsPropertyAccessor()
-        {
-            Dispose(false);
-        }
-    }
+		public void Dispose()
+		{
+			Dispose(true);
+		}
+
+		~OptionsPropertyAccessor()
+		{
+			Dispose(false);
+		}
+	}
 }

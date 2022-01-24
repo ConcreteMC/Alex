@@ -10,13 +10,14 @@ namespace Alex.Blocks.Minecraft
 	{
 		public static readonly PropertyBool OCCUPIED = new PropertyBool("occupied", "true", "false");
 		public static readonly PropertyBool PART = new PropertyBool("part", "foot", "head");
-		
+
 		public BlockColor Variant { get; }
-		public bool IsFoot => PART.GetValue(BlockState);// BlockState.GetTypedValue(PART);
+		public bool IsFoot => PART.GetValue(BlockState); // BlockState.GetTypedValue(PART);
+
 		public Bed(BlockColor variant)
 		{
 			Variant = variant;
-			
+
 			Transparent = true;
 			CanInteract = true;
 			BlockMaterial = Material.Wood;
@@ -29,11 +30,15 @@ namespace Alex.Blocks.Minecraft
 			{
 				case "occupied":
 					stateProperty = OCCUPIED;
+
 					return true;
+
 				case "part":
 					stateProperty = PART;
+
 					return true;
 			}
+
 			return base.TryGetStateProperty(prop, out stateProperty);
 		}
 	}

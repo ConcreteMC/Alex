@@ -4,7 +4,7 @@ using Microsoft.Xna.Framework;
 
 namespace Alex.Entities.Components.Effects
 {
-	public class SpeedEffect: Effect
+	public class SpeedEffect : Effect
 	{
 		private double _multiplier = 0.02;
 
@@ -12,7 +12,7 @@ namespace Alex.Entities.Components.Effects
 
 		private Modifier _modifier = new Modifier(
 			new MiNET.Utils.UUID("91AEAA56-376B-4498-935B-2F7F68070635"), 0d, ModifierMode.Multiply);
-		
+
 		public SpeedEffect() : base(EffectType.Speed)
 		{
 			Particles = false;

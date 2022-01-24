@@ -2,17 +2,12 @@
 
 namespace Alex.ResourcePackLib.Json.Models.Blocks
 {
-    public class BedrockBlockModel
-    {
-	    public BedrockBlockModel()
-	    {
+	public class BedrockBlockModel
+	{
+		public BedrockBlockModel() { }
 
-	    }
+		[JsonProperty("blockshape")] public string Blockshape { get; set; }
 
-	    [JsonProperty("blockshape")]
-	    public string Blockshape { get; set; }
-
-	    [JsonProperty("sound")]
-	    public string Sound { get; set; }
+		[JsonProperty("sound")] public string Sound { get; set; }
 	}
 }

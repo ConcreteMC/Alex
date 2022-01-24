@@ -18,13 +18,13 @@ namespace Alex.Worlds.Multiplayer.Bedrock.Resources
 		public string Version;
 
 		public ResourcePackType PackType { get; set; }
+
 		public ResourcePackEntry(string packUuid, string version)
 		{
 			UUID = packUuid;
 			Version = version;
 
 			PackageId = Identifier = $"{UUID}_{Version}";
-			
 		}
 
 		//private byte[] _completedData = null;
@@ -41,12 +41,17 @@ namespace Alex.Worlds.Multiplayer.Bedrock.Resources
 		public ulong ChunkCount { get; private set; } = 0;
 		//private byte[] _hash = null;
 
-		public void SetDataInfo(ResourcePackType packType, byte[] hash, uint messageChunkCount, uint messageMaxChunkSize, ulong messageCompressedPackageSize, string packageId)
+		public void SetDataInfo(ResourcePackType packType,
+			byte[] hash,
+			uint messageChunkCount,
+			uint messageMaxChunkSize,
+			ulong messageCompressedPackageSize,
+			string packageId)
 		{
 			PackageId = packageId;
 			PackType = packType;
 			//_hash = hash;
-			
+
 			var chunkCount = messageCompressedPackageSize / messageMaxChunkSize;
 
 			if (messageCompressedPackageSize % messageMaxChunkSize != 0)
@@ -64,19 +69,20 @@ namespace Alex.Worlds.Multiplayer.Bedrock.Resources
 			}
 
 			ExpectedIndex = 0;
-			
+
 			Log.Info($"Downloading resources... ID={Identifier}");
 			//Log.Info($"Resourcepack data info, packType={packType}");
 		}
 
 		public uint ExpectedIndex { get; set; } = 0;
-		
+
 		public bool SetChunkData(uint chunkIndex, byte[] chunkData, out byte[] completedData)
 		{
 			completedData = null;
+
 			if (IsComplete)
 				return false;
-			
+
 			if (chunkIndex != ExpectedIndex)
 			{
 				Log.Warn($"Received wrong chunk index, expected={ExpectedIndex} received={chunkIndex}");
@@ -108,6 +114,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock.Resources
 					//_completedData = ms.Read().ToArray();
 
 					completedData = buffer;
+
 					if (Alex.Instance.Options.AlexOptions.MiscelaneousOptions.LoadServerResources.Value)
 					{
 						OnComplete(buffer);
@@ -119,7 +126,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock.Resources
 
 			return true;
 		}
-		
+
 		public void SetData(byte[] data)
 		{
 			OnComplete(data);
@@ -133,12 +140,12 @@ namespace Alex.Worlds.Multiplayer.Bedrock.Resources
 		/// <summary>
 		///		The total amount of data received so far
 		/// </summary>
-		public long TotalReceived => _chunks == null ? 0 : (long) _chunks.Where(x => x != null).Sum(x => x.LongLength);
+		public long TotalReceived => _chunks == null ? 0 : (long)_chunks.Where(x => x != null).Sum(x => x.LongLength);
 
 		/// <summary>
 		///		The expected amount of data to come in.
 		/// </summary>
-		public long ExpectedSize => (long) _compressedPackageSize;
+		public long ExpectedSize => (long)_compressedPackageSize;
 
 		protected virtual void Dispose(bool disposing) { }
 

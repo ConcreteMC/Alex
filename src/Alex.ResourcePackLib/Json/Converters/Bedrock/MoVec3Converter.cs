@@ -37,31 +37,28 @@ namespace Alex.ResourcePackLib.Json.Converters.Bedrock
 
 						return new MoLangVector3Expression(values);
 					}
+
 					break;
+
 				case JTokenType.Object:
 					if (obj is JObject jObject)
 					{
 						return new MoLangVector3Expression(
 							jObject.ToObject<Dictionary<string, AnimationChannelData>>(
-								new JsonSerializer()
-								{
-									Converters = { new MoLangExpressionConverter()}
-								}));
+								new JsonSerializer() { Converters = { new MoLangExpressionConverter() } }));
 					}
+
 					break;
 			}
-			
+
 			var raw = obj.ToObject<IExpression[]>(MCJsonConvert.Serializer);
 
-			return new MoLangVector3Expression(new IExpression[][]
-			{
-				raw
-			});
-			
+			return new MoLangVector3Expression(new IExpression[][] { raw });
+
 			throw new Exception("No.");
 		}
 	}
-	
+
 	public class MoVec4Converter : JsonConverter<MoLangVector4Expression>
 	{
 		/// <inheritdoc />
@@ -91,27 +88,24 @@ namespace Alex.ResourcePackLib.Json.Converters.Bedrock
 
 						return new MoLangVector4Expression(values);
 					}
+
 					break;
+
 				case JTokenType.Object:
 					if (obj is JObject jObject)
 					{
 						return new MoLangVector4Expression(
 							jObject.ToObject<Dictionary<string, AnimationChannelData>>(
-								new JsonSerializer()
-								{
-									Converters = { new MoLangExpressionConverter()}
-								}));
+								new JsonSerializer() { Converters = { new MoLangExpressionConverter() } }));
 					}
+
 					break;
 			}
-			
+
 			var raw = obj.ToObject<IExpression[]>(MCJsonConvert.Serializer);
 
-			return new MoLangVector4Expression(new IExpression[][]
-			{
-				raw
-			});
-			
+			return new MoLangVector4Expression(new IExpression[][] { raw });
+
 			throw new Exception("No.");
 		}
 	}

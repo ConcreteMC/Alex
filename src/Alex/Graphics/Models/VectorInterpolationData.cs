@@ -7,11 +7,8 @@ public class VectorInterpolationData : InterpolationData<Vector3>
 {
 	/// <inheritdoc />
 	public VectorInterpolationData(Vector3 start, Vector3 target, double targetTime) : base(
-		FixInvalidVector(start), FixInvalidVector(target), targetTime)
-	{
-			
-	}
-		
+		FixInvalidVector(start), FixInvalidVector(target), targetTime) { }
+
 	private static Vector3 FixInvalidVector(Vector3 vector)
 	{
 		vector.X = float.IsNaN(vector.X) ? 0f : vector.X;
@@ -27,13 +24,14 @@ public class VectorInterpolationData : InterpolationData<Vector3>
 		Target = FixInvalidVector(target);
 		TargetTime = targetTime;
 		ElapsedTime = 0d;
+
 		return this;
 	}
 
 	/// <inheritdoc />
 	protected override Vector3 OnUpdate(double elapsedTime)
 	{
-		return MathUtils.LerpVector3Safe(Start, Target, (float) (elapsedTime / TargetTime));
+		return MathUtils.LerpVector3Safe(Start, Target, (float)(elapsedTime / TargetTime));
 	}
 
 	/// <inheritdoc />

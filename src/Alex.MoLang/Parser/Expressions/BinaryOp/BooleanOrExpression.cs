@@ -11,7 +11,8 @@ namespace Alex.MoLang.Parser.Expressions.BinaryOp
 		/// <inheritdoc />
 		public override IMoValue Evaluate(MoScope scope, MoLangEnvironment environment)
 		{
-			return new DoubleValue(Left.Evaluate(scope, environment).AsBool() || Right.Evaluate(scope, environment).AsBool());
+			return new DoubleValue(
+				Left.Evaluate(scope, environment).AsBool() || Right.Evaluate(scope, environment).AsBool());
 		}
 
 		/// <inheritdoc />

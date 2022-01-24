@@ -13,137 +13,140 @@ using NLog;
 
 namespace Alex.Utils.Assets
 {
-    public class MCBedrockAssetUtils
-    {
-        private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(MCBedrockAssetUtils));
+	public class MCBedrockAssetUtils
+	{
+		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(MCBedrockAssetUtils));
 
-        private const string DownloadURL = "https://aka.ms/resourcepacktemplate";
-        private static readonly string CurrentBedrockVersionStorageKey = Path.Combine("assets", "bedrock-version.txt");
-        
-        private static readonly Regex ExtractVersionFromFilename = new Regex(@"Vanilla_.*Pack_(?<version>[\d\.]+).zip", RegexOptions.Compiled);
-        
-        private IStorageSystem Storage { get; }
-        public MCBedrockAssetUtils(IStorageSystem storage)
-        {
-            Storage = storage;
-        }
+		private const string DownloadURL = "https://aka.ms/resourcepacktemplate";
+		private static readonly string CurrentBedrockVersionStorageKey = Path.Combine("assets", "bedrock-version.txt");
 
-        public bool TryGetStoredAssetVersion(out string version)
-        {
-            if (Storage.TryReadString(CurrentBedrockVersionStorageKey, out var currentVersion))
-            {
-                version = currentVersion;
+		private static readonly Regex ExtractVersionFromFilename = new Regex(
+			@"Vanilla_.*Pack_(?<version>[\d\.]+).zip", RegexOptions.Compiled);
 
-                return true;
-            }
+		private IStorageSystem Storage { get; }
 
-            version = null;
-            return false;
-        }
+		public MCBedrockAssetUtils(IStorageSystem storage)
+		{
+			Storage = storage;
+		}
 
-        public bool CheckUpdate(IProgressReceiver progressReceiver, string targetPath, out string path)
-        {
-            path = String.Empty;
-            progressReceiver?.UpdateProgress(0, "Checking for resource updates...");
-            
-            using var httpClient = new HttpClient(new HttpClientHandler
-            {
-                AllowAutoRedirect = true,
-            });
+		public bool TryGetStoredAssetVersion(out string version)
+		{
+			if (Storage.TryReadString(CurrentBedrockVersionStorageKey, out var currentVersion))
+			{
+				version = currentVersion;
 
-            try
-            {
-              //  string assetsZipSavePath = String.Empty;
+				return true;
+			}
 
-                string currentVersion;
+			version = null;
 
-                if (TryGetStoredAssetVersion(out currentVersion))
-                {
-                    path = Path.Combine("assets", $"bedrock-{currentVersion}.zip");
+			return false;
+		}
 
-                    if (!Storage.TryGetDirectory(targetPath, out var targetDirInfo) || targetDirInfo.GetFileSystemInfos().Length == 0)
-                        currentVersion = null;
-                }
+		public bool CheckUpdate(IProgressReceiver progressReceiver, string targetPath, out string path)
+		{
+			path = String.Empty;
+			progressReceiver?.UpdateProgress(0, "Checking for resource updates...");
 
-                try
-                {
-                    var zipDownloadHeaders = httpClient.Send(
-                        new HttpRequestMessage(HttpMethod.Get, DownloadURL), HttpCompletionOption.ResponseHeadersRead);
+			using var httpClient = new HttpClient(new HttpClientHandler { AllowAutoRedirect = true, });
 
-                    var fileName = zipDownloadHeaders.Content?.Headers?.ContentDisposition?.FileName
-                                   ?? zipDownloadHeaders.RequestMessage?.RequestUri?.LocalPath;
+			try
+			{
+				//  string assetsZipSavePath = String.Empty;
 
-                    var versionMatch = ExtractVersionFromFilename.Match(fileName);
+				string currentVersion;
 
-                    if (versionMatch.Success)
-                    {
-                        var latestVersion = versionMatch.Groups["version"].Value;
+				if (TryGetStoredAssetVersion(out currentVersion))
+				{
+					path = Path.Combine("assets", $"bedrock-{currentVersion}.zip");
 
-                        if (latestVersion != currentVersion)
-                        {
-                            if (Storage.Exists(path))
-                                Storage.Delete(path);
-                            
-                            progressReceiver?.UpdateProgress(
-                                0, "Downloading latest bedrock assets...", "This could take a while...");
+					if (!Storage.TryGetDirectory(targetPath, out var targetDirInfo)
+					    || targetDirInfo.GetFileSystemInfos().Length == 0)
+						currentVersion = null;
+				}
 
-                            /* zipDownloadHeaders = await httpClient.SendAsync(new HttpRequestMessage(HttpMethod.Get,
-                                 zipDownloadHeaders.Headers.Location), HttpCompletionOption.ResponseContentRead);
-                             var content = await zipDownloadHeaders.Content.ReadAsByteArrayAsync();*/
-                            Stopwatch sw = new Stopwatch();
-                            WebClient wc = new WebClient();
+				try
+				{
+					var zipDownloadHeaders = httpClient.Send(
+						new HttpRequestMessage(HttpMethod.Get, DownloadURL), HttpCompletionOption.ResponseHeadersRead);
 
-                            wc.DownloadProgressChanged += (sender, args) =>
-                            {
-                                var downloadSpeed =
-                                    $"Download speed: {FormattingUtils.GetBytesReadable((long) (Convert.ToDouble(args.BytesReceived) / sw.Elapsed.TotalSeconds), 2)}/s";
+					var fileName = zipDownloadHeaders.Content?.Headers?.ContentDisposition?.FileName
+					               ?? zipDownloadHeaders.RequestMessage?.RequestUri?.LocalPath;
 
-                                progressReceiver?.UpdateProgress(
-                                    args.ProgressPercentage, $"Downloading latest bedrock assets...", downloadSpeed);
-                            };
+					var versionMatch = ExtractVersionFromFilename.Match(fileName);
 
-                            bool   complete = false;
-                            string archivePath = string.Empty;
-                            wc.DownloadDataCompleted += (sender, args) =>
-                            {
-                                var content = args.Result;
-                                
-                                archivePath = Path.Combine("assets", $"bedrock-{latestVersion}.zip");
+					if (versionMatch.Success)
+					{
+						var latestVersion = versionMatch.Groups["version"].Value;
 
-                                // save locally
-                                
-                                Storage.TryWriteString(CurrentBedrockVersionStorageKey, latestVersion);
-                                
-                                Storage.TryWriteBytes(archivePath, content);
+						if (latestVersion != currentVersion)
+						{
+							if (Storage.Exists(path))
+								Storage.Delete(path);
 
-                                complete = true;
-                            };
-                            
-                            wc.DownloadDataAsync(zipDownloadHeaders.RequestMessage.RequestUri);
-                            sw.Restart();
-                            
-                            SpinWait.SpinUntil(() => complete);
-                            
-                            path = archivePath;
-                            
-                            return true;
-                        }
-                    }
+							progressReceiver?.UpdateProgress(
+								0, "Downloading latest bedrock assets...", "This could take a while...");
 
-                    return false;
-                }
-                catch (Exception ex)
-                {
-                    Log.Error(ex, "Failed to download bedrock assets...");
+							/* zipDownloadHeaders = await httpClient.SendAsync(new HttpRequestMessage(HttpMethod.Get,
+							     zipDownloadHeaders.Headers.Location), HttpCompletionOption.ResponseContentRead);
+							 var content = await zipDownloadHeaders.Content.ReadAsByteArrayAsync();*/
+							Stopwatch sw = new Stopwatch();
+							WebClient wc = new WebClient();
 
-                    return false;
-                }
-            }
-            catch(Exception ex)
-            {
-                Log.Error(ex, "Failed to fetch latest bedrock assets pack.");
-                throw;
-            }
-        }
-    }
+							wc.DownloadProgressChanged += (sender, args) =>
+							{
+								var downloadSpeed =
+									$"Download speed: {FormattingUtils.GetBytesReadable((long)(Convert.ToDouble(args.BytesReceived) / sw.Elapsed.TotalSeconds), 2)}/s";
+
+								progressReceiver?.UpdateProgress(
+									args.ProgressPercentage, $"Downloading latest bedrock assets...", downloadSpeed);
+							};
+
+							bool complete = false;
+							string archivePath = string.Empty;
+
+							wc.DownloadDataCompleted += (sender, args) =>
+							{
+								var content = args.Result;
+
+								archivePath = Path.Combine("assets", $"bedrock-{latestVersion}.zip");
+
+								// save locally
+
+								Storage.TryWriteString(CurrentBedrockVersionStorageKey, latestVersion);
+
+								Storage.TryWriteBytes(archivePath, content);
+
+								complete = true;
+							};
+
+							wc.DownloadDataAsync(zipDownloadHeaders.RequestMessage.RequestUri);
+							sw.Restart();
+
+							SpinWait.SpinUntil(() => complete);
+
+							path = archivePath;
+
+							return true;
+						}
+					}
+
+					return false;
+				}
+				catch (Exception ex)
+				{
+					Log.Error(ex, "Failed to download bedrock assets...");
+
+					return false;
+				}
+			}
+			catch (Exception ex)
+			{
+				Log.Error(ex, "Failed to fetch latest bedrock assets pack.");
+
+				throw;
+			}
+		}
+	}
 }

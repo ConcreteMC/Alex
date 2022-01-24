@@ -17,22 +17,22 @@ namespace Alex.ResourcePackLib.Json.Converters.Bedrock
 		}
 
 		/// <inheritdoc />
-		public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
+		public override object ReadJson(JsonReader reader,
+			Type objectType,
+			object existingValue,
+			JsonSerializer serializer)
 		{
 			var obj = JToken.Load(reader);
 
 			if (obj.Type == JTokenType.Object)
 			{
-			//	var gradientValue = ((JObject) obj).ToObject<SoundEvent>(serializer);
+				//	var gradientValue = ((JObject) obj).ToObject<SoundEvent>(serializer);
 
-				return new SoundEvent()
-				{
-					Sound = ((JObject) obj).GetValue("sound")?.Value<string>() ?? null
-				};
+				return new SoundEvent() { Sound = ((JObject)obj).GetValue("sound")?.Value<string>() ?? null };
 			}
 			else if (obj.Type == JTokenType.String)
 			{
-				return new SoundEvent() {Sound = obj.Value<string>()};
+				return new SoundEvent() { Sound = obj.Value<string>() };
 			}
 
 			return null;

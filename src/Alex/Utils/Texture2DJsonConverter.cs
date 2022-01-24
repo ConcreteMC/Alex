@@ -10,6 +10,7 @@ namespace Alex.Utils
 	public class Texture2DJsonConverter : JsonConverter<Texture2D>
 	{
 		private GraphicsDevice GraphicsDevice;
+
 		public Texture2DJsonConverter(GraphicsDevice device)
 		{
 			GraphicsDevice = device;
@@ -18,10 +19,11 @@ namespace Alex.Utils
 		public override void WriteJson(JsonWriter writer, Texture2D value, JsonSerializer serializer)
 		{
 			byte[] data = null;
+
 			if (!Program.IsRunningOnStartupThread())
 			{
 				ManualResetEvent resetEvent = new ManualResetEvent(false);
-				
+
 
 				Alex.Instance.UiTaskManager.Enqueue(
 					() =>
@@ -51,7 +53,10 @@ namespace Alex.Utils
 			writer.WriteValue(savedValue);
 		}
 
-		public override Texture2D ReadJson(JsonReader reader, Type objectType, Texture2D existingValue, bool hasExistingValue,
+		public override Texture2D ReadJson(JsonReader reader,
+			Type objectType,
+			Texture2D existingValue,
+			bool hasExistingValue,
 			JsonSerializer serializer)
 		{
 			try
@@ -64,12 +69,12 @@ namespace Alex.Utils
 				}
 
 				byte[] data = Convert.FromBase64String(base64Value);
-				
+
 				if (!Program.IsRunningOnStartupThread())
 				{
 					ManualResetEvent resetEvent = new ManualResetEvent(false);
 
-					Texture2D result      = null;
+					Texture2D result = null;
 
 					Alex.Instance.UiTaskManager.Enqueue(
 						() =>

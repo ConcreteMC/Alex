@@ -8,7 +8,7 @@ public class DirectStorage : IStorage
 	{
 		_index = index;
 	}
-	
+
 	/// <inheritdoc />
 	public uint this[int index]
 	{
@@ -18,11 +18,7 @@ public class DirectStorage : IStorage
 
 	/// <inheritdoc />
 	public int Length => 1;
-	
-	/// <inheritdoc />
-	public void Dispose()
-	{
-		
-	}
 
+	/// <inheritdoc />
+	public void Dispose() { }
 }

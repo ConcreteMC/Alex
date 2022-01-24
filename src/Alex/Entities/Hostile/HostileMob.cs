@@ -5,8 +5,7 @@ namespace Alex.Entities.Hostile
 {
 	public abstract class HostileMob : Mob
 	{
-		protected HostileMob(World level)
-			: base(level)
+		protected HostileMob(World level) : base(level)
 		{
 			base.MapIcon.Color = Color.Red;
 		}

@@ -20,10 +20,10 @@ namespace Alex.Blocks.Minecraft.Fences
 		}
 
 		public bool North => PropertyBool.NORTH.GetValue(BlockState);
-		public bool East =>PropertyBool.EAST.GetValue(BlockState);
+		public bool East => PropertyBool.EAST.GetValue(BlockState);
 		public bool South => PropertyBool.SOUTH.GetValue(BlockState);
 		public bool West => PropertyBool.WEST.GetValue(BlockState);
-		
+
 		/// <inheritdoc />
 		public override BlockState BlockPlaced(IBlockAccess world, BlockState state, BlockCoordinates position)
 		{
@@ -33,10 +33,11 @@ namespace Alex.Blocks.Minecraft.Fences
 			newState = Check(world, position, position.BlockEast(), newState);
 			newState = Check(world, position, position.BlockSouth(), newState);
 			newState = Check(world, position, position.BlockWest(), newState);
+
 			//current = Check(world, position, position + BlockCoordinates.Up, current);
 			//current = Check(world, position, position + BlockCoordinates.Down, current);
 			return newState;
-			
+
 			return base.BlockPlaced(world, state, position);
 		}
 
@@ -44,35 +45,40 @@ namespace Alex.Blocks.Minecraft.Fences
 		public override void BlockUpdate(World world, BlockCoordinates position, BlockCoordinates updatedBlock)
 		{
 			var state = Check(world, position, updatedBlock, BlockState);
+
 			if (BlockState != state)
 				world.SetBlockState(position, state);
-			
+
 			//base.BlockUpdate(world, position, updatedBlock);
 		}
 
-		private BlockState Check(IBlockAccess world, BlockCoordinates position, BlockCoordinates updatedBlock, BlockState current)
+		private BlockState Check(IBlockAccess world,
+			BlockCoordinates position,
+			BlockCoordinates updatedBlock,
+			BlockState current)
 		{
 			var neighbor = world.GetBlockState(updatedBlock);
-			
+
 			var facePos = updatedBlock - position;
-			var fp      = new Vector3(facePos.X, facePos.Y, facePos.Z);
+			var fp = new Vector3(facePos.X, facePos.Y, facePos.Z);
 			fp.Normalize();
-			
-			var face       = new Vector3(fp.X, fp.Y, fp.Z).GetBlockFace();
+
+			var face = new Vector3(fp.X, fp.Y, fp.Z).GetBlockFace();
 			//var faceString = face.ToString().ToLower();
 
 			BlockState check(PropertyBool property)
 			{
 				var currentValue = property.GetValue(current);
+
 				if (CanAttach(face, neighbor.Block))
 				{
 					if (!currentValue)
 					{
-						return current.WithProperty(property, true);//.WithProperty(faceString, "true");
+						return current.WithProperty(property, true); //.WithProperty(faceString, "true");
 						//world.SetBlockState(position, state);
 					}
 				}
-				else 
+				else
 				{
 					if (currentValue)
 					{
@@ -83,7 +89,7 @@ namespace Alex.Blocks.Minecraft.Fences
 
 				return current;
 			}
-			
+
 			//bool currentValue = false;
 
 			switch (face)
@@ -110,7 +116,7 @@ namespace Alex.Blocks.Minecraft.Fences
 		{
 			if (block is Fence || block is FenceGate)
 				return true;
-			
+
 			return base.CanAttach(face, block);
 		}
 
@@ -121,23 +127,35 @@ namespace Alex.Blocks.Minecraft.Fences
 			{
 				case "north":
 					stateProperty = PropertyBool.NORTH;
+
 					return true;
+
 				case "east":
 					stateProperty = PropertyBool.EAST;
+
 					return true;
+
 				case "south":
 					stateProperty = PropertyBool.SOUTH;
+
 					return true;
+
 				case "west":
 					stateProperty = PropertyBool.WEST;
+
 					return true;
+
 				case "up":
 					stateProperty = PropertyBool.UP;
+
 					return true;
+
 				case "down":
 					stateProperty = PropertyBool.DOWN;
+
 					return true;
 			}
+
 			return base.TryGetStateProperty(prop, out stateProperty);
 		}
 	}

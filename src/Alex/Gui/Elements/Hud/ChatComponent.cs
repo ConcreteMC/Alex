@@ -21,27 +21,29 @@ namespace Alex.Gui.Elements.Hud
 	public class ChatComponent : TextInput, IChatRecipient
 	{
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(ChatComponent));
-		
-		private ConcurrentDeck<(string message, DateTime time)> _chatEntries = new ConcurrentDeck<(string message, DateTime time)>(10);
+
+		private ConcurrentDeck<(string message, DateTime time)> _chatEntries =
+			new ConcurrentDeck<(string message, DateTime time)>(10);
 
 		public int UnfocusedHeight { get; set; } = 100;
 		public int FocusedHeight { get; set; } = 180;
-		
-		private  NetworkProvider  Network         { get; }
+
+		private NetworkProvider Network { get; }
 		private CommandProvider CommandProvider { get; } = null;
 
 		private static ChatComponent _instance;
+
 		public ChatComponent(NetworkProvider networkProvider)
 		{
 			Network = networkProvider;
 			CommandProvider = networkProvider.CommandProvider;
-			
+
 			Anchor = Alignment.BottomLeft;
 
 			MaxHeight = Height;
 			Height = 180;
 			Width = 320;
-			
+
 			Font = Alex.Instance.GuiRenderer.Font;
 
 			Padding = new Thickness(2, 0, 2, 0);
@@ -63,11 +65,12 @@ namespace Alex.Gui.Elements.Hud
 			base.TextElement.Anchor = Alignment.BottomLeft;
 
 			BorderColor = Color.Transparent;
-			
+
 			_instance = this;
 		}
 
 		private InputActionBinding _closeChatBinding;
+
 		protected override void OnFocusActivate()
 		{
 			Height = FocusedHeight;
@@ -75,7 +78,7 @@ namespace Alex.Gui.Elements.Hud
 
 			TextBuilder.Clear();
 			Value = string.Empty;
-			
+
 			ResetTabComplete();
 
 			TextElement.Text = string.Empty;
@@ -124,19 +127,23 @@ namespace Alex.Gui.Elements.Hud
 		}
 
 		private TimeSpan _renderTimeout = TimeSpan.FromSeconds(30);
+
 		protected override void OnDraw(GuiSpriteBatch graphics, GameTime gameTime)
 		{
 			base.OnDraw(graphics, gameTime);
 
 			var targetHeight = Focused ? FocusedHeight : UnfocusedHeight;
-			
+
 			if (Focused)
 			{
 				var renderPos = (TextElement.RenderBounds.BottomLeft() - new Vector2(0, 8)).ToPoint();
-				graphics.FillRectangle(new Rectangle(RenderBounds.X, (renderPos.Y) - 2, Width, 10), new Color(Color.Black, 0.5f));
+
+				graphics.FillRectangle(
+					new Rectangle(RenderBounds.X, (renderPos.Y) - 2, Width, 10), new Color(Color.Black, 0.5f));
 			}
 
 			var messages = _chatEntries.ReadDeck();
+
 			if (messages.Length > 0)
 			{
 				DateTime now = DateTime.UtcNow;
@@ -146,6 +153,7 @@ namespace Alex.Gui.Elements.Hud
 				{
 					var elapse = now - msg.time;
 					float alpha = 1f;
+
 					if (!Focused)
 					{
 						if (elapse > _renderTimeout)
@@ -153,12 +161,12 @@ namespace Alex.Gui.Elements.Hud
 							continue;
 						}
 
-						alpha = (float) (1f - ((elapse.TotalMilliseconds / _renderTimeout.TotalMilliseconds) * 1f));
+						alpha = (float)(1f - ((elapse.TotalMilliseconds / _renderTimeout.TotalMilliseconds) * 1f));
 					}
 
 					if (alpha <= 0)
 						break;
-					
+
 					DrawChatLine(graphics, msg.message, alpha, ref offset);
 
 					if (offset.Y - 48f >= targetHeight)
@@ -180,56 +188,70 @@ namespace Alex.Gui.Elements.Hud
 
 					var xOffset = stringSize.X + TextElement.Margin.Left;
 					tabRenderPos.X += xOffset;
-					
+
 					var offset = _tabCompleteMatchIndex;
 					var tabCompletionResults = _tabCompleteMatches;
 					var maxWidth = tabCompletionResults.Max(x => x.Size.X);
-					for(int i = 0; i < tabCompletionResults.Length; i++)
+
+					for (int i = 0; i < tabCompletionResults.Length; i++)
 					{
 						var tab = tabCompletionResults[i];
 						var text = tab.Match.GetDescriptive();
 						var size = tab.Size;
 						tabRenderPos.Y -= size.Y;
 
-						graphics.FillRectangle(new Rectangle((int) tabRenderPos.X, (int) (tabRenderPos.Y) - 2, maxWidth, size.Y), new Color(Color.Black, 0.95f));
-						graphics.DrawString(tabRenderPos, text, i == (offset - 1) ? Color.Gold : Color.White, FontStyle.None, 1f);
+						graphics.FillRectangle(
+							new Rectangle((int)tabRenderPos.X, (int)(tabRenderPos.Y) - 2, maxWidth, size.Y),
+							new Color(Color.Black, 0.95f));
+
+						graphics.DrawString(
+							tabRenderPos, text, i == (offset - 1) ? Color.Gold : Color.White, FontStyle.None, 1f);
 					}
 
 					stringOffset = t.Substring(0, TextBuilder.CursorPosition);
 					stringSize = Font.MeasureString(stringOffset);
-					
+
 					var currentSelection = tabCompletionResults[offset];
+
 					if (currentSelection.Match.HasTooltip)
 					{
-						graphics.DrawString(Font, currentSelection.Match.Tooltip, new Vector2(TextElement.RenderBounds.BottomLeft().X + TextElement.Margin.Left + stringSize.X, TextElement.RenderBounds.Y + TextElement.Margin.Top), Common.Utils.TextColor.Gray, FontStyle.None);
+						graphics.DrawString(
+							Font, currentSelection.Match.Tooltip,
+							new Vector2(
+								TextElement.RenderBounds.BottomLeft().X + TextElement.Margin.Left + stringSize.X,
+								TextElement.RenderBounds.Y + TextElement.Margin.Top), Common.Utils.TextColor.Gray,
+							FontStyle.None);
 					}
 				}
 			}
 		}
 
 		private double MaxTextWidth => (RenderBounds.Width - (Padding.Left + Padding.Right));
+
 		private string GetFitting(string text, out string rest)
 		{
 			rest = string.Empty;
 
 			var size = Font.MeasureString(text);
+
 			while ((size.X) > MaxTextWidth)
 			{
-				string current        = text;
+				string current = text;
 
 				if (current.Length == 0)
 					break;
-				
+
 				var lastWhiteSpace = current.LastIndexOf(' ');
+
 				if (lastWhiteSpace > 0)
 				{
 					text = current.Remove(lastWhiteSpace, current.Length - lastWhiteSpace);
-                    rest = current.Substring(lastWhiteSpace, current.Length - lastWhiteSpace) + rest;
+					rest = current.Substring(lastWhiteSpace, current.Length - lastWhiteSpace) + rest;
 				}
 				else
 				{
 					text = current.Remove(current.Length - 1, 1);
-					rest = current.Substring( current.Length - 1, 1) + rest;
+					rest = current.Substring(current.Length - 1, 1) + rest;
 				}
 
 				size = Font.MeasureString(text);
@@ -241,20 +263,23 @@ namespace Alex.Gui.Elements.Hud
 		private string[] CalculateLines(string text)
 		{
 			var size = Font.MeasureString(text);
+
 			if (size.X > MaxTextWidth)
 			{
 				List<string> output = new List<string>();
+
 				do
 				{
 					string result = GetFitting(text, out text);
+
 					if (result.Length == 0) break;
 					output.Add(result);
-
 				} while (text.Length > 0);
 
 				output.Reverse();
 
 				bool insertColorChar = false;
+
 				for (int i = 0; i < output.Count; i++)
 				{
 					if (insertColorChar)
@@ -263,6 +288,7 @@ namespace Alex.Gui.Elements.Hud
 					}
 
 					string v = output[i];
+
 					if (v.EndsWith($"§"))
 					{
 						insertColorChar = true;
@@ -273,7 +299,7 @@ namespace Alex.Gui.Elements.Hud
 			}
 			else
 			{
-				return new[] {text};
+				return new[] { text };
 			}
 		}
 
@@ -283,16 +309,21 @@ namespace Alex.Gui.Elements.Hud
 
 			var renderPos = RenderBounds.BottomLeft() + offset;
 
-			graphics.FillRectangle(new Rectangle(renderPos.ToPoint(), new Point(Width, (int) Math.Ceiling(size.Y + 2))),
+			graphics.FillRectangle(
+				new Rectangle(renderPos.ToPoint(), new Point(Width, (int)Math.Ceiling(size.Y + 2))),
 				new Color(Color.Black, alpha * 0.5f));
 
-			Font.DrawString(graphics.SpriteBatch, text, renderPos + new Vector2(Padding.Left, 2), (Color) Common.Utils.TextColor.White, opacity: alpha);
+			Font.DrawString(
+				graphics.SpriteBatch, text, renderPos + new Vector2(Padding.Left, 2),
+				(Color)Common.Utils.TextColor.White, opacity: alpha);
+
 			offset.Y -= (size.Y + 2);
 		}
 
 		public static TextColor FindLastColor(string message)
 		{
 			TextColor last = Common.Utils.TextColor.White;
+
 			for (int i = 0; i < message.Length - 1; i++)
 			{
 				if (message[i] == '§')
@@ -308,6 +339,7 @@ namespace Alex.Gui.Elements.Hud
 		private int _latestTransactionId = -1;
 		private int _tabCompletePosition = 0;
 		private LinkedListNode<string> _currentNode = null;
+
 		protected override bool OnKeyInput(char character, Keys key)
 		{
 			if (Focused)
@@ -318,6 +350,7 @@ namespace Alex.Gui.Elements.Hud
 					if (_hasTabCompleteResults)
 					{
 						DoTabComplete(true);
+
 						//_prevWasTab = true;
 						return true;
 					}
@@ -326,7 +359,10 @@ namespace Alex.Gui.Elements.Hud
 
 					//TextBuilder.CursorPosition = 1;
 					_tabCompletePosition = TextBuilder.CursorPosition - 1;
-					string text = TextBuilder.Text.Substring(0, TextBuilder.CursorPosition);//.GetAllBehindCursor(out _tabCompletePosition);
+
+					string text = TextBuilder.Text.Substring(
+						0, TextBuilder.CursorPosition); //.GetAllBehindCursor(out _tabCompletePosition);
+
 					if (text.StartsWith('/'))
 					{
 						_tabCompletePosition += 1;
@@ -334,6 +370,7 @@ namespace Alex.Gui.Elements.Hud
 					}
 
 					CommandProvider.Match(text, ReceivedTabComplete);
+
 					//ChatProvider?.RequestTabComplete(text, out _latestTransactionId);
 					return true;
 				}
@@ -348,7 +385,7 @@ namespace Alex.Gui.Elements.Hud
 
 					SubmitMessage();
 					ResetTabComplete();
-					
+
 					return true;
 				}
 				else if (key == Keys.Up)
@@ -359,8 +396,9 @@ namespace Alex.Gui.Elements.Hud
 
 						return true;
 					}
-					
+
 					var currentNode = _currentNode;
+
 					if (currentNode == null)
 					{
 						currentNode = _submittedMessages.Last;
@@ -389,7 +427,6 @@ namespace Alex.Gui.Elements.Hud
 
 					if (_currentNode != null)
 					{
-
 						var next = _currentNode.Next;
 
 						if (next != null)
@@ -414,9 +451,11 @@ namespace Alex.Gui.Elements.Hud
 
 			var position = TextBuilder.CursorPosition;
 			base.OnKeyInput(character, key);
+
 			if (TextBuilder.CursorPosition != position)
 			{
 				ResetTabComplete();
+
 				return true;
 			}
 
@@ -433,9 +472,10 @@ namespace Alex.Gui.Elements.Hud
 				_tabCompletePosition = 0;
 			}
 		}
-		
+
 		private int _tabCompleteMatchIndex = 0;
 		private int _tabCompletePrevLength = 0;
+
 		private void DoTabComplete(bool incremental)
 		{
 			if (_hasTabCompleteResults)
@@ -446,15 +486,16 @@ namespace Alex.Gui.Elements.Hud
 				//Remove the existing match first.
 				int removalLength = _tabCompletePrevLength > 0 ? _tabCompletePrevLength : _tabCompleteLength;
 				TextBuilder.CursorPosition = _tabCompletePosition + _tabCompleteStart + removalLength;
+
 				for (int i = 0; i < removalLength; i++)
-				{ 
+				{
 					TextBuilder.RemoveCharacter();
 				}
 
 				//Now append the new match
 				TextBuilder.CursorPosition = _tabCompletePosition + _tabCompleteStart;
 				TextBuilder.Append(firstMatch);
-				
+
 				_tabCompletePrevLength = firstMatch.Length;
 
 				if (incremental)
@@ -515,6 +556,7 @@ namespace Alex.Gui.Elements.Hud
 			if (TextBuilder.Length > 0)
 			{
 				var text = TextBuilder.Text;
+
 				if (Network != null)
 				{
 					Network?.SendChatMessage(new ChatObject(text));
@@ -549,6 +591,7 @@ namespace Alex.Gui.Elements.Hud
 				foreach (var line in CalculateLines(split).Reverse())
 				{
 					var t = line;
+
 					if (lastColor != Common.Utils.TextColor.White)
 					{
 						t = $"§{lastColor.Code}{t}";
@@ -557,7 +600,7 @@ namespace Alex.Gui.Elements.Hud
 					lastColor = FindLastColor(t);
 
 					_chatEntries.Push((t, DateTime.UtcNow));
-                }
+				}
 
 				/*for (var index = 0; index < lines.Length; index++)
 				{
@@ -578,13 +621,15 @@ namespace Alex.Gui.Elements.Hud
 		private int _tabCompleteStart, _tabCompleteLength;
 		private TabCompleteMatchWrapper[] _tabCompleteMatches;
 		private bool _hasTabCompleteResults = false;
+
 		public void ReceivedTabComplete(int start, int length, TabCompleteMatch[] matches)
 		{
-		//t/he	if (_latestTransactionId == transactionId)
+			//t/he	if (_latestTransactionId == transactionId)
 			{
 				if (matches.Length == 0)
 				{
 					ResetTabComplete();
+
 					return;
 				}
 
@@ -593,25 +638,25 @@ namespace Alex.Gui.Elements.Hud
 
 				matches = matches.Distinct().ToArray();
 				TabCompleteMatchWrapper[] wrappers = new TabCompleteMatchWrapper[matches.Length];
+
 				for (int i = 0; i < matches.Length; i++)
 				{
-					wrappers[i] = new TabCompleteMatchWrapper(matches[i], Font.MeasureString(matches[i].GetDescriptive()).ToPoint());
+					wrappers[i] = new TabCompleteMatchWrapper(
+						matches[i], Font.MeasureString(matches[i].GetDescriptive()).ToPoint());
 				}
+
 				_tabCompleteMatches = wrappers;
-				
+
 				_tabCompleteStart = start;
 				_tabCompleteLength = length;
 
-				
+
 				_hasTabCompleteResults = true;
 				DoTabComplete(true);
 			}
 		}
 
-		public void Unload()
-		{
-		
-		}
+		public void Unload() { }
 
 		/// <inheritdoc />
 		public void AddMessage(string message, MessageType messageType)
@@ -623,6 +668,7 @@ namespace Alex.Gui.Elements.Hud
 		{
 			public TabCompleteMatch Match { get; }
 			public Point Size { get; }
+
 			public TabCompleteMatchWrapper(TabCompleteMatch tabCompleteMatch, Point size)
 			{
 				Match = tabCompleteMatch;
@@ -646,4 +692,3 @@ namespace Alex.Gui.Elements.Hud
 		void AddMessage(string message, MessageType messageType);
 	}
 }
-

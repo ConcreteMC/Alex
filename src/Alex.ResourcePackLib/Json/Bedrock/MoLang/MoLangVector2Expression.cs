@@ -14,7 +14,7 @@ namespace Alex.ResourcePackLib.Json.Bedrock.MoLang
 	public class MoLangVector2Expression
 	{
 		private IExpression[] _x, _y;
-		
+
 		public MoLangVector2Expression(IExpression[][] values)
 		{
 			if (values.Length == 2)
@@ -29,6 +29,7 @@ namespace Alex.ResourcePackLib.Json.Bedrock.MoLang
 		}
 
 		private IReadOnlyDictionary<double, AnimationChannelData> _keyFrames;
+
 		public MoLangVector2Expression(Dictionary<string, AnimationChannelData> keyframes)
 		{
 			var newKeyFrames = new Dictionary<double, AnimationChannelData>();
@@ -40,11 +41,14 @@ namespace Alex.ResourcePackLib.Json.Bedrock.MoLang
 					newKeyFrames.TryAdd(time, keyframe.Value);
 				}
 			}
-			
+
 			_keyFrames = newKeyFrames;
 		}
 
-		private Vector2 Evaluate(MoLangRuntime runtime, IExpression[] xExpressions, IExpression[] yExpressions, Vector2 currentValue)
+		private Vector2 Evaluate(MoLangRuntime runtime,
+			IExpression[] xExpressions,
+			IExpression[] yExpressions,
+			Vector2 currentValue)
 		{
 			runtime.Environment.ThisVariable = new DoubleValue(currentValue.X);
 			IMoValue x = runtime.Execute(xExpressions);
@@ -63,22 +67,26 @@ namespace Alex.ResourcePackLib.Json.Bedrock.MoLang
 
 			return Evaluate(runtime, expressions[0], expressions[0], currentValue);
 		}
-		
-		private Vector2 Evaluate(MoLangRuntime runtime, AnimationChannelData complex, bool lookAHead, Vector2 currentValue)
+
+		private Vector2 Evaluate(MoLangRuntime runtime,
+			AnimationChannelData complex,
+			bool lookAHead,
+			Vector2 currentValue)
 		{
 			if (complex == null)
 				return Vector2.Zero;
 
-			
+
 			if (complex.Expressions != null)
 			{
 				var expressions = complex.Expressions;
+
 				return Evaluate(runtime, expressions, currentValue);
 			}
 
 			if (lookAHead)
 				return Evaluate(runtime, complex.KeyFrame.Pre, currentValue);
-			
+
 			return Evaluate(runtime, complex.KeyFrame.Post, currentValue);
 		}
 
@@ -92,7 +100,8 @@ namespace Alex.ResourcePackLib.Json.Bedrock.MoLang
 				double previousKey = 0d;
 				AnimationChannelData next = null;
 				double nextKey = 0d;
-				foreach (var keyframe in _keyFrames.OrderBy(x=> x.Key))
+
+				foreach (var keyframe in _keyFrames.OrderBy(x => x.Key))
 				{
 					if (keyframe.Key >= elapsedTime)
 					{
@@ -113,7 +122,7 @@ namespace Alex.ResourcePackLib.Json.Bedrock.MoLang
 				Vector2 previousVector = Evaluate(runtime, previous, false, currentValue);
 				Vector2 nextVector = Evaluate(runtime, next, true, currentValue);
 
-				return Vector2.Lerp(previousVector, nextVector, (float) ((1f / timeBetweenFrames) * accumulator));
+				return Vector2.Lerp(previousVector, nextVector, (float)((1f / timeBetweenFrames) * accumulator));
 			}
 
 			return Evaluate(runtime, _x, _y, currentValue);

@@ -14,12 +14,9 @@ namespace Alex.Blocks.Minecraft
 			   .SetRequiredTool(ItemType.PickAxe, ItemMaterial.Any).SetRequiresTool();
 		}
 	}
-	
+
 	public class PolishedGranite : Granite
 	{
-		public PolishedGranite()
-		{
-			
-		}
+		public PolishedGranite() { }
 	}
 }

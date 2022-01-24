@@ -17,8 +17,9 @@ namespace Alex.Services
 	public class BedrockServerQueryProvider : IServerQueryProvider
 	{
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(BedrockServerQueryProvider));
-		
+
 		private Alex Game { get; }
+
 		public BedrockServerQueryProvider(Alex game)
 		{
 			Game = game;
@@ -27,7 +28,8 @@ namespace Alex.Services
 		/// <inheritdoc />
 		public Task QueryServerAsync(ServerConnectionDetails connectionDetails,
 			PingServerDelegate pingCallback,
-			ServerStatusDelegate statusCallBack, CancellationToken cancellationToken)
+			ServerStatusDelegate statusCallBack,
+			CancellationToken cancellationToken)
 		{
 			return Task.Run(
 				() =>
@@ -41,7 +43,7 @@ namespace Alex.Services
 					try
 					{
 						IPEndPoint serverEndpoint = new IPEndPoint(
-							connectionDetails.EndPoint.Address, (int) connectionDetails.EndPoint.Port);
+							connectionDetails.EndPoint.Address, (int)connectionDetails.EndPoint.Port);
 
 						client = new BedrockClient(
 							Game, connectionDetails,
@@ -49,7 +51,6 @@ namespace Alex.Services
 								string.Empty, $"Pinger{serverEndpoint.ToString()}",
 								$"Pinger{serverEndpoint.ToString()}", null, null, null), null)
 						{
-
 							//IgnoreUnConnectedPong = true
 						};
 
@@ -89,19 +90,19 @@ namespace Alex.Services
 										Delay = pingTime,
 										Success = true,
 										Address = connectionDetails.Hostname,
-										Port = (ushort) connectionDetails.EndPoint.Port,
+										Port = (ushort)connectionDetails.EndPoint.Port,
 										WaitingOnPing = false,
 										Query = new ServerQuery()
 										{
 											Players =
-												new Players() {Max = motd.MaxPlayers, Online = motd.Players},
+												new Players() { Max = motd.MaxPlayers, Online = motd.Players },
 											Version = new Version()
 											{
 												Protocol = motd.ProtocolVersion,
 												Name = motd.ClientVersion,
 												Compatibility = compatability
 											},
-											Description = new Description() {Text = motd.MOTD},
+											Description = new Description() { Text = motd.MOTD },
 											Modinfo = null,
 											Favicon = null
 										}
@@ -118,7 +119,7 @@ namespace Alex.Services
 										Delay = sw.ElapsedMilliseconds,
 										Success = false,
 										Address = connectionDetails.Hostname,
-										Port = (ushort) connectionDetails.EndPoint.Port,
+										Port = (ushort)connectionDetails.EndPoint.Port,
 										WaitingOnPing = false
 									}));
 						}
@@ -129,7 +130,7 @@ namespace Alex.Services
 
 						statusCallBack?.Invoke(
 							new ServerQueryResponse(
-								false, "Failed to connect...", new ServerQueryStatus() {Success = false}));
+								false, "Failed to connect...", new ServerQueryStatus() { Success = false }));
 					}
 					finally
 					{
@@ -144,10 +145,10 @@ namespace Alex.Services
 		{
 			if (callback == null)
 				return;
-			
-			Stopwatch        sw         = new Stopwatch();
+
+			Stopwatch sw = new Stopwatch();
 			sw.Start();
-			
+
 			RaknetConnection connection = new RaknetConnection();
 			connection.RemoteEndpoint = null;
 			connection.AutoConnect = false;
@@ -169,13 +170,13 @@ namespace Alex.Services
 
 			sw.Stop();
 
-			var remoteEndPoint   = connection.RemoteEndpoint;
+			var remoteEndPoint = connection.RemoteEndpoint;
 			var remoteServerName = connection.RemoteServerName;
-			var ping             = sw.ElapsedMilliseconds;
+			var ping = sw.ElapsedMilliseconds;
 
 			connection.Session?.Close();
 			connection.Stop();
-			
+
 			var motd = new BedrockMotd(remoteServerName);
 
 			await callback.Invoke(
@@ -187,17 +188,17 @@ namespace Alex.Services
 						{
 							Address = remoteEndPoint.Address.ToString(),
 							Delay = sw.ElapsedMilliseconds,
-							Port = (ushort) remoteEndPoint.Port,
+							Port = (ushort)remoteEndPoint.Port,
 							Query = new ServerQuery()
 							{
-								Players = new Players() {Max = motd.MaxPlayers, Online = motd.Players},
+								Players = new Players() { Max = motd.MaxPlayers, Online = motd.Players },
 								Version = new Version()
 								{
 									Protocol = motd.ProtocolVersion,
 									Name = motd.ClientVersion,
 									Compatibility = CompatibilityResult.Compatible
 								},
-								Description = new Description() {Text = motd.MOTD},
+								Description = new Description() { Text = motd.MOTD },
 								Modinfo = null,
 								Favicon = null
 							},

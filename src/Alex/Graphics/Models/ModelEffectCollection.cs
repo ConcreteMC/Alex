@@ -7,24 +7,19 @@ namespace Alex.Graphics.Models
 {
 	public sealed class ModelEffectCollection : ReadOnlyCollection<Microsoft.Xna.Framework.Graphics.Effect>
 	{
-		internal ModelEffectCollection(IList<Microsoft.Xna.Framework.Graphics.Effect> list)
-			: base(list)
-		{
+		internal ModelEffectCollection(IList<Microsoft.Xna.Framework.Graphics.Effect> list) : base(list) { }
 
-		}
+		internal ModelEffectCollection() : base(new List<Microsoft.Xna.Framework.Graphics.Effect>()) { }
 
-		internal ModelEffectCollection() : base(new List<Microsoft.Xna.Framework.Graphics.Effect>())
-		{
-		}
-		
 		//ModelMeshPart needs to be able to add to ModelMesh's effects list
 		internal void Add(Microsoft.Xna.Framework.Graphics.Effect item)
 		{
-			Items.Add (item);
+			Items.Add(item);
 		}
+
 		internal void Remove(Microsoft.Xna.Framework.Graphics.Effect item)
 		{
-			Items.Remove (item);
+			Items.Remove(item);
 		}
 
 		// Summary:
@@ -61,6 +56,7 @@ namespace Alex.Graphics.Models
 					disposed = true;
 				}
 			}
+
 			//
 			// Summary:
 			//     Advances the enumerator to the next element of the ModelEffectCollection.
@@ -76,7 +72,7 @@ namespace Alex.Graphics.Models
 			void IEnumerator.Reset()
 			{
 				IEnumerator resetEnumerator = enumerator;
-				resetEnumerator.Reset ();
+				resetEnumerator.Reset();
 				enumerator = (List<Microsoft.Xna.Framework.Graphics.Effect>.Enumerator)resetEnumerator;
 			}
 

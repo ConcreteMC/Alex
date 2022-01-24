@@ -27,7 +27,7 @@ namespace Alex.Entities.BlockEntities
 		public SignBlockEntity(World level) : base(level)
 		{
 			//ModelRenderer = new EntityModelRenderer(new StandingSignEntityModel(), texture);
-			
+
 			Width = 1f;
 			Height = 1f;
 			HideNameTag = true;
@@ -51,7 +51,7 @@ namespace Alex.Entities.BlockEntities
 				var rot = bone.Rotation;
 				rot.Y = _yRotation;
 				bone.Rotation = rot;
-				
+
 				RootBone = bone;
 			}
 		}
@@ -67,7 +67,7 @@ namespace Alex.Entities.BlockEntities
 				{
 					value = t1;
 				}
-				
+
 				_lines[0] = value;
 				TextChanged();
 			}
@@ -82,11 +82,12 @@ namespace Alex.Entities.BlockEntities
 				{
 					value = t1;
 				}
-				
+
 				_lines[1] = value;
 				TextChanged();
 			}
 		}
+
 		public string Text3
 		{
 			get => _lines[2];
@@ -96,12 +97,12 @@ namespace Alex.Entities.BlockEntities
 				{
 					value = t1;
 				}
-				
+
 				_lines[2] = value;
 				TextChanged();
 			}
 		}
-		
+
 		public string Text4
 		{
 			get => _lines[3];
@@ -111,14 +112,15 @@ namespace Alex.Entities.BlockEntities
 				{
 					value = t1;
 				}
-				
+
 				_lines[3] = value;
 				TextChanged();
 			}
 		}
-		
-		private byte  _rotation  = 0;
+
+		private byte _rotation = 0;
 		private float _yRotation = 0f;
+
 		public byte SignRotation
 		{
 			get
@@ -128,8 +130,9 @@ namespace Alex.Entities.BlockEntities
 			set
 			{
 				_rotation = Math.Clamp(value, (byte)0, (byte)15);
-				
-				_yRotation          = _rotation * -22.5f;
+
+				_yRotation = _rotation * -22.5f;
+
 				if (RootBone != null)
 				{
 					var headRotation = RootBone.Rotation;
@@ -142,47 +145,43 @@ namespace Alex.Entities.BlockEntities
 
 		private void ReadTextFrom(NbtCompound compound)
 		{
-			if (compound.TryGet("SignTextColor", out NbtInt signTextColor))
-			{
-				
-			}
+			if (compound.TryGet("SignTextColor", out NbtInt signTextColor)) { }
+
 			if (compound.TryGet("Text", out NbtString text) && text.HasValue)
 			{
 				var str = text.Value;
 				var lines = str.Split('\n');
 				_lines = lines;
 				TextChanged();
+
 				return;
 			}
-			if (compound.TryGet("text1", out var text1)
-			    || compound.TryGet("Text1", out text1))
+
+			if (compound.TryGet("text1", out var text1) || compound.TryGet("Text1", out text1))
 			{
 				if (text1 != null && text1.HasValue)
 				{
 					Text1 = text1.StringValue;
 				}
 			}
-			
-			if (compound.TryGet("text2", out var text2)
-			    || compound.TryGet("Text2", out text2))
+
+			if (compound.TryGet("text2", out var text2) || compound.TryGet("Text2", out text2))
 			{
 				if (text2 != null && text2.HasValue)
 				{
 					Text2 = text2.StringValue;
 				}
 			}
-			
-			if (compound.TryGet("text3", out var text3)
-			    || compound.TryGet("Text3", out text3))
+
+			if (compound.TryGet("text3", out var text3) || compound.TryGet("Text3", out text3))
 			{
 				if (text3 != null && text3.HasValue)
 				{
 					Text3 = text3.StringValue;
 				}
 			}
-			
-			if (compound.TryGet("text4", out var text4)
-			    || compound.TryGet("Text4", out text4))
+
+			if (compound.TryGet("text4", out var text4) || compound.TryGet("Text4", out text4))
 			{
 				if (text4 != null && text4.HasValue)
 				{
@@ -201,38 +200,46 @@ namespace Alex.Entities.BlockEntities
 		}
 
 		private float TextOffset = 0.1f;
+
 		protected override bool BlockChanged(Block oldBlock, Block newBlock)
 		{
 			if (newBlock is WallSign)
 			{
 				TextYStart = 0.75f;
+
 				if (new WallSignEntityModel().TryGetRenderer(out var renderer))
 				{
 					ModelRenderer = renderer;
 				}
-				
+
 				Texture = BlockEntityFactory.SignTexture;
+
 				if (newBlock.BlockState.TryGetValue("facing", out var facing))
 				{
 					if (Enum.TryParse<BlockFace>(facing, true, out var face))
 					{
 						TextOffset = 0.4f;
+
 						switch (face)
 						{
 							case BlockFace.West:
 								SignRotation = 4;
+
 								break;
 
 							case BlockFace.East:
 								SignRotation = 12;
+
 								break;
 
 							case BlockFace.North:
 								SignRotation = 8;
+
 								break;
 
 							case BlockFace.South:
 								SignRotation = 0;
+
 								break;
 						}
 					}
@@ -240,23 +247,24 @@ namespace Alex.Entities.BlockEntities
 
 				return true;
 			}
-			
+
 			if (newBlock is StandingSign)
 			{
 				TextYStart = 0.95f;
-				
+
 				if (new StandingSignEntityModel().TryGetRenderer(out var renderer))
 				{
 					ModelRenderer = renderer;
 				}
-				
+
 				Texture = BlockEntityFactory.SignTexture;
 				TextOffset = -0.1f;
+
 				if (newBlock.BlockState.TryGetValue("rotation", out var r))
 				{
 					if (byte.TryParse(r, out var rot))
 					{
-						SignRotation = (byte) rot;// // ((rot + 3) % 15);
+						SignRotation = (byte)rot; // // ((rot + 3) % 15);
 					}
 				}
 
@@ -265,12 +273,12 @@ namespace Alex.Entities.BlockEntities
 
 			return false;
 		}
-		
+
 		/// <inheritdoc />
 		protected override void ReadFrom(NbtCompound compound)
 		{
 			base.ReadFrom(compound);
-			
+
 			ReadTextFrom(compound);
 			//Text1 = compound["Text1"].StringValue;
 			//Text2 = compound["Text2"].StringValue;
@@ -286,7 +294,7 @@ namespace Alex.Entities.BlockEntities
 			var text4 = Text4;*/
 
 			NameTag = string.Join('\n', _lines);
-		//NameTag = $"{text1}\n{text2}\n{text3}\n{text4}";
+			//NameTag = $"{text1}\n{text2}\n{text3}\n{text4}";
 
 			//if (_lines.All(string.IsNullOrWhiteSpace))
 			//	HideNameTag = true;
@@ -299,6 +307,7 @@ namespace Alex.Entities.BlockEntities
 		private BasicEffect _basicEffect = null;
 
 		private float TextYStart { get; set; } = 0.75f;
+
 		/// <inheritdoc />
 		public override void Render2D(IRenderArgs args)
 		{
@@ -312,19 +321,22 @@ namespace Alex.Entities.BlockEntities
 				_basicEffect.VertexColorEnabled = true;
 				_basicEffect.TextureEnabled = true;
 			}
-			
+
 			_basicEffect.Projection = args.Camera.ProjectionMatrix;
 			_basicEffect.View = args.Camera.ViewMatrix;
 
 			string clean = NameTag;
+
 			if (string.IsNullOrWhiteSpace(clean))
 				return;
-			
+
 			var maxDistance = (args.Camera.FarDistance);
-			
-			Vector3 lookAtOffset = Vector3.Transform(Vector3.Forward, Matrix.CreateRotationY(MathUtils.ToRadians(_yRotation)));
+
+			Vector3 lookAtOffset = Vector3.Transform(
+				Vector3.Forward, Matrix.CreateRotationY(MathUtils.ToRadians(_yRotation)));
+
 			lookAtOffset *= TextOffset;
-			
+
 			var pos = this.RenderLocation + new Vector3(lookAtOffset.X, TextYStart, lookAtOffset.Z);
 
 			var world = Matrix.CreateScale(1f / 96f) * Matrix.CreateRotationY(MathUtils.ToRadians(_yRotation))
@@ -333,8 +345,9 @@ namespace Alex.Entities.BlockEntities
 			world.Up = -world.Up;
 
 			_basicEffect.World = world;
-		
+
 			var distance = Vector3.Distance(pos, args.Camera.Position);
+
 			if (distance >= maxDistance)
 			{
 				return;
@@ -343,12 +356,13 @@ namespace Alex.Entities.BlockEntities
 			try
 			{
 				//sb.End();
-			
-				sb.Begin(SpriteSortMode.Immediate, BlendState.NonPremultiplied, SamplerState.PointWrap,
+
+				sb.Begin(
+					SpriteSortMode.Immediate, BlendState.NonPremultiplied, SamplerState.PointWrap,
 					DepthStencilState.DepthRead, effect: _basicEffect);
-				
+
 				Vector2 renderPosition = Vector2.Zero;
-				int     yOffset        = 0;
+				int yOffset = 0;
 
 				foreach (var str in clean.Split('\n'))
 				{
@@ -356,15 +370,15 @@ namespace Alex.Entities.BlockEntities
 
 					var stringCenter = Alex.Font.MeasureString(line);
 
-					var c = new Point((int) stringCenter.X, (int) stringCenter.Y);
+					var c = new Point((int)stringCenter.X, (int)stringCenter.Y);
 
-					renderPosition.X = (int) -(c.X * 0.5f);
-					renderPosition.Y = (int) yOffset;
+					renderPosition.X = (int)-(c.X * 0.5f);
+					renderPosition.Y = (int)yOffset;
 
 					//renderArgs.SpriteBatch.FillRectangle(
 					//	new Rectangle(renderPosition.ToPoint(), c), new Color(Color.Black, 128), screenSpace.Z);
 
-					Alex.Font.DrawString(sb, line, renderPosition, (Color) TextColor.Black, FontStyle.None, Vector2.One);
+					Alex.Font.DrawString(sb, line, renderPosition, (Color)TextColor.Black, FontStyle.None, Vector2.One);
 
 					yOffset += c.Y;
 				}

@@ -10,7 +10,6 @@ namespace Alex.Blocks.Minecraft
 			Transparent = false;
 
 			BlockMaterial = Material.Grass;
-			
 		}
 	}
 }

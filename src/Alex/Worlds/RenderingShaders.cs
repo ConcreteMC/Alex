@@ -10,12 +10,12 @@ namespace Alex.Worlds
 {
 	public class RenderingShaders
 	{
-		public BlockEffect AnimatedEffect            { get; }
+		public BlockEffect AnimatedEffect { get; }
 
-		public BlockEffect TransparentEffect         { get; }
-		public BlockEffect OpaqueEffect              { get; }
-		
-		
+		public BlockEffect TransparentEffect { get; }
+		public BlockEffect OpaqueEffect { get; }
+
+
 		public RenderingShaders()
 		{
 			var fogStart = 0f;
@@ -29,10 +29,9 @@ namespace Alex.Worlds
 				ReferenceAlpha = 32,
 				FogStart = fogStart,
 				FogEnabled = true,
-				
 				AmbientLightColor = Color.White,
 				AmbientLightDirection = new Vector3(0f, -0.25f, -1f),
-				
+
 				// TextureEnabled = true
 			};
 
@@ -45,7 +44,6 @@ namespace Alex.Worlds
 				ReferenceAlpha = 32,
 				FogStart = fogStart,
 				FogEnabled = true,
-				
 				AmbientLightColor = Color.White,
 				AmbientLightDirection = new Vector3(0f, -0.25f, -1f),
 				ApplyAnimations = true
@@ -60,7 +58,6 @@ namespace Alex.Worlds
 				FogEnabled = true,
 				ReferenceAlpha = 249,
 				AlphaFunction = CompareFunction.Always,
-				
 				AmbientLightColor = Color.White,
 				AmbientLightDirection = new Vector3(0f, -0.25f, -1f),
 			};
@@ -68,8 +65,7 @@ namespace Alex.Worlds
 
 		public void SetTextures(Texture2D texture)
 		{
-			AnimatedEffect.Texture =
-				TransparentEffect.Texture = OpaqueEffect.Texture = texture;
+			AnimatedEffect.Texture = TransparentEffect.Texture = OpaqueEffect.Texture = texture;
 		}
 
 
@@ -91,8 +87,7 @@ namespace Alex.Worlds
 
 			OpaqueEffect.View = AnimatedEffect.View = TransparentEffect.View = view;
 
-			OpaqueEffect.Projection =
-				AnimatedEffect.Projection = TransparentEffect.Projection = projection;
+			OpaqueEffect.Projection = AnimatedEffect.Projection = TransparentEffect.Projection = projection;
 
 			OpaqueEffect.CameraPosition =
 				AnimatedEffect.CameraPosition = TransparentEffect.CameraPosition = cameraPosition;
@@ -113,6 +108,7 @@ namespace Alex.Worlds
 		}
 
 		private Color _fogColor = Biome.DefaultFogColor;
+
 		public Color FogColor
 		{
 			get { return _fogColor; }
@@ -127,6 +123,7 @@ namespace Alex.Worlds
 		}
 
 		private float _fogDistance = 0f;
+
 		public float FogDistance
 		{
 			get { return _fogDistance; }

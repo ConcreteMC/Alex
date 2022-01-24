@@ -7,131 +7,132 @@ using RocketUI;
 
 namespace Alex.Gui.Elements.Hud
 {
-    public enum HeartValue
-    {
-        Full,
-        Half,
-        None
-    }
-    
-    public class HealthComponent : Container
-    {
-        private Player Player { get; }
-        private HealthBarHeart[] Hearts { get; }
-        
-        public HealthComponent(Player player)
-        {
-            Player = player;
+	public enum HeartValue
+	{
+		Full,
+		Half,
+		None
+	}
 
-            Height = 10;
+	public class HealthComponent : Container
+	{
+		private Player Player { get; }
+		private HealthBarHeart[] Hearts { get; }
 
-            Hearts = new HealthBarHeart[10];
-            for (int i = 0; i < 10; i++)
-            {
-                AddChild(Hearts[i] = new HealthBarHeart()
-                {
-                    Margin = new Thickness((i * 8), 0, 0, 0),
-                    Anchor = Alignment.BottomLeft
-                });
-            }
-            
-            player.HealthManager.OnHealthChanged += (sender, e) =>
-            {
-                Update(e.Health, e.MaxHealth);
-            };
-            //Update(player.HealthManager.Health, player.HealthManager.MaxHealth);
-        }
+		public HealthComponent(Player player)
+		{
+			Player = player;
 
-        private void Update(float health, float max)
-        {
-            var hearts = health * (10d / max);
-            var ceil = (int)Math.Ceiling(hearts);
-            for (int i = 0; i < Hearts.Length; i++)
-            {
-                HeartValue value = HeartValue.Full;
-                if (i <= hearts)
-                {
-                    value = HeartValue.Full;
-                }
-                else if (i == ceil)
-                {
-                    value = HeartValue.Half;
-                }
-                else
-                {
-                    value = HeartValue.None;
-                }
-                    
-                Hearts[i].Set(value);
-            }
-        }
+			Height = 10;
 
-        public class HealthBarHeart : RocketControl
-        {
-            private TextureElement Texture { get; set; }
+			Hearts = new HealthBarHeart[10];
 
-            //private 
-            public HealthBarHeart()
-            {
-                Width = 9;
-                Height = 9;
-            
-                AddChild(Texture = new TextureElement()
-                {
-                    Anchor = Alignment.TopLeft,
+			for (int i = 0; i < 10; i++)
+			{
+				AddChild(
+					Hearts[i] = new HealthBarHeart()
+					{
+						Margin = new Thickness((i * 8), 0, 0, 0), Anchor = Alignment.BottomLeft
+					});
+			}
 
-                    Height = 9,
-                    Width = 9,
-                    //Margin = new Thickness(4, 4)
-                });
-            }
-        
-            protected override void OnInit(IGuiRenderer renderer)
-            {
-                Background = renderer.GetTexture(AlexGuiTextures.HealthPlaceholder);
-                Texture.Texture = renderer.GetTexture(AlexGuiTextures.HealthHeart);
-                
-                Set(_previousValue);
-            }
+			player.HealthManager.OnHealthChanged += (sender, e) => { Update(e.Health, e.MaxHealth); };
+			//Update(player.HealthManager.Health, player.HealthManager.MaxHealth);
+		}
 
-            /// <inheritdoc />
-            protected override void OnUpdate(GameTime gameTime)
-            {
-                base.OnUpdate(gameTime);
-            }
+		private void Update(float health, float max)
+		{
+			var hearts = health * (10d / max);
+			var ceil = (int)Math.Ceiling(hearts);
 
-            private void Shake()
-            {
-                
-            }
+			for (int i = 0; i < Hearts.Length; i++)
+			{
+				HeartValue value = HeartValue.Full;
 
-            private HeartValue _previousValue = HeartValue.Full;
-            public void Set(HeartValue value)
-            {
-                Texture.IsVisible = true;
+				if (i <= hearts)
+				{
+					value = HeartValue.Full;
+				}
+				else if (i == ceil)
+				{
+					value = HeartValue.Half;
+				}
+				else
+				{
+					value = HeartValue.None;
+				}
 
-                if (value != _previousValue)
-                {
-                    Shake();
-                }
+				Hearts[i].Set(value);
+			}
+		}
 
-                _previousValue = value;
-                
-                switch (value)
-                {
-                    case HeartValue.Full:
-                        if (GuiRenderer != null)
-                            Texture.Texture = GuiRenderer.GetTexture(AlexGuiTextures.HealthHeart);
-                        break;
-                    case HeartValue.Half:
-                        if (GuiRenderer != null) 
-                            Texture.Texture = GuiRenderer.GetTexture(AlexGuiTextures.HealthHalfHeart);
-                        break;
-                    case HeartValue.None:
-                        Texture.IsVisible = false;
-                        break;
-                }
-            }
-        }
-    }
+		public class HealthBarHeart : RocketControl
+		{
+			private TextureElement Texture { get; set; }
+
+			//private 
+			public HealthBarHeart()
+			{
+				Width = 9;
+				Height = 9;
+
+				AddChild(
+					Texture = new TextureElement()
+					{
+						Anchor = Alignment.TopLeft, Height = 9, Width = 9,
+						//Margin = new Thickness(4, 4)
+					});
+			}
+
+			protected override void OnInit(IGuiRenderer renderer)
+			{
+				Background = renderer.GetTexture(AlexGuiTextures.HealthPlaceholder);
+				Texture.Texture = renderer.GetTexture(AlexGuiTextures.HealthHeart);
+
+				Set(_previousValue);
+			}
+
+			/// <inheritdoc />
+			protected override void OnUpdate(GameTime gameTime)
+			{
+				base.OnUpdate(gameTime);
+			}
+
+			private void Shake() { }
+
+			private HeartValue _previousValue = HeartValue.Full;
+
+			public void Set(HeartValue value)
+			{
+				Texture.IsVisible = true;
+
+				if (value != _previousValue)
+				{
+					Shake();
+				}
+
+				_previousValue = value;
+
+				switch (value)
+				{
+					case HeartValue.Full:
+						if (GuiRenderer != null)
+							Texture.Texture = GuiRenderer.GetTexture(AlexGuiTextures.HealthHeart);
+
+						break;
+
+					case HeartValue.Half:
+						if (GuiRenderer != null)
+							Texture.Texture = GuiRenderer.GetTexture(AlexGuiTextures.HealthHalfHeart);
+
+						break;
+
+					case HeartValue.None:
+						Texture.IsVisible = false;
+
+						break;
+				}
+			}
+		}
+	}
 }

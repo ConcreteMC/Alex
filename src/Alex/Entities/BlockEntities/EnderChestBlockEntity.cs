@@ -21,7 +21,7 @@ namespace Alex.Entities.BlockEntities
 			{
 				ModelRenderer = renderer;
 			}
-			
+
 			Texture = BlockEntityFactory.EnderChestTexture;
 		}
 	}

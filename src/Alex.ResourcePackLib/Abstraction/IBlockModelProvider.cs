@@ -7,7 +7,7 @@ namespace Alex.ResourcePackLib.Abstraction
 	{
 		bool TryGetBlockModel(ResourceLocation resourceLocation, out ResourcePackModelBase model);
 	}
-	
+
 	public interface IItemModelProvider
 	{
 		bool TryGetItemModel(ResourceLocation resourceLocation, out ResourcePackModelBase model);

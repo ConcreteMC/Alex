@@ -16,11 +16,15 @@ namespace Alex.Utils
 		float Rotation { get; }
 
 		uint[] GetData();
+
 		Texture2D GetTexture(GraphicsDevice device);
 
 		void Add(MapIcon icon);
+
 		void Remove(MapIcon icon);
+
 		IEnumerable<MapIcon> GetMarkers(ChunkCoordinates center, int radius);
+
 		IEnumerable<IMapElement> GetSections(ChunkCoordinates center, int radius);
 	}
 }

@@ -12,6 +12,7 @@ namespace Alex.Worlds
 	{
 		private BlockCoordinates _offset;
 		private IBlockAccess _world;
+
 		public OffsetBlockAccess(BlockCoordinates offset, IBlockAccess world)
 		{
 			_offset = offset;
@@ -26,11 +27,11 @@ namespace Alex.Worlds
 
 		private ChunkCoordinates GetOffset(ChunkCoordinates coordinates)
 		{
-		//	return new ChunkCoordinates((coordinates.X >> 4) + _offset.X, (coordinates.Z >> 4) + _offset.Z);
+			//	return new ChunkCoordinates((coordinates.X >> 4) + _offset.X, (coordinates.Z >> 4) + _offset.Z);
 			return coordinates + new ChunkCoordinates(_offset);
 		}
 
-		
+
 		/// <inheritdoc />
 		public ChunkColumn GetChunk(BlockCoordinates coordinates, bool cacheOnly = false)
 		{
@@ -103,10 +104,7 @@ namespace Alex.Worlds
 			int z,
 			BlockState block,
 			int storage,
-			BlockUpdatePriority priority = BlockUpdatePriority.High)
-		{
-			
-		}
+			BlockUpdatePriority priority = BlockUpdatePriority.High) { }
 
 		/// <inheritdoc />
 		public Biome GetBiome(BlockCoordinates coordinates)

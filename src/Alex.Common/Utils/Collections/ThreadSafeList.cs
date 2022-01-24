@@ -121,9 +121,10 @@ namespace Alex.Common.Utils.Collections
 			using (RwLock.Read())
 			{
 				var items = Items;
-				if (items == null) 
+
+				if (items == null)
 					yield break;
-				
+
 				foreach (var item in items)
 				{
 					yield return item;
@@ -194,6 +195,7 @@ namespace Alex.Common.Utils.Collections
 			{
 				return;
 			}
+
 			using (RwLock.Write())
 			{
 				Items.AddRange(asParallel ? collection.AsParallel() : collection);
@@ -226,17 +228,17 @@ namespace Alex.Common.Utils.Collections
 		///         cref="Parallel.ForEach{TSource}(System.Collections.Generic.IEnumerable{TSource},System.Action{TSource})" />
 		///     method.
 		/// </param>
-		public void ForEach(Action<T> action, bool performActionOnClones = true,
-			bool inParallel = false)
+		public void ForEach(Action<T> action, bool performActionOnClones = true, bool inParallel = false)
 		{
 			if (action == null)
 			{
 				throw new ArgumentNullException("action");
 			}
-			
+
 			if (performActionOnClones)
 			{
 				List<T> clones = Clone();
+
 				if (inParallel)
 				{
 					Parallel.ForEach(clones, action);
@@ -265,9 +267,11 @@ namespace Alex.Common.Utils.Collections
 		public bool TryAdd(T item)
 		{
 			bool written = false;
+
 			try
 			{
 				RwLock.EnterUpgradeableReadLock();
+
 				if (!Items.Contains(item))
 				{
 					try
@@ -282,21 +286,11 @@ namespace Alex.Common.Utils.Collections
 					}
 				}
 			}
-			catch (NullReferenceException)
-			{
-			}
-			catch (ObjectDisposedException)
-			{
-			}
-			catch (ArgumentNullException)
-			{
-			}
-			catch (ArgumentOutOfRangeException)
-			{
-			}
-			catch (ArgumentException)
-			{
-			}
+			catch (NullReferenceException) { }
+			catch (ObjectDisposedException) { }
+			catch (ArgumentNullException) { }
+			catch (ArgumentOutOfRangeException) { }
+			catch (ArgumentException) { }
 			finally
 			{
 				RwLock.ExitUpgradeableReadLock();
@@ -310,15 +304,19 @@ namespace Alex.Common.Utils.Collections
 			using (RwLock.Write())
 			{
 				int count = Items.Count;
+
 				if (count >= 1)
 				{
 					//int idx = Random.Next(0, count);
 					item = Items[0];
 					Items.RemoveAt(0);
+
 					return true;
 				}
 			}
+
 			item = default(T);
+
 			return false;
 		}
 
@@ -333,22 +331,27 @@ namespace Alex.Common.Utils.Collections
 			using (RwLock.Write())
 			{
 				int count = Items.Count;
+
 				if (count >= 1)
 				{
 					item = Items[0];
 					Items.RemoveAt(0);
 					rest = new List<T>(Items);
+
 					return true;
 				}
 			}
+
 			item = default(T);
 			rest = default(List<T>);
+
 			return false;
 		}
 
 		public T[] TakeAndClear()
 		{
 			T[] result;
+
 			using (RwLock.Write())
 			{
 				result = Items.ToArray();
@@ -363,6 +366,7 @@ namespace Alex.Common.Utils.Collections
 			try
 			{
 				RwLock.EnterUpgradeableReadLock();
+
 				foreach (var item in items)
 				{
 					if (Items.Contains(item))
@@ -372,6 +376,7 @@ namespace Alex.Common.Utils.Collections
 					else
 					{
 						RwLock.EnterWriteLock();
+
 						try
 						{
 							Items.Add(item);
@@ -388,15 +393,16 @@ namespace Alex.Common.Utils.Collections
 				RwLock.ExitUpgradeableReadLock();
 			}
 		}
-		
+
 		private sealed class ThreadSafeListEnumerator : IEnumerator<T>
 		{
 			private ThreadSafeList<T> _list;
 			private int _index = 0;
+
 			public ThreadSafeListEnumerator(ThreadSafeList<T> list)
 			{
 				_list = list;
-			//	_list.RwLock.EnterReadLock();
+				//	_list.RwLock.EnterReadLock();
 				//UpdateCurrent();
 			}
 
@@ -406,19 +412,20 @@ namespace Alex.Common.Utils.Collections
 				{
 					return;
 				}
+
 				Current = _list.Items[_index];
 			}
-		
+
 			/// <inheritdoc />
 			public bool MoveNext()
 			{
 				if (_index + 1 >= _list.Items.Count)
 					return false;
-				
+
 				_index++;
-				
+
 				UpdateCurrent();
-				
+
 				return true;
 			}
 
@@ -435,13 +442,14 @@ namespace Alex.Common.Utils.Collections
 			object IEnumerator.Current => Current;
 
 			private bool _disposed = false;
+
 			/// <inheritdoc />
 			public void Dispose()
 			{
 				if (_disposed)
 					return;
-				
-			//	_list.RwLock.ExitReadLock();
+
+				//	_list.RwLock.ExitReadLock();
 				_disposed = true;
 			}
 
@@ -508,7 +516,7 @@ namespace Alex.Common.Utils.Collections
 			internal WriteLock(ReaderWriterLockSlim rwl)
 			{
 				TheLock = rwl;
-				
+
 				TheLock.EnterWriteLock();
 			}
 

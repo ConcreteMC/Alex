@@ -14,7 +14,7 @@ namespace Alex.Graphics.Models.Entity.Animations
 		private AnimationClip _currentClip;
 		private TimeSpan _currentTime;
 		private int _currentKeyFrame;
-		
+
 		public AnimationPlayer(SkinningData skinningData)
 		{
 			if (skinningData == null)
@@ -31,7 +31,7 @@ namespace Alex.Graphics.Models.Entity.Animations
 			_currentClip = clip;
 			_currentTime = TimeSpan.Zero;
 			_currentKeyFrame = 0;
-			
+
 			_skinningData.BindPose.CopyTo(_boneTransforms, 0);
 		}
 
@@ -90,7 +90,7 @@ namespace Alex.Graphics.Models.Entity.Animations
 				_worldTransforms[bone] = _boneTransforms[bone] * _worldTransforms[parentBone];
 			}
 		}
-		
+
 		public void UpdateSkinTransforms()
 		{
 			for (int bone = 0; bone < _skinTransforms.Length; bone++)

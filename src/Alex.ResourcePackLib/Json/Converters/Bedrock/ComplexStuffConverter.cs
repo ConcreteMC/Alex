@@ -14,24 +14,18 @@ namespace Alex.ResourcePackLib.Json.Converters.Bedrock
 		public override object ReadJson(JsonReader reader, Type t, object existingValue, JsonSerializer serializer)
 		{
 			var obj = JToken.Load(reader);
-			
+
 			switch (obj.Type)
 			{
 				case JTokenType.Array:
 					var expressions = obj.ToObject<IExpression[][]>(serializer);
 
-					return new AnimationChannelData()
-					{
-						Expressions = expressions
-					};
+					return new AnimationChannelData() { Expressions = expressions };
 
 				case JTokenType.Object:
 					var frameValue = obj.ToObject<AnimationKeyFrame>(serializer);
 
-					return new AnimationChannelData()
-					{
-						KeyFrame = frameValue
-					};
+					return new AnimationChannelData() { KeyFrame = frameValue };
 			}
 
 			throw new Exception("Cannot unmarshal type AnimateElement");
@@ -39,7 +33,6 @@ namespace Alex.ResourcePackLib.Json.Converters.Bedrock
 
 		public override void WriteJson(JsonWriter writer, object untypedValue, JsonSerializer serializer)
 		{
-			
 			throw new Exception("Cannot marshal type ComplexStuff");
 		}
 	}

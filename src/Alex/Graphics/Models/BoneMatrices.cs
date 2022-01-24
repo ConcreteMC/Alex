@@ -11,8 +11,9 @@ public class BoneMatrices
 	{
 		_parent = parent;
 	}
-	
+
 	private Vector3 _rotation = Vector3.Zero;
+
 	public Vector3 Rotation
 	{
 		get => _rotation;
@@ -26,6 +27,7 @@ public class BoneMatrices
 	}
 
 	private Vector3 _position = Vector3.Zero;
+
 	public Vector3 Position
 	{
 		get => _position;
@@ -37,8 +39,9 @@ public class BoneMatrices
 			UpdateTransform();
 		}
 	}
-		
+
 	private Vector3 _scale = Vector3.One;
+
 	public Vector3 Scale
 	{
 		get => _scale;
@@ -50,7 +53,7 @@ public class BoneMatrices
 			UpdateTransform();
 		}
 	}
-	
+
 	private InterpolationData<Vector3> _rotationData = RotatedInterpolationData.EmptyRotation;
 	private InterpolationData<Vector3> _tempRotationData = RotatedInterpolationData.EmptyRotation;
 
@@ -74,7 +77,7 @@ public class BoneMatrices
 		_scaleData = _scaleData.WithValues(_scale, scaleData.Target, scaleData.TargetTime);
 		_tempScaleData.Reset();
 	}
-	
+
 	private void UpdateTransform()
 	{
 		_parent.IsMatricesDirty = true;
@@ -120,7 +123,7 @@ public class BoneMatrices
 
 		_parent.IsMatricesDirty = _parent.IsMatricesDirty || changed;
 	}
-	
+
 	public void RotateOverTime(Vector3 targetRotation, double time, bool overrideOthers = false)
 	{
 		if (overrideOthers)

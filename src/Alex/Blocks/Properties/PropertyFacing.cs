@@ -9,15 +9,12 @@ namespace Alex.Blocks.Properties
 {
 	public class PropertyFace : StateProperty<BlockFace>
 	{
-		public PropertyFace(string name) : base(name)
-		{
-			
-		}
+		public PropertyFace(string name) : base(name) { }
 
 		/// <inheritdoc />
 		public override IStateProperty<BlockFace> WithValue(BlockFace value)
 		{
-			return new PropertyFace(Name) {Value = value};
+			return new PropertyFace(Name) { Value = value };
 		}
 
 		public override BlockFace ParseValue(string value)
@@ -45,31 +42,38 @@ namespace Alex.Blocks.Properties
 			{
 				case BlockFace.Down:
 					color = TextColor.DarkGray;
+
 					break;
 
 				case BlockFace.Up:
 					color = TextColor.White;
+
 					break;
 
 				case BlockFace.East:
 					color = TextColor.BrightGreen;
+
 					break;
 
 				case BlockFace.West:
 					color = TextColor.Red;
+
 					break;
 
 				case BlockFace.North:
 					color = TextColor.Blue;
+
 					break;
 
 				case BlockFace.South:
 					color = TextColor.Yellow;
+
 					break;
 
 				case BlockFace.None:
 					break;
 			}
+
 			return $"{Name}={color.ToString()}{StringValue}";
 		}
 	}

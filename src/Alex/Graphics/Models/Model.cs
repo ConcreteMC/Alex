@@ -46,7 +46,7 @@ namespace Alex.Graphics.Models
 		/// Skinning data is example of attached object for model.
 		/// </remarks>
 		public object Tag { get; set; }
-		
+
 		/// <summary>
 		/// Constructs a model. 
 		/// </summary>
@@ -56,7 +56,7 @@ namespace Alex.Graphics.Models
 			{
 				bone.Model = this;
 			}
-			
+
 			Bones = new ModelBoneCollection(bones);
 			Meshes = new ModelMeshCollection(meshes);
 		}
@@ -64,18 +64,18 @@ namespace Alex.Graphics.Models
 		internal void BuildHierarchy()
 		{
 			var globalScale = Matrix.CreateScale(0.01f);
-			
-			foreach(var node in this.Root.Children)
+
+			foreach (var node in this.Root.Children)
 			{
 				node.Parent = this.Root;
 				BuildHierarchy(node, this.Root.Transform * globalScale, 0);
 			}
 		}
-		
+
 		private void BuildHierarchy(ModelBone node, Matrix parentTransform, int level)
 		{
 			node.ModelTransform = node.Transform * parentTransform;
-			
+
 			foreach (var child in node.Children)
 			{
 				child.Parent = node;
@@ -84,6 +84,7 @@ namespace Alex.Graphics.Models
 		}
 
 		private static ArrayPool<Matrix> MatrixArrayPool = ArrayPool<Matrix>.Create();
+
 		/// <summary>
 		/// Draws the model meshes.
 		/// </summary>
@@ -94,6 +95,7 @@ namespace Alex.Graphics.Models
 		{
 			var bonesCollection = this.Bones;
 			var meshes = this.Meshes;
+
 			if (bonesCollection == null || meshes == null)
 				return 0;
 
@@ -102,7 +104,7 @@ namespace Alex.Graphics.Models
 
 			var matrices = MatrixArrayPool.Rent(boneCount);
 			CopyAbsoluteBoneTransformsTo(bones, matrices);
-			
+
 			try
 			{
 				return Draw(world, view, projection, matrices);
@@ -119,16 +121,22 @@ namespace Alex.Graphics.Models
 			{
 				return Draw(world, view, projection);
 			}
+
 			return Draw(world, view, projection, matrices, null);
 		}
-		
-		public int Draw(Matrix world, Matrix view, Matrix projection, Matrix[] matrices, Microsoft.Xna.Framework.Graphics.Effect effect)
+
+		public int Draw(Matrix world,
+			Matrix view,
+			Matrix projection,
+			Matrix[] matrices,
+			Microsoft.Xna.Framework.Graphics.Effect effect)
 		{
 			var bonesCollection = this.Bones;
 			var meshes = this.Meshes;
+
 			if (bonesCollection == null || meshes == null)
 				return 0;
-			
+
 			int drawCount = 0;
 
 			var bones = this.Bones.ImmutableArray;
@@ -136,20 +144,22 @@ namespace Alex.Graphics.Models
 
 			if (matrices.Length < boneCount)
 				return 0;
-			
+
 			try
 			{
 				// Draw the model.
 				foreach (var mesh in meshes)
 				{
-					if (mesh.ParentBone == null || !mesh.ParentBone.Visible || mesh.ParentBone.Index < 0 || mesh.ParentBone.Index >= matrices.Length || mesh.Effects == null)
+					if (mesh.ParentBone == null || !mesh.ParentBone.Visible || mesh.ParentBone.Index < 0
+					    || mesh.ParentBone.Index >= matrices.Length || mesh.Effects == null)
 						continue;
-					
+
 					var parentIndex = mesh.ParentBone.Index;
 
 					var setEffectParams = (Microsoft.Xna.Framework.Graphics.Effect eff) =>
 					{
 						IEffectMatrices effectMatricies = eff as IEffectMatrices;
+
 						if (effectMatricies != null)
 						{
 							effectMatricies.World = matrices[parentIndex] * world;
@@ -164,26 +174,22 @@ namespace Alex.Graphics.Models
 					}
 					else
 					{
-
 						foreach (Microsoft.Xna.Framework.Graphics.Effect eff in mesh.Effects)
 						{
 							setEffectParams(eff);
 						}
-						
 					}
 
 					foreach (var meshPart in mesh.MeshParts)
 					{
 						var meshEffect = effect ?? meshPart.Effect;
+
 						if (meshEffect != null)
 							drawCount += meshPart.Draw(meshEffect.GraphicsDevice, meshEffect);
 					}
 				}
 			}
-			finally
-			{
-				
-			}
+			finally { }
 
 			return drawCount;
 		}
@@ -204,20 +210,23 @@ namespace Alex.Graphics.Models
 		public static void CopyAbsoluteBoneTransformsTo(IList<ModelBone> source, Matrix[] destinationBoneTransforms)
 		{
 			var bones = source;
+
 			if (destinationBoneTransforms == null)
 				throw new ArgumentNullException(nameof(destinationBoneTransforms));
-			
+
 			//var bones = this.Bones;
-			if (destinationBoneTransforms.Length <  bones.Count)
+			if (destinationBoneTransforms.Length < bones.Count)
 				throw new ArgumentOutOfRangeException(nameof(destinationBoneTransforms));
-			
+
 			int count = bones.Count;
+
 			for (int index1 = 0; index1 < count; index1++)
 			{
 				if (index1 >= bones.Count)
 					break;
-				
+
 				var modelBone = bones[index1];
+
 				if (modelBone.Parent == null)
 				{
 					destinationBoneTransforms[index1] = modelBone.Transform;
@@ -246,10 +255,12 @@ namespace Alex.Graphics.Models
 		{
 			if (sourceBoneTransforms == null)
 				throw new ArgumentNullException("sourceBoneTransforms");
+
 			if (sourceBoneTransforms.Length < Bones.Count)
 				throw new ArgumentOutOfRangeException("sourceBoneTransforms");
 
 			int count = Bones.Count;
+
 			for (int i = 0; i < count; i++)
 			{
 				Bones[i].Transform = sourceBoneTransforms[i];
@@ -270,10 +281,12 @@ namespace Alex.Graphics.Models
 		{
 			if (destinationBoneTransforms == null)
 				throw new ArgumentNullException("destinationBoneTransforms");
+
 			if (destinationBoneTransforms.Length < Bones.Count)
 				throw new ArgumentOutOfRangeException("destinationBoneTransforms");
 
 			int count = Bones.Count;
+
 			for (int i = 0; i < count; i++)
 			{
 				destinationBoneTransforms[i] = Bones[i].Transform;
@@ -286,10 +299,11 @@ namespace Alex.Graphics.Models
 			Dispose(true);
 			GC.SuppressFinalize(this);
 		}
-		
+
 		private void Dispose(bool disposing)
 		{
 			var instances = _instances;
+
 			if (instances != null && instances.Count == 0)
 			{
 				_instances = null;
@@ -303,23 +317,24 @@ namespace Alex.Graphics.Models
 				}
 
 				var bones = Bones;
-				
+
 				Bones = null;
 			}
 		}
-		
+
 		~Model()
 		{
 			Log.Warn($"Model not garbage collected!");
 			Dispose(false);
 		}
-		
+
 		public IModel Instanced()
 		{
 			return new InstancedModel(this);
 		}
 
 		private List<InstancedModel> _instances = new List<InstancedModel>();
+
 		private void RegisterInstance(InstancedModel instance)
 		{
 			_instances.Add(instance);
@@ -332,7 +347,7 @@ namespace Alex.Graphics.Models
 				Dispose();
 			}
 		}
-		
+
 		private class InstancedModel : IModel
 		{
 			private Model _parent;
@@ -365,7 +380,7 @@ namespace Alex.Graphics.Models
 				{
 					return _parent?.Root;
 				}
-				set{}
+				set { }
 			}
 
 			/// <inheritdoc />
@@ -398,7 +413,7 @@ namespace Alex.Graphics.Models
 					_parent = null;
 				}
 			}
-			
+
 			/// <inheritdoc />
 			public void Dispose()
 			{

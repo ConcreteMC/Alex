@@ -16,7 +16,7 @@
         <Setter Property="HighlightColor" Value="#FFFF55" />
         <Setter Property="DefaultColor" Value="#FFFFFF" />
     </Style>
-    
+
     <Style TargetType="Button" Name="Modern" x:Key="Modern">
         <Setter Property="Background" Value="#33000000" />
         <Setter Property="DisabledBackground" Value="#00000000" />
@@ -25,7 +25,7 @@
         <Setter Property="HighlightColor" Value="#55FFFF" />
         <Setter Property="DefaultColor" Value="#FFFFFF" />
     </Style>
-    
+
     <Style TargetType="ToggleButton" Name="Modern">
         <Setter Property="Background" Value="#33000000" />
         <Setter Property="DisabledBackground" Value="#00000000" />
@@ -58,7 +58,7 @@
             </Setter.Value>
         </Setter>
     </Style>
-    
+
     <Style TargetType="StackMenuItem">
         <Setter Property="Background">
             <Setter.Value>
@@ -81,17 +81,17 @@
             </Setter.Value>
         </Setter>
         <Setter Property="HighlightColor" Value="#FF55FFFF" />
-        <Setter Property="DefaultColor" Value="#FFFFFFFF" /> 
+        <Setter Property="DefaultColor" Value="#FFFFFFFF" />
     </Style>
-    
+
     <Style TargetType="alexGui:KeybindElement">
         <Setter Property="TextColor" Value="#FFFFFF" />
     </Style>
-    
+
     <Style TargetType="alexGui:KeybindElement" Name="ReadOnly">
         <Setter Property="TextColor" Value="#999999" />
     </Style>
-    
+
     <Style TargetType="alexGui:KeybindElement">
         <Style.Name>Unbound &amp;&amp; !Focused</Style.Name>
         <Setter Property="TextColor" Value="#ff5555" />

@@ -11,9 +11,12 @@ namespace Alex.MoLang.Parser.Parselet
 		{
 			var args = parser.ParseArgs();
 
-			if (args.Count != 2) {
+			if (args.Count != 2)
+			{
 				throw new Exception("Loop: Expected 2 argument, " + args.Count + " argument given");
-			} else {
+			}
+			else
+			{
 				return new LoopExpression(args[0], args[1]);
 			}
 		}

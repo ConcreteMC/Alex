@@ -16,7 +16,6 @@ namespace Alex.Blocks.Minecraft.Liquid
 
 			Diffusion = 3;
 		}
-		
 
 
 		/*public override void BlockPlaced(IWorld world, BlockCoordinates position)

@@ -11,16 +11,18 @@ namespace Alex.ResourcePackLib.IO
 {
 	public class ZipFileSystem : IFilesystem
 	{
-		private  ZipFile                       _archive;
-		private  ReadOnlyCollection<ZipFileEntry> _entries;
-		internal object                           Lock    = new object();
-		internal Thread                           ActiveThread = null;
+		private ZipFile _archive;
+		private ReadOnlyCollection<ZipFileEntry> _entries;
+		internal object Lock = new object();
+		internal Thread ActiveThread = null;
+
 		public ZipFileSystem(Stream stream, string name)
 		{
 			Name = name;
 			_archive = ZipFile.Read(stream);
 
 			List<ZipFileEntry> entries = new List<ZipFileEntry>();
+
 			foreach (var entry in _archive.Entries)
 			{
 				entries.Add(new ZipFileEntry(this, entry));
@@ -31,14 +33,14 @@ namespace Alex.ResourcePackLib.IO
 
 		/// <inheritdoc />
 		public string Name { get; }
-		
+
 		/// <inheritdoc />
-		public IReadOnlyCollection<IFile> Entries 
+		public IReadOnlyCollection<IFile> Entries
 		{
 			get
 			{
 				return _entries;
-			} 
+			}
 		}
 
 		/// <inheritdoc />
@@ -46,12 +48,12 @@ namespace Alex.ResourcePackLib.IO
 		{
 			return _entries.FirstOrDefault(x => x.FullName == name);
 		}
-		
+
 		public override string ToString()
 		{
 			return $"Zip: {Name}";
 		}
-		
+
 		/// <inheritdoc />
 		public void Dispose()
 		{
@@ -61,7 +63,8 @@ namespace Alex.ResourcePackLib.IO
 		public class ZipFileEntry : IFile
 		{
 			private ZipEntry _entry;
-			private ZipFileSystem   _archive;
+			private ZipFileSystem _archive;
+
 			public ZipFileEntry(ZipFileSystem archive, ZipEntry entry)
 			{
 				_archive = archive;
@@ -80,7 +83,7 @@ namespace Alex.ResourcePackLib.IO
 
 			/// <inheritdoc />
 			public long Length { get; }
-			
+
 			/// <inheritdoc />
 			public Stream Open()
 			{
@@ -90,6 +93,7 @@ namespace Alex.ResourcePackLib.IO
 					_archive.ActiveThread = Thread.CurrentThread;
 
 					byte[] buffer;
+
 					using (MemoryStream ms = new MemoryStream())
 					{
 						_entry.Extract(ms);

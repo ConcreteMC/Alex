@@ -16,30 +16,33 @@ namespace Alex.Worlds.Multiplayer.Java
 
 		/// <inheritdoc />
 		public JavaChunkColumn(int x, int z) : base(x, z) { }
+
 		public JavaChunkColumn(int x, int z, WorldSettings worldSettings) : base(x, z, worldSettings) { }
-		
+
 		protected override ChunkSection CreateSection(bool storeSkylight, int sections)
 		{
 			return new JavaChunkSection(storeSkylight, sections);
 		}
-		
+
 		public void Read(MinecraftStream ms, NbtCompound heightmaps, bool readSkylight)
 		{
 			if (!heightmaps.TryGet("MOTION_BLOCKING", out NbtLongArray longArray))
 			{
 				Log.Warn($"Invalid chunk data!");
+
 				return;
 			}
 
 			//
 			var dataArray = longArray.Value;
 			var realHeight = WorldSettings.WorldHeight + Math.Abs(WorldSettings.MinY);
-			var bitsPerBlock = (int)Math.Ceiling(Math.Log2(realHeight + 1));//, 256
-			
+			var bitsPerBlock = (int)Math.Ceiling(Math.Log2(realHeight + 1)); //, 256
+
 			uint maxHeight = uint.MinValue;
 			FlexibleStorage flexibleStorage = new FlexibleStorage(bitsPerBlock, 256);
-			var valueMask = (uint) ((1L << bitsPerBlock) - 1);
+			var valueMask = (uint)((1L << bitsPerBlock) - 1);
 			int bitOffset = 0;
+
 			for (int x = 0; x < 16; x++)
 			{
 				for (int z = 0; z < 16; z++)
@@ -56,19 +59,19 @@ namespace Alex.Worlds.Multiplayer.Java
 
 					if (startLongIndex >= dataArray.Length || end_long_index >= dataArray.Length)
 						continue;
-                            
+
 					uint rawId;
 
 					if (startLongIndex == end_long_index)
 					{
-						rawId = (uint) (dataArray[startLongIndex] >> startOffset);
+						rawId = (uint)(dataArray[startLongIndex] >> startOffset);
 					}
 					else
 					{
 						int endOffset = 64 - startOffset;
 
-						rawId = (uint) (dataArray[startLongIndex] >> startOffset
-						                | dataArray[end_long_index] << endOffset);
+						rawId = (uint)(dataArray[startLongIndex] >> startOffset
+						               | dataArray[end_long_index] << endOffset);
 					}
 
 					rawId &= valueMask;
@@ -79,13 +82,14 @@ namespace Alex.Worlds.Multiplayer.Java
 			//flexibleStorage.SetData(longArray.Value);
 
 			uint minHeight = uint.MaxValue;
+
 			for (int i = 0; i < flexibleStorage.Length; i++)
 			{
 				maxHeight = Math.Max(maxHeight, flexibleStorage[i]);
 				minHeight = Math.Min(minHeight, flexibleStorage[i]);
 			}
 
-			var sections = (int)Math.Ceiling((maxHeight / 16D));// + 1;
+			var sections = (int)Math.Ceiling((maxHeight / 16D)); // + 1;
 
 			try
 			{
@@ -117,7 +121,7 @@ namespace Alex.Worlds.Multiplayer.Java
 						}
 					}
 				}
-				
+
 				CalculateHeight(false);
 			}
 			catch (Exception e)

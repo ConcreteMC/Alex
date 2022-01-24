@@ -9,141 +9,144 @@ using NLog;
 
 namespace Alex.Common.World
 {
-    public class TickManager : IDisposable
+	public class TickManager : IDisposable
 	{
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(TickManager));
-		
+
 		private object _tickLock = new object();
 		private ConcurrentDictionary<TickedItem, long> ScheduledTicks { get; }
-		private LinkedList<TickedEntry>                TickedItems    { get; }
-		private long                               _tick = 0;
-		public  long                               CurrentTick => _tick;
+		private LinkedList<TickedEntry> TickedItems { get; }
+		private long _tick = 0;
+		public long CurrentTick => _tick;
 
-		private HighPrecisionTimer TickTimer      { get; set; }
-		public  double             TicksPerSecond { get; set; }
+		private HighPrecisionTimer TickTimer { get; set; }
+		public double TicksPerSecond { get; set; }
 
 		public TickManager()
-	    {
-		    ScheduledTicks = new ConcurrentDictionary<TickedItem, long>();
-		    TickedItems = new LinkedList<TickedEntry>();
-		    TickTimer = new HighPrecisionTimer(50, DoTick, false);
+		{
+			ScheduledTicks = new ConcurrentDictionary<TickedItem, long>();
+			TickedItems = new LinkedList<TickedEntry>();
+			TickTimer = new HighPrecisionTimer(50, DoTick, false);
 		}
 
 		private Stopwatch _sw = Stopwatch.StartNew();
-	    private void DoTick(object state)
-	    {
-		   // if (!Monitor.TryEnter(_tickLock, 0))
+
+		private void DoTick(object state)
+		{
+			// if (!Monitor.TryEnter(_tickLock, 0))
 			//    return;
 
-		    try
-		    {
-			    var startTime = _sw.ElapsedMilliseconds;
-			    var ticks = ScheduledTicks.Where(x => x.Value <= _tick).ToArray();
+			try
+			{
+				var startTime = _sw.ElapsedMilliseconds;
+				var ticks = ScheduledTicks.Where(x => x.Value <= _tick).ToArray();
 
-			    foreach (var tick in ticks)
-			    {
-				    ScheduledTicks.TryRemove(tick.Key, out long _);
-			    }
+				foreach (var tick in ticks)
+				{
+					ScheduledTicks.TryRemove(tick.Key, out long _);
+				}
 
-			    //Executed scheduled ticks
-			    foreach (var tick in ticks)
-			    {
-				    try
-				    {
-					    tick.Key.Invoke();
-				    }
-				    catch (Exception ex)
-				    {
-					    Log.Error(ex, $"An exception occureced while executing a scheduled tick!");
-				    }
-			    }
+				//Executed scheduled ticks
+				foreach (var tick in ticks)
+				{
+					try
+					{
+						tick.Key.Invoke();
+					}
+					catch (Exception ex)
+					{
+						Log.Error(ex, $"An exception occureced while executing a scheduled tick!");
+					}
+				}
 
-			    var scheduledTicksTime = _sw.ElapsedMilliseconds - startTime;
+				var scheduledTicksTime = _sw.ElapsedMilliseconds - startTime;
 
-			    TickedEntry[] tickedItems;
-			    lock (_tickLock)
-			    {
-				    tickedItems = TickedItems.ToArray();
-			    }
+				TickedEntry[] tickedItems;
 
-			    foreach (var ticked in tickedItems)
-			    {
-				    try
-				    {
-					    if (!ticked.Run())
-					    {
-						    Log.Warn($"Failed to tick item.");
+				lock (_tickLock)
+				{
+					tickedItems = TickedItems.ToArray();
+				}
 
-						    lock (_tickLock)
-						    {
-							    TickedItems.Remove(ticked);
-						    }
-					    }
-				    }
-				    catch (Exception ex)
-				    {
-					    Log.Error(ex, $"An exception occureced while executing a scheduled tick!");
-				    }
-			    }
+				foreach (var ticked in tickedItems)
+				{
+					try
+					{
+						if (!ticked.Run())
+						{
+							Log.Warn($"Failed to tick item.");
 
-			    var endTime = _sw.ElapsedMilliseconds;
+							lock (_tickLock)
+							{
+								TickedItems.Remove(ticked);
+							}
+						}
+					}
+					catch (Exception ex)
+					{
+						Log.Error(ex, $"An exception occureced while executing a scheduled tick!");
+					}
+				}
 
-			    var elapsedTickTime = endTime - startTime;
+				var endTime = _sw.ElapsedMilliseconds;
 
-			    if (elapsedTickTime > 50)
-			    {
-				    //    Log.Warn($"Ticking running slow! Tick took: {elapsedTickTime}ms of which {scheduledTicksTime} were spent on scheduled ticks. (ScheduledTicks={ticks.Length} TickedItems={tickedItems.Length})");
-			    }
+				var elapsedTickTime = endTime - startTime;
 
-			    _tick++;
+				if (elapsedTickTime > 50)
+				{
+					//    Log.Warn($"Ticking running slow! Tick took: {elapsedTickTime}ms of which {scheduledTicksTime} were spent on scheduled ticks. (ScheduledTicks={ticks.Length} TickedItems={tickedItems.Length})");
+				}
 
-			    if (_tick % 20 == 0)
-			    {
-				    var elapsed = _sw.Elapsed;
-				    _sw.Restart();
+				_tick++;
 
-				    TicksPerSecond = 20d / elapsed.TotalSeconds;
+				if (_tick % 20 == 0)
+				{
+					var elapsed = _sw.Elapsed;
+					_sw.Restart();
 
-				    if (elapsed.TotalMilliseconds <= 950)
-				    {
-					    Log.Warn($"Running ahead! TPS: {TicksPerSecond}");
-				    }
-				    else if (elapsed.TotalMilliseconds >= 1050)
-				    {
-					    Log.Warn($"Running behind! TPS: {TicksPerSecond}");
-				    }
+					TicksPerSecond = 20d / elapsed.TotalSeconds;
 
-				    if (Math.Ceiling(TicksPerSecond) < 20)
-				    {
-					    //   Log.Warn($"Running behind! TPS: {TicksPerSecond}");
-				    }
-			    }
-		    }
-		    finally
-		    {
-			    //Monitor.Exit(_tickLock);
-		    }
-	    }
+					if (elapsed.TotalMilliseconds <= 950)
+					{
+						Log.Warn($"Running ahead! TPS: {TicksPerSecond}");
+					}
+					else if (elapsed.TotalMilliseconds >= 1050)
+					{
+						Log.Warn($"Running behind! TPS: {TicksPerSecond}");
+					}
 
-	    public void RegisterTicked(ITicked ticked)
-	    {
-		    lock (_tickLock)
-		    {
-			    TickedItems.AddLast(new TickedEntry(ticked));
-		    }
-	    }
+					if (Math.Ceiling(TicksPerSecond) < 20)
+					{
+						//   Log.Warn($"Running behind! TPS: {TicksPerSecond}");
+					}
+				}
+			}
+			finally
+			{
+				//Monitor.Exit(_tickLock);
+			}
+		}
 
-	    public void UnregisterTicked(ITicked ticked)
-	    {
-		    lock (_tickLock)
-		    {
-			    var item = TickedItems.FirstOrDefault(x => x.Equals(ticked));
-			    if (item != null)
+		public void RegisterTicked(ITicked ticked)
+		{
+			lock (_tickLock)
+			{
+				TickedItems.AddLast(new TickedEntry(ticked));
+			}
+		}
+
+		public void UnregisterTicked(ITicked ticked)
+		{
+			lock (_tickLock)
+			{
+				var item = TickedItems.FirstOrDefault(x => x.Equals(ticked));
+
+				if (item != null)
 					TickedItems.Remove(item);
-		    }
-	    }
-	    
-	    public void ScheduleTick(Action action, long ticksFromNow, CancellationToken cancellationToken)
+			}
+		}
+
+		public void ScheduleTick(Action action, long ticksFromNow, CancellationToken cancellationToken)
 		{
 			if (!ScheduledTicks.TryAdd(new TickedItem(action, cancellationToken), _tick + ticksFromNow))
 			{
@@ -155,7 +158,7 @@ namespace Alex.Common.World
 		public void Dispose()
 		{
 			Log.Info($"Tickmanager disposing...");
-			
+
 			ScheduledTicks?.Clear();
 			TickedItems?.Clear();
 
@@ -167,7 +170,7 @@ namespace Alex.Common.World
 			}
 			catch (ObjectDisposedException ex)
 			{
-			Log.Warn(ex, $"Failed to dispose TickManager!");
+				Log.Warn(ex, $"Failed to dispose TickManager!");
 			}
 		}
 
@@ -175,6 +178,7 @@ namespace Alex.Common.World
 		{
 			private Action _action;
 			private CancellationToken _cancellationToken;
+
 			public TickedItem(Action action, CancellationToken cancellationToken)
 			{
 				_action = action;
@@ -187,20 +191,24 @@ namespace Alex.Common.World
 					_action?.Invoke();
 			}
 		}
-		
+
 		private class TickedEntry
 		{
 			private WeakReference<ITicked> _ticked;
 
 			private Stopwatch _stopwatch = Stopwatch.StartNew();
-			public TickedEntry(ITicked ticked) {
+
+			public TickedEntry(ITicked ticked)
+			{
 				_ticked = new WeakReference<ITicked>(ticked);
 			}
 
 			public TimeSpan ProcessingTime { get; private set; } = TimeSpan.Zero;
+
 			public bool Run()
 			{
 				_stopwatch.Restart();
+
 				try
 				{
 					if (_ticked.TryGetTarget(out var target))
@@ -240,18 +248,18 @@ namespace Alex.Common.World
 		}
 	}
 
-    public interface ITicked
-    {
-	    void OnTick();
-    }
+	public interface ITicked
+	{
+		void OnTick();
+	}
 
-    public interface ITickedConditionally : ITicked
-    {
-	    bool CanTick();
-    }
+	public interface ITickedConditionally : ITicked
+	{
+		bool CanTick();
+	}
 
-    public interface INamed
-    {
-	    string Name { get; }
-    }
+	public interface INamed
+	{
+		string Name { get; }
+	}
 }

@@ -5,8 +5,7 @@ namespace Alex.Entities.Passive
 {
 	public abstract class PassiveMob : AgeableEntity
 	{
-		protected PassiveMob(World level)
-			: base(level)
+		protected PassiveMob(World level) : base(level)
 		{
 			base.MapIcon.Color = Color.Green;
 		}

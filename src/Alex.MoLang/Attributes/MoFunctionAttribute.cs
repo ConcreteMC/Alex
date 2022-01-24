@@ -6,6 +6,7 @@ namespace Alex.MoLang.Attributes
 	public class MoFunctionAttribute : Attribute
 	{
 		public string[] Name { get; }
+
 		public MoFunctionAttribute(params string[] functionNames)
 		{
 			Name = functionNames;

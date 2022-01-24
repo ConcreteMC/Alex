@@ -13,100 +13,99 @@ using RocketUI.Input;
 namespace Alex.Gui.Elements.MainMenu
 {
 	public class SkinSelectionEntry : SelectionListItem
-    {
-        private GuiEntityModelView ModelView { get; }
-        public LoadedSkin Skin { get; }
-        private Action<SkinSelectionEntry> OnDoubleClick { get; }
+	{
+		private GuiEntityModelView ModelView { get; }
+		public LoadedSkin Skin { get; }
+		private Action<SkinSelectionEntry> OnDoubleClick { get; }
 
-        public SkinSelectionEntry(LoadedSkin skin, Action<SkinSelectionEntry> onDoubleClick)
-        {
-            Skin = skin;
-            OnDoubleClick = onDoubleClick;
+		public SkinSelectionEntry(LoadedSkin skin, Action<SkinSelectionEntry> onDoubleClick)
+		{
+			Skin = skin;
+			OnDoubleClick = onDoubleClick;
 
-            MinWidth = 92;
-            MaxWidth = 92;
-            MinHeight = 96;
-            MaxHeight = 96;
+			MinWidth = 92;
+			MaxWidth = 92;
+			MinHeight = 96;
+			MaxHeight = 96;
 
-            Margin = new Thickness(0, 4);
-            Anchor = Alignment.FillY;
+			Margin = new Thickness(0, 4);
+			Anchor = Alignment.FillY;
 
-            var mob = new RemotePlayer(null, null);
-            
-            if (skin.Model.TryGetRenderer(out var renderer))
-            {
-                var texture2D = TextureUtils.BitmapToTexture2D(this, Alex.Instance.GraphicsDevice, skin.Texture);
-                mob.ModelRenderer = renderer;
-                mob.Texture = texture2D;  
-            }
-            
-            ModelView = new GuiEntityModelView(mob)
-                {
-                    BackgroundOverlay = new Color(Color.Black, 0.15f),
-                    Background = null,
+			var mob = new RemotePlayer(null, null);
 
-                    Width = 92,
-                    Height = 96,
-                    Anchor = Alignment.Fill,
-                };
+			if (skin.Model.TryGetRenderer(out var renderer))
+			{
+				var texture2D = TextureUtils.BitmapToTexture2D(this, Alex.Instance.GraphicsDevice, skin.Texture);
+				mob.ModelRenderer = renderer;
+				mob.Texture = texture2D;
+			}
 
-            AddChild(ModelView);
-            
-            AddChild(
-                new TextElement()
-                {
-                    Text = skin.Name, Margin = Thickness.Zero, Anchor = Alignment.BottomCenter
-                });
-        }
+			ModelView = new GuiEntityModelView(mob)
+			{
+				BackgroundOverlay = new Color(Color.Black, 0.15f),
+				Background = null,
+				Width = 92,
+				Height = 96,
+				Anchor = Alignment.Fill,
+			};
 
-        private readonly float _playerViewDepth = -512.0f;
-        protected override void OnUpdate(GameTime gameTime)
-        {
-            base.OnUpdate(gameTime);
-            
-            var mousePos = Alex.Instance.GuiManager.FocusManager.CursorPosition;
+			AddChild(ModelView);
 
-            mousePos = Alex.Instance.GuiRenderer.Unproject(mousePos);
-            var playerPos = ModelView.RenderBounds.Center.ToVector2();
+			AddChild(new TextElement() { Text = skin.Name, Margin = Thickness.Zero, Anchor = Alignment.BottomCenter });
+		}
 
-            var mouseDelta = (new Vector3(playerPos.X, playerPos.Y, _playerViewDepth) -
-                              new Vector3(mousePos.X, mousePos.Y, 0.0f));
-            mouseDelta.Normalize();
+		private readonly float _playerViewDepth = -512.0f;
 
-            var headYaw = (float) mouseDelta.GetYaw();
-            var pitch   = (float) mouseDelta.GetPitch();
-            var yaw     = (float) headYaw;
+		protected override void OnUpdate(GameTime gameTime)
+		{
+			base.OnUpdate(gameTime);
 
-            ModelView.SetEntityRotation(-yaw, pitch, -headYaw);
-        }
+			var mousePos = Alex.Instance.GuiManager.FocusManager.CursorPosition;
 
-        private Stopwatch _previousClick = null;
-        private bool _firstClick = true;
-        protected override void OnCursorPressed(Point cursorPosition, MouseButton button)
-        {
-            base.OnCursorPressed(cursorPosition, button);
+			mousePos = Alex.Instance.GuiRenderer.Unproject(mousePos);
+			var playerPos = ModelView.RenderBounds.Center.ToVector2();
 
-            if (_previousClick == null)
-            {
-                _previousClick = Stopwatch.StartNew();
-                _firstClick = false;
-                return;
-            }
+			var mouseDelta = (new Vector3(playerPos.X, playerPos.Y, _playerViewDepth)
+			                  - new Vector3(mousePos.X, mousePos.Y, 0.0f));
 
-            if (_firstClick)
-            {
-                _previousClick.Restart();
-                _firstClick = false;
-            }
-            else
-            {
-                if (_previousClick.ElapsedMilliseconds < 150)
-                {
-                    OnDoubleClick?.Invoke(this);
-                }
+			mouseDelta.Normalize();
 
-                _firstClick = true;
-            }
-        }
-    }
+			var headYaw = (float)mouseDelta.GetYaw();
+			var pitch = (float)mouseDelta.GetPitch();
+			var yaw = (float)headYaw;
+
+			ModelView.SetEntityRotation(-yaw, pitch, -headYaw);
+		}
+
+		private Stopwatch _previousClick = null;
+		private bool _firstClick = true;
+
+		protected override void OnCursorPressed(Point cursorPosition, MouseButton button)
+		{
+			base.OnCursorPressed(cursorPosition, button);
+
+			if (_previousClick == null)
+			{
+				_previousClick = Stopwatch.StartNew();
+				_firstClick = false;
+
+				return;
+			}
+
+			if (_firstClick)
+			{
+				_previousClick.Restart();
+				_firstClick = false;
+			}
+			else
+			{
+				if (_previousClick.ElapsedMilliseconds < 150)
+				{
+					OnDoubleClick?.Invoke(this);
+				}
+
+				_firstClick = true;
+			}
+		}
+	}
 }
