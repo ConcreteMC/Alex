@@ -33,7 +33,7 @@ namespace Alex.Graphics.Models.Entity.Animations
 		public bool Initialized => _didInit;
 		public MoLangRuntime Runtime { get; set; }
 
-		public AnimationComponent(Entities.Entity entity) : base(entity)
+		public AnimationComponent(Entities.Entity entity) : base(entity, "AnimationComponent")
 		{
 			Runtime = new MoLangRuntime(entity);
 		}

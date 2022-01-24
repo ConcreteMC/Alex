@@ -15,6 +15,7 @@ using Alex.Common.Utils;
 using Alex.Common.World;
 using Alex.Entities.Components;
 using Alex.Entities.Components.Effects;
+using Alex.Entities.Events;
 using Alex.Entities.Properties;
 using Alex.Gamestates;
 using Alex.Graphics.Camera;
@@ -1312,14 +1313,20 @@ namespace Alex.Entities
 				}
 			}
 
-			foreach (var entityComponent in EntityComponents)
+			using (var subTimer = EntityManager.UpdateTimer.Value.Section("EntityComponents"))
 			{
-				if (!entityComponent.Enabled)
-					continue;
-
-				if (entityComponent is IUpdated updateable)
+				foreach (var entityComponent in EntityComponents)
 				{
-					updateable.Update(args.GameTime);
+					if (!entityComponent.Enabled)
+						continue;
+
+					if (entityComponent is IUpdated updateable)
+					{
+						using (var componentTimer = subTimer.Section(entityComponent.Name))
+						{
+							updateable.Update(args.GameTime);
+						}
+					}
 				}
 			}
 
@@ -1340,7 +1347,11 @@ namespace Alex.Entities
 				//_head.Rotation = Quaternion.CreateFromYawPitchRoll(MathUtils.ToRadians(headYaw), MathUtils.ToRadians(pitch), 0f);
 			}
 
-			renderer.Update(args);
+			using (var subTimer = EntityManager.UpdateTimer.Value.Section("ModelRenderer"))
+			{
+				renderer.Update(args);
+			}
+
 		}
 
 		public virtual void EntityHurt() { }
@@ -1454,18 +1465,29 @@ namespace Alex.Entities
 				}
 			}
 
-			foreach (var entityComponent in EntityComponents)
+			using (var componentTickTimer = EntityManager.TickTimer.Value.Section("EntityComponents"))
 			{
-				if (!entityComponent.Enabled)
-					continue;
+				foreach (var entityComponent in EntityComponents)
+				{
+					if (!entityComponent.Enabled)
+						continue;
 
-				if (entityComponent is ITicked ticked)
-					ticked.OnTick();
+					if (entityComponent is ITicked ticked)
+					{
+						using (componentTickTimer.Section(entityComponent.Name))
+						{
+							ticked.OnTick();
+						}
+					}
+				}
 			}
 
 			if (DoRotationCalculations)
 			{
-				UpdateRotations();
+				using (EntityManager.TickTimer.Value.Section("Rotations"))
+				{
+					UpdateRotations();
+				}
 			}
 			else
 			{

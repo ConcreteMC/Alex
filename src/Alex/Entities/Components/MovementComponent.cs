@@ -17,7 +17,7 @@ namespace Alex.Entities.Components
 		public Vector3 Heading { get; private set; }
 
 		/// <inheritdoc />
-		public MovementComponent(Entity entity) : base(entity)
+		public MovementComponent(Entity entity) : base(entity, "Movement")
 		{
 			Heading = Vector3.Zero;
 		}

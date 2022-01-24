@@ -22,7 +22,7 @@ namespace Alex.Entities.Components
 			}
 		}
 
-		protected FixedRateEntityComponent(Entity entity, int fps = 20) : base(entity)
+		protected FixedRateEntityComponent(Entity entity, string name, int fps = 20) : base(entity, name)
 		{
 			TargetFramerate = fps;
 		}

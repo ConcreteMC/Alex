@@ -14,7 +14,7 @@ namespace Alex.Entities.Components
 	{
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(PhysicsComponent));
 
-		public PhysicsComponent(Entity entity) : base(entity, 20) { }
+		public PhysicsComponent(Entity entity) : base(entity, "Physics", 20) { }
 
 		private Vector3 TruncateVelocity(Vector3 velocity)
 		{

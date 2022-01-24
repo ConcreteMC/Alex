@@ -24,7 +24,7 @@ namespace Alex.Entities.Components
 		private List<BoundingBox> _boundingBoxes = new List<BoundingBox>();
 
 		/// <inheritdoc />
-		public RaytracerComponent(Entity entity) : base(entity) { }
+		public RaytracerComponent(Entity entity) : base(entity, "RayTracer") { }
 
 		/// <inheritdoc />
 		public void OnTick()

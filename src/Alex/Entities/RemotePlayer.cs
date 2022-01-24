@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading;
+using Alex.Common.Resources;
 using Alex.Common.Utils;
 using Alex.Common.Utils.Vectors;
 using Alex.Gamestates;

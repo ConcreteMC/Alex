@@ -1,4 +1,6 @@
 using System;
+using System.Threading;
+using Alex.Entities.Events;
 using Alex.Gamestates.InGame;
 using Alex.Utils.Collections;
 using Alex.Utils.Threading;
@@ -18,11 +20,14 @@ namespace Alex.DebugOverlay
         private GuiGraph       _graph;
         private InfluxDBClient _infucksClient;
         private WriteApiAsync  _writeApiAsync;
-
+        private WriteApi  _writeApi;
+        
         private Func<PointData> _frameTimeBuilder;
         private Func<PointData> _taskExecTimeBuilder;
         private Func<PointData> _chunkUpdatedBuilder;
+        private Func<PointData> _entityUpdatedBuilder;
 
+        private BackgroundWorker _backgroundWorker = new BackgroundWorker(CancellationToken.None);
         public OverlayScreen(Alex alex)
         {
             _infucksClient = InfluxDBClientFactory.Create(
@@ -32,7 +37,8 @@ namespace Alex.DebugOverlay
                    .Org("influxdata-org").Bucket("alex").AddDefaultTag("host", Environment.MachineName).Build());
 
             _writeApiAsync = _infucksClient.GetWriteApiAsync();
-
+            _writeApi = _infucksClient.GetWriteApi();
+            
             _frameTimeBuilder = () => PointData.Measurement("rendering.frame_time")
                .Tag("host", Environment.MachineName).Timestamp(DateTime.UtcNow, WritePrecision.Ns);
 
@@ -41,7 +47,10 @@ namespace Alex.DebugOverlay
 
             _chunkUpdatedBuilder = () => PointData.Measurement("chunks.updated")
                .Tag("host", Environment.MachineName).Timestamp(DateTime.UtcNow, WritePrecision.Ns);
-
+            
+            _entityUpdatedBuilder = () => PointData.Measurement("entity.update")
+               .Tag("host", Environment.MachineName).Timestamp(DateTime.UtcNow, WritePrecision.Ns);
+            
             _alex = alex;
             _alex.OnEndDraw += OnEndDraw;
 
@@ -57,7 +66,55 @@ namespace Alex.DebugOverlay
             _graph.Height = 180;*/
 
             _alex.UiTaskManager.TaskFinished += TaskFinished;
+            EntityManager.EntityTicked += OnEntityTicked;
+            EntityManager.EntityUpdated += OnEntityUpdated;
+            _backgroundWorker.Start();
             //_alex.UiTaskManager.TaskCreated += TaskCreated;
+        }
+
+        private void OnEntityUpdated(object? sender, EntityUpdateEventArgs e)
+        {
+            var entityType = (e.Entity?.Type);
+
+            if (entityType == null)
+                return;
+
+            _backgroundWorker.Enqueue(
+                () =>
+                {
+                    foreach (var item in e.TimingsReport)
+                    {
+                        _writeApi.WritePoint(
+                            PointData.Measurement(Sanitize(item.Name)).Tag("host", Environment.MachineName)
+                               .Timestamp(DateTime.UtcNow, WritePrecision.Ns).Tag("entityType", entityType.ToString())
+                               .Field("duration", item.ElapsedTime.TotalMilliseconds));
+                    }
+                });
+        }
+
+        private string Sanitize(string input)
+        {
+            return input.Replace(" ", "_").ToLower();
+        }
+
+        private void OnEntityTicked(object? sender, EntityUpdateEventArgs e)
+        {
+            var entityType = e.Entity?.Type;
+
+            if (entityType == null)
+                return;
+
+            _backgroundWorker.Enqueue(
+                () =>
+                {
+                    foreach (var item in e.TimingsReport)
+                    {
+                        _writeApi.WritePoint(
+                            PointData.Measurement(Sanitize(item.Name)).Tag("host", Environment.MachineName)
+                               .Timestamp(DateTime.UtcNow, WritePrecision.Ns).Tag("entityType", entityType.ToString())
+                               .Field("duration", item.ElapsedTime.TotalMilliseconds));
+                    }
+                });
         }
 
         // private void TaskCreated(object? sender, TaskCreatedEventArgs e)

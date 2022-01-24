@@ -9,17 +9,20 @@ namespace Alex.Entities.Components
 	{
 		public Entity Entity { get; }
 
+		/// <inheritdoc />
+		public string Name { get; }
 		public bool Enabled { get; set; } = true;
 
-		protected EntityComponent(Entity entity)
+		protected EntityComponent(Entity entity, string name)
 		{
 			Entity = entity;
+			Name = name;
 		}
 	}
 
 	public abstract class EntityComponentUpdatable : EntityComponent, IUpdated
 	{
-		protected EntityComponentUpdatable(Entity entity) : base(entity) { }
+		protected EntityComponentUpdatable(Entity entity, string name) : base(entity, name) { }
 
 		/// <inheritdoc />
 		public TimeSpan LastUpdateElapsedTime { get; private set; }

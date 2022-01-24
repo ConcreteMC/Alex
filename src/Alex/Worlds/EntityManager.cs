@@ -15,6 +15,7 @@ using Alex.Common.World;
 using Alex.Entities;
 using Alex.Entities.BlockEntities;
 using Alex.Entities.Components;
+using Alex.Entities.Events;
 using Alex.Graphics.Camera;
 using Alex.Graphics.Models;
 using Alex.Net;
@@ -31,7 +32,9 @@ namespace Alex.Worlds
 	public class EntityManager : IDisposable, ITicked
 	{
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(EntityManager));
-
+		public static EventHandler<EntityUpdateEventArgs> EntityUpdated;
+		public static EventHandler<EntityUpdateEventArgs> EntityTicked;
+		
 		private ConcurrentDictionary<long, Entity> Entities { get; }
 		private ConcurrentDictionary<MiNET.Utils.UUID, Entity> EntityByUUID { get; }
 		private ConcurrentDictionary<BlockCoordinates, BlockEntity> BlockEntities { get; }
@@ -109,6 +112,8 @@ namespace Alex.Worlds
 
 		private object _tickLock = new object();
 
+		public static ThreadLocal<ExecutionTimer> TickTimer { get; set; } = new ThreadLocal<ExecutionTimer>(() => new ExecutionTimer("entity.tick"));
+		
 		public void OnTick()
 		{
 			if (!Monitor.TryEnter(_tickLock, 0))
@@ -152,7 +157,17 @@ namespace Alex.Worlds
 				foreach (var entity in rendered)
 				{
 					entity.IsRendered = true;
-					entity.OnTick();
+
+					TimingsReport report;
+					using (var tickTimer = TickTimer.Value = new ExecutionTimer("entity.tick"))
+					{
+						entity.OnTick();
+						
+						tickTimer.Stop();
+						report = tickTimer.GenerateReport();
+					}
+
+					EntityTicked?.Invoke(this, new EntityUpdateEventArgs(entity, report));
 
 					ticked++;
 				}
@@ -173,6 +188,7 @@ namespace Alex.Worlds
 
 		private Stopwatch _updateWatch = new Stopwatch();
 
+		public static ThreadLocal<ExecutionTimer> UpdateTimer { get; set; } = new ThreadLocal<ExecutionTimer>(() => new ExecutionTimer("entity.update"));
 		public void Update(IUpdateArgs args)
 		{
 			var delta = Alex.DeltaTime;
@@ -197,7 +213,15 @@ namespace Alex.Worlds
 				if (!entity.IsRendered)
 					continue;
 
-				entity.Update(args);
+				TimingsReport report;
+				using (var timer = UpdateTimer.Value = new ExecutionTimer("entity.update"))
+				{
+					entity.Update(args);
+
+					timer.Stop();
+					report = timer.GenerateReport();
+				}
+
 				entity.LastUpdate = DateTime.UtcNow;
 
 				var elapsed = _updateWatch.ElapsedMilliseconds;
@@ -207,6 +231,8 @@ namespace Alex.Worlds
 				{
 					Log.Warn($"Entity update took {elapsed - maxTime}ms too long. Entity={entity}");
 				}
+
+				EntityUpdated?.Invoke(this, new EntityUpdateEventArgs(entity, report));
 			}
 		}
 

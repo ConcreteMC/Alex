@@ -11,7 +11,7 @@ namespace Alex.Entities.Components.Effects
 		private readonly ConcurrentDictionary<EffectType, Effect> _effects =
 			new ConcurrentDictionary<EffectType, Effect>();
 
-		public EffectManagerComponent(Entity entity) : base(entity) { }
+		public EffectManagerComponent(Entity entity) : base(entity, "EffectManager") { }
 
 		/// <inheritdoc />
 		public void OnTick()

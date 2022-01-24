@@ -198,7 +198,7 @@ namespace Alex.Entities.Meta
 		public int SuffocationTicks { get; set; }
 		public int LavaTicks { get; set; }
 
-		public HealthManager(Entity entity) : base(entity)
+		public HealthManager(Entity entity) : base(entity, "HealthManager")
 		{
 			//Entity = entity;
 		}
