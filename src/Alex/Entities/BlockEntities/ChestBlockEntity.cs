@@ -1,4 +1,5 @@
 using System;
+using Alex.Blocks;
 using Alex.Blocks.Minecraft;
 using Alex.Blocks.Properties;
 using Alex.Common.Blocks;

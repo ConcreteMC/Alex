@@ -22,7 +22,7 @@ using Alex.Utils;
 using MiNET.Blocks;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using Block = Alex.Blocks.Minecraft.Block;
+using Block = Alex.Blocks.Block;
 using BlockModel = Alex.Graphics.Models.Blocks.BlockModel;
 using LightBlock = Alex.Blocks.Minecraft.LightBlock;
 

@@ -115,42 +115,30 @@ namespace Alex.Networking.Java.Packets.Play
 					return new ResourceLocationArgumentParser(parser);
 				}
 
-					break;
-
 				case "minecraft:block_pos":
 				{
 					return new BlockPositionArgumentParser(parser);
 				}
-
-					break;
 
 				case "minecraft:vec2":
 				{
 					return new Vector2ArgumentParser(parser);
 				}
 
-					break;
-
 				case "minecraft:vec3":
 				{
 					return new Vector3ArgumentParser(parser);
 				}
-
-					break;
 
 				case "minecraft:column_pos":
 				{
 					return new ColumnPositionArgumentParser(parser);
 				}
 
-					break;
-
 				case "brigadier:bool":
 				{
 					return new BoolArgumentParser(parser);
 				}
-
-					break;
 
 				case "brigadier:double":
 				{
@@ -173,8 +161,6 @@ namespace Alex.Networking.Java.Packets.Play
 					return cp;
 				}
 
-					break;
-
 				case "brigadier:float":
 				{
 					FloatArgumentParser cp = new FloatArgumentParser(parser);
@@ -195,8 +181,6 @@ namespace Alex.Networking.Java.Packets.Play
 
 					return cp;
 				}
-
-					break;
 
 				case "brigadier:integer":
 				{
@@ -219,8 +203,6 @@ namespace Alex.Networking.Java.Packets.Play
 					return cp;
 				}
 
-					break;
-
 				case "brigadier:string":
 				{
 					var a = stream.ReadVarInt();
@@ -228,16 +210,12 @@ namespace Alex.Networking.Java.Packets.Play
 					return (new StringArgumentParser(parser, (StringArgumentParser.StringMode)a));
 				}
 
-					break;
-
 				case "minecraft:entity":
 				{
 					var entityFlags = (byte)stream.ReadByte();
 
 					return (new EntityArgumentParser(parser, entityFlags));
 				}
-
-					break;
 
 				//	case "minecraft:game_profile":
 				//		break;
@@ -252,8 +230,6 @@ namespace Alex.Networking.Java.Packets.Play
 					return (new ScoreHolderArgumentParser(parser, scoreHolderFlags));
 				}
 
-					break;
-
 				case "minecraft:range":
 				{
 					bool allowDecimals = stream.ReadBool();
@@ -262,34 +238,23 @@ namespace Alex.Networking.Java.Packets.Play
 					{
 						return (new DoubleArgumentParser(parser) { });
 					}
-					else
-					{
-						return (new IntegerArgumentParser(parser) { });
-					}
+					
+					return (new IntegerArgumentParser(parser) { });
 				}
-
-					break;
 
 				case "minecraft:message":
 				{
 					return (new MessageArgumentParser(parser));
 				}
 
-					break;
-
 				case "minecraft:objective":
 				{
 					return (new ObjectiveArgumentParser(parser));
 				}
 
-					break;
-
 				default:
 					Log.Warn($"Unknown parser: {parser}");
-
 					return (new StringArgumentParser(parser, StringArgumentParser.StringMode.SingleWord));
-
-					break;
 			}
 		}
 

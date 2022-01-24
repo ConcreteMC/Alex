@@ -2,6 +2,7 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using Alex.Blocks;
 using Alex.Blocks.Minecraft;
 using Alex.Blocks.State;
 using Alex.Common;

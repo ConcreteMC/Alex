@@ -17,7 +17,7 @@
         <PackageReference Include="NLog" Version="4.7.12"/>
     </ItemGroup>
     <ItemGroup>
-        <ProjectReference Include="..\Alex.Common\Alex.Common.csproj"/>
+        <ProjectReference Include="..\..\Alex.Common\Alex.Common.csproj"/>
     </ItemGroup>
     <ItemGroup>
         <Compile Update="Properties\Resources.Designer.cs">

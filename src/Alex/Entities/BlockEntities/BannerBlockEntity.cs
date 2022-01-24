@@ -4,6 +4,7 @@ using System.Collections.ObjectModel;
 using System.Drawing.Imaging;
 using System.Linq;
 using System.Numerics;
+using Alex.Blocks;
 using Alex.Blocks.Minecraft;
 using Alex.Common.Blocks;
 using Alex.Common.Graphics;

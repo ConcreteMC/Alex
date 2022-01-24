@@ -11,7 +11,7 @@
         <PackageProjectUrl>https://github.com/kennyvv/Alex</PackageProjectUrl>
         <PackageLicenseUrl>https://github.com/kennyvv/Alex/blob/master/LICENSE</PackageLicenseUrl>
         <RepositoryUrl>https://github.com/kennyvv/Alex</RepositoryUrl>
-        <PackageVersion/>
+        <PackageVersion />
     </PropertyGroup>
 
     <PropertyGroup>
@@ -63,59 +63,59 @@
 
 
     <ItemGroup>
-        <Compile Remove="Graphics\Items\**"/>
-        <None Remove="Graphics\Items\**"/>
-        <EmbeddedResource Remove="Graphics\Items\**"/>
-        <Compile Remove="Graphics\Models\ModelExtra.cs"/>
-        <Compile Remove="Graphics\Models\AnimatedModel.cs"/>
-        <Compile Remove="Graphics\Models\Bone.cs"/>
-        <None Remove="Items\Resources\r16_to_current_item_map.json"/>
-        <EmbeddedResource Include="Items\Resources\r16_to_current_item_map.json"/>
-        <Compile Remove="Graphics\Models\Entity\BlockEntities\EnchantTableEntityModel.cs"/>
+        <Compile Remove="Graphics\Items\**" />
+        <None Remove="Graphics\Items\**" />
+        <EmbeddedResource Remove="Graphics\Items\**" />
+        <Compile Remove="Graphics\Models\ModelExtra.cs" />
+        <Compile Remove="Graphics\Models\AnimatedModel.cs" />
+        <Compile Remove="Graphics\Models\Bone.cs" />
+        <None Remove="Items\Resources\r16_to_current_item_map.json" />
+        <EmbeddedResource Include="Items\Resources\r16_to_current_item_map.json" />
+        <Compile Remove="Graphics\Models\Entity\BlockEntities\EnchantTableEntityModel.cs" />
     </ItemGroup>
 
     <ItemGroup>
-        <None Remove="Resources\**"/>
-        <EmbeddedResource Include="Resources\**"/>
+        <None Remove="Resources\**" />
+        <EmbeddedResource Include="Resources\**" />
     </ItemGroup>
 
     <ItemGroup>
         <None Update="skin.json">
             <CopyToOutputDirectory>Always</CopyToOutputDirectory>
         </None>
-        <Compile Remove="Particles\Systems\FlameParticleSystem.cs"/>
-        <Compile Remove="Particles\ParticleVertex.cs"/>
-        <Compile Remove="Particles\ParticleSystem.cs"/>
-        <Compile Remove="Particles\ParticleSettings.cs"/>
+        <Compile Remove="Particles\Systems\FlameParticleSystem.cs" />
+        <Compile Remove="Particles\ParticleVertex.cs" />
+        <Compile Remove="Particles\ParticleSystem.cs" />
+        <Compile Remove="Particles\ParticleSettings.cs" />
     </ItemGroup>
 
     <ItemGroup>
-        <PackageReference Include="CommandLineParser" Version="2.9.0-preview1"/>
-        <PackageReference Include="ConcurrentHashSet" Version="1.3.0"/>
-        <PackageReference Include="DiscordRichPresence" Version="1.0.175"/>
-        <PackageReference Include="EasyPipes" Version="1.3.0"/>
-        <PackageReference Include="FmodAudio" Version="2.2.2"/>
-        <PackageReference Include="jose-jwt" Version="3.2.0"/>
-        <PackageReference Include="Microsoft.Identity.Client" Version="4.37.0"/>
-        <PackageReference Include="MiNET.fnbt" Version="1.0.22"/>
-        <PackageReference Include="MojangAPI" Version="1.0.3"/>
-        <PackageReference Include="Mono.Cecil" Version="0.11.4"/>
-        <PackageReference Include="Newtonsoft.Json" Version="13.0.1"/>
-        <PackageReference Include="NLog" Version="4.7.12"/>
-        <PackageReference Include="PuppeteerSharp" Version="5.1.0"/>
-        <PackageReference Include="System.Globalization" Version="4.3.0"/>
-        <PackageReference Include="System.Reactive.Core" Version="5.0.0"/>
-        <PackageReference Include="System.Reactive.Interfaces" Version="5.0.0"/>
-        <PackageReference Include="System.Reactive.Linq" Version="5.0.0"/>
-        <PackageReference Include="System.Security.Cryptography.OpenSsl" Version="5.0.0"/>
+        <PackageReference Include="CommandLineParser" Version="2.9.0-preview1" />
+        <PackageReference Include="ConcurrentHashSet" Version="1.3.0" />
+        <PackageReference Include="DiscordRichPresence" Version="1.0.175" />
+        <PackageReference Include="EasyPipes" Version="1.3.0" />
+        <PackageReference Include="FmodAudio" Version="2.2.2" />
+        <PackageReference Include="jose-jwt" Version="3.2.0" />
+        <PackageReference Include="Microsoft.Identity.Client" Version="4.37.0" />
+        <PackageReference Include="MiNET.fnbt" Version="1.0.22" />
+        <PackageReference Include="MojangAPI" Version="1.0.3" />
+        <PackageReference Include="Mono.Cecil" Version="0.11.4" />
+        <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
+        <PackageReference Include="NLog" Version="4.7.12" />
+        <PackageReference Include="PuppeteerSharp" Version="5.1.0" />
+        <PackageReference Include="System.Globalization" Version="4.3.0" />
+        <PackageReference Include="System.Reactive.Core" Version="5.0.0" />
+        <PackageReference Include="System.Reactive.Interfaces" Version="5.0.0" />
+        <PackageReference Include="System.Reactive.Linq" Version="5.0.0" />
+        <PackageReference Include="System.Security.Cryptography.OpenSsl" Version="5.0.0" />
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\Alex.Common\Alex.Common.csproj"/>
-        <ProjectReference Include="..\Alex.ECS\Alex.ECS.csproj"/>
-        <ProjectReference Include="..\Alex.Networking.Java\Alex.Networking.Java.csproj"/>
-        <ProjectReference Include="..\Alex.ResourcePackLib\Alex.ResourcePackLib.csproj"/>
-        <ProjectReference Include="..\Networking\Alex.Networking.Bedrock\Alex.Networking.Bedrock.csproj"/>
+        <ProjectReference Include="..\Alex.Common\Alex.Common.csproj" />
+        <ProjectReference Include="..\Alex.ECS\Alex.ECS.csproj" />
+        <ProjectReference Include="..\Alex.ResourcePackLib\Alex.ResourcePackLib.csproj" />
+        <ProjectReference Include="..\Networking\Alex.Networking.Bedrock\Alex.Networking.Bedrock.csproj" />
+        <ProjectReference Include="..\Networking\Alex.Networking.Java\Alex.Networking.Java.csproj" />
     </ItemGroup>
 
     <ItemGroup>
@@ -143,9 +143,9 @@
     </ItemGroup>
 
     <ItemGroup>
-        <Folder Include="Audio\Models"/>
-        <Folder Include="Particles\Builtin"/>
+        <Folder Include="Audio\Models" />
+        <Folder Include="Particles\Builtin" />
     </ItemGroup>
 
-    <Import Project="$(MSBuildThisFileDirectory)/../../submodules/RocketUI/src/RocketUI/RocketUI.targets"/>
+    <Import Project="$(MSBuildThisFileDirectory)/../../submodules/RocketUI/src/RocketUI/RocketUI.targets" />
 </Project>

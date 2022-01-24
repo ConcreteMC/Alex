@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using Alex.Blocks.Materials;
+using Alex.Blocks.Minecraft;
 using Alex.Blocks.Minecraft.Leaves;
 using Alex.Blocks.Properties;
 using Alex.Blocks.State;
@@ -13,20 +13,17 @@ using Alex.Common.Utils.Vectors;
 using Alex.Entities;
 using Alex.Graphics.Models.Blocks;
 using Alex.Items;
-using Alex.ResourcePackLib.Json;
 using Alex.ResourcePackLib.Json.BlockStates;
 using Alex.Utils;
 using Alex.Worlds;
 using Alex.Worlds.Abstraction;
-using Alex.Worlds.Chunks;
 using Microsoft.Xna.Framework;
-using MiNET.Blocks;
 using NLog;
-using ItemBlock = Alex.Items.ItemBlock;
 using ItemMaterial = Alex.Common.Items.ItemMaterial;
 using ItemType = Alex.Common.Items.ItemType;
+using Wool = Alex.Blocks.Minecraft.Wool;
 
-namespace Alex.Blocks.Minecraft
+namespace Alex.Blocks
 {
 	public class Block : IRegistryEntry<Block>
 	{
@@ -285,7 +282,7 @@ namespace Alex.Blocks.Minecraft
 						{
 							return secondsForBreak / 5;
 						}
-						else if (this is Leaves.Leaves || this is AcaciaLeaves || this is Cobweb)
+						else if (this is Minecraft.Leaves.Leaves || this is AcaciaLeaves || this is Cobweb)
 						{
 							return secondsForBreak / 15;
 						}
