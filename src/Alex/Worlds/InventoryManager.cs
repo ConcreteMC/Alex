@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Concurrent;
+using Alex.Entities.BlockEntities;
 using Alex.Gui.Dialogs.Containers;
 using Alex.Utils;
 using Alex.Utils.Inventories;
@@ -19,7 +20,7 @@ namespace Alex.Worlds
 			Containers = new ConcurrentDictionary<int, GuiInventoryBase>();
 		}
 
-		public GuiInventoryBase Show(Inventory playerInventory, int containerId, ContainerType type)
+		public GuiInventoryBase Show(Inventory playerInventory, int containerId, ContainerType type, int data)
 		{
 			var dialog = Containers.GetOrAdd(
 				containerId, b =>
@@ -40,7 +41,7 @@ namespace Alex.Worlds
 
 						case ContainerType.Chest:
 							inv = new GuiChestDialog(
-								new InventoryBase(90) { InventoryId = containerId }, playerInventory);
+								new InventoryBase(90) { InventoryId = containerId }, playerInventory, data > 0 ? data : 54);
 
 							break;
 

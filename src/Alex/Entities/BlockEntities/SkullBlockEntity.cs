@@ -41,7 +41,7 @@ namespace Alex.Entities.BlockEntities
 
 			Width = 0.5f;
 			Height = 0.5f;
-			Offset = new Vector3(0.5f, 0f, 0.5f);
+			Offset = new Vector3(0.5f, -1.5f, 0.5f);
 		}
 
 		/// <inheritdoc />

@@ -55,7 +55,7 @@ namespace Alex.Graphics.Models.Blocks
 
 
 		public static BlockState GetBlockState(IBlockAccess world,
-			Vector3 position,
+			BlockCoordinates position,
 			BlockState blockState,
 			BlockStateResource blockStateModel)
 		{
@@ -132,7 +132,7 @@ namespace Alex.Graphics.Models.Blocks
 		}
 
 		public static bool PassesMultiPartRule(IBlockAccess world,
-			Vector3 position,
+			BlockCoordinates position,
 			MultiPartRule rule,
 			BlockState baseBlock,
 			out MultiPartRule passedRule)
@@ -206,7 +206,7 @@ namespace Alex.Graphics.Models.Blocks
 		}
 
 		private static bool Passes(IBlockAccess world,
-			Vector3 position,
+			BlockCoordinates position,
 			BlockState baseblockState,
 			string rule,
 			string value)
@@ -227,7 +227,7 @@ namespace Alex.Graphics.Models.Blocks
 				isDirection = false;
 			}
 
-			var direction = face.GetVector3();
+			var direction = face.GetBlockCoordinates();
 
 			//if (face == BlockFace.North || face == BlockFace.South)
 			//	direction = face.Opposite().GetVector3();

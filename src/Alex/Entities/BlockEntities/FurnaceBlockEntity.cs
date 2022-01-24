@@ -1,4 +1,5 @@
 using Alex.Blocks.Minecraft;
+using Alex.Common.Resources;
 using Alex.Items;
 using Alex.Networking.Java.Packets.Play;
 using Alex.Utils.Inventories;
@@ -17,6 +18,7 @@ namespace Alex.Entities.BlockEntities
 		/// <inheritdoc />
 		public FurnaceBlockEntity(World level) : base(level)
 		{
+			Type = new ResourceLocation("minecraft:furnace");
 			Inventory = new Inventory(3);
 		}
 

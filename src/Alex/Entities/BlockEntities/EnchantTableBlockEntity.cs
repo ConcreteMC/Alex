@@ -1,4 +1,5 @@
 ﻿using Alex.Blocks.Minecraft;
+using Alex.Common.Resources;
 using Alex.ResourcePackLib.Json.Bedrock.Entity;
 using Alex.Utils;
 using Alex.Worlds;
@@ -10,8 +11,7 @@ namespace Alex.Entities.BlockEntities
 	{
 		public EnchantTableBlockEntity(World level) : base(level)
 		{
-			Type = "minecraft:enchanttable";
-
+			Type = new ResourceLocation("minecraft:enchanttable");
 			Width = 1f;
 			Height = 1f;
 

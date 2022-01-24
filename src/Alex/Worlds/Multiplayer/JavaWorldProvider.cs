@@ -1797,14 +1797,14 @@ namespace Alex.Worlds.Multiplayer
 				//Chest
 				case 2:
 					inventoryBase = World.InventoryManager.Show(
-						World.Player.Inventory, packet.WindowId, ContainerType.Chest);
+						World.Player.Inventory, packet.WindowId, ContainerType.Chest, 27);
 
 					break;
 
 				//Large Chest:
 				case 5:
 					inventoryBase = World.InventoryManager.Show(
-						World.Player.Inventory, packet.WindowId, ContainerType.Chest);
+						World.Player.Inventory, packet.WindowId, ContainerType.Chest, 54);
 
 					break;
 			}

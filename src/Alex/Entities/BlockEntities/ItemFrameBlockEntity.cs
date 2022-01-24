@@ -3,6 +3,7 @@ using Alex.Blocks;
 using Alex.Blocks.Minecraft;
 using Alex.Common.Blocks;
 using Alex.Common.Graphics;
+using Alex.Common.Resources;
 using Alex.Graphics.Models.Items;
 using Alex.Items;
 using Alex.ResourcePackLib.Json.Models;
@@ -21,6 +22,7 @@ namespace Alex.Entities.BlockEntities
 		/// <inheritdoc />
 		public ItemFrameBlockEntity(World level) : base(level)
 		{
+			Type = new ResourceLocation("minecraft:item_frame");
 			Scale = 1f / 16f;
 			Width = 0.98f;
 			Height = 0.98f;

@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using Alex.Blocks.State;
+using Alex.Common.Resources;
 using Alex.Common.Utils.Vectors;
 using Alex.Entities.BlockEntities;
 using Alex.Worlds;
@@ -41,10 +42,13 @@ namespace Alex.Blocks.Minecraft
 				if (entity is ChestBlockEntity)
 					return base.BlockPlaced(world, state, position);
 
-				var ent = new ChestBlockEntity(w) { X = position.X & 0xf, Y = position.Y & 0xff, Z = position.Z & 0xf };
+				var ent = BlockEntityFactory.GetById(new ResourceLocation("minecraft:chest"), w, position);
 
-				if (ent.SetBlock(this))
-					w.SetBlockEntity(position.X, position.Y, position.Z, ent);
+				if (ent != null)
+				{
+					if (ent.SetBlock(this))
+						w.SetBlockEntity(position.X, position.Y, position.Z, ent);
+				}
 			}
 
 			return base.BlockPlaced(world, state, position);

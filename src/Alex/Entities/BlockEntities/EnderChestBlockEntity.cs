@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Alex.Blocks.Minecraft;
+using Alex.Common.Resources;
 using Alex.Graphics.Models.Entity;
 using Alex.Graphics.Models.Entity.Animations;
 using Alex.Graphics.Models.Entity.BlockEntities;
@@ -17,6 +18,7 @@ namespace Alex.Entities.BlockEntities
 		/// <inheritdoc />
 		public EnderChestBlockEntity(World level) : base(level)
 		{
+			Type = new ResourceLocation("minecraft:enderchest");
 			if (new ChestEntityModel().TryGetRenderer(out var renderer))
 			{
 				ModelRenderer = renderer;

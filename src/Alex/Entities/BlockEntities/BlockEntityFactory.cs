@@ -140,6 +140,11 @@ namespace Alex.Entities.BlockEntities
 					blockEntity = new EnderChestBlockEntity(world);
 
 					break;
+				
+				case "trapped_chest":
+				case "trappedchest":
+					blockEntity = new TrappedChestBlockEntity(world);
+					break;
 
 				case "sign":
 					blockEntity = new SignBlockEntity(world);
@@ -221,6 +226,11 @@ namespace Alex.Entities.BlockEntities
 
 					break;
 
+				case "barrel":
+					blockEntity = new BarrelBlockEntity(world);
+
+					break;
+				
 				default:
 					Log.Warn($"Missing block entity type: {id}");
 

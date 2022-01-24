@@ -27,6 +27,7 @@ namespace Alex.Entities.BlockEntities
 		/// <inheritdoc />
 		public SignBlockEntity(World level) : base(level)
 		{
+			Type = new ResourceLocation("minecraft:sign");
 			//ModelRenderer = new EntityModelRenderer(new StandingSignEntityModel(), texture);
 
 			Width = 1f;

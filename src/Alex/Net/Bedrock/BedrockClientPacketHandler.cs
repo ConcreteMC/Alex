@@ -1269,8 +1269,19 @@ namespace Alex.Net.Bedrock
 			{
 				var windowId = message.windowId;
 
+				int data = -1;
+				if (Client.World.EntityManager.TryGetBlockEntity(
+					    new BlockCoordinates(message.coordinates.X, message.coordinates.Y, message.coordinates.Z),
+					    out var blockEntity))
+				{
+					if (blockEntity is ChestBlockEntity chestBlockEntity)
+					{
+						data = (chestBlockEntity.ChestType & ChestType.Single) != 0 ? 27 : 54;
+					}
+				}
+				
 				var dialog = Client.World.InventoryManager.Show(
-					Client.World.Player.Inventory, message.windowId, (ContainerType)message.type);
+					Client.World.Player.Inventory, message.windowId, (ContainerType)message.type, data);
 
 				dialog.TransactionTracker = TransactionTracker;
 
@@ -1566,7 +1577,7 @@ namespace Alex.Net.Bedrock
 		{
 			Log.Info(
 				$"Initiating dimension change! Dimension={message.dimension} Respawn={message.respawn} Position={message.position}");
-
+			
 			World world = Client.World;
 			world.Dimension = (Dimension)message.dimension;
 
@@ -1575,9 +1586,6 @@ namespace Alex.Net.Bedrock
 			Client.ChunkPublisherPosition = new BlockCoordinates(pos);
 
 			world.UpdatePlayerPosition(pos, true);
-
-			ChunkProcessor.Clear();
-			world.ClearChunksAndEntities();
 
 			WorldProvider?.BossBarContainer?.Reset();
 			_bossBarMapping.Clear();
@@ -1592,8 +1600,16 @@ namespace Alex.Net.Bedrock
 				return;
 			}
 
-			Client.World.Player.OnDespawn();
+			if (Client.World.Player.IsSpawned)
+			{
+				ChunkProcessor.Clear();
+				world.ClearChunksAndEntities();
+			}
 
+			Client.World.Player.OnDespawn();
+			
+			//AlexInstance.GuiManager.HideDialog<WorldLoadingDialog>();
+			
 			bool cancelled = false;
 			WorldLoadingDialog worldLoadingDialog = AlexInstance.GuiManager.CreateDialog<WorldLoadingDialog>();
 			worldLoadingDialog.ConnectingToServer = true;

@@ -8,14 +8,14 @@ namespace Alex.Gui.Dialogs.Containers
 {
 	public class GuiChestDialog : GuiInventoryBase
 	{
-		public GuiChestDialog(InventoryBase inventory, Inventory playerInventory) : base(
+		public GuiChestDialog(InventoryBase inventory, Inventory playerInventory, int count) : base(
 			inventory, AlexGuiTextures.InventoryChestBackground, 175, 221)
 		{
 			RegisterInventory(playerInventory);
 			//7, 17
 
 			//Add chest slots
-			foreach (var slot in AddSlots(8, 18, 9, 54, 0, inventory.InventoryId))
+			foreach (var slot in AddSlots(8, 18, 9, count, 0, inventory.InventoryId))
 			{
 				slot.Item = inventory[slot.InventoryIndex];
 			}
@@ -31,6 +31,24 @@ namespace Alex.Gui.Dialogs.Containers
 			{
 				slot.Item = playerInventory[slot.InventoryIndex];
 			}
+		}
+	}
+	
+	public class GuiSingleChestDialog : GuiChestDialog
+	{
+		public GuiSingleChestDialog(InventoryBase inventory, Inventory playerInventory) : base(
+			inventory, playerInventory, 27)
+		{
+			
+		}
+	}
+	
+	public class GuiDoubleChestDialog : GuiChestDialog
+	{
+		public GuiDoubleChestDialog(InventoryBase inventory, Inventory playerInventory) : base(
+			inventory, playerInventory, 54)
+		{
+			
 		}
 	}
 }

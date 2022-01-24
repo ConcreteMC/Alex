@@ -29,6 +29,8 @@ namespace Alex.Entities.BlockEntities
 
 			Width = 1f;
 			Height = 1f;
+			
+			AnimationController.Enabled = true;
 		}
 
 		/// <inheritdoc />

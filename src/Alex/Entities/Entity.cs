@@ -434,7 +434,12 @@ namespace Alex.Entities
 				var root = modelRenderer?.Model?.Root;
 
 				if (root != null)
-					root.BaseScale = Vector3.One * _scale;
+				{
+					if (modelRenderer.GetBoneTransform(root.Name, out var bone))
+					{
+						bone.Scale = Vector3.One * _scale;
+					}
+				}
 
 				if (_scale <= 0.01f)
 				{
@@ -1692,7 +1697,7 @@ namespace Alex.Entities
 				if (texture != null)
 				{
 					Texture = null;
-					texture?.Dispose();
+					//texture?.Dispose();
 				}
 
 				OnDispose();
@@ -1709,7 +1714,7 @@ namespace Alex.Entities
 		public override string ToString()
 		{
 			return
-				$"{{Type: \"{GetType().Name}\", Def: \"{AnimationController?.EntityDefinition?.Identifier}\", EntityId: {EntityId}}}";
+				$"{{Type: \"{GetType().Name}\", Def: \"{Description?.Identifier}\", EntityId: {EntityId}}}";
 		}
 
 		private IItemRenderer _itemRenderer = null;

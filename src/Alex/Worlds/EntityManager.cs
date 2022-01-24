@@ -202,8 +202,8 @@ namespace Alex.Worlds
 
 			foreach (var entity in toUpdate)
 			{
-				if (elapsedTime >= delta)
-					break;
+				//if (elapsedTime >= delta)
+				//	break;
 
 				_updateWatch.Restart();
 				//if (entity.IsRendered)

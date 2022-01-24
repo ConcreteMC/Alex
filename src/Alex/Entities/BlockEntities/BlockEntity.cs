@@ -44,24 +44,33 @@ namespace Alex.Entities.BlockEntities
 			//Block = block;
 			DoRotationCalculations = false;
 			AnimationController.Enabled = false;
+			Movement.Enabled = false;
 			//base.Movement.InterpolatedMovement = false;
 		}
 
 		/// <inheritdoc />
 		protected override void OnTextureChanged(Texture2D oldValue, Texture2D newValue)
 		{
-			if (oldValue != null && oldValue.Tag is int references)
-			{
-				oldValue.Tag = references - 1;
-			}
-			else
-			{
-				oldValue?.Dispose();
-			}
-
+			if (oldValue == newValue)
+				return;
+			
 			if (newValue != null && newValue.Tag is int newReferences)
 			{
 				newValue.Tag = newReferences + 1;
+			}
+			
+			if (oldValue != null)
+			{
+				if (oldValue.Tag is int references)
+				{
+					references -= 1;
+					oldValue.Tag = references;
+
+					if (references == 0)
+					{
+						oldValue?.Dispose();
+					}
+				}
 			}
 		}
 
@@ -173,7 +182,7 @@ namespace Alex.Entities.BlockEntities
 				renderCount += renderer.Render(
 					renderArgs,
 					Matrix.CreateScale(Scale / 16f) * Matrix.CreateWorld(
-						new PlayerLocation(X + offset.X, Y + offset.Y, Z + offset.Z), vector, Vector3.Up));
+						RenderLocation, vector, Vector3.Up));
 			}
 
 			return renderCount;
