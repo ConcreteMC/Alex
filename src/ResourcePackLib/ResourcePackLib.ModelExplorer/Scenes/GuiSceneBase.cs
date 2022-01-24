@@ -11,7 +11,6 @@ namespace ResourcePackLib.ModelExplorer.Scenes
         
         protected GuiSceneBase(TScreen screen) : base()
         {
-            screen = screen;
             screen.Anchor = Alignment.Fill;
             screen.AutoSizeMode = AutoSizeMode.GrowAndShrink;
             Screen = screen;
