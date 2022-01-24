@@ -149,7 +149,7 @@ namespace Alex.Entities
 
 		// public BlockCoordinates SpawnPoint { get; set; } = BlockCoordinates.Zero;
 
-		public RaytracerComponent Raytracer { get; }
+		public RaytracerComponent Raytracer { get; private set; }
 
 		//public Camera Camera { get; internal set; }
 		public Player(GraphicsDevice graphics,
@@ -174,9 +174,15 @@ namespace Alex.Entities
 			base.NoAi = false;
 			CanSwim = true;
 
-			EntityComponents.Push(Raytracer = new RaytracerComponent(this));
-
 			base.MapIcon = new LocalPlayerMapIcon(this, MapMarker.GreenPointer);
+		}
+
+		/// <inheritdoc />
+		protected override void SetupComponents(Stack<IEntityComponent> components)
+		{
+			base.SetupComponents(components);
+			
+			components.Push(Raytracer = new RaytracerComponent(this));
 		}
 
 		/// <inheritdoc />

@@ -139,6 +139,9 @@ namespace Alex.Gui.Elements.Hud
 
 			public void Set(HeartValue value)
 			{
+				if (value == _previousValue)
+					return;
+				
 				switch (value)
 				{
 					case HeartValue.Full:

@@ -2,7 +2,9 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.Specialized;
+using System.Linq;
 using Alex.Common.Graphics;
+using Alex.Common.World;
 using Microsoft.Xna.Framework;
 
 namespace Alex.Graphics.Models;
@@ -148,20 +150,26 @@ public class ModelMatrixHolder : IDisposable
 		return false;
 	}
 
+	private BoneMatrices[] _boneMatrices = Array.Empty<BoneMatrices>();
+
 	public virtual void Update(IUpdateArgs args)
 	{
-		foreach (var bone in _boneTransforms.ToArray())
+		var matrices = _boneMatrices;
+		foreach (var bone in matrices)
 		{
-			bone.Value.Update(args);
+			bone.Update(args);
 			//bone.Update(args);
 		}
 	}
 
 	public virtual void ApplyMovement()
 	{
-		foreach (var b in _boneTransforms.ToArray())
+		_boneMatrices = _boneTransforms.Values.ToArray();
+		
+		var matrices = _boneMatrices;
+		foreach (var b in matrices)
 		{
-			b.Value.ApplyMovement();
+			b.ApplyMovement();
 		}
 	}
 

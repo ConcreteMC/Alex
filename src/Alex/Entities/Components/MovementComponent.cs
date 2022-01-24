@@ -11,7 +11,7 @@ using NLog;
 
 namespace Alex.Entities.Components
 {
-	public class MovementComponent : EntityComponentUpdatable, ITicked
+	public class MovementComponent : EntityComponentUpdatable
 	{
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(MovementComponent));
 		public Vector3 Heading { get; private set; }
@@ -28,10 +28,7 @@ namespace Alex.Entities.Components
 		protected override void OnUpdate(float deltaTime)
 		{
 			var entity = Entity;
-
-			//	if (!Process)
-			//		return;
-
+			
 			UpdateDistanceMoved(deltaTime);
 
 			if ((_target == null || _from == null))
@@ -46,34 +43,21 @@ namespace Alex.Entities.Components
 
 			_frameAccumulator += deltaTime;
 
-			var amount = (float)(_frameAccumulator / TargetTime);
-			//alpha = MathF.Min(1f, MathF.Max(alpha, 0f));
-
+			var amount = _frameAccumulator / TargetTime;
+			
 			var targetPosition = _target;
 			var previousStatePosition = _from;
 
-			var previousYaw = previousStatePosition.Yaw;
-			var previousHeadYaw = previousStatePosition.HeadYaw;
-			var previousPitch = previousStatePosition.Pitch;
-
-			var targetYaw = targetPosition.Yaw;
-			var targetHeadYaw = targetPosition.HeadYaw;
-			var targetPitch = targetPosition.Pitch;
-
-			var pos = Vector3.Lerp(previousStatePosition.ToVector3(), targetPosition.ToVector3(), amount);
-			var yaw = MathUtils.LerpDegrees(previousYaw, targetYaw, amount);
-			var headYaw = MathUtils.LerpDegrees(previousHeadYaw, targetHeadYaw, amount);
-			var pitch = MathUtils.LerpDegrees(previousPitch, targetPitch, amount);
-
+			var pos = MathUtils.LerpVector3Safe(previousStatePosition, targetPosition, amount);
 			var renderLocation = entity.RenderLocation;
 
 			renderLocation.X = pos.X;
 			renderLocation.Y = pos.Y;
 			renderLocation.Z = pos.Z;
 
-			renderLocation.HeadYaw = headYaw;
-			renderLocation.Yaw = yaw;
-			renderLocation.Pitch = pitch;
+			renderLocation.HeadYaw = MathUtils.LerpDegrees(previousStatePosition.HeadYaw, targetPosition.HeadYaw, amount);
+			renderLocation.Yaw = MathUtils.LerpDegrees(previousStatePosition.Yaw, targetPosition.Yaw, amount);
+			renderLocation.Pitch = MathUtils.LerpDegrees( previousStatePosition.Pitch, targetPosition.Pitch, amount);
 
 			renderLocation.OnGround = targetPosition.OnGround;
 
@@ -105,15 +89,9 @@ namespace Alex.Entities.Components
 
 		public float VerticalSpeed { get; private set; } = 0f;
 
-		private object _headingLock = new object();
-
 		public void UpdateHeading(Vector3 heading)
 		{
-			//lock (_headingLock)
-			{
-				Heading = heading;
-				//Heading = heading.Transform(Entity.KnownPosition.GetDirectionMatrix(Entity.IsSwimming, true));
-			}
+			Heading = heading;
 		}
 
 		private PlayerLocation _from;
@@ -128,11 +106,8 @@ namespace Alex.Entities.Components
 			//	Entity.RenderLocation = target;
 			//	return;
 			//}
-
-			var distance = Microsoft.Xna.Framework.Vector3.DistanceSquared(
-				Entity.RenderLocation.ToVector3(), target.ToVector3());
-
-			if (distance >= 16f)
+			
+			if (Entity.RenderLocation.DistanceTo(target) >= 16f)
 			{
 				Entity.RenderLocation = target;
 				_frameAccumulator = TargetTime;
@@ -149,7 +124,6 @@ namespace Alex.Entities.Components
 		private const float TargetTime = 1f / 20f;
 
 		public float MetersPerSecond { get; private set; } = 0f;
-		private Vector3 _previousPosition = Vector3.Zero;
 
 		private float _speedAccumulator = 0f;
 
@@ -160,6 +134,7 @@ namespace Alex.Entities.Components
 			if (_speedAccumulator >= TargetTime)
 			{
 				var modifier = (1f / _speedAccumulator);
+				_speedAccumulator -= TargetTime;
 
 				var horizontalDist = _distanceMoved - _lastDistanceMoved;
 				_lastDistanceMoved = _distanceMoved;
@@ -190,8 +165,6 @@ namespace Alex.Entities.Components
 				vmps /= 2f;
 
 				VerticalSpeed = vmps;
-
-				_speedAccumulator = 0f;
 			}
 		}
 
@@ -331,13 +304,6 @@ namespace Alex.Entities.Components
 			UpdateTarget();
 
 			return amount;
-		}
-
-
-		/// <inheritdoc />
-		public void OnTick()
-		{
-			//	Entity.KnownPosition.OnGround = DetectOnGround(Entity.Level, Entity.KnownPosition);
 		}
 
 		private void FixSneaking(IBlockAccess blockAccess, ref Vector3 amount)

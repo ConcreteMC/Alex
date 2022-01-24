@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Diagnostics;
 using System.Linq;
 using System.Text;
@@ -293,7 +294,7 @@ namespace Alex.Entities
 
 		public float Experience { get; set; } = 0;
 		public float ExperienceLevel { get; set; } = 0;
-		protected Stack<IEntityComponent> EntityComponents { get; }
+		protected IReadOnlyCollection<IEntityComponent> EntityComponents { get; }
 		public EffectManagerComponent Effects { get; }
 
 		public Entity(World level)
@@ -301,7 +302,7 @@ namespace Alex.Entities
 			Structs.Add("query", new ObjectStruct(this));
 
 			_timeOfCreation = DateTime.UtcNow;
-			EntityComponents = new Stack<IEntityComponent>();
+			//EntityComponents = new Stack<IEntityComponent>();
 
 			_lifeTime = Stopwatch.StartNew();
 
@@ -318,8 +319,8 @@ namespace Alex.Entities
 			IsAffectedByGravity = true;
 			//HasPhysics = true;
 
-			HealthManager = new HealthManager(this);
-			EntityComponents.Push(HealthManager);
+			Stack<IEntityComponent> components = new Stack<IEntityComponent>();
+			components.Push(HealthManager = new HealthManager(this));
 
 			UUID = new MiNET.Utils.UUID(Guid.NewGuid().ToByteArray());
 
@@ -329,18 +330,23 @@ namespace Alex.Entities
 			AddOrUpdateProperty(new MovementSpeedProperty(this));
 			AddOrUpdateProperty(new AttackSpeedProperty(this));
 
-			Movement = new MovementComponent(this);
-			EntityComponents.Push(Movement);
-			AnimationController = new AnimationComponent(this);
-			//EntityComponents.Push(Movement = new EntityMovement(this));
-			EntityComponents.Push(AnimationController);
-			EntityComponents.Push(Effects = new EffectManagerComponent(this));
+			components.Push(Movement = new MovementComponent(this));
+			components.Push(AnimationController = new AnimationComponent(this));
+			components.Push(Effects = new EffectManagerComponent(this));
 
 			//Effect = new EntityEffect();
 			//Effect.Texture = _texture;
 			//Effect.VertexColorEnabled = true;
 
 			MapIcon = new EntityMapIcon(this, MapMarker.SmallBlip);
+			
+			SetupComponents(components);
+			EntityComponents = components.ToImmutableArray();
+		}
+
+		protected virtual void SetupComponents(Stack<IEntityComponent> components)
+		{
+			
 		}
 
 		public double FlyingSpeed

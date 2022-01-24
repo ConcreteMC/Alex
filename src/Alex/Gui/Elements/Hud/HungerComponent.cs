@@ -94,6 +94,9 @@ namespace Alex.Gui.Elements.Hud
 
 			public void Set(HeartValue value)
 			{
+				if (value == _value)
+					return;
+				
 				_value = value;
 				Texture.IsVisible = true;
 

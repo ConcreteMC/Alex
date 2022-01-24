@@ -1,14 +1,24 @@
 ﻿using System;
+using Alex.Common.Utils.Vectors;
 using Microsoft.Xna.Framework;
 
 namespace Alex.Common.Utils
 {
 	public static class MathUtils
 	{
+		public static Vector3 LerpVector3Safe(PlayerLocation start, PlayerLocation end, float amount)
+		{
+			if (amount >= 1f) return end;
+			if (amount <= 0f) return start;
+
+			return new Vector3(
+				LerpSafe(start.X, end.X, amount), LerpSafe(start.Y, end.Y, amount), LerpSafe(start.Z, end.Z, amount));
+		}
+		
 		public static Vector3 LerpVector3Safe(Vector3 start, Vector3 end, float amount)
 		{
-			if (amount > 1f) return end;
-			if (amount < 0f) return start;
+			if (amount >= 1f) return end;
+			if (amount <= 0f) return start;
 
 			return new Vector3(
 				LerpSafe(start.X, end.X, amount), LerpSafe(start.Y, end.Y, amount), LerpSafe(start.Z, end.Z, amount));
@@ -16,21 +26,16 @@ namespace Alex.Common.Utils
 
 		public static float LerpSafe(float start, float end, float amount)
 		{
-			if (amount > 1f) return end;
-			if (amount < 0f) return start;
+			if (amount >= 1f) return end;
+			if (amount <= 0f) return start;
 
-			var s = start;
-			var e = end;
-
-			//start = MathF.Min(s, e);
-			//end = MathF.Max(s, e);
 			return start + (end - start) * amount;
 		}
 
 		public static Vector3 LerpVector3Degrees(Vector3 start, Vector3 end, float amount)
 		{
-			if (amount > 1f) return end;
-			if (amount < 0f) return start;
+			if (amount >= 1f) return end;
+			if (amount <= 0f) return start;
 
 			return new Vector3(
 				LerpDegrees(start.X, end.X, amount), LerpDegrees(start.Y, end.Y, amount),
@@ -39,8 +44,14 @@ namespace Alex.Common.Utils
 
 		public static float LerpDegrees(float start, float end, float amount)
 		{
+			if (amount >= 1f) return end;
+			if (amount <= 0f) return start;
+			
 			float difference = MathF.Abs(end - start);
 
+			if (difference < 0.001f)
+				return end;
+			
 			if (difference > 180f)
 			{
 				// We need to add on to one of the values.
