@@ -33,11 +33,11 @@ namespace Alex.Graphics.Models
 		private VertexBuffer CloudsPlane { get; set; }
 		private VertexBuffer SkyPlane { get; set; }
 		private VertexBuffer CelestialPlane { get; set; }
-		private VertexBuffer MoonPlane { get; }
+		private VertexBuffer MoonPlane { get; set; }
 
-		private Texture2D SunTexture { get; }
-		private Texture2D MoonTexture { get; }
-		private Texture2D CloudTexture { get; }
+		//private Texture2D SunTexture { get; }
+		//private Texture2D MoonTexture { get; }
+		private Texture2D CloudTexture { get; set; }
 
 		private bool CanRender { get; set; } = true;
 		public bool EnableClouds { get; set; } = false;
@@ -54,47 +54,13 @@ namespace Alex.Graphics.Models
 			//Game = alex;
 			var alex = serviceProvider.GetRequiredService<Alex>();
 			OptionsProvider = serviceProvider.GetRequiredService<IOptionsProvider>();
-
-			if (alex.Resources.TryGetBitmap("environment/sun", out var sun))
-			{
-				SunTexture = TextureUtils.BitmapToTexture2D(this, device, sun);
-			}
-			else
-			{
-				CanRender = false;
-
-				return;
-			}
-
-			if (alex.Resources.TryGetBitmap("environment/moon_phases", out var moonPhases))
-			{
-				MoonTexture = TextureUtils.BitmapToTexture2D(this, device, moonPhases);
-			}
-			else
-			{
-				CanRender = false;
-
-				return;
-			}
-
-			if (alex.Resources.TryGetBitmap("environment/clouds", out var cloudTexture))
-			{
-				CloudTexture = TextureUtils.BitmapToTexture2D(this, device, cloudTexture);
-				EnableClouds = false;
-			}
-			else
-			{
-				EnableClouds = false;
-			}
-
-			//var d = 144;
-
+			
 			SunEffect = new BasicEffect(device)
 			{
 				VertexColorEnabled = false,
 				LightingEnabled = false,
 				TextureEnabled = true,
-				Texture = SunTexture,
+				//Texture = SunTexture,
 				FogEnabled = false
 			};
 
@@ -103,7 +69,7 @@ namespace Alex.Graphics.Models
 				VertexColorEnabled = false,
 				LightingEnabled = false,
 				TextureEnabled = true,
-				Texture = MoonTexture,
+				//Texture = MoonTexture,
 				FogEnabled = false
 			};
 
@@ -115,6 +81,52 @@ namespace Alex.Graphics.Models
 				FogEnd = 64 * 0.8f,
 				LightingEnabled = true
 			};
+			
+			if (alex.Resources.TryGetBitmap("environment/sun", out var sun))
+			{
+				TextureUtils.BitmapToTexture2DAsync(this, device, sun, texture =>
+				{
+					SunEffect.Texture = texture;
+					sun.Dispose();
+				});
+			}
+			else
+			{
+				CanRender = false;
+
+				return;
+			}
+
+			if (alex.Resources.TryGetBitmap("environment/moon_phases", out var moonPhases))
+			{
+				TextureUtils.BitmapToTexture2DAsync(this, device, moonPhases, texture =>
+				{
+					MoonEffect.Texture = texture;
+					moonPhases.Dispose();
+				});
+			}
+			else
+			{
+				CanRender = false;
+
+				return;
+			}
+
+			if (alex.Resources.TryGetBitmap("environment/clouds", out var cloudTexture))
+			{
+				TextureUtils.BitmapToTexture2DAsync(this, device, cloudTexture, texture =>
+				{
+					CloudTexture = texture;
+					cloudTexture.Dispose();
+				});
+				EnableClouds = false;
+			}
+			else
+			{
+				EnableClouds = false;
+			}
+
+			//var d = 144;
 
 			//SkyPlaneEffect.AmbientLightColor
 			//SkyPlaneEffect.DiffuseColor = Color.White.ToVector3();
@@ -355,12 +367,12 @@ namespace Alex.Graphics.Models
 
 			var moonPhase = (int)(World.Time / 24000L % 8L + 8L) % 8;
 
-			if (_currentMoonPhase != moonPhase)
+			if (_currentMoonPhase != moonPhase && MoonEffect.Texture != null)
 			{
 				_currentMoonPhase = moonPhase;
 
-				var w = (1f / MoonTexture.Width) * (MoonTexture.Width / 4f);
-				var h = (1f / MoonTexture.Height) * (MoonTexture.Height / 2f);
+				var w = (1f / MoonEffect.Texture.Width) * (MoonEffect.Texture.Width / 4f);
+				var h = (1f / MoonEffect.Texture.Height) * (MoonEffect.Texture.Height / 2f);
 
 				int x = moonPhase % 4;
 				int y = moonPhase % 2;
@@ -516,17 +528,33 @@ namespace Alex.Graphics.Models
 		public void Dispose()
 		{
 			CloudsPlane?.Dispose();
+			CloudsPlane = null;
+			
 			SkyPlane?.Dispose();
+			SkyPlane = null;
+			
 			CelestialPlane?.Dispose();
+			CelestialPlane = null;
+			
 			MoonPlane?.Dispose();
-			SunTexture?.Dispose();
-			MoonTexture?.Dispose();
+			MoonPlane = null;
+			
 			CloudTexture?.Dispose();
-
+			CloudTexture = null;
+			
 			SkyPlaneEffect?.Dispose();
+			SkyPlaneEffect = null;
+			
+			SunEffect?.Texture?.Dispose();
 			SunEffect?.Dispose();
+			SunEffect = null;
+			
+			MoonEffect?.Texture?.Dispose();
 			MoonEffect?.Dispose();
+			MoonEffect = null;
+			
 			CloudsPlaneEffect?.Dispose();
+			CloudsPlaneEffect = null;
 		}
 	}
 

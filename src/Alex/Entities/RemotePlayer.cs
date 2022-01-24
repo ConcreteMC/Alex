@@ -398,16 +398,23 @@ namespace Alex.Entities
 						TextureUtils.BitmapToTexture2DAsync(
 							this, Alex.Instance.GraphicsDevice, skinBitmap, texture2D =>
 							{
-								if (texture2D == null)
+								try
 								{
-									Log.Warn($"Null texture for entity: {NameTag}");
+									if (texture2D == null)
+									{
+										Log.Warn($"Null texture for entity: {NameTag}");
 
-									return;
+										return;
+									}
+
+									Texture = texture2D;
 								}
-
-								skinBitmap?.Dispose();
-								Texture = texture2D;
-							});
+								finally
+								{
+									skinBitmap?.Dispose();
+								}
+							},
+							$"Skin Texture, Player={(NameTag?.Replace("\n", "") ?? EntityId.ToString())}, Width={textureSize.X} Height={textureSize.Y}");
 					}
 				}
 				finally

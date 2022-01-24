@@ -23,10 +23,10 @@ namespace Alex.DebugOverlay
 		public override void Enabled()
 		{
 			_guiRenderer = new GuiRenderer();
-			_guiRenderer.Init(_alex.GraphicsDevice, _alex.Services);
+			_guiRenderer.Init(_alex.GraphicsDevice, _alex.ServiceContainer);
 			_guiRenderer.Font = _alex.GuiRenderer.Font;
 			
-			_guiManager = new GuiManager(_alex,  _guiRenderer, _alex.Services);
+			_guiManager = new GuiManager(_alex,  _guiRenderer, _alex.ServiceContainer);
 			_alex.Components.Add(_guiManager);
 			_guiManager.DrawOrder = _alex.GuiManager.DrawOrder + 1;
 			//_streamWriter = File.AppendText(Filename);

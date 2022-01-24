@@ -161,7 +161,7 @@ namespace Alex.Utils.Threading
 
 						_frameSkip += framesToSkip;
 
-						Log.Debug(
+						Log.Warn(
 							$"Task execution time exceeds frametime by {(executionTime.TotalMilliseconds - Alex.DeltaTimeSpan.TotalMilliseconds):F2}ms skipping {framesToSkip} frames (Tag={(a.Tag ?? "null")})");
 					}
 				}

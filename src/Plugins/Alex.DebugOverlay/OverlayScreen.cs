@@ -25,44 +25,36 @@ namespace Alex.DebugOverlay
 
         public OverlayScreen(Alex alex)
         {
-            _infucksClient = InfluxDBClientFactory.Create(InfluxDBClientOptions.Builder.CreateNew()
-                .Url("http://localhost:8086")
-                .AuthenticateToken(
-                    "UWJZ-LTAFk07vzWAxD15NUP-KzHrP74lU-N1Lg1-tNW8EQl6EHthQssGxUQhqyatazOedEByEH3ZgvQ37CzBrg==")
-                .Org("my-org")
-                .Bucket("my-bucket")
-                .AddDefaultTag("host", Environment.MachineName)
-                .Build());
+            _infucksClient = InfluxDBClientFactory.Create(
+                InfluxDBClientOptions.Builder.CreateNew().Url("http://localhost:8086")
+                   .AuthenticateToken(
+                        "5up3r-S3cr3t-auth-t0k3n")
+                   .Org("influxdata-org").Bucket("alex").AddDefaultTag("host", Environment.MachineName).Build());
+
             _writeApiAsync = _infucksClient.GetWriteApiAsync();
 
             _frameTimeBuilder = () => PointData.Measurement("rendering.frame_time")
-                .Tag("host", Environment.MachineName)
-                .Timestamp(DateTime.UtcNow, WritePrecision.Ns);
+               .Tag("host", Environment.MachineName).Timestamp(DateTime.UtcNow, WritePrecision.Ns);
 
             _taskExecTimeBuilder = () => PointData.Measurement("tasks.completed")
-                .Tag("host", Environment.MachineName)
-                .Timestamp(DateTime.UtcNow, WritePrecision.Ns);
+               .Tag("host", Environment.MachineName).Timestamp(DateTime.UtcNow, WritePrecision.Ns);
 
             _chunkUpdatedBuilder = () => PointData.Measurement("chunks.updated")
-                .Tag("host", Environment.MachineName)
-                .Timestamp(DateTime.UtcNow, WritePrecision.Ns);
+               .Tag("host", Environment.MachineName).Timestamp(DateTime.UtcNow, WritePrecision.Ns);
 
             _alex = alex;
             _alex.OnEndDraw += OnEndDraw;
 
             SizeToWindow = true;
-            AddChild(_fpsElement = new TextElement("00 FPS", true)
-            {
-                Anchor = Alignment.TopLeft,
-                TextAlignment = TextAlignment.Left
-            });
-            // AddChild(_graph = new GuiGraph()
-            // {
-            //     Anchor = Alignment.TopRight
-            // });
-            // _graph.AutoSizeMode = AutoSizeMode.None;
-            // _graph.Width = 210;
-            // _graph.Height = 180;
+
+            AddChild(
+                _fpsElement =
+                    new TextElement("00 FPS", true) { Anchor = Alignment.TopLeft, TextAlignment = TextAlignment.Left });
+
+            /*AddChild(_graph = new GuiGraph() { Anchor = Alignment.TopRight });
+            _graph.AutoSizeMode = AutoSizeMode.None;
+            _graph.Width = 210;
+            _graph.Height = 180;*/
 
             _alex.UiTaskManager.TaskFinished += TaskFinished;
             //_alex.UiTaskManager.TaskCreated += TaskCreated;

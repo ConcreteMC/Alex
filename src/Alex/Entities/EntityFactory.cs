@@ -723,24 +723,18 @@ namespace Alex.Entities
 
 				//if (!_pooledTextures.TryGetValue(texture, out var texture2D))
 				{
-					if (resources.TryGetBedrockBitmap(texture, out var bmp))
+					Image<Rgba32> bmp = null;
+					if (resources.TryGetBedrockBitmap(texture, out bmp) || resources.TryGetBitmap(texture, out bmp))
 					{
+						var width = bmp.Width;
+						var height = bmp.Height;
+
 						TextureUtils.BitmapToTexture2DAsync(
 							e, Alex.Instance.GraphicsDevice, bmp, texture2D1 =>
 							{
 								e.Texture = texture2D1;
 								bmp.Dispose();
-							});
-					}
-					else if (resources.TryGetBitmap(texture, out var bmp2))
-					{
-						TextureUtils.BitmapToTexture2DAsync(
-							e, Alex.Instance.GraphicsDevice, bmp2, texture2D1 =>
-							{
-								e.Texture = texture2D1;
-
-								bmp2.Dispose();
-							});
+							}, $"Entity Definition Texture - Width={width} Height={height} - {entity.ToString()}");
 					}
 				}
 				//else

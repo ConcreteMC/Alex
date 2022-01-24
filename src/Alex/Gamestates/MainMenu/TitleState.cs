@@ -197,21 +197,19 @@ namespace Alex.Gamestates.MainMenu
 
 		private void ApplyModel(Entity entity)
 		{
-			Alex.UiTaskManager.Enqueue(
-				() =>
+			if (Alex.PlayerModel != null && Alex.PlayerTexture != null)
+			{
+				if (Alex.PlayerModel.TryGetRenderer(out var renderer))
 				{
-					if (Alex.PlayerModel != null && Alex.PlayerTexture != null)
-					{
-						if (Alex.PlayerModel.TryGetRenderer(out var renderer))
+					entity.ModelRenderer = renderer;
+					
+					TextureUtils.BitmapToTexture2DAsync(
+						this, Alex.GraphicsDevice, Alex.PlayerTexture, texture =>
 						{
-							entity.Texture = TextureUtils.BitmapToTexture2D(
-								this, Alex.GraphicsDevice, Alex.PlayerTexture);
-
-
-							entity.ModelRenderer = renderer;
-						}
-					}
-				});
+							entity.Texture = texture;
+						});
+				}
+			}
 		}
 
 		private void Init()

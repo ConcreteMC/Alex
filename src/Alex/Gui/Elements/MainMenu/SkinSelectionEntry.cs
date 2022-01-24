@@ -35,9 +35,11 @@ namespace Alex.Gui.Elements.MainMenu
 
 			if (skin.Model.TryGetRenderer(out var renderer))
 			{
-				var texture2D = TextureUtils.BitmapToTexture2D(this, Alex.Instance.GraphicsDevice, skin.Texture);
 				mob.ModelRenderer = renderer;
-				mob.Texture = texture2D;
+				TextureUtils.BitmapToTexture2DAsync(this, Alex.Instance.GraphicsDevice, skin.Texture, texture =>
+				{
+					mob.Texture = texture;
+				});
 			}
 
 			ModelView = new GuiEntityModelView(mob)

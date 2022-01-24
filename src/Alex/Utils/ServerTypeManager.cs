@@ -69,7 +69,7 @@ namespace Alex.Utils
 		where TQueryProvider : IServerQueryProvider
 	{
 		/// <inheritdoc />
-		protected ServerTypeImplementation(Container container, string displayName, string typeIdentifier) : base(
+		protected ServerTypeImplementation(IServiceProvider container, string displayName, string typeIdentifier) : base(
 			container, container.GetRequiredService<TQueryProvider>(), displayName, typeIdentifier) { }
 	}
 
@@ -87,7 +87,7 @@ namespace Alex.Utils
 		public IListStorageProvider<SavedServerEntry> ServerStorageProvider { get; }
 		public IListStorageProvider<PlayerProfile> ProfileProvider { get; }
 
-		protected ServerTypeImplementation(Container container,
+		protected ServerTypeImplementation(IServiceProvider container,
 			IServerQueryProvider queryProvider,
 			string displayName,
 			string typeIdentifier)

@@ -138,7 +138,7 @@ namespace Alex
 		private Point WindowSize { get; set; }
 		public AudioEngine AudioEngine { get; set; }
 
-		public Container ServiceContainer { get; private set; }
+		public IServiceProvider ServiceContainer { get; private set; }
 
 		public Alex(LaunchSettings launchSettings)
 		{
@@ -208,7 +208,7 @@ namespace Alex
 			};
 
 			ServerTypeManager = new ServerTypeManager();
-			//    PluginManager = new PluginManager();
+			PluginManager = new PluginManager();
 
 			Storage = new StorageSystem(LaunchSettings.WorkDir);
 			Storage.TryCreateDirectory("assets");
@@ -228,7 +228,10 @@ namespace Alex
 			Components.Add(UiTaskManager);
 
 			TextureUtils.RenderThread = Thread.CurrentThread;
-			TextureUtils.QueueOnRenderThread = action => UiTaskManager.Enqueue(action);
+			TextureUtils.QueueOnRenderThread = (action, tag) => UiTaskManager.Enqueue(action, setup =>
+			{
+				setup.Tag = tag;
+			});
 		}
 
 		/// <inheritdoc />
@@ -344,10 +347,13 @@ namespace Alex
 				container.Collection.Append<IHostedService, RocketDebugSocketServer>();
 			}
 
+			PluginManager.Initiate(container, Options, LaunchSettings);
+
 			container.Verify();
 			Services.AddService<IServiceProvider>(container);
 
 			ServiceContainer = container;
+			PluginManager.Setup(ServiceContainer);
 		}
 
 		protected override void LoadContent()
@@ -478,7 +484,7 @@ namespace Alex
 					try
 					{
 						Task.WaitAll(
-							ServiceContainer.GetAllInstances<IHostedService>()
+							ServiceContainer.GetServices<IHostedService>()
 							   .Select(s => s.StartAsync(CancellationToken.None)).ToArray());
 
 						InitializeGame(splash).Wait();
@@ -531,6 +537,8 @@ namespace Alex
 				() =>
 				{
 					DeviceManager.SynchronizeWithVerticalRetrace = enabled;
+					DeviceManager.PreferredBackBufferWidth = WindowSize.X;
+					DeviceManager.PreferredBackBufferHeight = WindowSize.Y;
 					DeviceManager.ApplyChanges();
 				});
 		}
@@ -567,7 +575,7 @@ namespace Alex
 
 			// GuiDebugHelper.Dispose();
 
-			//   PluginManager.UnloadAll();
+			PluginManager.UnloadAll();
 
 			RichPresenceProvider.ClearPresence();
 		}
@@ -636,7 +644,8 @@ namespace Alex
 			//GuiRenderer.LoadResourcePack(Resources.ResourcePack, null);
 			AnvilWorldProvider.LoadBlockConverter();
 
-			//    PluginManager.EnablePlugins();
+			PluginManager.LoadPlugins();
+			PluginManager.EnablePlugins();
 
 			var storage = ServiceContainer.GetRequiredService<IStorageSystem>();
 

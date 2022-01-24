@@ -22,13 +22,13 @@ namespace Alex.Common.Utils
 
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(TextureUtils));
 		public static Thread RenderThread { get; set; }
-		public static Action<Action> QueueOnRenderThread { get; set; }
+		public static Action<Action, object> QueueOnRenderThread { get; set; }
 
 		public static Texture2D BitmapToTexture2D<TImageFormat>(GraphicsDevice device,
 			Image<TImageFormat> bmp,
 			[CallerMemberName] string caller = "Image Converter") where TImageFormat : unmanaged, IPixel<TImageFormat>
 		{
-			return BitmapToTexture2D(caller, device, bmp, out _);
+			return BitmapToTexture2D(caller, device, bmp);
 		}
 
 		private static uint[] GetPixelData<TImageFormat>(this Image<TImageFormat> image)
@@ -59,7 +59,8 @@ namespace Alex.Common.Utils
 		public static void BitmapToTexture2DAsync<TImageFormat>(object owner,
 			GraphicsDevice device,
 			Image<TImageFormat> image,
-			TextureCreated onTextureCreated) where TImageFormat : unmanaged, IPixel<TImageFormat>
+			TextureCreated onTextureCreated,
+			string name = null) where TImageFormat : unmanaged, IPixel<TImageFormat>
 		{
 			if (image == null)
 				return;
@@ -86,21 +87,13 @@ namespace Alex.Common.Utils
 					{
 						var result = Execute();
 						onTextureCreated?.Invoke(result);
-					});
+					}, name ?? owner);
 			}
 		}
 
 		public static Texture2D BitmapToTexture2D<TImageFormat>(object owner,
 			GraphicsDevice device,
-			Image<TImageFormat> bmp) where TImageFormat : unmanaged, IPixel<TImageFormat>
-		{
-			return BitmapToTexture2D(owner, device, bmp, out _);
-		}
-
-		public static Texture2D BitmapToTexture2D<TImageFormat>(object owner,
-			GraphicsDevice device,
-			Image<TImageFormat> image,
-			out long byteSize) where TImageFormat : unmanaged, IPixel<TImageFormat>
+			Image<TImageFormat> image, string name = null) where TImageFormat : unmanaged, IPixel<TImageFormat>
 		{
 			Texture2D result = null;
 
@@ -128,12 +121,12 @@ namespace Alex.Common.Utils
 						result = Execute();
 
 						resetEvent.Set();
-					});
+					}, name ?? owner);
 
 				resetEvent.WaitOne();
 			}
 
-			byteSize = result.MemoryUsage();
+			//byteSize = result.MemoryUsage();
 
 			return result;
 		}
@@ -147,7 +140,7 @@ namespace Alex.Common.Utils
 			}
 		}
 
-		public static void ImageToTexture2DAsync(object owner,
+		/*public static void ImageToTexture2DAsync(object owner,
 			GraphicsDevice device,
 			byte[] bmp,
 			TextureCreated textureCreated)
@@ -163,7 +156,7 @@ namespace Alex.Common.Utils
 						textureCreated?.Invoke(t);
 					});
 			}
-		}
+		}*/
 
 		public static Texture2D Slice<TImageFormat>(this Image<TImageFormat> bmp,
 			GraphicsDevice graphics,

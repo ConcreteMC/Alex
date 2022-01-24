@@ -20,7 +20,10 @@ namespace Alex.Gamestates.MainMenu.Options.Elements
 		{
 			if (manifest.Icon != null)
 			{
-				_icon.Texture = TextureUtils.BitmapToTexture2D(this, Alex.Instance.GraphicsDevice, manifest.Icon);
+				TextureUtils.BitmapToTexture2DAsync(this, Alex.Instance.GraphicsDevice, manifest.Icon, texture =>
+				{
+					_icon.Texture = texture;
+				});
 			}
 		}
 
