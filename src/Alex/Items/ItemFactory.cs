@@ -4,6 +4,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Alex.Blocks;
 using Alex.Blocks.Minecraft;
@@ -221,7 +222,7 @@ namespace Alex.Items
 		}
 		
 		private static LegacyIdMap _legacyIdMap;
-	    public static void Init(IRegistryManager registryManager, ResourceManager resources, IProgressReceiver progressReceiver = null)
+public static void Init(IRegistryManager registryManager, ResourceManager resources, IProgressReceiver progressReceiver = null)
 	    {
 		    var existing = ItemRenderers.ToArray();
 		    ItemRenderers.Clear();
@@ -298,8 +299,12 @@ namespace Alex.Items
 		    var blocks = resources.Registries.Blocks.Entries;
 		    
             ConcurrentDictionary<ResourceLocation, Func<Item>> items = new ConcurrentDictionary<ResourceLocation, Func<Item>>();
-            
+
             List<Item> allItems = new List<Item>();
+
+            int taskCount = 0;
+            int finishedTasks = 0;
+            string lastItem = string.Empty;
             void HandleEntry(KeyValuePair<string, Registries.RegistryEntry> entry, bool isBlock)
             {
 	            var resourceLocation = new ResourceLocation(entry.Key);
@@ -371,7 +376,31 @@ namespace Alex.Items
 
 	            if (renderer != null)
 	            {
-		            item.Renderer = renderer;
+		            Interlocked.Increment(ref taskCount);
+		            if (!ThreadPool.QueueUserWorkItem(o =>
+		                {
+			                try
+			                {
+				                if (renderer is ItemModelRenderer imr)
+				                {
+					                imr?.TryCache(resources);
+				                }
+				                else if (renderer is ItemBlockModelRenderer bmr)
+				                {
+					                bmr.TryCache(resources);
+				                }
+			                }
+			                finally
+			                {
+				                lastItem = entry.Key;
+				                Interlocked.Increment(ref finishedTasks);
+			                }
+		                }))
+		            {
+			            Log.Error($"Could not queue item finalization: {entry.Key}");
+		            }
+		            
+		            item.Renderer = renderer.CloneItemRenderer();
 	            }
 
 	            if (item.Renderer == null)
@@ -410,6 +439,13 @@ namespace Alex.Items
 		            HandleEntry(entry, false);
 	            });
 
+            SpinWait spinWait = new SpinWait();
+            do
+            {
+	            progressReceiver?.UpdateProgress(finishedTasks, taskCount, "Finalizing items...", lastItem);
+	            spinWait.SpinOnce();
+            } while (finishedTasks < taskCount);
+            
             if (items.TryGetValue("minecraft:player_head", out var func))
 	           items.TryAdd("minecraft:skull", func);
 

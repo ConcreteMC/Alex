@@ -519,7 +519,6 @@ namespace Alex
             UiTaskManager.Enqueue(
                 () =>
                 {
-                    base.IsFixedTimeStep = enabled;
                     DeviceManager.SynchronizeWithVerticalRetrace = enabled;
                     DeviceManager.ApplyChanges();
                 });
@@ -605,6 +604,8 @@ namespace Alex
             //var options = Services.GetService<IOptionsProvider>();
 
             //	Log.Info($"Loading resources...");
+            var previousValue = base.IsFixedTimeStep;
+            base.IsFixedTimeStep = false;
             if (!Resources.CheckResources(GraphicsDevice, progressReceiver, OnResourcePackPreLoadCompleted))
             {
                 Console.WriteLine("Press enter to exit...");
@@ -614,7 +615,8 @@ namespace Alex
                 return Task.CompletedTask;
             }
 
-            
+            base.IsFixedTimeStep = previousValue;
+
             ServerTypeManager.TryRegister("java", new JavaServerType(this));
 
             ServerTypeManager.TryRegister(
