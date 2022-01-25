@@ -780,6 +780,8 @@ namespace Alex
 			ThreadPool.QueueUserWorkItem(
 				o =>
 				{
+					bool wasFixed = IsFixedTimeStep;
+					IsFixedTimeStep = false;
 					LoadResult result = LoadResult.Timeout;
 
 					try
@@ -803,6 +805,7 @@ namespace Alex
 
 						if (result != LoadResult.Done)
 						{
+							IsFixedTimeStep = wasFixed;
 							if (result != LoadResult.Aborted && result != LoadResult.Kicked
 							                                 && result != LoadResult.VersionMismatch)
 							{
