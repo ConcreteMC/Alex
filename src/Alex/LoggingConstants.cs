@@ -12,7 +12,7 @@ namespace Alex
 		/// </summary>
 		/// 
 #if DEBUG
-		public const bool LogNetworkStatistics = true;
+		public const bool LogNetworkStatistics = false;
 #else
 		public const bool LogNetworkStatistics = false;
 #endif
@@ -28,5 +28,7 @@ namespace Alex
 		public const bool LogServerEntityDefinitions = false;
 
 		public const bool LogUnknownParticles = false;
+		
+		public const bool LogUnknownEntityAttributes = false;
 	}
 }

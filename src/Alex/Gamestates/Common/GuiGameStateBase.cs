@@ -1,4 +1,5 @@
 ﻿using System;
+using Alex.Common;
 using Alex.Common.Data.Options;
 using Alex.Common.GameStates;
 using Alex.Common.Graphics;
@@ -82,20 +83,17 @@ namespace Alex.Gamestates.Common
 			OnUnload();
 		}
 
-		void IGameState.Update(GameTime gameTime)
+		/// <inheritdoc />
+		protected override void OnUpdate(GameTime gameTime)
 		{
 			ParentState?.Update(gameTime);
-
-			if (!Alex.GuiManager.HasScreen(this))
-				OnUpdate(gameTime);
+			base.OnUpdate(gameTime);
 		}
 
 		void IGameState.Draw(IRenderArgs args)
 		{
 			ParentState?.Draw(args);
 			OnDraw(args);
-
-			//Draw(Alex.GuiManager.GuiSpriteBatch, args.GameTime);
 		}
 
 		public void Show()

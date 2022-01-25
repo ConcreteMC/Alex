@@ -499,6 +499,12 @@ namespace Alex.Gamestates.Multiplayer
 		/// <inheritdoc />
 		protected override void OnDraw(GuiSpriteBatch graphics, GameTime gameTime)
 		{
+			_skyBox.Draw(new RenderArgs()
+			{
+				GameTime = gameTime,
+				GraphicsDevice = graphics.Context.GraphicsDevice,
+				SpriteBatch = graphics.SpriteBatch
+			});
 			base.OnDraw(graphics, gameTime);
 
 			var status = _showStatus;
@@ -518,13 +524,6 @@ namespace Alex.Gamestates.Multiplayer
 
 			graphics.SpriteBatch.FillRectangle(new Rectangle(position, size.ToPoint()), Color.Black * 0.5f);
 			graphics.DrawString(graphics.Font, text, position.ToVector2(), TextColor.White, FontStyle.None);
-		}
-
-		protected override void OnDraw(IRenderArgs args)
-		{
-			_skyBox.Draw(args);
-
-			base.OnDraw(args);
 		}
 
 		protected override void OnHide()

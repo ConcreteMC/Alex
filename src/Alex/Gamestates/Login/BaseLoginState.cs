@@ -1,4 +1,5 @@
-﻿using Alex.Common.Graphics;
+﻿using Alex.Common;
+using Alex.Common.Graphics;
 using Alex.Common.Gui.Elements;
 using Alex.Common.Utils;
 using Alex.Gamestates.Common;
@@ -147,10 +148,16 @@ namespace Alex.Gamestates.Login
 			NameInput.Enabled = true;
 		}
 
-		protected override void OnDraw(IRenderArgs args)
+		/// <inheritdoc />
+		protected override void OnDraw(GuiSpriteBatch graphics, GameTime gameTime)
 		{
-			base.OnDraw(args);
-			_backgroundSkyBox.Draw(args);
+			_backgroundSkyBox.Draw(new RenderArgs()
+			{
+				GameTime = gameTime,
+				GraphicsDevice = graphics.Context.GraphicsDevice,
+				SpriteBatch = graphics.SpriteBatch
+			});
+			base.OnDraw(graphics, gameTime);
 		}
 	}
 }

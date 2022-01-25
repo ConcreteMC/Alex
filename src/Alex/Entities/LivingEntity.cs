@@ -147,7 +147,7 @@ namespace Alex.Entities
 
 			if (HasPhysics)
 			{
-				using (EntityManager.TickTimer.Value.Section("liquids"))
+				//using (EntityManager.TickTimer.Value.Section("liquids"))
 				{
 					var renderPosition = RenderLocation;
 					var knownDown = renderPosition.GetCoordinates3D();

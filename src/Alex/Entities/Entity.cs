@@ -55,7 +55,7 @@ using PlayerLocation = Alex.Common.Utils.Vectors.PlayerLocation;
 
 namespace Alex.Entities
 {
-	public class Entity : MoLangEnvironment
+	public class Entity : MoLangEnvironment, ITicked
 	{
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(Entity));
 
@@ -237,6 +237,11 @@ namespace Alex.Entities
 				if (value && !oldValue)
 				{
 					Velocity = Vector3.Zero;
+					Level?.TickManager?.RegisterTicked(this);
+				} 
+				else if (oldValue && !value)
+				{
+					Level?.TickManager?.UnregisterTicked(this);
 				}
 			}
 		}
@@ -1324,20 +1329,15 @@ namespace Alex.Entities
 				}
 			}
 
-			using (var subTimer = EntityManager.UpdateTimer.Value.Section("EntityComponents"))
+		//	var mainTimer = EntityManager.UpdateTimer.Value;
+			//using (var subTimer = mainTimer.Section("EntityComponents"))
 			{
-				foreach (var entityComponent in EntityComponents)
+				var components = EntityComponents;
+				foreach (var entityComponent in components.Where(x => x.Enabled && x is IUpdated))
 				{
-					if (!entityComponent.Enabled)
-						continue;
+					//using var _ = subTimer.Section(entityComponent.Name);
 
-					if (entityComponent is IUpdated updateable)
-					{
-						using (var componentTimer = subTimer.Section(entityComponent.Name))
-						{
-							updateable.Update(args.GameTime);
-						}
-					}
+					((IUpdated)entityComponent).Update(args.GameTime);
 				}
 			}
 
@@ -1357,8 +1357,8 @@ namespace Alex.Entities
 				head.Rotation = new Vector3(-pitch, headYaw, 0f);
 				//_head.Rotation = Quaternion.CreateFromYawPitchRoll(MathUtils.ToRadians(headYaw), MathUtils.ToRadians(pitch), 0f);
 			}
-
-			using (var subTimer = EntityManager.UpdateTimer.Value.Section("ModelRenderer"))
+			
+			//using (mainTimer.Section("ModelRenderer"))
 			{
 				renderer.Update(args);
 			}
@@ -1444,6 +1444,14 @@ namespace Alex.Entities
 		private Stopwatch _deltaStopwatch = Stopwatch.StartNew();
 		public long Age { get; set; } = 0;
 
+		void ITicked.OnTick()
+		{
+			if (!_isRendered)
+				return;
+			
+			OnTick();
+		}
+		
 		public virtual void OnTick()
 		{
 			Age++;
@@ -1476,7 +1484,7 @@ namespace Alex.Entities
 				}
 			}
 
-			using (var componentTickTimer = EntityManager.TickTimer.Value.Section("EntityComponents"))
+			//using (var componentTickTimer = EntityManager.TickTimer.Value.Section("EntityComponents"))
 			{
 				foreach (var entityComponent in EntityComponents)
 				{
@@ -1485,7 +1493,7 @@ namespace Alex.Entities
 
 					if (entityComponent is ITicked ticked)
 					{
-						using (componentTickTimer.Section(entityComponent.Name))
+				//		using (componentTickTimer.Section(entityComponent.Name))
 						{
 							ticked.OnTick();
 						}
@@ -1495,7 +1503,7 @@ namespace Alex.Entities
 
 			if (DoRotationCalculations)
 			{
-				using (EntityManager.TickTimer.Value.Section("Rotations"))
+			//	using (EntityManager.TickTimer.Value.Section("Rotations"))
 				{
 					UpdateRotations();
 				}
@@ -1679,13 +1687,17 @@ namespace Alex.Entities
 
 		private bool _disposed = false;
 
+		public bool Disposing { get; private set; }
 		public void Dispose()
 		{
+			Disposing = true;
 			if (_disposed)
 				return;
 
 			try
 			{
+				IsRendered = false;
+				
 				ItemRenderer?.Dispose();
 				ItemRenderer = null;
 
@@ -1882,7 +1894,7 @@ namespace Alex.Entities
 						break;
 
 					default:
-						if (!TryUpdateAttribute(attribute.Value))
+						if (!TryUpdateAttribute(attribute.Value) && LoggingConstants.LogUnknownEntityAttributes)
 							Log.Warn($"Unknown attribute! {attribute.Value.ToString()})");
 
 						break;

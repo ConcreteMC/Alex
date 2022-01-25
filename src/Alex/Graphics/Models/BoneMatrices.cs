@@ -66,16 +66,28 @@ public class BoneMatrices
 	public void ApplyMovement()
 	{
 		var posData = _tempPositionData;
-		_positionData = _positionData.WithValues(_position, posData.Target, posData.TargetTime);
-		_tempPositionData.Reset();
+
+		if (posData.IsValid)
+		{
+			_positionData = _positionData.WithValues(_position, posData.Target, posData.TargetTime);
+			_tempPositionData.Reset();
+		}
 
 		var rotData = _tempRotationData;
-		_rotationData = _rotationData.WithValues(_rotation, rotData.Target, rotData.TargetTime);
-		_tempRotationData.Reset();
+
+		if (rotData.IsValid)
+		{
+			_rotationData = _rotationData.WithValues(_rotation, rotData.Target, rotData.TargetTime);
+			_tempRotationData.Reset();
+		}
 
 		var scaleData = _tempScaleData;
-		_scaleData = _scaleData.WithValues(_scale, scaleData.Target, scaleData.TargetTime);
-		_tempScaleData.Reset();
+
+		if (scaleData.IsValid)
+		{
+			_scaleData = _scaleData.WithValues(_scale, scaleData.Target, scaleData.TargetTime);
+			_tempScaleData.Reset();
+		}
 	}
 
 	private void UpdateTransform()

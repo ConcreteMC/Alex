@@ -1,4 +1,5 @@
 using System.Threading.Tasks;
+using Alex.Common;
 using Alex.Common.Graphics;
 using Alex.Common.Gui.Elements;
 using Alex.Common.Services;
@@ -155,16 +156,15 @@ namespace Alex.Gamestates.Multiplayer
 		}
 
 		/// <inheritdoc />
-		protected override void OnDraw(IRenderArgs args)
+		protected override void OnDraw(GuiSpriteBatch graphics, GameTime gameTime)
 		{
-			var sb = _skyBox;
-
-			if (sb != null)
+			_skyBox?.Draw(new RenderArgs()
 			{
-				sb.Draw(args);
-			}
-
-			base.OnDraw(args);
+				GameTime = gameTime,
+				GraphicsDevice = graphics.Context.GraphicsDevice,
+				SpriteBatch = graphics.SpriteBatch
+			});
+			base.OnDraw(graphics, gameTime);
 		}
 
 		protected override void OnItemDoubleClick(UserSelectionItem item)

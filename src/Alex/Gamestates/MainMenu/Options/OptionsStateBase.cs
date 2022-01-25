@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using Alex.Common;
 using Alex.Common.Data.Options;
 using Alex.Common.GameStates;
 using Alex.Common.Graphics;
@@ -327,14 +328,21 @@ namespace Alex.Gamestates.MainMenu.Options
 
 		private bool _descriptionsAdded = false;
 
-		protected override void OnDraw(IRenderArgs args)
+		/// <inheritdoc />
+		protected override void OnDraw(GuiSpriteBatch graphics, GameTime gameTime)
 		{
 			if (!Alex.InGame && _skyBox != null)
 			{
-				_skyBox.Draw(args);
+				_skyBox.Draw(
+					new RenderArgs()
+					{
+						GameTime = gameTime,
+						GraphicsDevice = graphics.Context.GraphicsDevice,
+						SpriteBatch = graphics.SpriteBatch
+					});
 			}
 
-			base.OnDraw(args);
+			base.OnDraw(graphics, gameTime);
 		}
 
 		protected void AddDescription(IGuiControl control, string title, string line1, string line2 = "")

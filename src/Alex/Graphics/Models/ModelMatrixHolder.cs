@@ -164,13 +164,13 @@ public class ModelMatrixHolder : IDisposable
 
 	public virtual void ApplyMovement()
 	{
-		_boneMatrices = _boneTransforms.Values.ToArray();
-		
-		var matrices = _boneMatrices;
+		var matrices = _boneTransforms.Values.ToArray();
 		foreach (var b in matrices)
 		{
 			b.ApplyMovement();
 		}
+
+		_boneMatrices = matrices;
 	}
 
 	/// <inheritdoc />

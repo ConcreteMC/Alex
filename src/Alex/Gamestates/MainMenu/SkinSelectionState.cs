@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using Alex.Common;
 using Alex.Common.Graphics;
 using Alex.Common.Gui.Elements;
 using Alex.Common.Services;
@@ -295,13 +296,17 @@ namespace Alex.Gamestates.MainMenu
 			// _skyBox.Update(gameTime);
 		}
 
-		protected override void OnDraw(IRenderArgs args)
+		/// <inheritdoc />
+		protected override void OnDraw(GuiSpriteBatch graphics, GameTime gameTime)
 		{
-			_skyBox.Draw(args);
-
-			base.OnDraw(args);
+			_skyBox.Draw(new RenderArgs()
+			{
+				GameTime = gameTime,
+				GraphicsDevice = graphics.Context.GraphicsDevice,
+				SpriteBatch = graphics.SpriteBatch
+			});
+			base.OnDraw(graphics, gameTime);
 		}
-
 		/// <inheritdoc />
 		protected override void OnInit(IGuiRenderer renderer)
 		{

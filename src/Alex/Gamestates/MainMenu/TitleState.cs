@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Timers;
+using Alex.Common;
 using Alex.Common.Graphics;
 using Alex.Common.Gui.Elements;
 using Alex.Common.Gui.Graphics;
@@ -315,18 +316,23 @@ namespace Alex.Gamestates.MainMenu
 			_playerView.Entity.RenderLocation.Pitch = pitch;
 		}
 
-		protected override void OnDraw(IRenderArgs args)
+		/// <inheritdoc />
+		protected override void OnDraw(GuiSpriteBatch graphics, GameTime gameTime)
 		{
 			if (_backgroundSkyBox.Loaded)
 			{
-				_backgroundSkyBox.Draw(args);
+				_backgroundSkyBox.Draw(new RenderArgs()
+				{
+					GameTime = gameTime,
+					GraphicsDevice = graphics.Context.GraphicsDevice,
+					SpriteBatch = graphics.SpriteBatch
+				});
 			}
 			else
 			{
 				_backgroundSkyBox.Load(GuiRenderer);
 			}
-
-			base.OnDraw(args);
+			base.OnDraw(graphics, gameTime);
 		}
 
 		protected override void OnShow()

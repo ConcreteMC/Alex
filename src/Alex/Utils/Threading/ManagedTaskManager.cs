@@ -120,7 +120,7 @@ namespace Alex.Utils.Threading
 				Interlocked.Increment(ref _framesSkipped);
 				_frameSkip--;
 
-				//	return;
+				return;
 			}
 
 			Stopwatch sw = Stopwatch.StartNew();

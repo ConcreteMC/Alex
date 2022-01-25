@@ -1,4 +1,5 @@
 ﻿using System;
+using Alex.Common;
 using Alex.Common.Data.Servers;
 using Alex.Common.Graphics;
 using Alex.Common.Gui.Elements;
@@ -248,10 +249,16 @@ namespace Alex.Gamestates.Multiplayer
 			_errorMessage.Text = error;
 		}
 
-		protected override void OnDraw(IRenderArgs args)
+		/// <inheritdoc />
+		protected override void OnDraw(GuiSpriteBatch graphics, GameTime gameTime)
 		{
-			base.OnDraw(args);
-			_skyBox.Draw(args);
+			_skyBox.Draw(new RenderArgs()
+			{
+				GameTime = gameTime,
+				GraphicsDevice = graphics.Context.GraphicsDevice,
+				SpriteBatch = graphics.SpriteBatch
+			});
+			base.OnDraw(graphics, gameTime);
 		}
 
 		protected override void OnUpdate(GameTime gameTime)

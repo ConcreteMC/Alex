@@ -55,6 +55,16 @@ namespace Alex.Common.Utils
 
 			return colorData;
 		}
+		
+		private static Texture2D Execute<TImageFormat>(GraphicsDevice device, Image<TImageFormat> image, object tag) where TImageFormat : unmanaged, IPixel<TImageFormat>
+		{
+			var r = new Texture2D(device, image.Width, image.Height);
+
+			r.SetData(image.GetPixelData());
+			r.Tag = tag;
+
+			return r;
+		}
 
 		public static void BitmapToTexture2DAsync<TImageFormat>(object owner,
 			GraphicsDevice device,
@@ -65,30 +75,22 @@ namespace Alex.Common.Utils
 			if (image == null)
 				return;
 
-			Texture2D Execute()
-			{
-				var r = new Texture2D(device, image.Width, image.Height);
+		
 
-				r.SetData(image.GetPixelData());
-				r.Tag = owner;
-
-				return r;
-			}
-
-			if (Thread.CurrentThread == RenderThread)
+			/*if (Thread.CurrentThread == RenderThread)
 			{
 				var result = Execute();
 				onTextureCreated?.Invoke(result);
 			}
 			else
-			{
+			{*/
 				QueueOnRenderThread(
 					() =>
 					{
-						var result = Execute();
+						var result = Execute(device, image, owner);
 						onTextureCreated?.Invoke(result);
 					}, name ?? owner);
-			}
+			//}
 		}
 
 		public static Texture2D BitmapToTexture2D<TImageFormat>(object owner,
@@ -96,20 +98,10 @@ namespace Alex.Common.Utils
 			Image<TImageFormat> image, string name = null) where TImageFormat : unmanaged, IPixel<TImageFormat>
 		{
 			Texture2D result = null;
-
-			Texture2D Execute()
-			{
-				var r = new Texture2D(device, image.Width, image.Height);
-
-				r.SetData(image.GetPixelData());
-				r.Tag = owner;
-
-				return r;
-			}
-
+			
 			if (Thread.CurrentThread == RenderThread)
 			{
-				result = Execute();
+				result = Execute(device, image, owner);
 			}
 			else
 			{
@@ -118,12 +110,13 @@ namespace Alex.Common.Utils
 				QueueOnRenderThread(
 					() =>
 					{
-						result = Execute();
+						result = Execute(device, image, owner);
 
 						resetEvent.Set();
 					}, name ?? owner);
 
 				resetEvent.WaitOne();
+				resetEvent.Dispose();
 			}
 
 			//byteSize = result.MemoryUsage();

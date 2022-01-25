@@ -285,7 +285,7 @@ namespace Alex.Common.GameStates
 			}
 		}
 
-		public override void Update(GameTime gameTime)
+		/*public override void Update(GameTime gameTime)
 		{
 			IGameState activeState = ActiveState;
 
@@ -299,7 +299,7 @@ namespace Alex.Common.GameStates
 			{
 				Log.Warn(ex, $"An exception occured while trying to call Update: {ex.ToString()}!");
 			}
-		}
+		}*/
 
 		public IGameState GetActiveState()
 		{

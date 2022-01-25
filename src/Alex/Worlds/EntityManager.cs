@@ -110,15 +110,10 @@ namespace Alex.Worlds
 
 		private Stopwatch _sw = new Stopwatch();
 
-		private object _tickLock = new object();
-
 		public static ThreadLocal<ExecutionTimer> TickTimer { get; set; } = new ThreadLocal<ExecutionTimer>(() => new ExecutionTimer("entity.tick"));
 		
 		public void OnTick()
 		{
-			if (!Monitor.TryEnter(_tickLock, 0))
-				return;
-
 			_sw.Restart();
 
 			int ticked = 0;
@@ -129,6 +124,7 @@ namespace Alex.Worlds
 				if (World?.Camera == null)
 					return;
 
+				var oldRendered = _rendered;
 				List<Entity> rendered = new List<Entity>(_rendered.Length);
 
 				var entities = Entities.Values.ToArray();
@@ -138,6 +134,9 @@ namespace Alex.Worlds
 
 				foreach (var entity in entities.Concat(blockEntities))
 				{
+					if (entity.Disposing)
+						continue;
+					
 					var entityPos = entity.RenderLocation;
 
 					//if (World.Camera.BoundingFrustum.Contains(entity.GetVisibilityBoundingBox(entityPos)) != ContainmentType.Disjoint)
@@ -146,6 +145,7 @@ namespace Alex.Worlds
 						    OptionsProvider.AlexOptions.VideoOptions.EntityRenderDistance.Value) * 16f)
 					{
 						entityCount++;
+						entity.IsRendered = true;
 						rendered.Add(entity);
 					}
 					else
@@ -154,30 +154,10 @@ namespace Alex.Worlds
 					}
 				}
 
-				foreach (var entity in rendered)
-				{
-					entity.IsRendered = true;
-
-					TimingsReport report;
-					using (var tickTimer = TickTimer.Value = new ExecutionTimer("entity.tick"))
-					{
-						entity.OnTick();
-						
-						tickTimer.Stop();
-						report = tickTimer.GenerateReport();
-					}
-
-					EntityTicked?.Invoke(this, new EntityUpdateEventArgs(entity, report));
-
-					ticked++;
-				}
-
 				_rendered = rendered.ToArray();
 			}
 			finally
 			{
-				Monitor.Exit(_tickLock);
-
 				if (_sw.Elapsed.TotalMilliseconds >= 50)
 				{
 					Log.Warn(
@@ -194,12 +174,13 @@ namespace Alex.Worlds
 			var delta = Alex.DeltaTime;
 
 			IReadOnlyCollection<Entity> toUpdate;
-			toUpdate = _rendered.OrderByDescending(x => DateTime.UtcNow - x.LastUpdate).ToArray();
+			toUpdate = _rendered;//.OrderByDescending(x => DateTime.UtcNow - x.LastUpdate).ToArray();
 			//toUpdate = _rendered;
 
 			float maxTime = delta / toUpdate.Count;
-			long elapsedTime = 0;
+			double elapsedTime = 0;
 
+			//var updateCall = EntityUpdated?.GetInvocationList()?.Length ?? 0;
 			foreach (var entity in toUpdate)
 			{
 				//if (elapsedTime >= delta)
@@ -213,26 +194,30 @@ namespace Alex.Worlds
 				if (!entity.IsRendered)
 					continue;
 
-				TimingsReport report;
-				using (var timer = UpdateTimer.Value = new ExecutionTimer("entity.update"))
+				//TimingsReport report = null;
+				//using (var timer = UpdateTimer.Value = new ExecutionTimer("entity.update"))
 				{
 					entity.Update(args);
 
-					timer.Stop();
-					report = timer.GenerateReport();
+				//	timer.Stop();
+					
+				//	if (updateCall > 0)
+					//	report = timer.GenerateReport();
 				}
 
 				entity.LastUpdate = DateTime.UtcNow;
 
-				var elapsed = _updateWatch.ElapsedMilliseconds;
+				var elapsed = _updateWatch.Elapsed.TotalMilliseconds;
 				elapsedTime += elapsed;
 
-				if (elapsed > maxTime)
+				var difference = (elapsed - maxTime);
+				if (difference > 1d)
 				{
-					Log.Warn($"Entity update took {elapsed - maxTime}ms too long. Entity={entity}");
+					Log.Warn($"Entity update took {difference:F2}ms too long. Entity={entity}");
 				}
 
-				EntityUpdated?.Invoke(this, new EntityUpdateEventArgs(entity, report));
+				//if (updateCall > 0)
+				//	EntityUpdated?.Invoke(this, new EntityUpdateEventArgs(entity, report));
 			}
 		}
 
@@ -453,7 +438,10 @@ namespace Alex.Worlds
 			{
 				if (removeId)
 				{
-					if (Entities.TryRemove(e.EntityId, out e)) { }
+					if (Entities.TryRemove(e.EntityId, out e))
+					{
+						
+					}
 				}
 
 				EntityRemoved?.Invoke(this, e);

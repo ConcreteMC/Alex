@@ -367,13 +367,13 @@ namespace Alex.Worlds
 						chunk.CalculateLighting = false;
 					}
 
-					using (var ba = new CachedBlockAccess(World))
-					{
-						if (chunk.UpdateBuffer(ba, true))
+					//using (var ba = new CachedBlockAccess(World))
+					//{
+						if (chunk.UpdateBuffer(World, true))
 						{
 							OnChunkUpdate?.Invoke(this, new ChunkUpdatedEventArgs(chunk, timingWatch.Elapsed));
 						}
-					}
+					//}
 				}
 				finally
 				{
