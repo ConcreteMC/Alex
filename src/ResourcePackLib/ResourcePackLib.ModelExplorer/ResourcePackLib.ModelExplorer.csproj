@@ -45,8 +45,5 @@
       <Compile Update="Scenes\Screens\MainMenuScreen.cs">
         <DependentUpon>MainMenuScreen.xaml</DependentUpon>
       </Compile>
-      <Compile Update="Scenes\Scene.Components.cs">
-        <DependentUpon>Scene.cs</DependentUpon>
-      </Compile>
     </ItemGroup>
 </Project>

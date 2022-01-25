@@ -10,9 +10,12 @@
                     Orientation="Vertical"
                     MinWidth="200"
                     MinHeight="300"
-                    Width="300"
+                    Width="250"
                     Background="#00000099"
+                    Padding="10,10,10,10"
+                    
                     >
         <controls:CameraLocationControl />
+        <Button Text="i am a button"></Button>
     </StackContainer>
 </Screen>

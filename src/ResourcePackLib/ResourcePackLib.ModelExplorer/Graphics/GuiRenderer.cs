@@ -30,11 +30,21 @@ public class GuiRenderer : IGuiRenderer
 
     private void LoadTexturesFromContent()
     {
+        var gui = _content.Load<Texture2D>("Gui/Gui");
+        _pathedTextureCache["Gui/Gui"] = gui;
+
+        LoadTextureFromSpriteSheet(GuiTextures.ControlDefault, gui, new Rectangle(0, 0, 100, 20), new Thickness(2));
+        LoadTextureFromSpriteSheet(GuiTextures.ControlHover, gui, new Rectangle(0, 20, 100, 20), new Thickness(2));
+        LoadTextureFromSpriteSheet(GuiTextures.ControlFocused, gui, new Rectangle(0, 40, 100, 20), new Thickness(2));
+
+        LoadTextureFromSpriteSheet(GuiTextures.ButtonDefault, gui, new Rectangle(100, 0, 60, 20), new Thickness(2));
+        LoadTextureFromSpriteSheet(GuiTextures.ButtonHover, gui, new Rectangle(100, 20, 60, 20), new Thickness(2));
+        LoadTextureFromSpriteSheet(GuiTextures.ButtonFocused, gui, new Rectangle(100, 40, 60, 20), new Thickness(2));
     }
 
     private void LoadStyleSheets()
     {
-        //RocketXamlLoader.Load<StyleSheet>(_styleSheet, "ResourcePackLib.ModelExplorer.Scenes.Styles.xaml");
+        RocketXamlLoader.Load<StyleSheet>(_styleSheet, "ResourcePackLib.ModelExplorer.Scenes.Styles.xaml");
     }
 
     private TextureSlice2D LoadTextureFromEmbeddedResource(GuiTextures guiTexture, byte[] resource)

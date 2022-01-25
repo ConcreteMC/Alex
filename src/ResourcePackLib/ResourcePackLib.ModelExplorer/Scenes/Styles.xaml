@@ -2,4 +2,26 @@
             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
             xmlns:markup="clr-namespace:Portable.Xaml.Markup;assembly=Portable.Xaml">
 
+    <Style TargetType="TextInput">
+        <Setter Property="Background" Value="RocketUI:ControlDefault" />
+        <Setter Property="HighlightedBackground" Value="RocketUI:ControlHover" />
+        <Setter Property="FocusedBackground" Value="RocketUI:ControlFocused" />
+        <Setter Property="Padding" Value="5,5,5,5" />
+        <Setter Property="Margin" Value="5,5,5,5" />
+        <Setter Property="MinWidth" Value="80" />
+        <Setter Property="MinHeight" Value="40" />
+        <Setter Property="AutoSizeMode" Value="GrowOnly" />
+    </Style>
+
+    <Style TargetType="Button">
+        <Setter Property="Background" Value="RocketUI:ButtonDefault" />
+        <Setter Property="HighlightedBackground" Value="RocketUI:ButtonHover" />
+        <Setter Property="FocusedBackground" Value="RocketUI:ButtonFocused" />
+        <Setter Property="Padding" Value="5,5,5,5" />
+        <Setter Property="Margin" Value="5,5,5,5" />
+        <Setter Property="MinWidth" Value="20" />
+        <Setter Property="MinHeight" Value="20" />
+        <Setter Property="AutoSizeMode" Value="GrowAndShrink" />
+    </Style>
+
 </StyleSheet>

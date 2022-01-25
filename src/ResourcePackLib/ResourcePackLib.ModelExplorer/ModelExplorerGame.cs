@@ -31,6 +31,8 @@ public class ModelExplorerGame : Game, IGame
     public InputManager InputManager { get; private set; }
 
     public GuiManager GuiManager { get; private set; }
+    
+    public bool IsWireFrame { get; set; }
 
     public ModelExplorerGame(IServiceProvider services)
     {
@@ -51,7 +53,7 @@ public class ModelExplorerGame : Game, IGame
     protected override void Initialize()
     {
         GraphicsDeviceManager.GraphicsProfile = GraphicsProfile.HiDef;
-        GraphicsDeviceManager.SynchronizeWithVerticalRetrace = false;
+        GraphicsDeviceManager.SynchronizeWithVerticalRetrace = true;
 //            GraphicsDeviceManager.PreferMultiSampling = true;
         IsFixedTimeStep = false;
         Window.AllowUserResizing = true;
@@ -82,8 +84,8 @@ public class ModelExplorerGame : Game, IGame
         // cam.Rotation = Quaternion.CreateFromYawPitchRoll(270f, (float)Math.PI / 2f, 0f);
             
         GuiManager = ServiceProvider.GetRequiredService<GuiManager>();
-        GuiManager.ScaledResolution.TargetWidth = 720;
-        GuiManager.ScaledResolution.TargetHeight = 360;
+        GuiManager.ScaledResolution.TargetWidth = 480;
+        GuiManager.ScaledResolution.TargetHeight = 320;
         GuiManager.AddScreen(_debugGui = new DebugGui());
         Components.Add(GuiManager);
         GuiManager.DrawOrder = 10;
@@ -93,6 +95,7 @@ public class ModelExplorerGame : Game, IGame
         
         SceneManager.SetScene<MainMenuScene>();
         _graphics.GraphicsDevice.Viewport = new Viewport(Window.ClientBounds);
+        GuiManager.Reinitialize();
 
         InputManager.GetOrAddPlayerManager(PlayerIndex.One).TryGetListener<KeyboardInputListener>(out _keyboardListener);
 
@@ -110,11 +113,7 @@ public class ModelExplorerGame : Game, IGame
 
         if (_keyboardListener.IsAnyPressed(Keys.F8))
         {
-            var r = GraphicsDevice.RasterizerState.Copy();
-            r.FillMode = (r.FillMode == FillMode.Solid) 
-                ? FillMode.WireFrame
-                : FillMode.Solid;
-            GraphicsDevice.RasterizerState = r;
+            IsWireFrame = !IsWireFrame;
         }
 
         var rotateSpeed = 45f;

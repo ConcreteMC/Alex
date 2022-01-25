@@ -33,7 +33,7 @@ public class MCEntityGeometryBone
     public string Parent { get; set; }
 
     [JsonConverter(typeof(Vector3ArrayJsonConverter))]
-    public Vector3 Pivot { get; set; }
+    public Vector3? Pivot { get; set; }
 
     [JsonConverter(typeof(Vector3ArrayJsonConverter))]
     public Vector3? BindPoseRotation { get; set; }
@@ -80,9 +80,13 @@ public static class MCEntityModelBuilder
         foreach (var bone in geometry.Bones)
         {
             var bb = modelBuilder
-                .AddBone(bone.Name)
-                .Pivot(bone.Pivot);
+                .AddBone(bone.Name);
             
+            if (bone.Pivot.HasValue)
+            {
+                bb.Pivot(bone.Pivot.Value);
+            }
+
             if (bone.BindPoseRotation.HasValue)
                 bb.BindPoseRotation(bone.BindPoseRotation.Value);
 
@@ -108,10 +112,10 @@ public static class MCEntityModelBuilder
     {
         foreach (var bone in model.Bones)
         {
-            bone.Transform.LocalPosition = Microsoft.Xna.Framework.Vector3.Zero;
+            bone.Transform.Position = Microsoft.Xna.Framework.Vector3.Zero;
         }
     }
-    
+
     public static void LogBoneLocations(TruModel model)
     {
         var sb = new StringBuilder();
@@ -121,9 +125,9 @@ public static class MCEntityModelBuilder
         foreach (var bone in model.Bones)
         {
             var wlrd = bone.Transform.World;
-            
-            if(!bone.Meshes.Any()) continue;
-            
+
+            if (!bone.Meshes.Any()) continue;
+
             var boneMinMesh = bone.Meshes.SelectMany(m =>
                     Enumerable.Range(m.VertexOffset, m.NumVertices)
                         .Select(i => model.Vertices[i])
@@ -136,7 +140,7 @@ public static class MCEntityModelBuilder
             var boneMax = boneMinMesh.LastOrDefault();
             sb.AppendLine($"{bone.Name},{bone.Parent?.Name},{boneMin.X},{boneMin.Y},{boneMin.Z},{boneMax.X},{boneMax.Y},{boneMax.Z}");
         }
-        
+
         Log.Info($"\n\n{sb.ToString()}\n\n");
         File.WriteAllText("bonedebug.csv", sb.ToString());
     }
@@ -179,7 +183,8 @@ public class MCEntity : DrawableEntity
 
         _effect = new BasicEffect(GraphicsDevice);
 
-        var texture = Texture2D.FromFile(GraphicsDevice, texPath);;
+        var texture = Texture2D.FromFile(GraphicsDevice, texPath);
+        ;
         //var texture = new ColorTexture2D(GraphicsDevice, Color.HotPink);
         _effect.Texture = texture;
         _effect.TextureEnabled = true;
@@ -215,7 +220,8 @@ public class MCEntity : DrawableEntity
             using (var cxt = GraphicsContext.CreateContext(GraphicsDevice, BlendState.AlphaBlend, DepthStencilState.Default))
             {
                 var r = cxt.RasterizerState.Copy();
-                r.FillMode = FillMode.Solid;
+
+                r.FillMode = ((ModelExplorerGame)Game).IsWireFrame ? FillMode.WireFrame : FillMode.Solid;
                 //r.CullMode = CullMode.None;
                 //r.DepthClipEnable = false;
                 cxt.RasterizerState = r;

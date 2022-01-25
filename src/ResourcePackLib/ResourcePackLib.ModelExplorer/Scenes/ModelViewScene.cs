@@ -11,6 +11,12 @@ public class MainMenuScene : GuiSceneBase<MainMenuScreen>
     protected override void OnInitialize()
     {
         base.OnInitialize();
+
+        var grid = new GridEntity(ModelExplorerGame.Instance);
+        grid.Visible = true;
+        grid.Position = Vector3.Zero;
+        grid.Scale = Vector3.One;
+        Components.Add(grid);
         
         var cube = new CubeEntity(ModelExplorerGame.Instance);
         cube.Visible = true;
@@ -20,7 +26,7 @@ public class MainMenuScene : GuiSceneBase<MainMenuScreen>
         var fox = Services.CreateInstance<MCEntity>();
         fox.Visible = true;
         fox.Position = Vector3.Up;
-        fox.Transform.LocalScale = Vector3.One / 16f;
+        //fox.Transform.Scale = Vector3.One / 16f;
         
         Components.Add(Services.GetOrCreateInstance<AxisEntity>());
         //Components.Add(cube);
@@ -42,5 +48,10 @@ public class MainMenuScene : GuiSceneBase<MainMenuScreen>
             }
         }
         base.OnUpdate(gameTime);
+    }
+
+    protected override void OnShow()
+    {
+        base.OnShow();
     }
 }
