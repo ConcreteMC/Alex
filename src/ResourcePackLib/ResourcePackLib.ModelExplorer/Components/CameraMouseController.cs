@@ -1,5 +1,4 @@
 ﻿using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Input;
 using ResourcePackLib.ModelExplorer.Abstractions;
 using ResourcePackLib.ModelExplorer.Attributes;
 using RocketUI.Input;

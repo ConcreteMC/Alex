@@ -22,9 +22,9 @@ public class ModelExplorerGame : Game, IGame
     public IServiceProvider ServiceProvider { get; }
     public Game Game => this;
     public static IGame Instance { get; private set; }
-    public GraphicsDeviceManager GraphicsDeviceManager => _graphics;
+    public GraphicsDeviceManager DeviceManager => _graphics;
 
-    private GraphicsDeviceManager _graphics;
+    private readonly GraphicsDeviceManager _graphics;
     private SpriteBatch _spriteBatch;
 
     public SceneManager SceneManager { get; private set; }
@@ -38,12 +38,55 @@ public class ModelExplorerGame : Game, IGame
     {
         Instance = this;
         ServiceProvider = services;
-        _graphics = new GraphicsDeviceManager(this);
+        _graphics = new GraphicsDeviceManager(this)
+        {
+            SynchronizeWithVerticalRetrace = true,
+            GraphicsProfile = GraphicsProfile.HiDef,
+            PreferHalfPixelOffset = false,
+            PreferredDepthStencilFormat = DepthFormat.Depth24Stencil8,
+            PreferredBackBufferWidth = Window.ClientBounds.Width,
+            PreferredBackBufferHeight = Window.ClientBounds.Height
+        };
+        _graphics.PreparingDeviceSettings += OnGraphicsManagerOnPreparingDeviceSettings;
+        IsFixedTimeStep = true;
+        Window.AllowUserResizing = true;
+        Window.ClientSizeChanged += OnWindowOnClientSizeChanged;
+
         Content.RootDirectory = "Content";
         IsMouseVisible = true;
 
         var hostApplicationLifetime = services.GetRequiredService<IHostApplicationLifetime>();
         hostApplicationLifetime.ApplicationStopping.Register(OnHostApplicationStopping);
+    }
+
+    private void OnWindowOnClientSizeChanged(object? sender, EventArgs e)
+    {
+        if (DeviceManager.PreferredBackBufferWidth != Window.ClientBounds.Width ||
+            DeviceManager.PreferredBackBufferHeight != Window.ClientBounds.Height)
+        {
+            if (DeviceManager.IsFullScreen)
+            {
+                DeviceManager.PreferredBackBufferWidth = DeviceManager.GraphicsDevice.Adapter.CurrentDisplayMode.Width;
+                DeviceManager.PreferredBackBufferHeight = DeviceManager.GraphicsDevice.Adapter.CurrentDisplayMode.Height;
+            }
+            else
+            {
+                DeviceManager.PreferredBackBufferWidth = Window.ClientBounds.Width;
+                DeviceManager.PreferredBackBufferHeight = Window.ClientBounds.Height;
+            }
+            DeviceManager.ApplyChanges();
+        }
+    }
+
+    private void OnGraphicsManagerOnPreparingDeviceSettings(object? sender, PreparingDeviceSettingsEventArgs e)
+    {
+        e.GraphicsDeviceInformation.PresentationParameters.DepthStencilFormat = DepthFormat.Depth24Stencil8;
+
+        DeviceManager.PreferredBackBufferFormat = SurfaceFormat.Color;
+        //  DeviceManager.PreferMultiSampling = true;
+
+        DeviceManager.PreferredBackBufferWidth = Window.ClientBounds.Width;
+        DeviceManager.PreferredBackBufferHeight = Window.ClientBounds.Height;
     }
 
     private void OnHostApplicationStopping()
@@ -52,18 +95,18 @@ public class ModelExplorerGame : Game, IGame
     }
     protected override void Initialize()
     {
-        GraphicsDeviceManager.GraphicsProfile = GraphicsProfile.HiDef;
-        GraphicsDeviceManager.SynchronizeWithVerticalRetrace = true;
+        DeviceManager.GraphicsProfile = GraphicsProfile.HiDef;
+        GraphicsDevice.PresentationParameters.MultiSampleCount = 8;
+        DeviceManager.SynchronizeWithVerticalRetrace = true;
 //            GraphicsDeviceManager.PreferMultiSampling = true;
-        IsFixedTimeStep = false;
+        IsFixedTimeStep = true;
         Window.AllowUserResizing = true;
             
-        GraphicsDeviceManager.ApplyChanges();
-
-        InputManager = ServiceProvider.GetRequiredService<InputManager>();
-        Components.Add(InputManager);            
-            
+        DeviceManager.ApplyChanges();
+        
+        Components.Add(InputManager = ServiceProvider.GetRequiredService<InputManager>());
         Components.Add(SceneManager = ServiceProvider.GetRequiredService<SceneManager>());
+        Components.Add(GuiManager = ServiceProvider.GetRequiredService<GuiManager>());
         
         base.Initialize();
     }
@@ -83,11 +126,10 @@ public class ModelExplorerGame : Game, IGame
         Camera.Position = new Vector3(1.7f, 1.7f, 1.7f);
         // cam.Rotation = Quaternion.CreateFromYawPitchRoll(270f, (float)Math.PI / 2f, 0f);
             
-        GuiManager = ServiceProvider.GetRequiredService<GuiManager>();
+        
         GuiManager.ScaledResolution.TargetWidth = 480;
         GuiManager.ScaledResolution.TargetHeight = 320;
         GuiManager.AddScreen(_debugGui = new DebugGui());
-        Components.Add(GuiManager);
         GuiManager.DrawOrder = 10;
         GuiManager.Init();
         
@@ -114,29 +156,6 @@ public class ModelExplorerGame : Game, IGame
         if (_keyboardListener.IsAnyPressed(Keys.F8))
         {
             IsWireFrame = !IsWireFrame;
-        }
-
-        var rotateSpeed = 45f;
-        var moveSpeed = 2f;
-        
-        var keyboard = Keyboard.GetState();
-        if (keyboard.IsKeyDown(Keys.LeftControl))
-        {
-            var rotateDiff = (float)((gameTime.ElapsedGameTime.TotalSeconds / 1f) * rotateSpeed);
-            if (_keyboardListener.IsAnyDown(Keys.NumPad8)) _camera.Rotation += (Vector3.UnitX * MathHelper.ToRadians(-rotateDiff));
-            if (_keyboardListener.IsAnyDown(Keys.NumPad2)) _camera.Rotation += (Vector3.UnitX * MathHelper.ToRadians(rotateDiff));
-            if (_keyboardListener.IsAnyDown(Keys.NumPad4)) _camera.Rotation += (Vector3.UnitY * MathHelper.ToRadians(-rotateDiff));
-            if (_keyboardListener.IsAnyDown(Keys.NumPad6)) _camera.Rotation += (Vector3.UnitY * MathHelper.ToRadians(rotateDiff));
-        }
-        else
-        {
-            var moveDiff = Vector3.One * (float)((gameTime.ElapsedGameTime.TotalSeconds / 1f) * moveSpeed);
-            if (keyboard.IsKeyDown(Keys.W)) _camera.MoveRelative(Vector3.Forward * moveDiff);
-            if (keyboard.IsKeyDown(Keys.A)) _camera.MoveRelative(Vector3.Left * moveDiff);
-            if (keyboard.IsKeyDown(Keys.S)) _camera.MoveRelative(Vector3.Backward * moveDiff);
-            if (keyboard.IsKeyDown(Keys.D)) _camera.MoveRelative(Vector3.Right * moveDiff);
-            if (keyboard.IsKeyDown(Keys.Q)) _camera.MoveRelative(Vector3.Up * moveDiff);
-            if (keyboard.IsKeyDown(Keys.E)) _camera.MoveRelative(Vector3.Down * moveDiff);
         }
 
         base.Update(gameTime);

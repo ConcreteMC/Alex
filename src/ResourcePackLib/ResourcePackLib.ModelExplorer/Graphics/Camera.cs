@@ -101,8 +101,8 @@ namespace ResourcePackLib.ModelExplorer.Graphics
             UpdateView();
             UpdateProjection();
 
-            _game.GraphicsDeviceManager.DeviceCreated += (sender, args) => UpdateProjection();
-            _game.GraphicsDeviceManager.DeviceReset += (sender, args) => UpdateProjection();
+            _game.DeviceManager.DeviceCreated += (sender, args) => UpdateProjection();
+            _game.DeviceManager.DeviceReset += (sender, args) => UpdateProjection();
             _game.Window.ClientSizeChanged += (sender, args) => UpdateProjection();
             Transform.Changed += (sender, args) => UpdateView();
         }

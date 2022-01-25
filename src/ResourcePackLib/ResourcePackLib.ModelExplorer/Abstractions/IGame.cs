@@ -9,7 +9,7 @@ public interface IGame : IDisposable
 {
     Game Game { get; }
         
-    GraphicsDeviceManager GraphicsDeviceManager { get; }
+    GraphicsDeviceManager DeviceManager { get; }
         
     // include all the Properties/Methods that you'd want to use on your Game class below.
     GameWindow                   Window       { get; }

@@ -33,6 +33,7 @@ public class MainMenuScene : GuiSceneBase<MainMenuScreen>
         Components.Add(fox);
         
         Components.Add(Services.GetOrCreateInstance<CameraMouseController>());
+        Components.Add(Services.GetOrCreateInstance<CameraKeyboardController>());
         
         Game.Camera.Position = Vector3.Backward;
     }
