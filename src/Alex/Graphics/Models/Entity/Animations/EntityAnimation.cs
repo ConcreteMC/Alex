@@ -95,11 +95,13 @@ namespace Alex.Graphics.Models.Entity.Animations
 
 			if (_animationLength > 0 && _animationTime >= _animationLength)
 			{
-				Stop();
-
 				if (_loop)
 				{
-					Play();
+					_animationTime = 0;
+				}
+				else
+				{
+					Stop();
 				}
 			}
 		}

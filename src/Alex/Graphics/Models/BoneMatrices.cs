@@ -69,7 +69,7 @@ public class BoneMatrices
 
 		if (posData.IsValid)
 		{
-			_positionData = _positionData.WithValues(_position, posData.Target, posData.TargetTime);
+			_positionData = _positionData.WithValues(_position, posData.Target * new Vector3(-1f, 1f, 1f), posData.TargetTime);
 			_tempPositionData.Reset();
 		}
 
@@ -77,7 +77,7 @@ public class BoneMatrices
 
 		if (rotData.IsValid)
 		{
-			_rotationData = _rotationData.WithValues(_rotation, rotData.Target, rotData.TargetTime);
+			_rotationData = _rotationData.WithValues(_rotation, rotData.Target * new Vector3(-1f, -1f, 1f), rotData.TargetTime);
 			_tempRotationData.Reset();
 		}
 

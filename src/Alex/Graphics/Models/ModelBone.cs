@@ -155,13 +155,10 @@ namespace Alex.Graphics.Models
 
 			return Matrix.CreateScale(_baseScale * data.Scale) * Matrix.CreateTranslation(-pivot)
 			                                                   * MatrixHelper.CreateRotationDegrees(
-				                                                   _baseRotation * new Vector3(1f, 1f, 1f))
-			                                                   * MatrixHelper.CreateRotationDegrees(
-				                                                   (data.Rotation) * new Vector3(-1f, -1f, 1f))
+				                                                   _baseRotation + data.Rotation)
 			                                                   * Matrix.CreateTranslation(pivot)
 			                                                   * Matrix.CreateTranslation(
-				                                                   _basePosition + (data.Position * new Vector3(
-					                                                   -1f, 1f, 1f)));
+				                                                   _basePosition + data.Position);
 		}
 	}
 }
