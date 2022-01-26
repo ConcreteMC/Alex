@@ -14,6 +14,7 @@ using RocketUI;
 using RocketUI.Input;
 using RocketUI.Input.Listeners;
 using RocketUI.Utilities.Helpers;
+using SpriteBatchExtensions = RocketUI.Utilities.Extensions.SpriteBatchExtensions;
 
 namespace ResourcePackLib.ModelExplorer;
 
@@ -76,6 +77,13 @@ public class ModelExplorerGame : Game, IGame
             }
             DeviceManager.ApplyChanges();
         }
+
+        GuiManager.ScaledResolution.TargetWidth = Window.ClientBounds.Width;
+        GuiManager.ScaledResolution.TargetHeight = Window.ClientBounds.Height;
+        GuiManager.ScaledResolution.GuiScale = 1;
+        GuiManager.ScaledResolution.ViewportSize = new Size(Window.ClientBounds.Width, Window.ClientBounds.Height);
+        GuiManager.ScaledResolution.Update();
+        
     }
 
     private void OnGraphicsManagerOnPreparingDeviceSettings(object? sender, PreparingDeviceSettingsEventArgs e)
@@ -103,10 +111,10 @@ public class ModelExplorerGame : Game, IGame
         Window.AllowUserResizing = true;
             
         DeviceManager.ApplyChanges();
-        
-        Components.Add(InputManager = ServiceProvider.GetRequiredService<InputManager>());
+
         Components.Add(SceneManager = ServiceProvider.GetRequiredService<SceneManager>());
         Components.Add(GuiManager = ServiceProvider.GetRequiredService<GuiManager>());
+        Components.Add(InputManager = ServiceProvider.GetRequiredService<InputManager>());
         
         base.Initialize();
     }
@@ -114,6 +122,7 @@ public class ModelExplorerGame : Game, IGame
     protected override void LoadContent()
     {
         GpuResourceManager.Init(GraphicsDevice);
+        SpriteBatchExtensions.Init(GraphicsDevice);
         _spriteBatch = new SpriteBatch(GraphicsDevice);
         
         base.LoadContent();
@@ -126,17 +135,21 @@ public class ModelExplorerGame : Game, IGame
         Camera.Position = new Vector3(1.7f, 1.7f, 1.7f);
         // cam.Rotation = Quaternion.CreateFromYawPitchRoll(270f, (float)Math.PI / 2f, 0f);
             
-        
-        GuiManager.ScaledResolution.TargetWidth = 480;
-        GuiManager.ScaledResolution.TargetHeight = 320;
-        GuiManager.AddScreen(_debugGui = new DebugGui());
-        GuiManager.DrawOrder = 10;
+
+        GuiManager.ScaledResolution.TargetWidth = Window.ClientBounds.Width;
+        GuiManager.ScaledResolution.TargetHeight = Window.ClientBounds.Height;
+        GuiManager.ScaledResolution.GuiScale = 1;
+        GuiManager.DrawOrder = 100;
         GuiManager.Init();
+        GuiManager.AddScreen(_debugGui = new DebugGui());
         
         Options = ServiceProvider.GetRequiredService<IOptions<GameOptions>>().Value;
         
         SceneManager.SetScene<MainMenuScene>();
         _graphics.GraphicsDevice.Viewport = new Viewport(Window.ClientBounds);
+        
+        DeviceManager.ApplyChanges();
+        
         GuiManager.Reinitialize();
 
         InputManager.GetOrAddPlayerManager(PlayerIndex.One).TryGetListener<KeyboardInputListener>(out _keyboardListener);

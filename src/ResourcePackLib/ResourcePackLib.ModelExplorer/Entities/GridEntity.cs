@@ -1,6 +1,7 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using ResourcePackLib.ModelExplorer.Abstractions;
+using RocketUI;
 
 namespace ResourcePackLib.ModelExplorer.Entities;
 
@@ -15,7 +16,15 @@ public class GridEntity : DrawableEntity
             _dirty = true;
         }
     }
-
+    public int SubDivisions
+    {
+        get => _subDivisions;
+        set
+        {
+            _subDivisions = value;
+            _dirty = true;
+        }
+    }
     public float Spacing
     {
         get => _spacing;
@@ -25,7 +34,6 @@ public class GridEntity : DrawableEntity
             _dirty = true;
         }
     }
-
     public Color LineColor
     {
         get => _lineColor;
@@ -35,7 +43,15 @@ public class GridEntity : DrawableEntity
             _dirty = true;
         }
     }
-
+    public Color SubLineColor
+    {
+        get => _subLineColor;
+        set
+        {
+            _subLineColor = value;
+            _dirty = true;
+        }
+    }
     public Vector3 XAxis
     {
         get => _xAxis;
@@ -45,7 +61,6 @@ public class GridEntity : DrawableEntity
             _dirty = true;
         }
     }
-
     public Vector3 YAxis
     {
         get => _yAxis;
@@ -60,11 +75,13 @@ public class GridEntity : DrawableEntity
     private VertexBuffer _vertexBuffer;
     private IndexBuffer _indexBuffer;
     private short[] _indicies;
-    private bool _dirty;
+    private bool _dirty = true;
     private Vector3 _yAxis = Vector3.UnitZ;
     private Vector3 _xAxis = Vector3.UnitX;
-    private Color _lineColor = Color.LightGray;
+    private Color _lineColor = Color.LightGray * 0.85f;
+    private Color _subLineColor = Color.LightGray * 0.15f;
     private float _spacing = 1.0f;
+    private int _subDivisions = 1;
     private int _steps = 25;
 
     private BasicEffect _effect;
@@ -84,10 +101,7 @@ public class GridEntity : DrawableEntity
                 World = Matrix.Identity
             };
 
-        var halfSteps = (int)Math.Ceiling(Steps / 2f);
-
-        var arraySize = (short)((((halfSteps * 2f) + 1f) * 2f) * 2);
-        InitBuffers(arraySize);
+        CalculateVertices();
     }
 
     private void InitBuffers(short arraySize)
@@ -102,39 +116,45 @@ public class GridEntity : DrawableEntity
 
     private void CalculateVertices()
     {
-        var halfSteps = (int)Math.Ceiling(Steps / 2f);
-
-        var arraySize = (short)((((halfSteps * 2f) + 1f) * 2f) * 2);
-        if (arraySize != _vertexBuffer.VertexCount)
+        var subSteps = SubDivisions;
+        var steps = Steps * subSteps;
+        var spacing = Spacing / (float)subSteps;
+        var halfSteps = (int)Math.Ceiling(steps / 2f);
+        var vSteps = ((halfSteps * 2f) + 1f) * 2f;
+        var arraySize = (short)(vSteps * 2);
+        
+        if (_vertexBuffer == null || arraySize != _vertexBuffer.VertexCount)
             InitBuffers(arraySize);
 
-        var minX = -halfSteps * XAxis * Spacing;
-        var maxX = halfSteps * XAxis * Spacing;
+        var minX = -halfSteps * XAxis * spacing;
+        var maxX = halfSteps * XAxis * spacing;
 
-        var minY = -halfSteps * YAxis * Spacing;
-        var maxY = halfSteps * YAxis * Spacing;
+        var minY = -halfSteps * YAxis * spacing;
+        var maxY = halfSteps * YAxis * spacing;
 
         int i = 0;
         for (int x = -halfSteps; x <= halfSteps; x++)
         {
-            var minPos = (x * XAxis * Spacing) + minY;
-            var maxPos = (x * XAxis * Spacing) + maxY;
-            _verticies[i] = new VertexPositionColor(minPos, LineColor);
+            var lineColor = ((x % subSteps) == 0) ? LineColor : SubLineColor;
+            var minPos = (x * XAxis * spacing) + minY;
+            var maxPos = (x * XAxis * spacing) + maxY;
+            _verticies[i] = new VertexPositionColor(minPos, lineColor);
             _indicies[i] = (short)i;
             i++;
-            _verticies[i] = new VertexPositionColor(maxPos, LineColor);
+            _verticies[i] = new VertexPositionColor(maxPos, lineColor);
             _indicies[i] = (short)i;
             i++;
         }
 
         for (int y = -halfSteps; y <= halfSteps; y++)
         {
-            var minPos = (y * YAxis * Spacing) + minX;
-            var maxPos = (y * YAxis * Spacing) + maxX;
-            _verticies[i] = new VertexPositionColor(minPos, LineColor);
+            var lineColor = ((y % subSteps) == 0) ? LineColor : SubLineColor;
+            var minPos = (y * YAxis * spacing) + minX;
+            var maxPos = (y * YAxis * spacing) + maxX;
+            _verticies[i] = new VertexPositionColor(minPos, lineColor);
             _indicies[i] = (short)i;
             i++;
-            _verticies[i] = new VertexPositionColor(maxPos, LineColor);
+            _verticies[i] = new VertexPositionColor(maxPos, lineColor);
             _indicies[i] = (short)i;
             i++;
         }
@@ -142,8 +162,7 @@ public class GridEntity : DrawableEntity
         _vertexBuffer.SetData(_verticies);
         _indexBuffer.SetData(_indicies);
     }
-    
-    public void Update()
+    public override void Update(GameTime gameTime)
     {
         if (_dirty)
         {
@@ -152,18 +171,22 @@ public class GridEntity : DrawableEntity
         }
     }
         
-    public void Draw(GraphicsDevice graphics, Matrix view, Matrix projection)
+    public override void Draw(GameTime gameTime)
     {
-        _effect.View = view;
-        _effect.Projection = projection;
-            
-        graphics.SetVertexBuffer(_vertexBuffer);
-        graphics.Indices = _indexBuffer;
-        
-        foreach (EffectPass pass in _effect.CurrentTechnique.Passes)
+        using (GraphicsContext.CreateContext(GraphicsDevice, BlendState.AlphaBlend, DepthStencilState.Default, RasterizerState.CullNone))
         {
-            pass.Apply();
-            graphics.DrawIndexedPrimitives(PrimitiveType.LineList, 0, 0, _indicies.Length / 2);
+            var camera = ((IGame)Game).Camera;
+            _effect.View = camera.View;
+            _effect.Projection = camera.Projection;
+            
+            GraphicsDevice.SetVertexBuffer(_vertexBuffer);
+            GraphicsDevice.Indices = _indexBuffer;
+
+            foreach (EffectPass pass in _effect.CurrentTechnique.Passes)
+            {
+                pass.Apply();
+                GraphicsDevice.DrawIndexedPrimitives(PrimitiveType.LineList, 0, 0, _indicies.Length / 2);
+            }
         }
     }
 

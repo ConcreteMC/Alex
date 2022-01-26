@@ -12,11 +12,17 @@ public class MainMenuScene : GuiSceneBase<MainMenuScreen>
     {
         base.OnInitialize();
 
-        var grid = new GridEntity(ModelExplorerGame.Instance);
-        grid.Visible = true;
-        grid.Position = Vector3.Zero;
-        grid.Scale = Vector3.One;
-        Components.Add(grid);
+        Components.Add(new GridEntity(ModelExplorerGame.Instance)
+        {
+            Visible = true,
+            Scale = Vector3.One,
+            Position = Vector3.Zero,
+            Steps = 25,
+            SubDivisions = 16,
+            Spacing = 1.0f,
+            LineColor = Color.LightGray * 0.85f,
+            SubLineColor = Color.LightGray * 0.15f
+        });
         
         var cube = new CubeEntity(ModelExplorerGame.Instance);
         cube.Visible = true;
@@ -25,8 +31,8 @@ public class MainMenuScene : GuiSceneBase<MainMenuScreen>
 
         var fox = Services.CreateInstance<MCEntity>();
         fox.Visible = true;
-        fox.Position = Vector3.Up;
-        //fox.Transform.Scale = Vector3.One / 16f;
+        fox.Position = Vector3.Zero;
+        fox.Transform.Scale = Vector3.One / 16f;
         
         Components.Add(Services.GetOrCreateInstance<AxisEntity>());
         //Components.Add(cube);
