@@ -1,9 +1,13 @@
 # Alex
+![Build status](https://github.com/ConcreteMC/Alex/workflows/.NET%20Core/badge.svg)
+[![Discord](https://img.shields.io/discord/433462740451852292.svg?color=7289da&label=Discord&logo=discord&style=flat-square)](https://discord.gg/txaahdU) 
+
 A Minecraft (Java & Bedrock Edition) client written in C# 
 
-![Build status](https://github.com/kennyvv/Alex/workflows/.NET%20Core/badge.svg)
 
-##### This client requires a paid Minecraft account!
+#### This is NOT a hacked/cracked client!
+Alex does and always will require a valid Minecraft/Xbox account inorder to play!
+
 
 ![Title screen](https://raw.githubusercontent.com/kennyvv/Alex/master/screenshots/alex-home.png)
 ![Nethergames Lobby](https://raw.githubusercontent.com/kennyvv/Alex/master/screenshots/alex-ng-new.png)
@@ -42,13 +46,10 @@ I'm always looking for people that want to help me continue development on Alex!
 
 Awesome repositories
 ---------------------
-
-These repositories were super helpfull while i was building Alex! You should check them out :)
-
+* [MoLang](https://github.com/ConcreteMC/MolangSharp) - Our MoLang implementation for .NET
+* [RocketUI](https://github.com/TruDan/RocketUI) - The GUI library used in Alex
 * [MiNET](https://github.com/NiclasOlofsson/MiNET) - A Minecraft Bedrock Edition server written in C#
 * [TrueCraft](https://github.com/SirCmpwn/TrueCraft) - A Minecraft beta 1.7.3 client written in C#
-* [MoLang](https://github.com/bedrockk/MoLang) - A MoLang implementation for Java
-* [RocketUI](https://github.com/TruDan/RocketUI) - The GUI library used in Alex
 * [GeyserMC](https://github.com/GeyserMC/mappings) - Provides Bedrock <-> Java mappings
 
 Other resources
