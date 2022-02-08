@@ -5,7 +5,7 @@ using Newtonsoft.Json;
 
 namespace Alex.ResourcePackLib.Json.Bedrock.MoLang
 {
-	[JsonConverter(typeof(ComplexStuffConverter))]
+	[JsonConverter(typeof(AnimationChannelDataConverter))]
 	public class AnimationChannelData
 	{
 		public IExpression[] Expressions { get; set; }

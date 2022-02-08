@@ -6,11 +6,9 @@ using Newtonsoft.Json;
 
 namespace Alex.ResourcePackLib.Json.Converters.MoLang
 {
-	internal class AnnoyingMolangElementConverter : JsonConverter
+	internal class AnnoyingMolangElementConverter : JsonConverter<AnnoyingMolangElement>
 	{
-		public override bool CanConvert(Type t) => t == typeof(AnnoyingMolangElement);
-
-		public override object ReadJson(JsonReader reader, Type t, object existingValue, JsonSerializer serializer)
+		public override AnnoyingMolangElement ReadJson(JsonReader reader, Type t, AnnoyingMolangElement existingValue, bool hasExistingValue, JsonSerializer serializer)
 		{
 			switch (reader.TokenType)
 			{
@@ -29,10 +27,8 @@ namespace Alex.ResourcePackLib.Json.Converters.MoLang
 			throw new Exception("Cannot unmarshal type AnimateElement");
 		}
 
-		public override void WriteJson(JsonWriter writer, object untypedValue, JsonSerializer serializer)
+		public override void WriteJson(JsonWriter writer, AnnoyingMolangElement value, JsonSerializer serializer)
 		{
-			var value = (AnnoyingMolangElement)untypedValue;
-
 			if (value.StringValue != null)
 			{
 				serializer.Serialize(writer, value.StringValue);

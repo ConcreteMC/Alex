@@ -432,85 +432,89 @@ namespace Alex.Common.Graphics.Typography
 		{
 			if (_isInitialised) return;
 
-			bitmap.TryGetSinglePixelSpan(out var rgba);
-			var textureWidth = bitmap.Width;
-			var textureHeight = bitmap.Height;
-
-			var cellHeight = (textureHeight / GridHeight);
-
-			Dictionary<char, IFontGlyph> glyphs = new Dictionary<char, IFontGlyph>();
-
-			for (int line = 0; line < data.Length; line++)
+			if (bitmap.DangerousTryGetSinglePixelMemory(out var mem))
 			{
-				var lineCharacters = data[line];
+				var rgba = mem.Span;
+				//	bitmap.TryGetSinglePixelSpan(out var rgba);
+				var textureWidth = bitmap.Width;
+				var textureHeight = bitmap.Height;
 
-				var cellWidth = (textureWidth / lineCharacters.Length);
+				var cellHeight = (textureHeight / GridHeight);
 
-				for (int i = 0; i < lineCharacters.Length; i++)
+				Dictionary<char, IFontGlyph> glyphs = new Dictionary<char, IFontGlyph>();
+
+				for (int line = 0; line < data.Length; line++)
 				{
-					var character = lineCharacters[i];
-					int col = i;
+					var lineCharacters = data[line];
 
-					// Scan the grid cell by pixel column, to determine the
-					// width of the characters.
-					int width = 0;
-					int height = 0;
+					var cellWidth = (textureWidth / lineCharacters.Length);
 
-					bool columnIsEmpty = true;
-
-					for (var x = cellWidth - 1; x >= 0; x--)
+					for (int i = 0; i < lineCharacters.Length; i++)
 					{
-						columnIsEmpty = true;
+						var character = lineCharacters[i];
+						int col = i;
 
-						for (var y = cellHeight - 1; y >= 0; y--)
+						// Scan the grid cell by pixel column, to determine the
+						// width of the characters.
+						int width = 0;
+						int height = 0;
+
+						bool columnIsEmpty = true;
+
+						for (var x = cellWidth - 1; x >= 0; x--)
 						{
-							// width * y + x
-							//if (textureData[(textureWidth * (row * cellHeight + y)) + (col * cellWidth + x)].A != 0)
-							//     if (rgba[(col * cellWidth) + x, (row * cellHeight) + y].A != 0)
-							if (rgba[(textureWidth * (line * cellHeight + y)) + (col * cellWidth + x)].A != 0)
-							{
-								columnIsEmpty = false;
+							columnIsEmpty = true;
 
-								if (y > height)
-									height = y;
+							for (var y = cellHeight - 1; y >= 0; y--)
+							{
+								// width * y + x
+								//if (textureData[(textureWidth * (row * cellHeight + y)) + (col * cellWidth + x)].A != 0)
+								//     if (rgba[(col * cellWidth) + x, (row * cellHeight) + y].A != 0)
+								if (rgba[(textureWidth * (line * cellHeight + y)) + (col * cellWidth + x)].A != 0)
+								{
+									columnIsEmpty = false;
+
+									if (y > height)
+										height = y;
+								}
+							}
+
+							width = x;
+
+							if (!columnIsEmpty)
+							{
+								break;
 							}
 						}
 
-						width = x;
 
-						if (!columnIsEmpty)
+						var charWidth = (0.5f + (width * (8.0f / cellWidth)) + 1f);
+						var charHeight = (0.5f + (height * (8.0f / cellHeight)) + 1f);
+
+						++width;
+						++height;
+
+						var bounds = new Rectangle(col * cellWidth, line * cellHeight, width, cellHeight);
+						var textureSlice = AsciiTexture.Slice(bounds);
+
+						if (character == ' ')
 						{
-							break;
+							charWidth = 4;
 						}
+
+						var glyph = new Glyph(character, textureSlice, charWidth, charHeight);
+
+						Debug.WriteLine($"BitmapFont Glyph Loaded: {glyph}");
+
+						glyphs[character] = glyph;
 					}
-
-
-					var charWidth = (0.5f + (width * (8.0f / cellWidth)) + 1f);
-					var charHeight = (0.5f + (height * (8.0f / cellHeight)) + 1f);
-
-					++width;
-					++height;
-
-					var bounds = new Rectangle(col * cellWidth, line * cellHeight, width, cellHeight);
-					var textureSlice = AsciiTexture.Slice(bounds);
-
-					if (character == ' ')
-					{
-						charWidth = 4;
-					}
-
-					var glyph = new Glyph(character, textureSlice, charWidth, charHeight);
-
-					Debug.WriteLine($"BitmapFont Glyph Loaded: {glyph}");
-
-					glyphs[character] = glyph;
 				}
+
+				Glyphs = glyphs;
+				DefaultGlyph = new Glyph('\x0000', AsciiTexture.Slice(0, 0, 0, 0), 8, 0);
+
+				_isInitialised = true;
 			}
-
-			Glyphs = glyphs;
-			DefaultGlyph = new Glyph('\x0000', AsciiTexture.Slice(0, 0, 0, 0), 8, 0);
-
-			_isInitialised = true;
 		}
 
 		public struct Glyph : IFontGlyph

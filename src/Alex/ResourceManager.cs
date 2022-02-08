@@ -476,7 +476,7 @@ namespace Alex
 			_hasInit = true;
 
 			var data = ReadResource("Alex.Resources.nethergames.png");
-			NethergamesLogo = TextureUtils.BitmapToTexture2D(this, Alex.GraphicsDevice, Image.Load(data));
+			NethergamesLogo = TextureUtils.BitmapToTexture2D(this, Alex.GraphicsDevice, Image.Load<Rgba32>(data));
 
 			return true;
 		}

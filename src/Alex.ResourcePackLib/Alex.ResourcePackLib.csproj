@@ -9,7 +9,7 @@
         <PackageReference Include="DotNetZip.NetStandard" Version="1.12.0" />
         <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
         <PackageReference Include="NLog" Version="4.7.12" />
-        <PackageReference Include="SixLabors.ImageSharp" Version="1.0.4" />
+        <PackageReference Include="SixLabors.ImageSharp" Version="2.0.0" />
         <PackageReference Include="System.Resources.Extensions" Version="6.0.0" />
     </ItemGroup>
     <ItemGroup>

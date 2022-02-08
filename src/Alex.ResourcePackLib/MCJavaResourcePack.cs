@@ -552,7 +552,7 @@ namespace Alex.ResourcePackLib
 		{
 			var cloned = image;
 
-			if (cloned.TryGetSinglePixelSpan(out var pixelSpan))
+			if (cloned.DangerousTryGetSinglePixelMemory(out var pixelSpan))
 			{
 				return pixelSpan.ToArray().Select(x => new Color(x.Rgba)).ToArray();
 			}

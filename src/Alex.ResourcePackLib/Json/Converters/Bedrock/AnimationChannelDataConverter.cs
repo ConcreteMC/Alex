@@ -7,7 +7,7 @@ using Newtonsoft.Json.Linq;
 
 namespace Alex.ResourcePackLib.Json.Converters.Bedrock
 {
-	internal class ComplexStuffConverter : JsonConverter
+	internal class AnimationChannelDataConverter : JsonConverter
 	{
 		public override bool CanConvert(Type t) => t == typeof(AnimationChannelData);
 

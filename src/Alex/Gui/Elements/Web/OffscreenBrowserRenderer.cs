@@ -83,9 +83,9 @@ namespace Alex.Gui.Elements.Web
 
 		private Color[] GetRawData(byte[] bmpData)
 		{
-			using (Image<Rgba32> img = Image.Load(bmpData))
+			using (Image<Rgba32> img = Image.Load<Rgba32>(bmpData))
 			{
-				if (!img.TryGetSinglePixelSpan(out var outVal))
+				if (!img.DangerousTryGetSinglePixelMemory(out var outVal))
 				{
 					throw new Exception("Failed to convert data");
 				}

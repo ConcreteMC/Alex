@@ -36,8 +36,9 @@ namespace Alex.Common.Utils
 		{
 			uint[] colorData;
 
-			if (image.TryGetSinglePixelSpan(out var pixelSpan))
+			if (image.DangerousTryGetSinglePixelMemory(out var ps))
 			{
+				var pixelSpan = ps.Span;
 				colorData = new uint[pixelSpan.Length];
 
 				Rgba32 dest = new Rgba32();
@@ -128,7 +129,7 @@ namespace Alex.Common.Utils
 		{
 			//using (MemoryStream s = new MemoryStream(bmp))
 			{
-				using (var image = Image.Load(bmp))
+				using (var image = Image.Load<Rgba32>(bmp))
 					return BitmapToTexture2D(owner, device, image);
 			}
 		}
@@ -369,9 +370,9 @@ namespace Alex.Common.Utils
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			public void Invoke(int y)
 			{
-				Span<TPixelBg> destination = this.sourceFrame.GetPixelRowSpan(y).Slice(this.minX, this.width);
+				Span<TPixelBg> destination = this.sourceFrame.DangerousGetPixelRowMemory(y).Span.Slice(this.minX, this.width);
 
-				Span<TPixelFg> span = this.targetImage.GetPixelRowSpan(y - this.locationY)
+				Span<TPixelFg> span = this.targetImage.DangerousGetPixelRowMemory(y - this.locationY).Span
 				   .Slice(this.targetX, this.width);
 
 				//Vector4.Lerp(span[i].ToVector4(), destination[i].ToVector4(), interpolationValue)

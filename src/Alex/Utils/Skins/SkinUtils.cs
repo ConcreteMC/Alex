@@ -292,7 +292,7 @@ namespace Alex.Utils.Skins
 							data = wc.DownloadData(url);
 						}
 
-						var t = Image.Load(data);
+						var t = Image.Load<Rgba32>(data);
 						onComplete?.Invoke(t, r.textures.SKIN.metadata?.model == "slim");
 						//resetEvent.WaitOne();
 
@@ -516,8 +516,9 @@ namespace Alex.Utils.Skins
 
 			using (MemoryStream ms = new MemoryStream())
 			{
-				if (skinTexture.TryGetSinglePixelSpan(out var span))
+				if (skinTexture.DangerousTryGetSinglePixelMemory(out var memory))
 				{
+					var span = memory.Span;
 					foreach (var value in span)
 					{
 						ms.WriteByte(value.R);

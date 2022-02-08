@@ -667,8 +667,9 @@ namespace Alex.Net.Bedrock
 
 				using (MemoryStream ms = new MemoryStream())
 				{
-					if (Alex.PlayerTexture.TryGetSinglePixelSpan(out var span))
+					if (Alex.PlayerTexture.DangerousTryGetSinglePixelMemory(out var memory))
 					{
+						var span = memory.Span;
 						foreach (var value in span)
 						{
 							ms.WriteByte(value.R);

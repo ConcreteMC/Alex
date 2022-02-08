@@ -29,10 +29,7 @@ namespace Alex.ResourcePackLib.Json.Converters.MoLang
 			if (token.Type == JTokenType.String)
 			{
 				string molang = token.Value<string>();
-				TokenIterator tokenIterator = new TokenIterator(molang);
-				MoLangParser parser = new MoLangParser(tokenIterator);
-
-				var res = parser.Parse();
+				var res = MoLangParser.Parse(molang);
 
 				return res;
 			}

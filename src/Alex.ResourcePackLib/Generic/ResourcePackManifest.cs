@@ -17,7 +17,7 @@ namespace Alex.ResourcePackLib.Generic
 		{
 			if (UnknownPack == null)
 			{
-				UnknownPack = Image.Load(
+				UnknownPack = Image.Load<Rgba32>(
 					EmbeddedResourceUtils.GetApiRequestFile("Alex.ResourcePackLib.Resources.unknown_pack.png"));
 			}
 		}

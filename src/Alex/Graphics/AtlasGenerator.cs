@@ -24,6 +24,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using NLog;
 using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.Advanced;
 using SixLabors.ImageSharp.Formats.Png;
 using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp.Processing;
@@ -156,12 +157,25 @@ namespace Alex.Graphics
 			Dictionary<ResourceLocation, Utils.TextureInfo> textureInfos =
 				new Dictionary<ResourceLocation, Utils.TextureInfo>();
 
+			var maxTHeight = 0;
+			var maxTWidth = 0;
+			int w = 0;
+			int h = 0;
+			foreach (var texture in textures)
+			{
+				w += texture.Width;
+				h += texture.Height;
+				
+				maxTWidth = Math.Max(texture.Width, maxTWidth);
+				maxTHeight = Math.Max(texture.Height, maxTHeight);
+			}
+			
+			var maxHeight = h;
+			var maxWidth = w;
+			
 			packer.PackImage(
-				progressReceiver, textures, false, true, TextureWidth * textures.Count, TextureHeight * textures.Count,
-				4, true, out var img, out var resultingMap);
-
-			var widthScale = TextureWidth / 16;
-			var heightScale = TextureHeight / 16;
+				progressReceiver, textures, false, false, maxWidth, maxHeight,
+				0, true, out var img, out var resultingMap);
 
 			foreach (var node in resultingMap)
 			{
@@ -227,8 +241,8 @@ namespace Alex.Graphics
 
 					for (int row = 0; row < bmp.Height; row++)
 					{
-						var rowSpan = bmp.GetPixelRowSpan(row);
-
+						var rowData = bmp.DangerousGetPixelRowMemory(row);
+						var rowSpan = rowData.Span;
 						for (int col = 0; col < rowSpan.Length; col++)
 						{
 							colorData[idx] = rowSpan[col].Rgba;

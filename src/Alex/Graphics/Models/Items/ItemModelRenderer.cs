@@ -63,8 +63,9 @@ namespace Alex.Graphics.Models.Items
 
 				try
 				{
-					if (bitmap.TryGetSinglePixelSpan(out var pixels))
+					if (bitmap.DangerousTryGetSinglePixelMemory(out var pixelMemory))
 					{
+						var pixels = pixelMemory.Span;
 						var pixelSize = new Vector3(16f / bitmap.Width, 16f / bitmap.Height, 1f);
 
 						for (int y = 0; y < bitmap.Height; y++)
