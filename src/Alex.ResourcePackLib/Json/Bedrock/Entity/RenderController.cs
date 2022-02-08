@@ -1,7 +1,7 @@
 using System.Collections.Generic;
-using Alex.MoLang.Parser;
-using Alex.MoLang.Parser.Expressions;
 using Alex.ResourcePackLib.Json.Bedrock.MoLang;
+using ConcreteMC.MolangSharp.Parser;
+using ConcreteMC.MolangSharp.Parser.Expressions;
 using Newtonsoft.Json;
 
 namespace Alex.ResourcePackLib.Json.Bedrock.Entity
@@ -17,9 +17,9 @@ namespace Alex.ResourcePackLib.Json.Bedrock.Entity
 		public AnnoyingMolangElement[] PartVisibility { get; set; } = new AnnoyingMolangElement[]
 		{
 			new AnnoyingMolangElement(
-				new Dictionary<string, IExpression[]>()
+				new Dictionary<string, IExpression>()
 				{
-					{ "*", new IExpression[] { new BooleanExpression(true) } }
+					{ "*", new BooleanExpression(true) }
 				})
 		};
 
@@ -27,9 +27,9 @@ namespace Alex.ResourcePackLib.Json.Bedrock.Entity
 		public AnnoyingMolangElement[] Materials { get; set; } = new AnnoyingMolangElement[]
 		{
 			new AnnoyingMolangElement(
-				new Dictionary<string, IExpression[]>()
+				new Dictionary<string, IExpression>()
 				{
-					{ "*", new IExpression[] { new StringExpression("Material.default") } }
+					{ "*", new StringExpression("Material.default") }
 				})
 		};
 
@@ -39,7 +39,7 @@ namespace Alex.ResourcePackLib.Json.Bedrock.Entity
 			new AnnoyingMolangElement("Texture.default")
 		};
 
-		[JsonProperty("arrays")] public Dictionary<string, IDictionary<string, IExpression[]>> Arrays { get; set; }
+		[JsonProperty("arrays")] public Dictionary<string, IDictionary<string, IExpression>> Arrays { get; set; }
 	}
 
 	public class PartVisibility : Dictionary<string, List<IExpression>> { }

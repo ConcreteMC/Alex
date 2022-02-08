@@ -2,11 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using Alex.Entities;
-using Alex.Entities.Passive;
-using Alex.MoLang.Runtime;
 using Alex.ResourcePackLib.Json.Bedrock.Entity;
 using Alex.ResourcePackLib.Json.Bedrock.MoLang;
+using ConcreteMC.MolangSharp.Runtime;
 using Microsoft.Xna.Framework;
 using NLog;
 
@@ -72,7 +70,7 @@ namespace Alex.Graphics.Models.Entity.Animations
 				entity.AnimationTime = _animationTime;
 				double animTimeUpdate = _animationTime; // + elapsed.TotalSeconds;
 
-				if (anim.AnimationTimeUpdate != null && anim.AnimationTimeUpdate.Length > 0)
+				if (anim.AnimationTimeUpdate != null)
 				{
 					animTimeUpdate = _parent.Execute(anim.AnimationTimeUpdate).AsDouble();
 				}

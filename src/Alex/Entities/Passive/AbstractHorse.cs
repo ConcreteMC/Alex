@@ -1,8 +1,7 @@
-using Alex.Graphics.Models.Entity;
-using Alex.MoLang.Attributes;
-using Alex.MoLang.Runtime;
 using Alex.Networking.Java.Packets.Play;
 using Alex.Worlds;
+using ConcreteMC.MolangSharp.Attributes;
+using ConcreteMC.MolangSharp.Runtime;
 using MiNET.Entities;
 using NLog;
 

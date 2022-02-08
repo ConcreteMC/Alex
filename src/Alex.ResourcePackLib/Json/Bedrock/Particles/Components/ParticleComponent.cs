@@ -1,4 +1,4 @@
-using Alex.MoLang.Runtime;
+using ConcreteMC.MolangSharp.Runtime;
 
 namespace Alex.ResourcePackLib.Json.Bedrock.Particles.Components
 {

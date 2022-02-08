@@ -3,9 +3,8 @@ using System.Collections.Generic;
 using Alex.Common.Utils;
 using Alex.Entities.Passive;
 using Alex.Graphics.Models.Entity.Animations;
-using Alex.MoLang.Runtime.Struct;
-using Alex.MoLang.Runtime.Value;
 using Alex.ResourcePackLib.Json.Bedrock.Entity;
+using ConcreteMC.MolangSharp.Runtime.Value;
 using NLog;
 
 namespace Alex.Graphics.Models.Entity

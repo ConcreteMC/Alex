@@ -1,8 +1,8 @@
 using System;
 using System.Collections.Generic;
-using Alex.MoLang.Parser;
-using Alex.MoLang.Parser.Expressions;
-using Alex.MoLang.Parser.Tokenizer;
+using ConcreteMC.MolangSharp.Parser;
+using ConcreteMC.MolangSharp.Parser.Expressions;
+using ConcreteMC.MolangSharp.Parser.Tokenizer;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -38,15 +38,15 @@ namespace Alex.ResourcePackLib.Json.Converters.MoLang
 			}
 			else if (token.Type == JTokenType.Integer)
 			{
-				return new IExpression[] { new NumberExpression(token.Value<double>()) };
+				return new NumberExpression(token.Value<double>());
 			}
 			else if (token.Type == JTokenType.Float)
 			{
-				return new IExpression[] { new NumberExpression(token.Value<double>()) };
+				return new NumberExpression(token.Value<double>());
 			}
 			else if (token.Type == JTokenType.Boolean)
 			{
-				return new IExpression[] { new BooleanExpression(token.Value<bool>()) };
+				return new BooleanExpression(token.Value<bool>());
 			}
 
 			return existingValue;
@@ -55,7 +55,7 @@ namespace Alex.ResourcePackLib.Json.Converters.MoLang
 		/// <inheritdoc />
 		public override bool CanConvert(Type objectType)
 		{
-			return typeof(IExpression[]).IsAssignableFrom(objectType);
+			return typeof(IExpression).IsAssignableFrom(objectType);
 		}
 
 

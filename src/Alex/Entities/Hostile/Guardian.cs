@@ -1,4 +1,5 @@
 using Alex.Worlds;
+using ConcreteMC.MolangSharp.Attributes;
 using Microsoft.Xna.Framework;
 using MiNET.Entities;
 
@@ -14,10 +15,10 @@ namespace Alex.Entities.Hostile
 
 		public Vector2 EyeTargetRotation { get; set; } = Vector2.Zero;
 
-		[MoLang.Attributes.MoProperty("eye_target_x_rotation")]
+		[MoProperty("eye_target_x_rotation")]
 		public double EyeTargetXRotation => EyeTargetRotation.X;
 
-		[MoLang.Attributes.MoProperty("eye_target_y_rotation")]
+		[MoProperty("eye_target_y_rotation")]
 		public double EyeTargetYRotation => EyeTargetRotation.Y;
 	}
 }

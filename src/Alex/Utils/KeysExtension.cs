@@ -2,7 +2,7 @@ using Microsoft.Xna.Framework.Input;
 
 namespace Alex.Utils
 {
-	public static class KeysExtension
+	/*public static class KeysExtension
 	{
 		public static bool IsSpecialKey(this Keys keyInput)
 		{
@@ -306,5 +306,5 @@ namespace Alex.Utils
 
 			return false;
 		}
-	}
+	}*/
 }

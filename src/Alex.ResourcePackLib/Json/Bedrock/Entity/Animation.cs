@@ -1,11 +1,7 @@
 using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Numerics;
-using Alex.MoLang.Parser;
-using Alex.MoLang.Parser.Expressions;
-using Alex.ResourcePackLib.Json.Bedrock.MoLang;
-using Alex.ResourcePackLib.Json.Converters;
+using ConcreteMC.MolangSharp.Parser;
+using ConcreteMC.MolangSharp.Parser.Expressions;
 using Newtonsoft.Json;
 
 namespace Alex.ResourcePackLib.Json.Bedrock.Entity
@@ -15,7 +11,7 @@ namespace Alex.ResourcePackLib.Json.Bedrock.Entity
 	/// </summary>
 	public class Animation
 	{
-		public static IExpression[] DefaultTimeUpdate { get; }
+		public static IExpression DefaultTimeUpdate { get; }
 
 		static Animation()
 		{
@@ -26,21 +22,21 @@ namespace Alex.ResourcePackLib.Json.Bedrock.Entity
 		///		Determines whether the animation should go back to T0 when finished.
 		/// </summary>
 		[JsonProperty("loop")]
-		public IExpression[] Loop { get; set; } = new IExpression[] { new BooleanExpression(false) };
+		public IExpression Loop { get; set; } = new BooleanExpression(false);
 
 		/// <summary>
 		///		How does time pass when playing the animation.
 		///     Defaults to "query.anim_time + query.delta_time" which means advance in seconds.
 		/// </summary>
 		[JsonProperty("anim_time_update")]
-		public IExpression[] AnimationTimeUpdate { get; set; } = null;
+		public IExpression AnimationTimeUpdate { get; set; } = null;
 
 		/// <summary>
 		///		How much should this animation be blended in with the others?
 		///		0.0 = off.  1.0 = fully apply all transforms.
 		/// </summary>
 		[JsonProperty("blend_weight")]
-		public IExpression[] BlendWeight { get; set; } = new IExpression[] { new NumberExpression(1d) };
+		public IExpression BlendWeight { get; set; } = new NumberExpression(1d);
 
 		/// <summary>
 		///		At what time does the system consider this animation finished

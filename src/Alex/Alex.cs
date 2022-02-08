@@ -387,8 +387,9 @@ namespace Alex
 			RegisterServiceContainer();
 
 			Resources = ServiceContainer.GetRequiredService<ResourceManager>();
-			GuiRenderer = ServiceContainer.GetRequiredService<GuiRenderer>();
+			GuiRenderer = (GuiRenderer)ServiceContainer.GetRequiredService<IGuiRenderer>();
 			GuiManager = ServiceContainer.GetRequiredService<GuiManager>();
+			GuiManager.Enabled = true;
 			GuiManager.DrawOrder = 100;
 
 			GuiManager.ScaledResolution.TargetWidth = 320;
@@ -401,7 +402,7 @@ namespace Alex
 			Components.Add(GuiManager.InputManager);
 
 			GuiManager.Init();
-			GuiRenderer = (GuiRenderer)GuiManager.GuiRenderer;
+			//GuiRenderer = (GuiRenderer)GuiManager.GuiRenderer;
 			InputManager.GetOrAddPlayerManager(PlayerIndex.One); // Init player1's playermanager
 
 			options.AlexOptions.VideoOptions.FancyGraphics.Bind(

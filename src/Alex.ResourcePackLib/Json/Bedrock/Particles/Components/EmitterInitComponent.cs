@@ -1,5 +1,5 @@
-using Alex.MoLang.Parser;
-using Alex.MoLang.Runtime;
+using ConcreteMC.MolangSharp.Parser;
+using ConcreteMC.MolangSharp.Runtime;
 using Newtonsoft.Json;
 
 namespace Alex.ResourcePackLib.Json.Bedrock.Particles.Components
@@ -8,10 +8,10 @@ namespace Alex.ResourcePackLib.Json.Bedrock.Particles.Components
 	{
 		public const string ComponentName = "minecraft:emitter_initialization";
 
-		[JsonProperty("creation_expression")] public IExpression[] OnCreateExpressions { get; set; }
+		[JsonProperty("creation_expression")] public IExpression OnCreateExpressions { get; set; }
 
 		[JsonProperty("per_update_expression")]
-		public IExpression[] UpdateExpressions { get; set; }
+		public IExpression UpdateExpressions { get; set; }
 
 		public EmitterInitComponent() { }
 

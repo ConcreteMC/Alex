@@ -6,12 +6,12 @@ using Alex.Blocks.Minecraft;
 using Alex.Common.Graphics;
 using Alex.Common.Utils;
 using Alex.Items;
-using Alex.MoLang.Runtime;
-using Alex.MoLang.Runtime.Struct;
-using Alex.MoLang.Runtime.Value;
-using Alex.MoLang.Utils;
 using Alex.ResourcePackLib.Json.Bedrock.Particles;
 using Alex.ResourcePackLib.Json.Bedrock.Particles.Components;
+using ConcreteMC.MolangSharp.Runtime;
+using ConcreteMC.MolangSharp.Runtime.Struct;
+using ConcreteMC.MolangSharp.Runtime.Value;
+using ConcreteMC.MolangSharp.Utils;
 using Microsoft.Xna.Framework;
 using NLog;
 
@@ -30,7 +30,7 @@ namespace Alex.Particles
 			get => _u.Value;
 			set
 			{
-				_u.Value = value;
+				_u = new DoubleValue(value);
 			}
 		}
 
@@ -39,7 +39,7 @@ namespace Alex.Particles
 			get => _v.Value;
 			set
 			{
-				_v.Value = value;
+				_v = new DoubleValue(value);
 			}
 		}
 
@@ -100,7 +100,7 @@ namespace Alex.Particles
 			get => (byte)_a.Value;
 			set
 			{
-				_a.Value = value;
+				_a = new DoubleValue(value);
 			}
 		}
 
@@ -109,7 +109,7 @@ namespace Alex.Particles
 			get => (byte)_r.Value;
 			set
 			{
-				_r.Value = value;
+				_r = new DoubleValue(value);
 			}
 		}
 
@@ -118,7 +118,7 @@ namespace Alex.Particles
 			get => (byte)_g.Value;
 			set
 			{
-				_g.Value = value;
+				_g = new DoubleValue(value);
 			}
 		}
 
@@ -127,7 +127,7 @@ namespace Alex.Particles
 			get => (byte)_b.Value;
 			set
 			{
-				_b.Value = value;
+				_b = new DoubleValue(value);
 			}
 		}
 
@@ -258,7 +258,7 @@ namespace Alex.Particles
 			}
 			set
 			{
-				_lifeTime.Value = value;
+				_lifeTime = new DoubleValue(value);
 			}
 		}
 
@@ -272,7 +272,7 @@ namespace Alex.Particles
 			get => _maxLifetime.Value;
 			set
 			{
-				_maxLifetime.Value = value;
+				_maxLifetime = new DoubleValue(value);
 			}
 		}
 

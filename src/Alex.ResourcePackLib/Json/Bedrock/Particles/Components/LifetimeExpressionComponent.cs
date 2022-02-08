@@ -1,5 +1,5 @@
-using Alex.MoLang.Parser;
-using Alex.MoLang.Runtime;
+using ConcreteMC.MolangSharp.Parser;
+using ConcreteMC.MolangSharp.Runtime;
 using LibNoise.Combiner;
 using Newtonsoft.Json;
 
@@ -9,7 +9,7 @@ namespace Alex.ResourcePackLib.Json.Bedrock.Particles.Components
 	{
 		public LifetimeExpressionComponent() { }
 
-		[JsonProperty("max_lifetime")] public IExpression[] MaxLifetime { get; set; }
+		[JsonProperty("max_lifetime")] public IExpression MaxLifetime { get; set; }
 
 		public double CalculateLifetime(MoLangRuntime runtime)
 		{

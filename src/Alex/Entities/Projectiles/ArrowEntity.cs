@@ -1,6 +1,6 @@
-using Alex.MoLang.Attributes;
 using Alex.Net;
 using Alex.Worlds;
+using ConcreteMC.MolangSharp.Attributes;
 using Microsoft.Xna.Framework;
 
 namespace Alex.Entities.Projectiles

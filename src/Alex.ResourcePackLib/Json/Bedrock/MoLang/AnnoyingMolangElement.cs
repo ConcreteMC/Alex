@@ -1,14 +1,14 @@
 using System.Collections.Generic;
-using Alex.MoLang.Parser;
+using ConcreteMC.MolangSharp.Parser;
 
 namespace Alex.ResourcePackLib.Json.Bedrock.MoLang
 {
 	public class AnnoyingMolangElement
 	{
-		public Dictionary<string, IExpression[]> Expressions;
+		public Dictionary<string, IExpression> Expressions;
 		public string StringValue;
 
-		public AnnoyingMolangElement(Dictionary<string, IExpression[]> expressions)
+		public AnnoyingMolangElement(Dictionary<string, IExpression> expressions)
 		{
 			Expressions = expressions;
 			StringValue = null;

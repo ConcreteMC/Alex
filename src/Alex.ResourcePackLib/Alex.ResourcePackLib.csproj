@@ -5,11 +5,12 @@
         <Platforms>x64;AnyCPU</Platforms>
     </PropertyGroup>
     <ItemGroup>
-        <PackageReference Include="DotNetZip.NetStandard" Version="1.12.0"/>
-        <PackageReference Include="Newtonsoft.Json" Version="13.0.1"/>
-        <PackageReference Include="NLog" Version="4.7.12"/>
-        <PackageReference Include="SixLabors.ImageSharp" Version="1.0.4"/>
-        <PackageReference Include="System.Resources.Extensions" Version="6.0.0"/>
+        <PackageReference Include="Alex.MoLang" Version="2022.2.7.162539" />
+        <PackageReference Include="DotNetZip.NetStandard" Version="1.12.0" />
+        <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
+        <PackageReference Include="NLog" Version="4.7.12" />
+        <PackageReference Include="SixLabors.ImageSharp" Version="1.0.4" />
+        <PackageReference Include="System.Resources.Extensions" Version="6.0.0" />
     </ItemGroup>
     <ItemGroup>
         <Compile Update="Properties\Resources.Designer.cs">
@@ -23,11 +24,10 @@
             <Generator>ResXFileCodeGenerator</Generator>
             <LastGenOutput>Resources.Designer.cs</LastGenOutput>
         </EmbeddedResource>
-        <None Remove="Resources\unknown_pack.png"/>
-        <EmbeddedResource Include="Resources\unknown_pack.png"/>
+        <None Remove="Resources\unknown_pack.png" />
+        <EmbeddedResource Include="Resources\unknown_pack.png" />
     </ItemGroup>
     <ItemGroup>
-        <ProjectReference Include="..\Alex.Common\Alex.Common.csproj"/>
-        <ProjectReference Include="..\Alex.MoLang\Alex.MoLang.csproj"/>
+        <ProjectReference Include="..\Alex.Common\Alex.Common.csproj" />
     </ItemGroup>
 </Project>

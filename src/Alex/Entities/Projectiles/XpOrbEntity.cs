@@ -1,5 +1,5 @@
-using Alex.MoLang.Attributes;
 using Alex.Worlds;
+using ConcreteMC.MolangSharp.Attributes;
 
 namespace Alex.Entities.Projectiles
 {

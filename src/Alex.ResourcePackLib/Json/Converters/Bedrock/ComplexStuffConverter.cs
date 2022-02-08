@@ -1,7 +1,7 @@
 using System;
-using Alex.MoLang.Parser;
 using Alex.ResourcePackLib.Json.Bedrock.Entity;
 using Alex.ResourcePackLib.Json.Bedrock.MoLang;
+using ConcreteMC.MolangSharp.Parser;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -18,7 +18,7 @@ namespace Alex.ResourcePackLib.Json.Converters.Bedrock
 			switch (obj.Type)
 			{
 				case JTokenType.Array:
-					var expressions = obj.ToObject<IExpression[][]>(serializer);
+					var expressions = obj.ToObject<IExpression[]>(serializer);
 
 					return new AnimationChannelData() { Expressions = expressions };
 

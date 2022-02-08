@@ -1,10 +1,9 @@
 using System.Collections.Generic;
 using System.Linq;
-using Alex.MoLang.Parser;
-using Alex.MoLang.Runtime;
-using Alex.MoLang.Runtime.Value;
-using Alex.MoLang.Utils;
 using Alex.ResourcePackLib.Json.Converters.Bedrock;
+using ConcreteMC.MolangSharp.Parser;
+using ConcreteMC.MolangSharp.Runtime;
+using ConcreteMC.MolangSharp.Runtime.Value;
 using Microsoft.Xna.Framework;
 using Newtonsoft.Json;
 
@@ -13,9 +12,9 @@ namespace Alex.ResourcePackLib.Json.Bedrock.MoLang
 	[JsonConverter(typeof(MoVec2Converter))]
 	public class MoLangVector2Expression
 	{
-		private IExpression[] _x, _y;
+		private IExpression _x, _y;
 
-		public MoLangVector2Expression(IExpression[][] values)
+		public MoLangVector2Expression(IExpression[] values)
 		{
 			if (values.Length == 2)
 			{
@@ -46,8 +45,8 @@ namespace Alex.ResourcePackLib.Json.Bedrock.MoLang
 		}
 
 		private Vector2 Evaluate(MoLangRuntime runtime,
-			IExpression[] xExpressions,
-			IExpression[] yExpressions,
+			IExpression xExpressions,
+			IExpression yExpressions,
 			Vector2 currentValue)
 		{
 			runtime.Environment.ThisVariable = new DoubleValue(currentValue.X);
@@ -58,7 +57,7 @@ namespace Alex.ResourcePackLib.Json.Bedrock.MoLang
 			return new Vector2(x.AsFloat(), y.AsFloat());
 		}
 
-		private Vector2 Evaluate(MoLangRuntime runtime, IExpression[][] expressions, Vector2 currentValue)
+		private Vector2 Evaluate(MoLangRuntime runtime, IExpression[] expressions, Vector2 currentValue)
 		{
 			if (expressions.Length == 3)
 			{

@@ -1,8 +1,8 @@
 using System;
 using System.Collections.Generic;
-using Alex.MoLang.Parser;
 using Alex.ResourcePackLib.Json.Bedrock.MoLang;
 using Alex.ResourcePackLib.Json.Converters.MoLang;
+using ConcreteMC.MolangSharp.Parser;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -33,7 +33,7 @@ namespace Alex.ResourcePackLib.Json.Converters.Bedrock
 				case JTokenType.Array:
 					if (obj is JArray jArray)
 					{
-						IExpression[][] values = jArray.ToObject<IExpression[][]>(MCJsonConvert.Serializer);
+						IExpression[] values = jArray.ToObject<IExpression[]>(MCJsonConvert.Serializer);
 
 						return new MoLangVector2Expression(values);
 					}
@@ -51,9 +51,9 @@ namespace Alex.ResourcePackLib.Json.Converters.Bedrock
 					break;
 			}
 
-			var raw = obj.ToObject<IExpression[]>(MCJsonConvert.Serializer);
+			var raw = obj.ToObject<IExpression>(MCJsonConvert.Serializer);
 
-			return new MoLangVector2Expression(new IExpression[][] { raw });
+			return new MoLangVector2Expression(new IExpression[] { raw });
 
 			throw new Exception("No.");
 		}

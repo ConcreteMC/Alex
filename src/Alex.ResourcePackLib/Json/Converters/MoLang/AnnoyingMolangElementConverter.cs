@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
-using Alex.MoLang.Parser;
 using Alex.ResourcePackLib.Json.Bedrock.MoLang;
+using ConcreteMC.MolangSharp.Parser;
 using Newtonsoft.Json;
 
 namespace Alex.ResourcePackLib.Json.Converters.MoLang
@@ -21,7 +21,7 @@ namespace Alex.ResourcePackLib.Json.Converters.MoLang
 					return new AnnoyingMolangElement(stringValue);
 
 				case JsonToken.StartObject:
-					var objectValue = serializer.Deserialize<Dictionary<string, IExpression[]>>(reader);
+					var objectValue = serializer.Deserialize<Dictionary<string, IExpression>>(reader);
 
 					return new AnnoyingMolangElement(objectValue);
 			}

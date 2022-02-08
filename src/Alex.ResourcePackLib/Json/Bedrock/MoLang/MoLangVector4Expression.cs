@@ -1,12 +1,11 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Alex.MoLang.Parser;
-using Alex.MoLang.Parser.Expressions;
-using Alex.MoLang.Runtime;
-using Alex.MoLang.Runtime.Value;
-using Alex.MoLang.Utils;
 using Alex.ResourcePackLib.Json.Converters.Bedrock;
+using ConcreteMC.MolangSharp.Parser;
+using ConcreteMC.MolangSharp.Parser.Expressions;
+using ConcreteMC.MolangSharp.Runtime;
+using ConcreteMC.MolangSharp.Runtime.Value;
 using Microsoft.Xna.Framework;
 using Newtonsoft.Json;
 
@@ -15,9 +14,9 @@ namespace Alex.ResourcePackLib.Json.Bedrock.MoLang
 	[JsonConverter(typeof(MoVec4Converter))]
 	public class MoLangVector4Expression
 	{
-		private IExpression[] _x, _y, _z, _w;
+		private IExpression _x, _y, _z, _w;
 
-		public MoLangVector4Expression(IExpression[][] values)
+		public MoLangVector4Expression(IExpression[] values)
 		{
 			if (values.Length == 4)
 			{
@@ -50,10 +49,10 @@ namespace Alex.ResourcePackLib.Json.Bedrock.MoLang
 		}
 
 		private Vector4 Evaluate(MoLangRuntime runtime,
-			IExpression[] xExpressions,
-			IExpression[] yExpressions,
-			IExpression[] zExpressions,
-			IExpression[] wExpressions,
+			IExpression xExpressions,
+			IExpression yExpressions,
+			IExpression zExpressions,
+			IExpression wExpressions,
 			Vector4 currentValue)
 		{
 			runtime.Environment.ThisVariable = new DoubleValue(currentValue.X);
@@ -68,7 +67,7 @@ namespace Alex.ResourcePackLib.Json.Bedrock.MoLang
 			return new Vector4(x.AsFloat(), y.AsFloat(), z.AsFloat(), w.AsFloat());
 		}
 
-		private Vector4 Evaluate(MoLangRuntime runtime, IExpression[][] expressions, Vector4 currentValue)
+		private Vector4 Evaluate(MoLangRuntime runtime, IExpression[] expressions, Vector4 currentValue)
 		{
 			if (expressions.Length == 4)
 			{
@@ -79,7 +78,7 @@ namespace Alex.ResourcePackLib.Json.Bedrock.MoLang
 			{
 				return Evaluate(
 					runtime, expressions[0], expressions[1], expressions[2],
-					new IExpression[] { new NumberExpression(1d) }, currentValue);
+					new NumberExpression(1d), currentValue);
 			}
 
 			return Evaluate(runtime, expressions[0], expressions[0], expressions[0], expressions[0], currentValue);

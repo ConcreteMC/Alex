@@ -27,11 +27,6 @@ using Alex.Graphics.Models.Items;
 using Alex.Gui;
 using Alex.Gui.Elements.Map;
 using Alex.Items;
-using Alex.MoLang.Attributes;
-using Alex.MoLang.Runtime;
-using Alex.MoLang.Runtime.Struct;
-using Alex.MoLang.Runtime.Value;
-using Alex.MoLang.Utils;
 using Alex.Net;
 using Alex.Networking.Java.Packets.Play;
 using Alex.ResourcePackLib.Json.Bedrock.Entity;
@@ -40,6 +35,11 @@ using Alex.Utils;
 using Alex.Utils.Inventories;
 using Alex.Worlds;
 using Alex.Worlds.Multiplayer.Java;
+using ConcreteMC.MolangSharp.Attributes;
+using ConcreteMC.MolangSharp.Runtime;
+using ConcreteMC.MolangSharp.Runtime.Struct;
+using ConcreteMC.MolangSharp.Runtime.Value;
+using ConcreteMC.MolangSharp.Utils;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using MiNET;
@@ -304,7 +304,7 @@ namespace Alex.Entities
 
 		public Entity(World level)
 		{
-			Structs.Add("query", new ObjectStruct(this));
+			Structs.Add("query", new InteropStruct(this));
 
 			_timeOfCreation = DateTime.UtcNow;
 			//EntityComponents = new Stack<IEntityComponent>();

@@ -1,7 +1,7 @@
 using System.Collections.Generic;
-using Alex.MoLang.Parser;
 using Alex.ResourcePackLib.Json.Bedrock.Entity;
 using Alex.ResourcePackLib.Json.Bedrock.MoLang;
+using ConcreteMC.MolangSharp.Parser;
 using Newtonsoft.Json;
 
 namespace Alex.ResourcePackLib.Json.Bedrock.Attachables
@@ -17,7 +17,7 @@ namespace Alex.ResourcePackLib.Json.Bedrock.Attachables
 
 		[JsonProperty("min_engine_version")] public string MinEngineVersion { get; set; }
 
-		[JsonProperty("item")] public Dictionary<string, IExpression[]> Item { get; set; }
+		[JsonProperty("item")] public Dictionary<string, IExpression> Item { get; set; }
 
 		[JsonProperty("materials")] public Dictionary<string, string> Materials { get; set; }
 

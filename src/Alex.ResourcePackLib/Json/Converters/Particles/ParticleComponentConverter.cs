@@ -1,11 +1,10 @@
 using System;
 using System.Collections.Generic;
-using Alex.MoLang.Parser;
-using Alex.MoLang.Parser.Expressions;
-using Alex.ResourcePackLib.Json.Bedrock.Entity;
 using Alex.ResourcePackLib.Json.Bedrock.MoLang;
 using Alex.ResourcePackLib.Json.Bedrock.Particles.Components;
 using Alex.ResourcePackLib.Json.Converters.MoLang;
+using ConcreteMC.MolangSharp.Parser;
+using ConcreteMC.MolangSharp.Parser.Expressions;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -131,7 +130,7 @@ namespace Alex.ResourcePackLib.Json.Converters.Particles
 				{
 					if (token is JArray jArray)
 					{
-						IExpression[][] values = jArray.ToObject<IExpression[][]>(MCJsonConvert.Serializer);
+						IExpression[] values = jArray.ToObject<IExpression[]>(MCJsonConvert.Serializer);
 
 						return new InitialSpeedComponent() { Value = new MoLangVector3Expression(values) };
 					}
@@ -156,16 +155,16 @@ namespace Alex.ResourcePackLib.Json.Converters.Particles
 					return new InitialSpeedComponent()
 					{
 						Value = new MoLangVector3Expression(
-							new IExpression[][] { new IExpression[] { new NumberExpression(token.Value<int>()) } })
+							new IExpression[] { new NumberExpression(token.Value<int>()) })
 					};
 
 				case JTokenType.Float:
 					return new InitialSpeedComponent()
 					{
 						Value = new MoLangVector3Expression(
-							new IExpression[][]
+							new IExpression[]
 							{
-								new IExpression[] { new NumberExpression(token.Value<float>()) }
+								new NumberExpression(token.Value<float>())
 							})
 					};
 			}
@@ -173,7 +172,7 @@ namespace Alex.ResourcePackLib.Json.Converters.Particles
 			return new InitialSpeedComponent()
 			{
 				Value = new MoLangVector3Expression(
-					new IExpression[][] { new IExpression[] { new NumberExpression(0d) } })
+					new IExpression[] { new NumberExpression(0d) })
 			};
 		}
 	}

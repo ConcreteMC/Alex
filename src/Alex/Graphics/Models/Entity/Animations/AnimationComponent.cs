@@ -9,16 +9,14 @@ using Alex.Entities;
 using Alex.Entities.Components;
 using Alex.Entities.Passive;
 using Alex.Items;
-using Alex.MoLang.Parser;
-using Alex.MoLang.Parser.Expressions;
-using Alex.MoLang.Runtime;
-using Alex.MoLang.Runtime.Struct;
-using Alex.MoLang.Runtime.Value;
-using Alex.MoLang.Utils;
-using Alex.ResourcePackLib;
 using Alex.ResourcePackLib.Abstraction;
 using Alex.ResourcePackLib.Json.Bedrock.Entity;
 using Alex.ResourcePackLib.Json.Bedrock.MoLang;
+using ConcreteMC.MolangSharp.Parser;
+using ConcreteMC.MolangSharp.Parser.Expressions;
+using ConcreteMC.MolangSharp.Runtime;
+using ConcreteMC.MolangSharp.Runtime.Value;
+using ConcreteMC.MolangSharp.Utils;
 using Microsoft.Xna.Framework;
 using NLog;
 using Org.BouncyCastle.Utilities;
@@ -38,7 +36,7 @@ namespace Alex.Graphics.Models.Entity.Animations
 			Runtime = new MoLangRuntime(entity);
 		}
 
-		private IExpression[] _preRenderExpressions = null;
+		private IExpression _preRenderExpressions = null;
 		public EntityDescription EntityDefinition { get; private set; }
 		private IReadOnlyDictionary<string, IAnimation> _animations = null;
 		private IReadOnlyDictionary<string, EntityRenderController> _renderControllers = null;
@@ -82,7 +80,7 @@ namespace Alex.Graphics.Models.Entity.Animations
 					{
 						foreach (var list in definition.Scripts.PreAnimation)
 						{
-							preRender.AddRange(list);
+							preRender.Add(list);
 						}
 					}
 				}
@@ -97,7 +95,7 @@ namespace Alex.Graphics.Models.Entity.Animations
 					LoadAnimationControllers(animationProvider, definition.AnimationControllers);
 
 				EntityDefinition = definition;
-				_preRenderExpressions = preRender.ToArray();
+				_preRenderExpressions = new ScriptExpression(preRender.ToArray());
 
 				Runtime = runtime;
 				_didInit = true;
@@ -129,10 +127,9 @@ namespace Alex.Graphics.Models.Entity.Animations
 					{
 						IMoValue result = null;
 
-						if (kv.Value.Length == 1)
+						if (kv.Value is NameExpression ne)
 						{
-							if (kv.Value[0] is NameExpression ne)
-								search = ne.Name.Path.ToString();
+							search = ne.Name.Path.ToString();
 						}
 						else
 						{
@@ -191,10 +188,9 @@ namespace Alex.Graphics.Models.Entity.Animations
 					{
 						IMoValue result = null;
 
-						if (kv.Value.Length == 1)
+						if (kv.Value is NameExpression ne)
 						{
-							if (kv.Value[0] is NameExpression ne)
-								search = ne.Name.Path.ToString();
+							search = ne.Name.Path.ToString();
 						}
 						else
 						{
@@ -269,7 +265,7 @@ namespace Alex.Graphics.Models.Entity.Animations
 		}
 
 		private IEnumerable<IMoValue> ConditionalExecute(MoLangRuntime runtime,
-			IExpression[][] expressions,
+			IExpression[] expressions,
 			IDictionary<string, IMoValue> context)
 		{
 			if (expressions == null)
@@ -277,7 +273,7 @@ namespace Alex.Graphics.Models.Entity.Animations
 
 			foreach (var expressionList in expressions)
 			{
-				if (expressionList == null || expressionList.Length == 0)
+				if (expressionList == null)
 					continue;
 
 				yield return runtime.Execute(expressionList, context);
@@ -446,7 +442,7 @@ namespace Alex.Graphics.Models.Entity.Animations
 			}
 		}
 
-		public IMoValue Execute(IExpression[] expressions)
+		public IMoValue Execute(IExpression expressions)
 		{
 			return Runtime.Execute(expressions, Context);
 		}

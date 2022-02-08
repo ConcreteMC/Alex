@@ -2,11 +2,10 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Alex.Common.Utils;
-using Alex.MoLang.Parser;
-using Alex.MoLang.Runtime;
-using Alex.MoLang.Runtime.Value;
-using Alex.MoLang.Utils;
 using Alex.ResourcePackLib.Json.Converters.Bedrock;
+using ConcreteMC.MolangSharp.Parser;
+using ConcreteMC.MolangSharp.Runtime;
+using ConcreteMC.MolangSharp.Runtime.Value;
 using Microsoft.Xna.Framework;
 using Newtonsoft.Json;
 
@@ -19,9 +18,9 @@ namespace Alex.ResourcePackLib.Json.Bedrock.MoLang
 	[JsonConverter(typeof(MoVec3Converter))]
 	public class MoLangVector3Expression
 	{
-		private IExpression[] _x, _y, _z;
+		private IExpression _x, _y, _z;
 
-		public MoLangVector3Expression(IExpression[][] values)
+		public MoLangVector3Expression(IExpression[] values)
 		{
 			IsKeyFramed = false;
 
@@ -63,9 +62,9 @@ namespace Alex.ResourcePackLib.Json.Bedrock.MoLang
 		}
 
 		private Vector3 Evaluate(MoLangRuntime runtime,
-			IExpression[] xExpressions,
-			IExpression[] yExpressions,
-			IExpression[] zExpressions,
+			IExpression xExpressions,
+			IExpression yExpressions,
+			IExpression zExpressions,
 			Vector3 currentValue)
 		{
 			runtime.Environment.ThisVariable = new DoubleValue(currentValue.X);
@@ -78,7 +77,7 @@ namespace Alex.ResourcePackLib.Json.Bedrock.MoLang
 			return new Vector3(x.AsFloat(), y.AsFloat(), z.AsFloat());
 		}
 
-		private Vector3 Evaluate(MoLangRuntime runtime, IExpression[][] expressions, Vector3 currentValue)
+		private Vector3 Evaluate(MoLangRuntime runtime, IExpression[] expressions, Vector3 currentValue)
 		{
 			if (expressions == null) return currentValue;
 

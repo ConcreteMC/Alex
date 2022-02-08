@@ -1,9 +1,7 @@
 using System;
-using Alex.MoLang.Parser;
-using Alex.MoLang.Runtime;
-using Alex.ResourcePackLib.Json.Bedrock.Entity;
 using Alex.ResourcePackLib.Json.Bedrock.MoLang;
-using Alex.ResourcePackLib.Json.Bedrock.Particles.Components;
+using ConcreteMC.MolangSharp.Parser;
+using ConcreteMC.MolangSharp.Runtime;
 using Microsoft.Xna.Framework;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -51,7 +49,7 @@ namespace Alex.ResourcePackLib.Json.Converters.Particles
 	{
 		[JsonProperty("gradient")] public MoLangVector4Expression[] Gradient { get; set; }
 
-		[JsonProperty("interpolant")] public IExpression[] Interpolant { get; set; }
+		[JsonProperty("interpolant")] public IExpression Interpolant { get; set; }
 
 		public Color GetValue(MoLangRuntime runtime)
 		{
@@ -90,7 +88,7 @@ namespace Alex.ResourcePackLib.Json.Converters.Particles
 			}
 			else if (obj.Type == JTokenType.Array)
 			{
-				var expressions = obj.ToObject<IExpression[][]>(serializer);
+				var expressions = obj.ToObject<IExpression[]>(serializer);
 
 				return new ParticleColor(new MoLangVector4Expression(expressions));
 			}

@@ -1,5 +1,5 @@
-using Alex.MoLang.Parser;
 using Alex.ResourcePackLib.Json.Bedrock.MoLang;
+using ConcreteMC.MolangSharp.Parser;
 using Microsoft.Xna.Framework;
 using Newtonsoft.Json;
 
@@ -15,7 +15,7 @@ namespace Alex.ResourcePackLib.Json.Bedrock.Particles.Components
 
 		[JsonProperty("frames_per_second")] public float? FPS { get; set; } = 8;
 
-		[JsonProperty("max_frame")] public IExpression[] MaxFrame { get; set; }
+		[JsonProperty("max_frame")] public IExpression MaxFrame { get; set; }
 
 		[JsonProperty("stretch_to_lifetime")] public bool StretchToLifetime { get; set; }
 

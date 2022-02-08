@@ -1,5 +1,5 @@
-using Alex.MoLang.Parser;
-using Alex.MoLang.Runtime;
+using ConcreteMC.MolangSharp.Parser;
+using ConcreteMC.MolangSharp.Runtime;
 using Newtonsoft.Json;
 
 namespace Alex.ResourcePackLib.Json.Bedrock.Particles.Components
@@ -9,7 +9,7 @@ namespace Alex.ResourcePackLib.Json.Bedrock.Particles.Components
 		public const string ComponentName = "minecraft:particle_initialization";
 
 		[JsonProperty("per_render_expression")]
-		public IExpression[] PerRender { get; set; }
+		public IExpression PerRender { get; set; }
 
 		public ParticleInitComponent() { }
 
