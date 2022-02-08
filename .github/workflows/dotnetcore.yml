@@ -5,25 +5,6 @@ on:
     branches: master
 
 jobs:
-  nuget:
-    name: Publish Alex.MoLang to NuGET
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v2
-      with:
-        submodules: 'recursive'
-        
-    - name: Setup .NET Core
-      uses: actions/setup-dotnet@v1.8.0
-      with:
-        dotnet-version: 6.0.x
-
-    - name: Publish
-      run: |
-        dotnet build -c Release src/Alex.MoLang/Alex.MoLang.csproj
-        dotnet pack --no-build -c Release /p:Version="1.0.${{github.run_id}}" src/Alex.MoLang/Alex.MoLang.csproj -o .
-        dotnet nuget push *.nupkg -s https://api.nuget.org/v3/index.json -k ${{secrets.NUGET_PUBLISH_KEY}} --skip-duplicate
-        
   package:
     name: Build
     runs-on: ${{ matrix.os }}
