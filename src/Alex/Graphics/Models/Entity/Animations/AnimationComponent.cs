@@ -15,6 +15,8 @@ using Alex.ResourcePackLib.Json.Bedrock.MoLang;
 using ConcreteMC.MolangSharp.Parser;
 using ConcreteMC.MolangSharp.Parser.Expressions;
 using ConcreteMC.MolangSharp.Runtime;
+using ConcreteMC.MolangSharp.Runtime.Exceptions;
+using ConcreteMC.MolangSharp.Runtime.Struct;
 using ConcreteMC.MolangSharp.Runtime.Value;
 using ConcreteMC.MolangSharp.Utils;
 using Microsoft.Xna.Framework;
@@ -521,7 +523,14 @@ namespace Alex.Graphics.Models.Entity.Animations
 			_deltaTimeStopwatch.Stop();
 			//Stopwatch sw = Stopwatch.StartNew();
 			//_queryStruct?.Tick(_deltaTimeStopwatch.Elapsed);
-			ProcessAnimations();
+			try
+			{
+				ProcessAnimations();
+			}
+			catch (MoLangRuntimeException ex)
+			{
+				Log.Error(ex, $"Failed to process animation.");
+			}
 			//sw.Stop();
 			//if (sw.Elapsed.TotalMilliseconds > 10)
 

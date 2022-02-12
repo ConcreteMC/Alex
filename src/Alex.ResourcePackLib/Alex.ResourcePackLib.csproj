@@ -5,7 +5,7 @@
         <Platforms>x64;AnyCPU</Platforms>
     </PropertyGroup>
     <ItemGroup>
-        <PackageReference Include="Alex.MoLang" Version="2022.2.7.162539" />
+        <PackageReference Include="Alex.MoLang" Version="2022.2.12.154444" />
         <PackageReference Include="DotNetZip.NetStandard" Version="1.12.0" />
         <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
         <PackageReference Include="NLog" Version="4.7.12" />
