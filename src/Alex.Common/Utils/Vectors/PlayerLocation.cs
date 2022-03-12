@@ -151,12 +151,6 @@ namespace Alex.Common.Utils.Vectors
 			vector = Vector3.Transform(vector, GetDirectionMatrix(includePitch, useHeadYaw));
 
 			return vector;
-
-			//	vector.X = (-MathF.Sin(yaw) * MathF.Cos(pitch));
-			//vector.Y = -MathF.Sin(pitch);
-			//	vector.Z = (MathF.Cos(yaw) * MathF.Cos(pitch));
-
-			//	return vector;
 		}
 
 		public Matrix GetDirectionMatrix(bool includePitch = false, bool useHeadYaw = false)
@@ -164,7 +158,7 @@ namespace Alex.Common.Utils.Vectors
 			float pitch = (includePitch ? Pitch : 0f).ToRadians();
 			float yaw = ((useHeadYaw ? HeadYaw : Yaw)).ToRadians();
 
-			return Matrix.CreateRotationX(pitch) * Matrix.CreateRotationY(yaw);
+			return Matrix.CreateRotationX(-pitch) * Matrix.CreateRotationY(yaw);
 		}
 
 		public static PlayerLocation operator *(PlayerLocation a, float b)

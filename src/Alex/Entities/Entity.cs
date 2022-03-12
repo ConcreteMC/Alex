@@ -683,7 +683,19 @@ namespace Alex.Entities
 
 		[MoProperty("is_interested")] public bool IsInterested { get; set; }
 
-		[MoProperty("is_tamed")] public bool IsTamed { get; set; }
+		[MoProperty("is_tamed")]
+		public bool IsTamed
+		{
+			get => _isTamed;
+			set
+			{
+				if (value != _isTamed)
+				{
+					_isTamed = value;
+					AnimationController?.InvokeRenderControllerUpdate();
+				}
+			}
+		}
 
 		[MoProperty("is_leashed")] public bool IsLeashed { get; set; }
 
@@ -1737,6 +1749,7 @@ namespace Alex.Entities
 		private bool _isSprinting;
 		private bool _isSneaking;
 		private bool _hasRider = false;
+		private bool _isTamed;
 
 		public bool CanSurface { get; set; } = false;
 		public const float JumpVelocity = 0.42f;

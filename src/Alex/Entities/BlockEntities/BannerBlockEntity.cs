@@ -140,7 +140,11 @@ public class BannerBlockEntity : BlockEntity
 		if (_isTextureDirty)
 		{
 			_canvasTexture ??= new Image<Rgba32>(64, 64, Color.Black);
-			_canvasTexture.Mutate(cxt => { cxt.Clear(Color.Black); });
+			_canvasTexture.Mutate(
+				cxt =>
+				{
+					cxt.Clear(Color.Black);
+				});
 
 			ApplyCanvasLayer(new PatternLayer(Common.Utils.BannerColor.FromId((int)BannerColor), BannerPattern.Base));
 
@@ -252,12 +256,12 @@ public class BannerBlockEntity : BlockEntity
 				{
 					switch (face)
 					{
-						case BlockFace.West:
+						case BlockFace.East:
 							BannerRotation = 12;
 
 							break;
 
-						case BlockFace.East:
+						case BlockFace.West:
 							BannerRotation = 4;
 
 							break;

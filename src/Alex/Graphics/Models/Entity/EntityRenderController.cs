@@ -1,10 +1,12 @@
-using System;
 using System.Collections.Generic;
+using System.Linq;
 using Alex.Common.Utils;
-using Alex.Entities.Passive;
 using Alex.Graphics.Models.Entity.Animations;
 using Alex.ResourcePackLib.Json.Bedrock.Entity;
+using ConcreteMC.MolangSharp.Runtime;
+using ConcreteMC.MolangSharp.Runtime.Struct;
 using ConcreteMC.MolangSharp.Runtime.Value;
+using ConcreteMC.MolangSharp.Utils;
 using NLog;
 
 namespace Alex.Graphics.Models.Entity
@@ -15,32 +17,30 @@ namespace Alex.Graphics.Models.Entity
 		private readonly AnimationComponent _parent;
 		private readonly RenderController _definition;
 		private bool _requiresUpdate = false;
-
-		private IDictionary<string, IDictionary<string, IMoValue>> _context;
-
 		public EntityRenderController(AnimationComponent parent, RenderController definition)
 		{
 			_parent = parent;
 			_definition = definition;
-			_context = BuildContext(definition);
+
+			BuildArrayStruct(definition, parent.Entity);
 		}
 
-		private IDictionary<string, IDictionary<string, IMoValue>> BuildContext(RenderController definition)
+		private void BuildArrayStruct(RenderController definition, MoLangEnvironment environment)
 		{
-			Dictionary<string, IDictionary<string, IMoValue>> context =
-				new Dictionary<string, IDictionary<string, IMoValue>>(StringComparer.OrdinalIgnoreCase);
+			if (definition.Arrays == null) return;
 
-			if (_definition.Arrays != null)
+			foreach (var array in definition.Arrays)
 			{
-				foreach (var array in _definition.Arrays)
+				foreach (var key in array.Value)
 				{
-					string key = array.Key;
+					ArrayStruct arrayStruct = new ArrayStruct(
+						key.Value.Select(x => _parent.Execute(x)).ToArray());
+
+					environment.SetValue(new MoPath(key.Key), arrayStruct);
 				}
 			}
-
-			return context;
 		}
-
+		
 		private void UpdatePartVisibility()
 		{
 			var visibilities = _definition?.PartVisibility;
@@ -77,16 +77,6 @@ namespace Alex.Graphics.Models.Entity
 				{
 					IDictionary<string, IMoValue> context = _parent.Context;
 
-					if (_definition.Arrays != null && _definition.Arrays.TryGetValue("textures", out var tarray))
-					{
-						context = new Dictionary<string, IMoValue>();
-
-						foreach (var val in tarray)
-						{
-							context.Add(val.Key, _parent.Execute(val.Value));
-						}
-					}
-
 					string[] textureResults = new string[textures.Length];
 
 					for (var index = 0; index < textures.Length; index++)
@@ -104,47 +94,41 @@ namespace Alex.Graphics.Models.Entity
 								var result = _parent.Runtime.Execute(element.Value, context);
 
 								textureResults[index] = result.AsString();
-								//Log.Info($"Got texture: {result.AsString()}");
 							}
 						}
 					}
 
-					//if (_parent.Entity is AbstractHorse)
+					for (var index = 0; index < textureResults.Length; index++)
 					{
-						for (var index = 0; index < textureResults.Length; index++)
+						if (index > 0)
+							break;
+
+						var result = textureResults[index];
+
+						if (_parent?.Entity?.Texture?.Tag is string str && str == result)
 						{
-							if (index > 0)
-								break;
+							continue;
+						}
 
-							var result = textureResults[index];
-
-							if (_parent?.Entity?.Texture?.Tag is string str && str == result)
+						if (_parent.EntityDefinition.Textures.TryGetValue(result, out var texturePath))
+						{
+							if (Alex.Instance.Resources.TryGetBedrockBitmap(texturePath, out var bitmap))
 							{
-								continue;
-							}
-
-							if (_parent.EntityDefinition.Textures.TryGetValue(result, out var texturePath))
-							{
-								if (Alex.Instance.Resources.TryGetBedrockBitmap(texturePath, out var bitmap))
-								{
-									TextureUtils.BitmapToTexture2DAsync(
-										this, Alex.Instance.GraphicsDevice, bitmap, texture2D =>
+								TextureUtils.BitmapToTexture2DAsync(
+									this, Alex.Instance.GraphicsDevice, bitmap, texture2D =>
+									{
+										if (texture2D == null)
 										{
-											if (texture2D == null)
-											{
-												return;
-											}
+											return;
+										}
 
-											texture2D.Tag = result;
-											_parent.Entity.Texture = texture2D;
-										});
-								}
+										texture2D.Tag = result;
+										_parent.Entity.Texture = texture2D;
+									});
 							}
-							//if (Alex.Instance.Resources.)
-							//if (_parent.Entity.Texture)
-							//Log.Info($"Texture[{index}] = {result}");
 						}
 					}
+
 				}
 			}
 			finally

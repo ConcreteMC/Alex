@@ -16,12 +16,13 @@
 
     <ItemGroup>
         <PackageReference Include="MiNET.fnbt" Version="1.0.22" />
-        <PackageReference Include="MojangAPI" Version="1.0.3" />
+        <PackageReference Include="MojangAPI" Version="1.1.0" />
         <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
         <PackageReference Include="NLog" Version="4.7.12" />
         <PackageReference Include="SharpAvi" Version="2.1.2" />
         <PackageReference Include="SixLabors.ImageSharp" Version="2.0.0" />
-        <PackageReference Include="SixLabors.ImageSharp.Drawing" Version="1.0.0-beta13" />
+        <PackageReference Include="SixLabors.ImageSharp.Drawing" Version="1.0.0-beta14" />
+        <PackageReference Update="MonoGame.Framework.Compute.DesktopGL" Version="3.8.1.3" />
     </ItemGroup>
 
     <ItemGroup>

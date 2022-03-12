@@ -39,7 +39,7 @@ namespace Alex.ResourcePackLib.Json.Bedrock.Entity
 			new AnnoyingMolangElement("Texture.default")
 		};
 
-		[JsonProperty("arrays")] public Dictionary<string, IDictionary<string, IExpression>> Arrays { get; set; }
+		[JsonProperty("arrays")] public Dictionary<string, IDictionary<string, IExpression[]>> Arrays { get; set; }
 	}
 
 	public class PartVisibility : Dictionary<string, List<IExpression>> { }

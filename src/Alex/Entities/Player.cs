@@ -94,58 +94,6 @@ namespace Alex.Entities
 			set { }
 		}
 
-		/// <inheritdoc />
-		public override void SetSwimming(bool swimming)
-		{
-			if (swimming && !IsSwimming)
-			{
-				IsSwimming = true;
-				Network?.EntityAction((int)EntityId, EntityAction.StartSwimming);
-			}
-			else if (!swimming && IsSwimming)
-			{
-				IsSwimming = false;
-				Network?.EntityAction((int)EntityId, EntityAction.StopSwimming);
-			}
-		}
-
-		/// <inheritdoc />
-		public override void SetFlying(bool flying)
-		{
-			if (!CanFly && flying)
-			{
-				IsFlying = false;
-
-				return;
-			}
-
-			if (flying && !IsFlying)
-			{
-				IsFlying = true;
-				Network?.EntityAction((int)EntityId, EntityAction.StartFlying);
-			}
-			else if (!flying && IsFlying)
-			{
-				IsFlying = false;
-				Network?.EntityAction((int)EntityId, EntityAction.StopFlying);
-			}
-		}
-
-		/// <inheritdoc />
-		public override void SetSprinting(bool sprinting)
-		{
-			bool wasSprinting = IsSprinting;
-			base.SetSprinting(sprinting);
-
-			/*if (wasSprinting && !IsSprinting)
-			{
-				Network?.EntityAction((int)EntityId, EntityAction.StopSprinting);
-			}
-			else if (!wasSprinting && IsSprinting)
-			{
-				Network?.EntityAction((int)EntityId, EntityAction.StartSprinting);
-			}*/
-		}
 
 		// public BlockCoordinates SpawnPoint { get; set; } = BlockCoordinates.Zero;
 
@@ -200,6 +148,58 @@ namespace Alex.Entities
 					Alex.Instance.GuiManager.HideDialog(activeDialog);
 				}
 			}
+		}
+		
+		public override void SetSwimming(bool swimming)
+		{
+			if (swimming && !IsSwimming)
+			{
+				IsSwimming = true;
+				Network?.EntityAction((int)EntityId, EntityAction.StartSwimming);
+			}
+			else if (!swimming && IsSwimming)
+			{
+				IsSwimming = false;
+				Network?.EntityAction((int)EntityId, EntityAction.StopSwimming);
+			}
+		}
+
+		/// <inheritdoc />
+		public override void SetFlying(bool flying)
+		{
+			if (!CanFly && flying)
+			{
+				IsFlying = false;
+
+				return;
+			}
+
+			if (flying && !IsFlying)
+			{
+				IsFlying = true;
+				Network?.EntityAction((int)EntityId, EntityAction.StartFlying);
+			}
+			else if (!flying && IsFlying)
+			{
+				IsFlying = false;
+				Network?.EntityAction((int)EntityId, EntityAction.StopFlying);
+			}
+		}
+
+		/// <inheritdoc />
+		public override void SetSprinting(bool sprinting)
+		{
+			bool wasSprinting = IsSprinting;
+			base.SetSprinting(sprinting);
+
+			/*if (wasSprinting && !IsSprinting)
+			{
+				Network?.EntityAction((int)EntityId, EntityAction.StopSprinting);
+			}
+			else if (!wasSprinting && IsSprinting)
+			{
+				Network?.EntityAction((int)EntityId, EntityAction.StartSprinting);
+			}*/
 		}
 
 		/// <inheritdoc />

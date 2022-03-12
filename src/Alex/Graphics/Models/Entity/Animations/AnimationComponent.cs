@@ -87,6 +87,45 @@ namespace Alex.Graphics.Models.Entity.Animations
 					}
 				}
 
+				if (definition.Textures != null)
+				{
+					Dictionary<string, IMoValue> textureBuilder =
+						new Dictionary<string, IMoValue>(StringComparer.OrdinalIgnoreCase);
+					foreach (var texture in definition.Textures)
+					{
+						textureBuilder.TryAdd(texture.Key, new StringValue(texture.Value));
+					}
+					var texturesStruct = new VariableStruct(textureBuilder);
+					if (!Entity.Structs.TryAdd("texture", texturesStruct))
+						Entity.Structs["texture"] = texturesStruct;
+				}
+				
+				if (definition.Geometry != null)
+				{
+					Dictionary<string, IMoValue> textureBuilder =
+						new Dictionary<string, IMoValue>(StringComparer.OrdinalIgnoreCase);
+					foreach (var texture in definition.Geometry)
+					{
+						textureBuilder.TryAdd(texture.Key, new StringValue(texture.Value));
+					}
+					var texturesStruct = new VariableStruct(textureBuilder);
+					if (!Entity.Structs.TryAdd("geometry", texturesStruct))
+						Entity.Structs["geometry"] = texturesStruct;
+				}
+				
+				if (definition.Materials != null)
+				{
+					Dictionary<string, IMoValue> textureBuilder =
+						new Dictionary<string, IMoValue>(StringComparer.OrdinalIgnoreCase);
+					foreach (var texture in definition.Materials)
+					{
+						textureBuilder.TryAdd(texture.Key, new StringValue(texture.Value));
+					}
+					var texturesStruct = new VariableStruct(textureBuilder);
+					if (!Entity.Structs.TryAdd("material", texturesStruct))
+						Entity.Structs["material"] = texturesStruct;
+				}
+
 				if (definition.Animations != null)
 					LoadAnimations(animationProvider, definition.Animations);
 

@@ -164,38 +164,47 @@ namespace Alex
 			return true;
 		}
 
+		private SemaphoreSlim _reloadSemaphore = new SemaphoreSlim(1, 1);
 		internal void ReloadBedrockResources(IProgressReceiver progress)
 		{
-			Alex.ParticleManager.Reset();
-			EntityFactory.Reset();
+			_reloadSemaphore.Wait();
 
-			var activeBedrockPacks = ActiveBedrockResourcePacks.ToArray();
-
-			ProcessEntityModels(progress, activeBedrockPacks);
-
-			for (int index = 0; index < activeBedrockPacks.Length; index++)
+			try
 			{
-				var resourcePack = activeBedrockPacks[index];
+				Alex.ParticleManager.Reset();
+				EntityFactory.Reset();
 
-				Log.Debug($"== Start Processing \"{resourcePack.Info.Name}\" ==");
+				var activeBedrockPacks = ActiveBedrockResourcePacks.ToArray();
 
-				int audioCount = Alex.AudioEngine.Initialize(resourcePack, progress);
-				Log.Debug($"Imported {audioCount} sounds from \"{resourcePack.Info.Name}\"...");
+				ProcessEntityModels(progress, activeBedrockPacks);
 
-				int modelCount = EntityFactory.LoadEntityDefinitions(resourcePack, true, progress);
-				Log.Debug($"Imported {modelCount} entity definitions from \"{resourcePack.Info.Name}\"...");
+				for (int index = 0; index < activeBedrockPacks.Length; index++)
+				{
+					var resourcePack = activeBedrockPacks[index];
 
-				int particleCount = Alex.ParticleManager.Load(resourcePack, progress);
-				Log.Debug($"Imported {particleCount} particles from \"{resourcePack.Info.Name}\"...");
+					Log.Debug($"== Start Processing \"{resourcePack.Info.Name}\" ==");
 
-				Log.Debug($"== End Processing \"{resourcePack.Info.Name}\" ==\n");
+					int audioCount = Alex.AudioEngine.Initialize(resourcePack, progress);
+					Log.Debug($"Imported {audioCount} sounds from \"{resourcePack.Info.Name}\"...");
+
+					int modelCount = EntityFactory.LoadEntityDefinitions(resourcePack, true, progress);
+					Log.Debug($"Imported {modelCount} entity definitions from \"{resourcePack.Info.Name}\"...");
+
+					int particleCount = Alex.ParticleManager.Load(resourcePack, progress);
+					Log.Debug($"Imported {particleCount} particles from \"{resourcePack.Info.Name}\"...");
+
+					Log.Debug($"== End Processing \"{resourcePack.Info.Name}\" ==\n");
+				}
+
+				progress?.UpdateProgress(0, $"Loading UI textures...");
+				Alex.GuiRenderer.LoadResourcePackTextures(this, progress);
+				Alex.GuiManager.Reinitialize();
+				Alex.ServiceContainer.GetRequiredService<GuiPanoramaSkyBox>().LoadTextures(Alex.GuiRenderer);
 			}
-
-			progress?.UpdateProgress(0, $"Loading UI textures...");
-			Alex.GuiRenderer.LoadResourcePackTextures(this, progress);
-			Alex.GuiManager.Reinitialize();
-			Alex.ServiceContainer.GetRequiredService<GuiPanoramaSkyBox>().LoadTextures(Alex.GuiRenderer);
-
+			finally
+			{
+				_reloadSemaphore.Release();
+			}
 			//  GenerateTextureAtlases(Alex.GraphicsDevice, progress);
 		}
 

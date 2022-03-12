@@ -15,6 +15,8 @@ using MiNET.Worlds;
 using Newtonsoft.Json;
 using NLog;
 using RocketUI;
+using SixLabors.ImageSharp.PixelFormats;
+using Image = SixLabors.ImageSharp.Image;
 
 namespace Alex.Gamestates.Singleplayer;
 
@@ -269,10 +271,16 @@ public class WorldListEntry : ListItem
 	{
 		base.OnInit(renderer);
 
-		if (WorldInfo.IconData != null)
+		if (WorldInfo.IconData != null && WorldInfo.IconData.Length > 0)
 		{
-			_texture = TextureUtils.ImageToTexture2D(this, Alex.Instance.GraphicsDevice, WorldInfo.IconData);
-			_serverIcon.Texture = _texture;
+			var image = Image.Load<Rgba32>(WorldInfo.IconData);
+
+			TextureUtils.BitmapToTexture2DAsync(this, Alex.Instance.GraphicsDevice, image, texture =>
+			{
+				_texture = texture;
+				_serverIcon.Texture = _texture;
+				image.Dispose();
+			});
 		}
 		else
 		{

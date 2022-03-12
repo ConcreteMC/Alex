@@ -116,15 +116,6 @@ namespace Alex.Graphics.Models.Blocks
 
 			var pos = position + face.GetBlockCoordinates();
 
-			/*var cX = (int)pos.X & 0xf;
-			var cZ = (int)pos.Z & 0xf;
-
-			if (cX < 0 || cX > 16)
-				return false;
-
-			if (cZ < 0 || cZ > 16)
-				return false;*/
-
 			var theBlock = world.GetBlockState(pos)?.Block;
 
 			if (theBlock == null || !theBlock.Renderable)
@@ -137,10 +128,6 @@ namespace Alex.Graphics.Models.Blocks
 		private IEnumerable<BoundingBox> GenerateBoundingBoxes(BlockStateModel stateModel,
 			ResourcePackLib.Json.Models.ResourcePackModelBase model)
 		{
-			//float facesMinX = float.MaxValue, facesMinY = float.MaxValue, facesMinZ = float.MaxValue;
-			//	float facesMaxX = float.MinValue, facesMaxY = float.MinValue, facesMaxZ = float.MinValue;
-
-			//List<BoundingBox> boxes = new List<BoundingBox>();
 			for (var index = 0; index < model.Elements.Length; index++)
 			{
 				var eMinX = float.MaxValue;
@@ -222,10 +209,8 @@ namespace Alex.Graphics.Models.Blocks
 					eMaxZ = Math.Max(eMaxZ, maxZ);
 				}
 
-				//yield return new BoundingBox(FixRotation(element.From, element, stateModel) / 16, FixRotation(element.To, element,stateModel) / 16);
 				yield return new BoundingBox(new Vector3(eMinX, eMinY, eMinZ), new Vector3(eMaxX, eMaxY, eMaxZ));
 			}
-			//return boxes.ToArray();
 		}
 
 		private Vector3 FixRotation(Vector3 v, ModelElement element, BlockStateModel bsModel)
@@ -394,12 +379,7 @@ namespace Alex.Graphics.Models.Blocks
 							v.TexCoords.Y = 0.5f * th + (y * c + x * s);
 						}
 					}
-
-					//v.TexCoords += uvMap.Value.TextureInfo.Position;
-					//	textureCoordinates *= (Vector2.One / uvMap.Value.TextureInfo.AtlasSize);
 				}
-
-				//v.TexCoords = textureCoordinates;
 
 				v.Position /= 16f;
 				v.Face = blockFace;
@@ -425,7 +405,6 @@ namespace Alex.Graphics.Models.Blocks
 				element.To *= Scale;
 				element.From *= Scale;
 
-				//var faces = element.Faces.ToArray();
 				foreach (var face in element.Faces)
 				{
 					var facing = face.Key;
@@ -566,7 +545,6 @@ namespace Alex.Graphics.Models.Blocks
 
 					BlockTextureData uvMap = GetTextureUVMap(
 						Resources, face.Value.Texture, x1, x2, y1, y2, face.Value.Rotation, faceColor, null);
-					//uvMap.Rotate(face.Value.Rotation);
 
 					var vertices = GetFaceVertices(face.Key, element.From, element.To, uvMap);
 
@@ -672,8 +650,7 @@ namespace Alex.Graphics.Models.Blocks
 					var weightSum = baseBlock.ModelData.Sum(x => x.Weight);
 
 					var rnd = weightSum;
-
-					//for (var index = 0; index < Models.Length; index++)
+					
 					foreach (var model in baseBlock.ModelData)
 					{
 						//	var model = Models[index];
@@ -699,8 +676,6 @@ namespace Alex.Graphics.Models.Blocks
 				{
 					yield return new BlockStateModelWrapper(selectedModel, registryEntry.Value);
 				}
-
-				//	CalculateModel(world, blockCoordinates, chunkBuilder, position, baseBlock, selectedModel.BlockStateModel, selectedModel.BlockModel, biome);
 			}
 		}
 
@@ -740,10 +715,8 @@ namespace Alex.Graphics.Models.Blocks
 					var rnd = ((baseBlock.ModelData.Count == 1) ? 1f : MathF.Abs(
 						NoiseGenerator.GetValue(position.X * position.Y, position.Z * position.X))) * weightSum;
 
-					//for (var index = 0; index < Models.Length; index++)
 					foreach (var model in baseBlock.ModelData)
 					{
-						//	var model = Models[index];
 						rnd -= model.Weight;
 
 						if (rnd < 0)
@@ -767,19 +740,7 @@ namespace Alex.Graphics.Models.Blocks
 					CalculateModel(
 						world, chunkBuilder, position, baseBlock.Block, selectedModel, registryEntry.Value, biome);
 				}
-
-				//	CalculateModel(world, blockCoordinates, chunkBuilder, position, baseBlock, selectedModel.BlockStateModel, selectedModel.BlockModel, biome);
 			}
-			//else
-			//{
-			//for (var bsModelIndex = 0; bsModelIndex < Models.Length; bsModelIndex++)
-			//{
-			//var bsModel = Models[bsModelIndex];
-
-			//	if (string.IsNullOrWhiteSpace(bsModel.ModelName)) continue;
-
-			//}
-			//}
 		}
 	}
 }

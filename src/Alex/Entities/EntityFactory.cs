@@ -173,6 +173,10 @@ namespace Alex.Entities
 			IProgressReceiver progressReceiver = null)
 		{
 			var entityDefinitions = resourcePack.EntityDefinitions;
+
+			if (entityDefinitions == null)
+				return 0;
+			
 			var beforeImport = _registeredRenderers.Count;
 			int done = 0;
 			int total = entityDefinitions.Count;

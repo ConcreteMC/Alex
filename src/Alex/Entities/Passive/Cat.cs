@@ -7,35 +7,15 @@ namespace Alex.Entities.Passive
 {
 	public class Cat : TameableMob
 	{
-		private CatType _variant = CatType.Black;
-
-		public CatType Variant
+		public CatType CatVariant
 		{
 			get
 			{
-				return _variant;
+				return (CatType)base.Variant;
 			}
 			set
 			{
-				_variant = value;
-
-				string stringType = value.ToString().ToLower();
-
-				if (value == CatType.BritishShorthair)
-				{
-					stringType = "british";
-				}
-				else if (value == CatType.AllBlack)
-				{
-					stringType = "all_black";
-				}
-
-				if (IsTamed)
-				{
-					stringType = $"{stringType}_tame";
-				}
-
-				//TryUpdateTexture("minecraft:cat", stringType);
+				base.Variant = (int) value;
 			}
 		}
 
@@ -53,7 +33,7 @@ namespace Alex.Entities.Passive
 
 			if (entry.Index == 19 && entry is MetadataVarInt varInt)
 			{
-				Variant = (CatType)varInt.Value;
+				CatVariant = (CatType)varInt.Value;
 			}
 		}
 
