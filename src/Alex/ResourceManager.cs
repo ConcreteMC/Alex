@@ -15,6 +15,7 @@ using Alex.Blocks.Mapping;
 using Alex.Blocks.Minecraft;
 using Alex.Blocks.State;
 using Alex.Common.Graphics.GpuResources;
+using Alex.Common.Graphics.Typography;
 using Alex.Common.Resources;
 using Alex.Common.Services;
 using Alex.Common.Utils;
@@ -50,11 +51,21 @@ using ResourceLocation = Alex.Common.Resources.ResourceLocation;
 
 namespace Alex
 {
+	public class FontsLoadedEventArgs : EventArgs
+	{
+		public BitmapFontSource[] FontSources { get; }
+
+		public FontsLoadedEventArgs(BitmapFontSource[] fontSources)
+		{
+			FontSources = fontSources;
+		}
+	}
 	public class ResourceManager : ITextureProvider
 	{
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(ResourceManager));
 
-		private LinkedList<MCJavaResourcePack> ActiveResourcePacks { get; } = new LinkedList<MCJavaResourcePack>();
+		private LinkedList<ResourcePack> ActiveResourcePacks { get; } = new LinkedList<ResourcePack>();
+		private LinkedList<MCJavaResourcePack> ActiveJavaResourcePacks { get; } = new LinkedList<MCJavaResourcePack>();
 
 		private LinkedList<MCBedrockResourcePack> ActiveBedrockResourcePacks { get; } =
 			new LinkedList<MCBedrockResourcePack>();
@@ -86,6 +97,7 @@ namespace Alex
 		public static Texture2D NethergamesLogo { get; private set; }
 
 		public EventHandler OnResourcesReloaded;
+		public EventHandler<FontsLoadedEventArgs> OnFontsLoaded;
 
 		public ResourceManager(IStorageSystem storage,
 			IOptionsProvider optionsProvider,
@@ -196,6 +208,8 @@ namespace Alex
 					Log.Debug($"== End Processing \"{resourcePack.Info.Name}\" ==\n");
 				}
 
+				ReloadFonts();
+				
 				progress?.UpdateProgress(0, $"Loading UI textures...");
 				Alex.GuiRenderer.LoadResourcePackTextures(this, progress);
 				Alex.GuiManager.Reinitialize();
@@ -206,6 +220,14 @@ namespace Alex
 				_reloadSemaphore.Release();
 			}
 			//  GenerateTextureAtlases(Alex.GraphicsDevice, progress);
+		}
+
+		private void ReloadFonts()
+		{
+			var f = ActiveResourcePacks.Where(x => x is IFontSourceProvider fontSourceProvider && fontSourceProvider.FontSources != null && fontSourceProvider.FontSources.Length > 0).Cast<IFontSourceProvider>().SelectMany(x => x.FontSources).ToArray();
+			//var f2 = ActiveBedrockResourcePacks.Where(x => x is IFontSourceProvider fontSourceProvider && fontSourceProvider.FontSources != null && fontSourceProvider.FontSources.Length > 0).Cast<IFontSourceProvider>().SelectMany(x => x.FontSources).ToArray();
+			OnFontsLoaded?.Invoke(this, new FontsLoadedEventArgs(f));
+			
 		}
 
 		internal bool Remove(ResourcePack resourcePack)
@@ -219,7 +241,7 @@ namespace Alex
 			}
 			else if (resourcePack.Info.Type == ResourcePackType.Java)
 			{
-				if (ActiveResourcePacks.Remove((MCJavaResourcePack)resourcePack))
+				if (ActiveJavaResourcePacks.Remove((MCJavaResourcePack)resourcePack))
 				{
 					return true;
 				}
@@ -239,6 +261,7 @@ namespace Alex
 					var pack = (MCBedrockResourcePack)resourcePack;
 					pack.ContentKey = contentKey;
 
+					ActiveResourcePacks.AddLast(pack);
 					ActiveBedrockResourcePacks.AddLast(pack);
 
 					yield return pack;
@@ -248,7 +271,7 @@ namespace Alex
 
 		private IEnumerable<ResourcePack> LoadResourcePack(IProgressReceiver progressReceiver,
 			IFilesystem fs,
-			MCJavaResourcePack.McResourcePackPreloadCallback preloadCallback = null)
+			McResourcePackPreloadCallback preloadCallback = null)
 		{
 			Stopwatch sw = Stopwatch.StartNew();
 
@@ -438,11 +461,11 @@ namespace Alex
 
 		public DirectoryInfo SkinPackDirectory { get; private set; } = null;
 		public DirectoryInfo ResourcePackDirectory { get; private set; } = null;
-		private MCJavaResourcePack.McResourcePackPreloadCallback PreloadCallback { get; set; }
+		private McResourcePackPreloadCallback PreloadCallback { get; set; }
 
 		public bool CheckResources(GraphicsDevice device,
 			IProgressReceiver progressReceiver,
-			MCJavaResourcePack.McResourcePackPreloadCallback preloadCallback)
+			McResourcePackPreloadCallback preloadCallback)
 		{
 			PreloadCallback = preloadCallback;
 
@@ -492,7 +515,7 @@ namespace Alex
 
 		private bool ProcessResourcePacks(GraphicsDevice device,
 			IProgressReceiver progressReceiver,
-			MCJavaResourcePack.McResourcePackPreloadCallback preloadCallback)
+			McResourcePackPreloadCallback preloadCallback)
 		{
 			string defaultResources;
 			string defaultBedrock;
@@ -515,13 +538,15 @@ namespace Alex
 			ItemAtlas.Reset();
 
 			bool wasInit = _hasInit;
+			
+			ActiveResourcePacks.Clear();
 
-			foreach (var active in ActiveResourcePacks.ToArray())
+			foreach (var active in ActiveJavaResourcePacks.ToArray())
 			{
 				active?.Dispose();
 			}
 
-			ActiveResourcePacks.Clear();
+			ActiveJavaResourcePacks.Clear();
 
 			foreach (var active in ActiveBedrockResourcePacks.ToArray())
 			{
@@ -557,7 +582,8 @@ namespace Alex
 					if (pack.Info != null && string.IsNullOrWhiteSpace(pack.Info.Name))
 						pack.Info.Name = "Vanilla";
 
-					ActiveResourcePacks.AddLast((MCJavaResourcePack)pack);
+					ActiveJavaResourcePacks.AddLast((MCJavaResourcePack)pack);
+					ActiveResourcePacks.AddLast(pack);
 				}
 				else if (pack.Info.Type == ResourcePackType.Bedrock)
 				{
@@ -565,6 +591,7 @@ namespace Alex
 						pack.Info.Name = "Vanilla Bedrock";
 
 					ActiveBedrockResourcePacks.AddLast((MCBedrockResourcePack)pack);
+					ActiveResourcePacks.AddLast(pack);
 				}
 			}
 
@@ -590,6 +617,7 @@ namespace Alex
 							if (pack is MCBedrockResourcePack bedrockPack)
 							{
 								ActiveBedrockResourcePacks.AddLast(bedrockPack);
+								ActiveResourcePacks.AddLast(bedrockPack);
 							}
 						}
 						else if (pack.Info.Type == ResourcePackType.Java)
@@ -601,6 +629,7 @@ namespace Alex
 									pack.Info.Name = Path.GetFileNameWithoutExtension(file);
 								}
 
+								ActiveJavaResourcePacks.AddLast(javaPack);
 								ActiveResourcePacks.AddLast(javaPack);
 							}
 						}
@@ -612,7 +641,7 @@ namespace Alex
 				}
 			}
 
-			foreach (var resourcePack in ActiveResourcePacks)
+			foreach (var resourcePack in ActiveJavaResourcePacks)
 				Alex.GuiRenderer.LoadLanguages(resourcePack, progressReceiver);
 
 			progressReceiver?.UpdateProgress(50, "Loading language...");
@@ -633,7 +662,7 @@ namespace Alex
 			ReloadBedrockResources(progressReceiver);
 
 			progressReceiver?.UpdateProgress(0, "Processing block models...");
-			ProcessBlockModels(progressReceiver, ActiveResourcePacks);
+			ProcessBlockModels(progressReceiver, ActiveJavaResourcePacks);
 
 			EntityFactory.Load(this, progressReceiver);
 
@@ -649,12 +678,7 @@ namespace Alex
 
 			BlockEntityFactory.LoadResources(device, this);
 
-			var f = ActiveResourcePacks.LastOrDefault(x => x.FontBitmap != null);
-
-			if (f != null)
-			{
-				PreloadCallback?.Invoke(f.FontBitmap, MCJavaResourcePack.BitmapFontCharacters);
-			}
+			ReloadFonts();
 
 			if (wasInit)
 			{
@@ -801,7 +825,7 @@ namespace Alex
 			Dictionary<ResourceLocation, ResourcePackModelBase> models =
 				new Dictionary<ResourceLocation, ResourcePackModelBase>();
 
-			var active = ActiveResourcePacks.ToArray();
+			var active = ActiveJavaResourcePacks.ToArray();
 
 			foreach (var resourcePack in active)
 			{
@@ -973,7 +997,7 @@ namespace Alex
 		{
 			bitmap = null;
 
-			foreach (var resourcePack in ActiveResourcePacks.Reverse())
+			foreach (var resourcePack in ActiveJavaResourcePacks.Reverse())
 			{
 				if (resourcePack.TryGetBitmap(location, out var f))
 				{
@@ -991,7 +1015,7 @@ namespace Alex
 		{
 			meta = null;
 
-			foreach (var resourcePack in ActiveResourcePacks.Reverse())
+			foreach (var resourcePack in ActiveJavaResourcePacks.Reverse())
 			{
 				if (resourcePack.TryGetTextureMeta(location, out var f))
 				{
@@ -1085,7 +1109,7 @@ namespace Alex
 		{
 			resource = null;
 
-			foreach (var resourcePack in ActiveResourcePacks.Reverse())
+			foreach (var resourcePack in ActiveJavaResourcePacks.Reverse())
 			{
 				if (resourcePack.TryGetBlockState(location, out resource))
 				{
@@ -1098,7 +1122,7 @@ namespace Alex
 
 		public Microsoft.Xna.Framework.Color GetGrassColor(float temp, float rain, int elevation)
 		{
-			foreach (var resourcePack in ActiveResourcePacks.Reverse())
+			foreach (var resourcePack in ActiveJavaResourcePacks.Reverse())
 			{
 				if (resourcePack.TryGetGrassColor(temp, rain, elevation, out var color))
 				{
@@ -1111,7 +1135,7 @@ namespace Alex
 
 		public Microsoft.Xna.Framework.Color GetFoliageColor(float temp, float rain, int elevation)
 		{
-			foreach (var resourcePack in ActiveResourcePacks.Reverse())
+			foreach (var resourcePack in ActiveJavaResourcePacks.Reverse())
 			{
 				if (resourcePack.TryGetFoliageColor(temp, rain, elevation, out var color))
 				{

@@ -367,7 +367,8 @@ namespace Alex
 			var builtInFont = ResourceManager.ReadResource("Alex.Resources.default_font.png");
 
 			var image = Image.Load<Rgba32>(builtInFont);
-			OnResourcePackPreLoadCompleted(image, MCJavaResourcePack.BitmapFontCharacters);
+			var fontSources = new[] { new BitmapFontSource(image, MCJavaResourcePack.BitmapFontCharacters) };
+			OnResourcePackPreLoadCompleted(fontSources);
 
 			var options = Options;
 
@@ -627,6 +628,20 @@ namespace Alex
 			var previousValue = base.IsFixedTimeStep;
 			base.IsFixedTimeStep = false;
 
+			Resources.OnFontsLoaded += (sender, args) =>
+			{
+				UiTaskManager.Enqueue(
+					() =>
+					{
+						// Font = new BitmapFont(
+						// 	GraphicsDevice, fontBitmap, bitmapCharacters[0].Length, bitmapCharacters.Length,
+						// 	bitmapCharacters);
+						Font = new BitmapFont(GraphicsDevice, args.FontSources);
+
+						GuiManager.ApplyFont(Font);
+					});
+			};
+			
 			if (!Resources.CheckResources(GraphicsDevice, progressReceiver, OnResourcePackPreLoadCompleted))
 			{
 				Console.WriteLine("Press enter to exit...");
@@ -727,17 +742,9 @@ namespace Alex
 			return Task.CompletedTask;
 		}
 
-		private void OnResourcePackPreLoadCompleted(Image<Rgba32> fontBitmap, string[] bitmapCharacters)
+		private void OnResourcePackPreLoadCompleted(BitmapFontSource[] fontSources)
 		{
-			UiTaskManager.Enqueue(
-				() =>
-				{
-					Font = new BitmapFont(
-						GraphicsDevice, fontBitmap, bitmapCharacters[0].Length, bitmapCharacters.Length,
-						bitmapCharacters);
-
-					GuiManager.ApplyFont(Font);
-				});
+		
 		}
 
 		public void ConnectToServer(ServerTypeImplementation serverType,

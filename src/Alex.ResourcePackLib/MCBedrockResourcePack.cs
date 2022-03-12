@@ -2,9 +2,11 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
+using Alex.Common.Graphics.Typography;
 using Alex.Common.Resources;
 using Alex.Common.Utils;
 using Alex.ResourcePackLib.Abstraction;
@@ -31,7 +33,7 @@ using Image = SixLabors.ImageSharp.Image;
 
 namespace Alex.ResourcePackLib
 {
-	public class MCBedrockResourcePack : ResourcePack, ITextureProvider, IAnimationProvider, IRenderControllerProvider,
+	public class MCBedrockResourcePack : ResourcePack, ITextureProvider, IAnimationProvider, IRenderControllerProvider, IFontSourceProvider,
 		IDisposable
 	{
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(MCBedrockResourcePack));
@@ -136,6 +138,8 @@ namespace Alex.ResourcePackLib
 
 			Dictionary<string, Animation> animations = new Dictionary<string, Animation>(StringComparer.Ordinal);
 
+			List<BitmapFontSource> fontSources = new List<BitmapFontSource>();
+			
 			TryAddBitmap("textures/ui/title");
 
 			if (TryLoadMobModels(entityModels))
@@ -213,7 +217,7 @@ namespace Alex.ResourcePackLib
 
 					if (IsFontFile.IsMatch(entry.FullName))
 					{
-						ProcessFontFile(progressReporter, entry);
+						ProcessFontFile(progressReporter, entry, fontSources);
 
 						continue;
 					}
@@ -306,6 +310,7 @@ namespace Alex.ResourcePackLib
 			TryAddBitmap("textures/entity/banner/banner_piglin");
 
 			ProcessEntityDefinitions(entityDefinitions);
+			ProcessBitmapFont(fontSources);
 
 			EntityModels = entityModels;
 			EntityDefinitions = entityDefinitions.ToDictionary(x => new ResourceLocation(x.Key), v => v.Value);
@@ -316,6 +321,11 @@ namespace Alex.ResourcePackLib
 			Attachables = attachableDefinitions;
 		}
 
+		private void ProcessBitmapFont(List<BitmapFontSource> bitmapFontSources)
+		{
+			FontSources = bitmapFontSources.ToArray();
+		}
+		
 		private void ProcessEntityDefinitions(IDictionary<string, EntityDescription> definitions)
 		{
 			foreach (var def in definitions.Values)
@@ -745,13 +755,24 @@ namespace Alex.ResourcePackLib
 			}
 		}
 
-		private void ProcessFontFile(ResourcePack.LoadProgress progress, IFile entry)
+		private void ProcessFontFile(LoadProgress progress, IFile entry, List<BitmapFontSource> bitmapFontSources)
 		{
 			//TODO: Process server sent custom font glyph files (glyph_E1 starts at E100 in unicode, so \uE100)
-			return;
 			var image = TryLoad(entry.FullName);
 
-			if (image != null) { }
+			if (image != null)
+			{
+				if (entry.Name.StartsWith("glyph_"))
+				{
+					var startChar = entry.Name.Substring("glyph_".Length, 2);
+					var numeric = int.Parse($"{startChar}00", NumberStyles.HexNumber);
+					bitmapFontSources.Add(new BitmapFontSource(image, (char)numeric));
+				}
+				else
+				{
+					bitmapFontSources.Add(new BitmapFontSource(image, MCJavaResourcePack.BitmapFontCharacters));
+				}
+			}
 		}
 
 		private bool TryAddBitmap(string path)
@@ -862,5 +883,7 @@ namespace Alex.ResourcePackLib
 		{
 			return RenderControllers.TryGetValue(key, out renderController);
 		}
+
+		public BitmapFontSource[] FontSources { get; private set; }
 	}
 }
