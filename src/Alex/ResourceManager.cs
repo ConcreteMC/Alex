@@ -247,7 +247,8 @@ namespace Alex
 			   .Cast<IFontSourceProvider>().SelectMany(x => x.FontSources).ToArray();*/
 
 			//var f2 = ActiveBedrockResourcePacks.Where(x => x is IFontSourceProvider fontSourceProvider && fontSourceProvider.FontSources != null && fontSourceProvider.FontSources.Length > 0).Cast<IFontSourceProvider>().SelectMany(x => x.FontSources).ToArray();
-			OnFontsLoaded?.Invoke(this, new FontsLoadedEventArgs(fontSources.ToArray()));
+			if(fontSources.Count > 0)
+				OnFontsLoaded?.Invoke(this, new FontsLoadedEventArgs(fontSources.ToArray()));
 		}
 
 		internal bool Remove(ResourcePack resourcePack)

@@ -46,6 +46,7 @@ namespace Alex.ResourcePackLib.IO
 		/// <inheritdoc />
 		public IFile GetEntry(string name)
 		{
+			name = DiskFileSystem.NormalizePath(name);
 			return _entries.FirstOrDefault(x => x.FullName == name);
 		}
 
