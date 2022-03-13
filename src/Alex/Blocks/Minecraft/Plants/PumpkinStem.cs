@@ -1,15 +1,13 @@
 using Alex.Blocks.Materials;
 
-namespace Alex.Blocks.Minecraft
+namespace Alex.Blocks.Minecraft.Plants
 {
-	public class Tulip : FlowerBase
+	public class PumpkinStem : Block
 	{
-		public Tulip()
+		public PumpkinStem() : base()
 		{
 			Solid = false;
 			Transparent = true;
-
-			IsFullCube = false;
 
 			BlockMaterial = Material.Plants;
 		}

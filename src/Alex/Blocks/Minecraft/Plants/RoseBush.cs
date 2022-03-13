@@ -1,15 +1,14 @@
 ﻿using Alex.Blocks.Materials;
 
-namespace Alex.Blocks.Minecraft
+namespace Alex.Blocks.Minecraft.Plants
 {
-	public class AzureBluet : FlowerBase
+	public class RoseBush : Block
 	{
-		public AzureBluet()
+		public RoseBush()
 		{
-			Transparent = true;
 			Solid = false;
+			Transparent = true;
 			IsFullCube = false;
-
 			BlockMaterial = Material.Plants;
 		}
 	}

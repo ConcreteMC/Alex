@@ -14,6 +14,8 @@ using Alex.ResourcePackLib.Json.Bedrock.Entity;
 using Alex.ResourcePackLib.Json.Bedrock.MoLang;
 using ConcreteMC.MolangSharp.Parser;
 using ConcreteMC.MolangSharp.Parser.Expressions;
+using ConcreteMC.MolangSharp.Parser.Expressions.BinaryOp;
+using ConcreteMC.MolangSharp.Parser.Visitors;
 using ConcreteMC.MolangSharp.Runtime;
 using ConcreteMC.MolangSharp.Runtime.Exceptions;
 using ConcreteMC.MolangSharp.Runtime.Struct;

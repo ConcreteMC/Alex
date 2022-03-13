@@ -14,9 +14,9 @@ namespace Alex.Networking.Java.Util
 		public IBufferedCipher ReadCipher { get; }
 		public IBufferedCipher WriteCipher { get; }
 
-		private byte[] mInBuf;
-		private int mInPos;
-		private bool inStreamEnded;
+		private byte[] _mInBuf;
+		private int _mInPos;
+		private bool _inStreamEnded;
 		public override bool CanRead => Stream.CanRead && (ReadCipher != null);
 
 		public override bool CanWrite => Stream.CanWrite && (WriteCipher != null);
@@ -29,7 +29,7 @@ namespace Alex.Networking.Java.Util
 			if (readCipher != null)
 			{
 				this.ReadCipher = readCipher;
-				mInBuf = null;
+				_mInBuf = null;
 			}
 
 			if (writeCipher != null)
@@ -45,13 +45,13 @@ namespace Alex.Networking.Java.Util
 			if (ReadCipher == null)
 				return Stream.ReadByte();
 
-			if (mInBuf == null || mInPos >= mInBuf.Length)
+			if (_mInBuf == null || _mInPos >= _mInBuf.Length)
 			{
 				if (!FillInBuf())
 					return -1;
 			}
 
-			return mInBuf[mInPos++];
+			return _mInBuf[_mInPos++];
 		}
 
 		public override int Read(byte[] buffer, int offset, int count)
@@ -63,15 +63,15 @@ namespace Alex.Networking.Java.Util
 
 			while (num < count)
 			{
-				if (mInBuf == null || mInPos >= mInBuf.Length)
+				if (_mInBuf == null || _mInPos >= _mInBuf.Length)
 				{
 					if (!FillInBuf())
 						break;
 				}
 
-				int numToCopy = System.Math.Min(count - num, mInBuf.Length - mInPos);
-				Array.Copy(mInBuf, mInPos, buffer, offset + num, numToCopy);
-				mInPos += numToCopy;
+				int numToCopy = System.Math.Min(count - num, _mInBuf.Length - _mInPos);
+				Array.Copy(_mInBuf, _mInPos, buffer, offset + num, numToCopy);
+				_mInPos += numToCopy;
 				num += numToCopy;
 			}
 
@@ -81,17 +81,17 @@ namespace Alex.Networking.Java.Util
 
 		private bool FillInBuf()
 		{
-			if (inStreamEnded)
+			if (_inStreamEnded)
 				return false;
 
-			mInPos = 0;
+			_mInPos = 0;
 
 			do
 			{
-				mInBuf = ReadAndProcessBlock();
-			} while (!inStreamEnded && mInBuf == null);
+				_mInBuf = ReadAndProcessBlock();
+			} while (!_inStreamEnded && _mInBuf == null);
 
-			return mInBuf != null;
+			return _mInBuf != null;
 		}
 
 		private byte[] ReadAndProcessBlock()
@@ -108,7 +108,7 @@ namespace Alex.Networking.Java.Util
 
 				if (count < 1)
 				{
-					inStreamEnded = true;
+					_inStreamEnded = true;
 
 					break;
 				}
@@ -116,9 +116,9 @@ namespace Alex.Networking.Java.Util
 				numRead += count;
 			} while (numRead < block.Length);
 
-			Debug.Assert(inStreamEnded || numRead == block.Length);
+			Debug.Assert(_inStreamEnded || numRead == block.Length);
 
-			byte[] bytes = inStreamEnded ? ReadCipher.DoFinal(block, 0, numRead) : ReadCipher.ProcessBytes(block);
+			byte[] bytes = _inStreamEnded ? ReadCipher.DoFinal(block, 0, numRead) : ReadCipher.ProcessBytes(block);
 
 			if (bytes != null && bytes.Length == 0)
 			{
@@ -209,17 +209,17 @@ namespace Alex.Networking.Java.Util
 
 		private async Task<bool> FillInBufAsync()
 		{
-			if (inStreamEnded)
+			if (_inStreamEnded)
 				return false;
 
-			mInPos = 0;
+			_mInPos = 0;
 
 			do
 			{
-				mInBuf = await ReadAndProcessBlockAsync();
-			} while (!inStreamEnded && mInBuf == null);
+				_mInBuf = await ReadAndProcessBlockAsync();
+			} while (!_inStreamEnded && _mInBuf == null);
 
-			return mInBuf != null;
+			return _mInBuf != null;
 		}
 
 		private async Task<byte[]> ReadAndProcessBlockAsync()
@@ -236,7 +236,7 @@ namespace Alex.Networking.Java.Util
 
 				if (count < 1)
 				{
-					inStreamEnded = true;
+					_inStreamEnded = true;
 
 					break;
 				}
@@ -244,9 +244,9 @@ namespace Alex.Networking.Java.Util
 				numRead += count;
 			} while (numRead < block.Length);
 
-			Debug.Assert(inStreamEnded || numRead == block.Length);
+			Debug.Assert(_inStreamEnded || numRead == block.Length);
 
-			byte[] bytes = inStreamEnded ? ReadCipher.DoFinal(block, 0, numRead) : ReadCipher.ProcessBytes(block);
+			byte[] bytes = _inStreamEnded ? ReadCipher.DoFinal(block, 0, numRead) : ReadCipher.ProcessBytes(block);
 
 			if (bytes != null && bytes.Length == 0)
 			{
@@ -283,7 +283,7 @@ namespace Alex.Networking.Java.Util
 
 			while (num < count)
 			{
-				if (mInBuf == null || mInPos >= mInBuf.Length)
+				if (_mInBuf == null || _mInPos >= _mInBuf.Length)
 				{
 					if (!await FillInBufAsync())
 						break;
@@ -292,9 +292,9 @@ namespace Alex.Networking.Java.Util
 				if (cancellationToken.IsCancellationRequested)
 					break;
 
-				int numToCopy = Math.Min(count - num, mInBuf.Length - mInPos);
-				Array.Copy(mInBuf, mInPos, buffer, offset + num, numToCopy);
-				mInPos += numToCopy;
+				int numToCopy = Math.Min(count - num, _mInBuf.Length - _mInPos);
+				Array.Copy(_mInBuf, _mInPos, buffer, offset + num, numToCopy);
+				_mInPos += numToCopy;
 				num += numToCopy;
 			}
 

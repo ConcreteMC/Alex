@@ -367,8 +367,8 @@ namespace Alex
 			var builtInFont = ResourceManager.ReadResource("Alex.Resources.default_font.png");
 
 			var image = Image.Load<Rgba32>(builtInFont);
-			var fontSources = new[] { new BitmapFontSource(image, MCJavaResourcePack.BitmapFontCharacters) };
-			OnResourcePackPreLoadCompleted(fontSources);
+			
+			LoadFonts(new BitmapFontSource("default", image, MCJavaResourcePack.BitmapFontCharacters, true));
 
 			var options = Options;
 
@@ -616,6 +616,20 @@ namespace Alex
 
 		public GraphicsMetrics Metrics { get; private set; }
 
+		private void LoadFonts(params BitmapFontSource[] sources)
+		{
+			UiTaskManager.Enqueue(
+				() =>
+				{
+					// Font = new BitmapFont(
+					// 	GraphicsDevice, fontBitmap, bitmapCharacters[0].Length, bitmapCharacters.Length,
+					// 	bitmapCharacters);
+					Font = new BitmapFont(GraphicsDevice, sources);
+
+					GuiManager.ApplyFont(Font);
+				});
+		}
+		
 		private Task InitializeGame(IProgressReceiver progressReceiver)
 		{
 			progressReceiver.UpdateProgress(0, "Initializing...");
@@ -630,16 +644,7 @@ namespace Alex
 
 			Resources.OnFontsLoaded += (sender, args) =>
 			{
-				UiTaskManager.Enqueue(
-					() =>
-					{
-						// Font = new BitmapFont(
-						// 	GraphicsDevice, fontBitmap, bitmapCharacters[0].Length, bitmapCharacters.Length,
-						// 	bitmapCharacters);
-						Font = new BitmapFont(GraphicsDevice, args.FontSources);
-
-						GuiManager.ApplyFont(Font);
-					});
+				LoadFonts(args.FontSources);
 			};
 			
 			if (!Resources.CheckResources(GraphicsDevice, progressReceiver, OnResourcePackPreLoadCompleted))

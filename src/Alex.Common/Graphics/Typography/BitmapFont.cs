@@ -7,6 +7,7 @@ using Alex.Common.Utils;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using MiNET.Worlds;
+using NLog;
 using RocketUI;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
@@ -21,18 +22,21 @@ namespace Alex.Common.Graphics.Typography
         public Image<Rgba32> Image { get; }
         public char[] Characters { get; }
         public bool IsAscii { get; }
+        public string Name { get; }
 
-        public BitmapFontSource(Image<Rgba32> image, string[] characters, bool isAscii = false)
+        public BitmapFontSource(string name, Image<Rgba32> image, string[] characters, bool isAscii = false)
         {
+            Name = name;
             Image = image;
             Characters = characters.SelectMany(x => x.ToCharArray()).ToArray();
             IsAscii = isAscii;
         }
 
-        public BitmapFontSource(Image<Rgba32> image, char unicodeStartChar)
+        public BitmapFontSource(string name, Image<Rgba32> image, char unicodeStartChar)
         {
+            Name = name;
             Image = image;
-            Characters = Enumerable.Range(unicodeStartChar, 255)
+            Characters = Enumerable.Range(unicodeStartChar, 256)
                 .Select(x => (char)x)
                 .ToArray();
         }
@@ -93,9 +97,20 @@ namespace Alex.Common.Graphics.Typography
                 AsciiTexture = asciiTexture;
         }*/
 
+        private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(BitmapFont));
         public BitmapFont(GraphicsDevice graphicsDevice, BitmapFontSource[] sources) : this(16, 16, sources.SelectMany(s => s.Characters).Chunk(16).Select(x => new string(x)).ToArray())
         {
-            LoadGlyphs(graphicsDevice, sources);
+            LoadGlyphs(graphicsDevice, sources.Where(
+                x =>
+                {
+                    if (x.Image == null)
+                    {
+                        Log.Warn($"Tried loading null font: {x.Name}");
+                        return false;
+                    }
+
+                    return true;
+                }).ToArray());
         }
 
         public BitmapFont(BitmapFontSource[] sources) : this(16, 16, sources.SelectMany(s => s.Characters).Chunk(16).Select(x => new string(x)).ToArray())
@@ -388,24 +403,20 @@ namespace Alex.Common.Graphics.Typography
 
                     if (firstGlyphOfLine)
                     {
-                        //	offset.X += CharacterSpacing;
                         firstGlyphOfLine = false;
                     }
 
-                    //if (styleRandom)
-                    //{
-                    //	c = 
-                    //}
-
                     p.X = offsetX;
                     p.Y = offsetY;
-                    //var p = new Vector2(offsetX, offsetY);
-                    //var px    = offsetX;
-                    //var py    = offsetY;
+                    
                     var width = glyph.Width + (styleBold ? 1f : 0f) + CharacterSpacing;
 
                     if (glyph.Texture != null)
                     {
+                        var localScale = glyph.Scale * scaleVal * Scale;
+                        var localForegroundColor = styleColor.ForegroundColor * opacity;
+                        var localBackgroundColor = styleColor.BackgroundColor * opacity;
+                        
                         if (dropShadow)
                         {
                             var shadowP = p + Vector2.One;
@@ -415,15 +426,15 @@ namespace Alex.Common.Graphics.Typography
                                 var boldShadowP = Vector2.Transform(shadowP + Vector2.UnitX, transformation);
 
                                 sb.Draw(
-                                    glyph.Texture, boldShadowP, styleColor.BackgroundColor * opacity, rotation,
-                                    originVal, glyph.Scale * scaleVal * Scale, effects, layerDepth);
+                                    glyph.Texture, boldShadowP, localBackgroundColor, rotation,
+                                    originVal, localScale, effects, layerDepth);
                             }
 
                             shadowP = Vector2.Transform(shadowP, transformation);
 
                             sb.Draw(
-                                glyph.Texture, shadowP, styleColor.BackgroundColor * opacity, rotation, originVal,
-                                glyph.Scale * scaleVal * Scale, effects, layerDepth);
+                                glyph.Texture, shadowP, localBackgroundColor, rotation, originVal,
+                                localScale, effects, layerDepth);
                         }
 
                         if (styleBold)
@@ -431,8 +442,8 @@ namespace Alex.Common.Graphics.Typography
                             var boldP = Vector2.Transform(p + Vector2.UnitX, transformation);
 
                             sb.Draw(
-                                glyph.Texture, boldP, styleColor.ForegroundColor * opacity, rotation, originVal,
-                                glyph.Scale * scaleVal * Scale, effects, layerDepth);
+                                glyph.Texture, boldP, localForegroundColor, rotation, originVal,
+                                localScale, effects, layerDepth);
                         }
 
                         /*	if (styleUnderline)
@@ -445,8 +456,8 @@ namespace Alex.Common.Graphics.Typography
                         p = Vector2.Transform(p, transformation);
 
                         sb.Draw(
-                            glyph.Texture, p, styleColor.ForegroundColor * opacity, rotation, originVal,
-                            glyph.Scale * scaleVal * Scale, effects, layerDepth);
+                            glyph.Texture, p, localForegroundColor, rotation, originVal,
+                            localScale, effects, layerDepth);
                     }
 
                     offsetX += width;
@@ -471,11 +482,11 @@ namespace Alex.Common.Graphics.Typography
             if (_isInitialised) return;
             
             Dictionary<char, IFontGlyph> glyphs = new Dictionary<char, IFontGlyph>();
-            var asciiSource = sources.LastOrDefault(x => x.IsAscii);
+            var asciiSource = sources.LastOrDefault(x => x.IsAscii && x.Image != null);
             if (asciiSource != null)
             {
                 AsciiTexture = TextureUtils.BitmapToTexture2D(this, graphics, asciiSource.Image);
-                LoadGlyphs(ref glyphs, asciiSource.Image, AsciiTexture, asciiSource.Characters.Chunk(16).Select(c => new string(c)).ToArray());
+                LoadGlyphs(ref glyphs, asciiSource.Image, AsciiTexture, asciiSource.Characters.Chunk(16).Select(c => new string(c)).ToArray(), false);
             }
 
             var unicodeSources = sources.Where(x => !x.IsAscii).ToArray();
@@ -488,7 +499,7 @@ namespace Alex.Common.Graphics.Typography
                 var texture = TextureUtils.BitmapToTexture2D(this, graphics, source.Image);
                 UnicodeTextures[i] = texture;
 
-                LoadGlyphs(ref glyphs, source.Image, texture, source.Characters.Chunk(16).Select(c => new string(c)).ToArray());
+                LoadGlyphs(ref glyphs, source.Image, texture, source.Characters.Chunk(16).Select(c => new string(c)).ToArray(), true);
             }
 
             Glyphs = glyphs;
@@ -496,19 +507,19 @@ namespace Alex.Common.Graphics.Typography
             _isInitialised = true;
         }
 
-        private void LoadGlyphs(ref Dictionary<char, IFontGlyph> glyphs, Image<Rgba32> bitmap, Texture2D texture, string[] data)
+        private void LoadGlyphs(ref Dictionary<char, IFontGlyph> glyphs, Image<Rgba32> bitmap, Texture2D texture, string[] data, bool isUnicode)
         {
             if (_isInitialised) return;
 
             if (bitmap.DangerousTryGetSinglePixelMemory(out var mem))
             {
                 var rgba = mem.Span;
-                //	bitmap.TryGetSinglePixelSpan(out var rgba);
+                
                 var textureWidth = bitmap.Width;
                 var textureHeight = bitmap.Height;
 
                 var cellHeight = (textureHeight / GridHeight);
-
+                //var cellWidth = (textureWidth / GridWidth);
 
                 for (int line = 0; line < data.Length; line++)
                 {
@@ -519,6 +530,10 @@ namespace Alex.Common.Graphics.Typography
                     for (int i = 0; i < lineCharacters.Length; i++)
                     {
                         var character = lineCharacters[i];
+
+                        if (glyphs.ContainsKey(character))
+                            continue;
+
                         int col = i;
 
                         // Scan the grid cell by pixel column, to determine the
@@ -534,10 +549,12 @@ namespace Alex.Common.Graphics.Typography
 
                             for (var y = cellHeight - 1; y >= 0; y--)
                             {
-                                // width * y + x
-                                //if (textureData[(textureWidth * (row * cellHeight + y)) + (col * cellWidth + x)].A != 0)
-                                //     if (rgba[(col * cellWidth) + x, (row * cellHeight) + y].A != 0)
-                                if (rgba[(textureWidth * (line * cellHeight + y)) + (col * cellWidth + x)].A != 0)
+                                var index = (textureWidth * (line * cellHeight + y)) + (col * cellWidth + x);
+
+                                if (index < 0 || index >= rgba.Length)
+                                    continue;
+
+                                if (rgba[index].A != 0)
                                 {
                                     columnIsEmpty = false;
 
@@ -545,7 +562,7 @@ namespace Alex.Common.Graphics.Typography
                                         height = y;
                                 }
                             }
-
+                            
                             width = x;
 
                             if (!columnIsEmpty)
@@ -553,15 +570,42 @@ namespace Alex.Common.Graphics.Typography
                                 break;
                             }
                         }
+                        
+                        bool rowIsEmpty = true;
+                        for (var y = cellHeight - 1; y >= 0; y--)
+                        {
+                            rowIsEmpty = true;
 
+                            for (var x = cellWidth - 1; x >= 0; x--)
+                            {
+                                var index = (textureWidth * (line * cellHeight + y)) + (col * cellWidth + x);
 
-                        var charWidth = (0.5f + (width * (8.0f / cellWidth)) + 1f);
-                        var charHeight = (0.5f + (height * (8.0f / cellHeight)) + 1f);
+                                if (index < 0 || index >= rgba.Length)
+                                    continue;
+
+                                if (rgba[index].A != 0)
+                                {
+                                    rowIsEmpty = false;
+                                }
+                            }
+                            
+                            height = y;
+
+                            if (!rowIsEmpty)
+                            {
+                                break;
+                            }
+                        }
+
+                        const float multiplier =  8.0f;
+
+                        var charWidth = (0.5f + (width * (multiplier / cellWidth)) + 1f);
+                        var charHeight = (0.5f + (height * (multiplier / cellHeight)) + 1f);
 
                         ++width;
                         ++height;
 
-                        var bounds = new Rectangle(col * cellWidth, line * cellHeight, width, cellHeight);
+                        var bounds = new Rectangle(col * cellWidth, line * cellHeight, width, height);
                         var textureSlice = texture.Slice(bounds);
 
                         if (character == ' ')
@@ -569,11 +613,11 @@ namespace Alex.Common.Graphics.Typography
                             charWidth = 4;
                         }
 
-                        var scale = 128f / textureWidth;
+                        var glyph = new Glyph(
+                            character, textureSlice, charWidth, charHeight,
+                            /*isUnicode ? (charWidth / bounds.Width) : */isUnicode ? charWidth / width : 1f);
 
-                        var glyph = new Glyph(character, textureSlice, charWidth, charHeight, scale);
-
-                        Debug.WriteLine($"BitmapFont Glyph Loaded: {glyph}");
+                        //Debug.WriteLine($"BitmapFont Glyph Loaded: {glyph}");
 
                         glyphs[character] = glyph;
                     }

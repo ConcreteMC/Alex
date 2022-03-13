@@ -1,8 +1,8 @@
 using Microsoft.Xna.Framework;
 
-namespace Alex.Entities
+namespace Alex.Common
 {
-	public class ColoredBoundingBox
+	public struct ColoredBoundingBox
 	{
 		public BoundingBox Box { get; }
 		public Color Color { get; }

@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -23,6 +24,7 @@ using Alex.ResourcePackLib.Json.Converters.Bedrock;
 using Alex.ResourcePackLib.Json.Models.Entities;
 using Alex.ResourcePackLib.Json.Textures;
 using ConcreteMC.MolangSharp.Parser.Exceptions;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using NLog;
 using SixLabors.ImageSharp;
@@ -33,6 +35,41 @@ using Image = SixLabors.ImageSharp.Image;
 
 namespace Alex.ResourcePackLib
 {
+	public interface IResourceEncryptionProvider
+	{
+		bool TryOpen(IFile file, out Stream cryptoStream);
+	}
+
+	public class BedrockCryptoProvider : IResourceEncryptionProvider
+	{
+		private readonly IDictionary<string, byte[]> _keys;
+
+		public BedrockCryptoProvider(IDictionary<string, byte[]> keys)
+		{
+			_keys = keys;
+		}
+		
+		/// <inheritdoc />
+		public bool TryOpen(IFile file, out Stream cryptoStream)
+		{
+			cryptoStream = default;
+
+			var path = file.FullName;
+
+			if (path.StartsWith('/'))
+				path = path.Substring(1);
+			
+			if (_keys.TryGetValue(path, out var key))
+			{
+				cryptoStream = file.OpenEncoded(key);
+
+				return true;
+			}
+
+			return false;
+		}
+	}
+	
 	public class MCBedrockResourcePack : ResourcePack, ITextureProvider, IAnimationProvider, IRenderControllerProvider, IFontSourceProvider,
 		IDisposable
 	{
@@ -74,10 +111,11 @@ namespace Alex.ResourcePackLib
 
 		public MCBedrockResourcePack(IFilesystem archive,
 			ResourcePackManifest manifest,
-			ResourcePack.LoadProgress progressReporter = null)
+			ResourcePack.LoadProgress progressReporter = null, string contentKey = null)
 		{
 			Info = manifest;
 			_archive = archive;
+			ContentKey = contentKey;
 
 			//Info = GetManifest(archive);
 			Load(progressReporter);
@@ -119,8 +157,64 @@ namespace Alex.ResourcePackLib
 
 		private static readonly Regex IsUiDefinition = new Regex(@"^ui[\\\/](?'filename'.*)\.json", RegexOpts);
 
+		private class ContentsFile
+		{
+			[JsonProperty("version")]
+			public long Version { get; set; }
+
+			[JsonProperty("content")]
+			public ContentsEntry[] Content { get; set; }
+		}
+		
+		private class ContentsEntry
+		{
+			[JsonProperty("path")] public string Path { get; set; }
+			[JsonProperty("key")] public string Key { get; set; } = null;
+		}
+		
+		private void LoadEncryptionKeys(string contentKey)
+		{
+			var contentsFile = _archive.GetEntry("contents.json");
+
+			byte[] data = null;
+			using (var stream = contentsFile.Open())
+			{
+				data = stream.ReadToByteArray();
+			}
+
+			data = data.Skip(256).ToArray();
+			
+			ContentsFile file = null;
+
+			using (MemoryStream ms = new MemoryStream(data))
+			{
+				using (var stream = ms.OpenEncoded(Encoding.Default.GetBytes(contentKey)))
+				{
+					using (var reader = new StreamReader(stream, null, true, leaveOpen: true))
+					{
+						var jsonData = reader.ReadToEnd();
+						file = JsonConvert.DeserializeObject<ContentsFile>(jsonData);
+					}
+					//var rawData = stream.ReadToByteArray();
+					//File.WriteAllBytes($"/home/kenny/contents.json", rawData);
+				}
+			}
+
+			if (file == null)
+				return;
+			
+			EncryptionProvider = new BedrockCryptoProvider(
+				file.Content.Where(x => !string.IsNullOrWhiteSpace(x.Key)).ToDictionary(x => x.Path, x => Encoding.UTF8.GetBytes(x.Key)));
+		}
+
+		public IResourceEncryptionProvider EncryptionProvider { get; set; } = null;
 		private void Load(ResourcePack.LoadProgress progressReporter)
 		{
+			if (!string.IsNullOrWhiteSpace(ContentKey))
+			{
+				LoadEncryptionKeys(ContentKey);
+			}
+			
 			Dictionary<string, EntityDescription> entityDefinitions = new Dictionary<string, EntityDescription>();
 			Dictionary<string, EntityModel> entityModels = new Dictionary<string, EntityModel>(StringComparer.Ordinal);
 
@@ -162,7 +256,7 @@ namespace Alex.ResourcePackLib
 					{
 						try
 						{
-							using (var stream = entry.OpenEncoded(ContentKey))
+							using (var stream = entry.OpenEncoded(EncryptionProvider))
 							{
 								var json = Encoding.UTF8.GetString(stream.ReadToSpan(entry.Length));
 
@@ -354,7 +448,7 @@ namespace Alex.ResourcePackLib
 		{
 			try
 			{
-				string json = entry.ReadAsEncodedString(ContentKey);
+				string json = entry.ReadAsEncodedString(EncryptionProvider);
 				SoundBindings = MCJsonConvert.DeserializeObject<SoundBindingsCollection>(json);
 			}
 			catch (Exception ex)
@@ -369,7 +463,7 @@ namespace Alex.ResourcePackLib
 		{
 			try
 			{
-				string json = entry.ReadAsEncodedString(ContentKey);
+				string json = entry.ReadAsEncodedString(EncryptionProvider);
 
 				var versionedResource = MCJsonConvert.DeserializeObject<VersionedResource<AttachableDefinition>>(
 					json,
@@ -407,7 +501,7 @@ namespace Alex.ResourcePackLib
 		{
 			try
 			{
-				string json = entry.ReadAsEncodedString(ContentKey);
+				string json = entry.ReadAsEncodedString(EncryptionProvider);
 
 				var versionedResource = MCJsonConvert.DeserializeObject<VersionedResource<ParticleDefinition>>(
 					json,
@@ -440,7 +534,7 @@ namespace Alex.ResourcePackLib
 		{
 			try
 			{
-				string json = entry.ReadAsEncodedString(ContentKey);
+				string json = entry.ReadAsEncodedString(EncryptionProvider);
 
 				var versionedResource = MCJsonConvert.DeserializeObject<VersionedResource<Animation>>(
 					json, new VersionedResourceConverter<Animation>("animations"));
@@ -462,7 +556,7 @@ namespace Alex.ResourcePackLib
 		private void ProcessAnimationController(IFile entry,
 			Dictionary<string, AnimationController> animationControllers)
 		{
-			string json = entry.ReadAsEncodedString(ContentKey);
+			string json = entry.ReadAsEncodedString(EncryptionProvider);
 
 			var versionedResource = MCJsonConvert.DeserializeObject<VersionedResource<AnimationController>>(
 				json, new VersionedResourceConverter<AnimationController>("animation_controllers"));
@@ -475,7 +569,7 @@ namespace Alex.ResourcePackLib
 
 		private void ProcessRenderController(IFile entry, Dictionary<string, RenderController> renderControllers)
 		{
-			string json = entry.ReadAsEncodedString(ContentKey);
+			string json = entry.ReadAsEncodedString(EncryptionProvider);
 
 			var versionedResource = MCJsonConvert.DeserializeObject<VersionedResource<RenderController>>(
 				json, new VersionedResourceConverter<RenderController>("render_controllers"));
@@ -611,7 +705,7 @@ namespace Alex.ResourcePackLib
 		{
 			try
 			{
-				string json = entry.ReadAsEncodedString(ContentKey);
+				string json = entry.ReadAsEncodedString(EncryptionProvider);
 
 				LoadEntityModel(json, models);
 			}
@@ -669,14 +763,14 @@ namespace Alex.ResourcePackLib
 
 		private void ProcessSounds(ResourcePack.LoadProgress progress, IFile entry)
 		{
-			string json = entry.ReadAsEncodedString(ContentKey);
+			string json = entry.ReadAsEncodedString(EncryptionProvider);
 
 			SoundDefinitions = SoundDefinitionFormat.FromJson(json);
 		}
 
 		private void LoadEntityDefinition(IFile entry, Dictionary<string, EntityDescription> entityDefinitions)
 		{
-			string json = entry.ReadAsEncodedString(ContentKey);
+			string json = entry.ReadAsEncodedString(EncryptionProvider);
 			List<EntityDescription> definitions = new List<EntityDescription>();
 
 			JObject obj = JObject.Parse(json, new JsonLoadSettings());
@@ -766,11 +860,11 @@ namespace Alex.ResourcePackLib
 				{
 					var startChar = entry.Name.Substring("glyph_".Length, 2);
 					var numeric = int.Parse($"{startChar}00", NumberStyles.HexNumber);
-					bitmapFontSources.Add(new BitmapFontSource(image, (char)numeric));
+					bitmapFontSources.Add(new BitmapFontSource(entry.Name, image, (char)numeric));
 				}
 				else
 				{
-					bitmapFontSources.Add(new BitmapFontSource(image, MCJavaResourcePack.BitmapFontCharacters));
+					bitmapFontSources.Add(new BitmapFontSource(entry.Name, image, MCJavaResourcePack.BitmapFontCharacters));
 				}
 			}
 		}
@@ -800,7 +894,7 @@ namespace Alex.ResourcePackLib
 			{
 				Image<Rgba32> bmp = null;
 
-				using (var fs = entry.OpenEncoded(ContentKey))
+				using (var fs = entry.OpenEncoded(EncryptionProvider))
 				{
 					if (file.EndsWith(".tga"))
 					{

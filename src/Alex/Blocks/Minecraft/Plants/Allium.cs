@@ -1,15 +1,13 @@
 using Alex.Blocks.Materials;
 
-namespace Alex.Blocks.Minecraft
+namespace Alex.Blocks.Minecraft.Plants
 {
-	public class BlueOrchid : FlowerBase
+	public class Allium : FlowerBase
 	{
-		public BlueOrchid()
+		public Allium()
 		{
 			Solid = false;
 			Transparent = true;
-
-			IsFullCube = false;
 
 			BlockMaterial = Material.Plants;
 		}

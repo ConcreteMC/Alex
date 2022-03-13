@@ -12,7 +12,9 @@ using Alex.Blocks.Minecraft.Leaves;
 using Alex.Blocks.Minecraft.Liquid;
 using Alex.Blocks.Minecraft.Logs;
 using Alex.Blocks.Minecraft.Planks;
+using Alex.Blocks.Minecraft.Plants;
 using Alex.Blocks.Minecraft.Saplings;
+using Alex.Blocks.Minecraft.Signs;
 using Alex.Blocks.Minecraft.Slabs;
 using Alex.Blocks.Minecraft.Stairs;
 using Alex.Blocks.Minecraft.Terracotta;
@@ -469,6 +471,12 @@ namespace Alex.Blocks
 			RegisterBlock("minecraft:peony", () => new Peony());
 			RegisterBlock("minecraft:sweet_berry_bush", () => new SweetBerryBush());
 
+			//Potted Plants
+			RegisterBlock("minecraft:potted_cactus", () => new PottedCactus());
+			RegisterBlock("minecraft:potted_dead_bush", () => new PottedDeadBush());
+			RegisterBlock("minecraft:potted_azure_bluet", () => new PottedAzureBluet());
+			RegisterBlock("minecraft:potted_blue_orchid", () => new PottedBlueOrchid());
+
 			RegisterBlock("minecraft:barrier", () => new InvisibleBedrock(false));
 
 			//Stained glass
@@ -517,7 +525,8 @@ namespace Alex.Blocks
 			RegisterBlock("minecraft:crimson_hyphae", () => new CrimsonHyphae());
 			RegisterBlock("minecraft:soul_fire", () => new SoulFire());
 			RegisterBlock("minecraft:soul_campfire", () => new SoulCampfire());
-
+			RegisterBlock("minecraft:sea_pickle", () => new SeaPickle());
+			
 			//Carpet
 			RegisterBlockRange(
 				() => new Carpet().WithLocation("minecraft:white_carpet"),
@@ -559,10 +568,8 @@ namespace Alex.Blocks
 
 			//Skulls
 			RegisterBlock("minecraft:skeleton_skull", () => new Skull() { SkullType = SkullType.Skeleton });
-
 			RegisterBlock(
 				"minecraft:wither_skeleton_skull", () => new Skull() { SkullType = SkullType.WitherSkeleton });
-
 			RegisterBlock("minecraft:zombie_head", () => new Skull() { SkullType = SkullType.Zombie });
 			RegisterBlock("minecraft:player_head", () => new Skull() { SkullType = SkullType.Player });
 			RegisterBlock("minecraft:creeper_head", () => new Skull() { SkullType = SkullType.Creeper });
@@ -570,10 +577,8 @@ namespace Alex.Blocks
 
 			//Wall skulls
 			RegisterBlock("minecraft:skeleton_wall_skull", () => new WallSkull() { SkullType = SkullType.Skeleton });
-
 			RegisterBlock(
 				"minecraft:wither_skeleton_wall_skull", () => new WallSkull() { SkullType = SkullType.WitherSkeleton });
-
 			RegisterBlock("minecraft:zombie_wall_head", () => new WallSkull() { SkullType = SkullType.Zombie });
 			RegisterBlock("minecraft:player_wall_head", () => new WallSkull() { SkullType = SkullType.Player });
 			RegisterBlock("minecraft:creeper_wall_head", () => new WallSkull() { SkullType = SkullType.Creeper });
@@ -618,10 +623,6 @@ namespace Alex.Blocks
 
 			RegisterBlock("minecraft:grass_path", () => new GrassPath());
 			RegisterBlock("minecraft:dirt_path", () => new GrassPath());
-
-			RegisterBlock("minecraft:potted_cactus", () => new PottedCactus());
-			RegisterBlock("minecraft:potted_dead_bush", () => new PottedDeadBush());
-			RegisterBlock("minecraft:sea_pickle", () => new SeaPickle());
 
 			// Banners (Standing)
 			RegisterBlock("minecraft:white_banner", () => new StandingBanner(BlockColor.White));

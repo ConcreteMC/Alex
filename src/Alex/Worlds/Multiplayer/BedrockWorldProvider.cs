@@ -186,13 +186,10 @@ namespace Alex.Worlds.Multiplayer
 			bool outOfOrder = false;
 			LoadingState state = LoadingState.ConnectingToServer;
 			string subTitle = "";
-
-			bool waitingOnResources = false;
-			bool loadingResources = false;
-
+			
 			var resourcePackManager = Client?.ResourcePackManager;
 
-			void statusHandler(object sender, ResourcePackManager.ResourceStatusChangedEventArgs args)
+			/*void statusHandler(object sender, ResourcePackManager.ResourceStatusChangedEventArgs args)
 			{
 				switch (args.Status)
 				{
@@ -202,49 +199,41 @@ namespace Alex.Worlds.Multiplayer
 
 						break;
 
-					case ResourcePackManager.ResourceManagerStatus.ReceivingResources:
+					case ResourcePackManager.ResourceManagerStatus.Downloading:
 						waitingOnResources = true;
 						loadingResources = false;
 
 						break;
 
-					case ResourcePackManager.ResourceManagerStatus.StartLoading:
+					case ResourcePackManager.ResourceManagerStatus.Loading:
 						waitingOnResources = false;
 						loadingResources = true;
 
 						break;
-
-					case ResourcePackManager.ResourceManagerStatus.FinishedLoading:
-						waitingOnResources = false;
-						loadingResources = false;
-
+					case ResourcePackManager.ResourceManagerStatus.Initialized:
 						break;
 				}
-			}
+			}*/
 
 			try
 			{
 				if (resourcePackManager != null)
 				{
-					resourcePackManager.StatusChanged += statusHandler;
-
-					waitingOnResources = resourcePackManager.Status != ResourcePackManager.ResourceManagerStatus.Ready
-					                     && resourcePackManager.Status
-					                     != ResourcePackManager.ResourceManagerStatus.Initialized;
+				//	resourcePackManager.StatusChanged += statusHandler;
 				}
 
 				LoadResult loadResult = LoadResult.Unknown;
 
 				while (Client.IsConnected && Client.DisconnectReason != DisconnectReason.Unknown)
 				{
-					progressReport(state, percentage, subTitle);
+					progressReport(state, percentage, $"{subTitle}");
 
-					if (waitingOnResources)
+					if (resourcePackManager != null && resourcePackManager.WaitingOnResources)
 					{
 						state = LoadingState.RetrievingResources;
 						percentage = (int)Math.Ceiling(resourcePackManager.Progress * 100);
 					}
-					else if (loadingResources)
+					else if (resourcePackManager != null && resourcePackManager.Status == ResourcePackManager.ResourceManagerStatus.Loading)
 					{
 						state = LoadingState.LoadingResources;
 						percentage = resourcePackManager.LoadingProgress;
@@ -261,31 +250,38 @@ namespace Alex.Worlds.Multiplayer
 						{
 							subTitle = "Waiting on game start";
 						}
+						else if (Client.PlayerStatus != McpePlayStatus.PlayStatus.PlayerSpawn)
+						{
+							subTitle = "Waiting on spawn ";
+						}
 						else
 						{
 							subTitle = "Waiting on spawn confirmation";
 						}
 					}
 
-					if (Client.Connection.IsNetworkOutOfOrder)
+					if (Client.Connection.IsNetworkOutOfOrder && !outOfOrder)
 					{
-						if (!outOfOrder)
-						{
-							subTitle = "Waiting for network to catch up";
-							outOfOrder = true;
-						}
+						subTitle = "Waiting for network to catch up";
+						outOfOrder = true;
 					}
-					else
+					else if (!Client.Connection.IsNetworkOutOfOrder && outOfOrder)
 					{
-						if (outOfOrder)
-						{
-							subTitle = "";
-							outOfOrder = false;
-							sw.Restart();
-						}
+						subTitle = "";
+						outOfOrder = false;
+						sw.Restart();
 					}
+					
+					if (resourcePackManager != null && resourcePackManager.WaitingOnResources)
+						sw.Restart();
 
-					if (Client.CanSpawn && Client.GameStarted && !waitingOnResources && !loadingResources)
+					if (Client.CanSpawn && Client.GameStarted && (resourcePackManager == null
+					                                              || (resourcePackManager.Status
+					                                                  == ResourcePackManager.ResourceManagerStatus.Ready
+					                                                  || (!resourcePackManager.WaitingOnResources
+					                                                      && resourcePackManager.Status
+					                                                      == ResourcePackManager.ResourceManagerStatus
+						                                                     .Initialized))))
 					{
 						break;
 					}
@@ -306,6 +302,8 @@ namespace Alex.Worlds.Multiplayer
 						break;
 					}
 				}
+				
+				Log.Info($"Exited load loop.");
 
 				if (Client.DisconnectReason == DisconnectReason.Kicked)
 					return LoadResult.Kicked;
@@ -338,8 +336,7 @@ namespace Alex.Worlds.Multiplayer
 			}
 			finally
 			{
-				if (resourcePackManager != null)
-					resourcePackManager.StatusChanged -= statusHandler;
+			
 			}
 		}
 

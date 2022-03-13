@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using Alex.Blocks.Minecraft;
+using Alex.Blocks.Minecraft.Signs;
 using Alex.Blocks.Minecraft.Terracotta;
 using Alex.Common.Blocks;
 using Alex.Common.Gui.Graphics;

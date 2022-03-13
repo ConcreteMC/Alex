@@ -376,23 +376,76 @@ namespace Alex.ResourcePackLib
             return MCJsonConvert.DeserializeObject<FontDefinitionFile>(Encoding.UTF8.GetString(content));
         }
 
-        public List<FontDefinition> Fonts { get; set; } = new List<FontDefinition>();
-
         private void LoadFont(IFilesystem archive)
         {
             List<IFile> asciiFontEntries = new List<IFile>();
             List<IFile> unicodeFontEntries = new List<IFile>();
             var sources = new List<BitmapFontSource>();
 
-            FontDefinitionFile fontDefinitionFile = null;
+            //FontDefinitionFile fontDefinitionFile = null;
 
+            bool hasAscii = false;
             foreach (var entry in archive.Entries)
             {
                 var fontDefinitionMatch = IsFontDefinition.Match(entry.FullName);
 
                 if (fontDefinitionMatch.Success)
                 {
-                    fontDefinitionFile = LoadFontDefinition(entry);
+                    var fontDefinitionFile = LoadFontDefinition(entry);
+
+                    if (fontDefinitionFile?.Providers != null)
+                    {
+                        foreach (var definition in fontDefinitionFile?.Providers)
+                        {
+                            if (definition is BitmapFontDefinition bitmapFont)
+                            {
+                                var fileName = new ResourceLocation(bitmapFont.File);
+                                var filePath = Path.Combine(fileName.Namespace, "textures", fileName.Path);
+                                var bitmapEntry = archive.GetEntry(filePath);
+
+                                if (bitmapEntry == null)
+                                    continue;
+
+                                // LoadBitmap(bitmapEntry, fileName);
+
+                                bitmapFont.File = filePath;
+
+                                if (LoadBitmapFontSource(
+                                        bitmapEntry, bitmapFont.Characters, out var bitmapFontSource,
+                                        bitmapEntry.Name.Equals("ascii.png")))
+                                {
+                                    sources.Add(bitmapFontSource);
+                                }
+                            }
+                            else if (definition is LegacyFontDefinition legacyFont)
+                            {
+                                for (int i = 0; i < 0xFF; i++)
+                                {
+                                    var f = i.ToString("x2").ToLower();
+                                    var fileName = new ResourceLocation(legacyFont.Template.Replace("%s", f));
+
+                                    var filePath = Path.Combine(fileName.Namespace, "textures", fileName.Path);
+
+                                    var bitmapEntry = archive.GetEntry(filePath);
+
+                                    if (bitmapEntry == null)
+                                        continue;
+
+                                    //    LoadBitmap(bitmapEntry, fileName);
+
+                                    var startChar = int.Parse($"{f}00", NumberStyles.HexNumber);
+
+                                    var characters = Enumerable.Range(startChar, 256).Select(x => (char) x).Chunk(16)
+                                       .Select(x => new string(x)).ToArray();
+
+                                    if (LoadBitmapFontSource(bitmapEntry, characters, out var bitmapFontSource))
+                                    {
+                                        sources.Add(bitmapFontSource);
+                                    }
+                                }
+                            }
+                        }
+                    }
 
                     continue;
                 }
@@ -416,71 +469,15 @@ namespace Alex.ResourcePackLib
                 }
             }
 
-            if (fontDefinitionFile?.Providers != null)
-            {
-                foreach (var definition in fontDefinitionFile?.Providers)
-                {
-                    if (definition is BitmapFontDefinition bitmapFont)
-                    {
-                        var fileName = new ResourceLocation(bitmapFont.File);
-                        var filePath = Path.Combine("assets", fileName.Namespace, "textures", fileName.Path);
-                        var bitmapEntry = archive.GetEntry(filePath);
 
-                        if (bitmapEntry == null)
-                            continue;
-
-                        LoadBitmap(bitmapEntry, fileName);
-
-                        bitmapFont.File = filePath;
-                        Fonts.Add(definition);
-
-
-                        if (LoadBitmapFontSource(bitmapEntry, bitmapFont.Characters, out var bitmapFontSource))
-                        {
-                            sources.Add(bitmapFontSource);   
-                        }
-                    }
-                    else if (definition is LegacyFontDefinition legacyFont)
-                    {
-                        
-                        Fonts.Add(definition);
-                        for(int i = 0; i < 0xFF; i++)
-                        {
-                            var f = i.ToString("x2");
-                            var fileName = new ResourceLocation(legacyFont.Template.Replace("%s", f));
-                            var filePath = Path.Combine("assets", fileName.Namespace, "textures", fileName.Path);
-                            var bitmapEntry = archive.GetEntry(filePath);
-                            
-                            if (bitmapEntry == null)
-                                continue;
-                            
-                            LoadBitmap(bitmapEntry, fileName);
-
-                            var startChar = int.Parse($"{f}00", NumberStyles.HexNumber);
-                            var characters = Enumerable.Range(startChar, 255)
-                                .Select(x => (char)x)
-                                .Chunk(16)
-                                .Select(x => new string(x))
-                                .ToArray();
-                            
-                            if (LoadBitmapFontSource(bitmapEntry, characters, out var bitmapFontSource))
-                            {
-                                sources.Add(bitmapFontSource);   
-                            }
-                        }
-                    }
-                }
-            }
-
-
-            foreach (var entry in asciiFontEntries)
+            /*foreach (var entry in asciiFontEntries)
             {
                 if (LoadBitmapFontSource(entry, BitmapFontCharacters, out var bitmapFontSource, true))
                 {
                     sources.Insert(0, bitmapFontSource);
                     break;   
                 }
-            }
+            }*/
 
             FontSources = sources.ToArray();
             
@@ -508,7 +505,7 @@ namespace Alex.ResourcePackLib
                         match.Groups["namespace"].Value, SanitizeFilename(match.Groups["filename"].Value)));
                 //ProcessTexture(entry, match);
                 var bitmap = fontBitmap();
-                bitmapFontSource = new BitmapFontSource(bitmap, characters, isAscii);
+                bitmapFontSource = new BitmapFontSource(entry.Name, bitmap, characters, isAscii);
 
                 return true;
             }
@@ -516,36 +513,7 @@ namespace Alex.ResourcePackLib
             bitmapFontSource = null;
             return false;
         }
-
-        private bool LoadBitmapFont(IFile entry)
-        {
-            var match = IsFontTextureResource.Match(entry.FullName);
-
-            if (match.Success)
-            {
-                var fontBitmap = LoadBitmap(
-                    entry,
-                    new ResourceLocation(
-                        match.Groups["namespace"].Value, SanitizeFilename(match.Groups["filename"].Value)))();
-                //ProcessTexture(entry, match);
-
-
-                if (!DidPreload)
-                {
-                    DidPreload = true;
-
-                    PreloadCallback?.Invoke(new[] { new BitmapFontSource(fontBitmap, BitmapFontCharacters) });
-                }
-
-                return true;
-            }
-
-            return false;
-
-            //Log.Info($"Font pixelformat: {fontBitmap.PixelFormat} | RawFormat: {fontBitmap.RawFormat}");
-            //Font = new BitmapFont(Graphics, fontBitmap, 16, BitmapFontCharacters.ToCharArray().ToList());
-        }
-
+        
         private void LoadGlyphSizes(IFile entry)
         {
             byte[] glyphWidth; // = new byte[65536];

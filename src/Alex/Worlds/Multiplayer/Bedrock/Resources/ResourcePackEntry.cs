@@ -70,12 +70,13 @@ namespace Alex.Worlds.Multiplayer.Bedrock.Resources
 
 			ExpectedIndex = 0;
 
-			Log.Info($"Downloading resources... ID={Identifier}");
+			//Log.Info($"Downloading resources... ID={Identifier}");
 			//Log.Info($"Resourcepack data info, packType={packType}");
 		}
 
 		public uint ExpectedIndex { get; set; } = 0;
 
+		public byte[] Data { get; private set; } = null;
 		public bool SetChunkData(uint chunkIndex, byte[] chunkData, out byte[] completedData)
 		{
 			completedData = null;
@@ -90,41 +91,68 @@ namespace Alex.Worlds.Multiplayer.Bedrock.Resources
 				return false;
 			}
 
-			ExpectedIndex++;
+			if (chunkIndex < _chunks.Length)
+			{
+				ExpectedIndex++;
+			}
+
 			_chunks[chunkIndex] = chunkData;
 
-			if (_chunks.All(x => x != null))
+			var chunks = _chunks;
+			if (chunks.All(x => x != null))
 			{
-				using (MemoryStream ms = new MemoryStream())
+				if (TotalReceived == ExpectedSize)
 				{
-					for (int i = 0; i < _chunks.Length; i++)
+					byte[] buffer = new byte[ExpectedSize];
+					var span = buffer.AsSpan();
+					
+					int position = 0;
+					for (int i = 0; i < chunks.Length; i++)
 					{
-						ms.Write(_chunks[i]);
-						_chunks[i] = null;
+						var chunk = chunks[i];
+						chunk.CopyTo(span.Slice(position, chunk.Length));
+						position += chunk.Length;
 					}
 
-					ms.Position = 0;
-
-					byte[] buffer = new byte[_compressedPackageSize];
-					ms.Read(buffer, 0, buffer.Length);
-
-					//_completedData = buffer;
-
-					//_completedData = ms.
-					//_completedData = ms.Read().ToArray();
-
+					Data = buffer;
 					completedData = buffer;
-
+					IsComplete = true;
 					if (Alex.Instance.Options.AlexOptions.MiscelaneousOptions.LoadServerResources.Value)
 					{
 						OnComplete(buffer);
 					}
-				}
 
-				IsComplete = true;
+					return true;
+					/*using (MemoryStream ms = new MemoryStream())
+					{
+						for (int i = 0; i < chunks.Length; i++)
+						{
+							ms.Write(chunks[i]);
+							_chunks[i] = null;
+						}
+
+						ms.Position = 0;
+
+						ms.Read(buffer, 0, buffer.Length);
+
+						//_completedData = buffer;
+
+						//_completedData = ms.
+						//_completedData = ms.Read().ToArray();
+
+						completedData = buffer;
+
+						if (Alex.Instance.Options.AlexOptions.MiscelaneousOptions.LoadServerResources.Value)
+						{
+							OnComplete(buffer);
+						}
+					}
+
+					IsComplete = true;*/
+				}
 			}
 
-			return true;
+			return false;
 		}
 
 		public void SetData(byte[] data)

@@ -5,6 +5,7 @@ using System.Linq;
 using Alex.ResourcePackLib.Json.Bedrock.Entity;
 using Alex.ResourcePackLib.Json.Bedrock.MoLang;
 using ConcreteMC.MolangSharp.Runtime;
+using ConcreteMC.MolangSharp.Runtime.Exceptions;
 using Microsoft.Xna.Framework;
 using NLog;
 
@@ -33,12 +34,20 @@ namespace Alex.Graphics.Models.Entity.Animations
 
 			_components = definition.Bones.Select(x => new BoneComp(x.Key, this, x.Value)).ToArray();
 
-			if (definition.Loop != null)
+			try
 			{
-				_loop = parent.Execute(definition.Loop).AsBool();
+				if (definition.Loop != null)
+				{
+					_loop = parent.Execute(definition.Loop).AsBool();
+				}
+				else
+				{
+					_loop = false;
+				}
 			}
-			else
+			catch (MoLangRuntimeException ex)
 			{
+				Log.Warn(ex, $"Error while initializing entity animation!");
 				_loop = false;
 			}
 		}

@@ -41,6 +41,14 @@ namespace Alex.Utils.Caching
 			return Storage.TryWriteBytes(GetPath(hash), data);
 		}
 
+		public void Remove(TKey hash)
+		{
+			if (Storage.Exists(GetPath(hash)))
+			{
+				Storage.Delete(GetPath(hash));
+			}
+		}
+
 		/// <inheritdoc />
 		public virtual void Dispose() { }
 	}

@@ -12,6 +12,7 @@ using Alex.Blocks.Mapping;
 using Alex.Blocks.Minecraft;
 using Alex.Blocks.Minecraft.Fences;
 using Alex.Common.Utils.Collections;
+using Alex.Common.World;
 using Alex.Entities.BlockEntities;
 using Alex.Net.Bedrock;
 using Alex.Utils;
@@ -38,7 +39,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 		static ChunkProcessor() { }
 
-		private record BufferItem(KeyValuePair<ulong, byte[]> KeyValuePair, ChunkData ChunkData);
+		private record BufferItem(KeyValuePair<ulong, byte[]> KeyValuePair, ChunkData ChunkData, SubChunkData SubChunkData);
 
 		//public IReadOnlyDictionary<uint, BlockStateContainer> BlockStateMap { get; set; } =
 		//    new Dictionary<uint, BlockStateContainer>();
@@ -87,6 +88,12 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 				return;
 			}
 
+			if (item.SubChunkData != null)
+			{
+				HandleSubChunkData(item.SubChunkData);	
+				return;
+			}
+
 			HandleKv(item.KeyValuePair);
 		}
 
@@ -130,6 +137,58 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			}
 		}
 
+		private void HandleSubChunkData(SubChunkData data)
+		{
+			var chunkManager = Client?.World?.ChunkManager;
+
+			if (chunkManager == null)
+				return;
+			
+			if (data.Result != SubChunkRequestResult.Success)
+			{
+				Log.Warn($"Got subchunk response: {data.Result}");
+				return;
+			}
+
+			if (data.BlobHash != null)
+			{
+				//Cache based
+				return;
+			}
+
+			if (data.Data == null)
+			{
+				Log.Error($"Invalid subchunk data!");
+				return;
+			}
+
+			BedrockChunkSection section = null;
+			using (MemoryStream ms = new MemoryStream(data.Data))
+			{
+				using NbtBinaryReader defStream = new NbtBinaryReader(ms, true);
+				section = ReadSection(defStream);
+			}
+
+			if (section == null)
+			{
+				Log.Warn($"Read null section!");
+				return;
+			}
+
+			if (chunkManager.TryGetChunk(new ChunkCoordinates(data.X, data.Z), out var chunk))
+			{
+				var sY = data.Y + (chunk.WorldSettings.MinY / 16);
+				//chunk.WorldSettings.WorldHeight
+				
+				var currentSection = chunk.Sections[sY];
+				chunk.Sections[sY] = section;
+				
+				currentSection?.Dispose();
+				
+				chunkManager.ScheduleChunkUpdate(new ChunkCoordinates(data.X, data.Z), ScheduleType.Full);
+			}
+		}
+		
 		public void Clear()
 		{
 			if (_dataQueue.Count > 0)
@@ -138,7 +197,9 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			}
 		}
 
-		public void HandleChunkData(bool cacheEnabled,
+		public void HandleChunkData(
+			bool cacheEnabled,
+			SubChunkRequestMode subChunkRequestMode,
 			ulong[] blobs,
 			uint subChunkCount,
 			byte[] chunkData,
@@ -148,9 +209,18 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			if (CancellationToken.IsCancellationRequested || subChunkCount < 1)
 				return;
 
-			var value = new ChunkData(cacheEnabled, blobs, subChunkCount, chunkData, cx, cz);
+			var value = new ChunkData(cacheEnabled, subChunkRequestMode, blobs, subChunkCount, chunkData, cx, cz);
 
-			_dataQueue.Post(new BufferItem(default, value));
+			_dataQueue.Post(new BufferItem(default, value, null));
+		}
+
+		public void HandleSubChunkData(SubChunkRequestResult result, ulong? blobHash, byte[] data, int cx, int cy, int cz)
+		{
+			if (CancellationToken.IsCancellationRequested)
+				return;
+
+			var value = new SubChunkData(result, blobHash, data, cx, cy, cz);
+			_dataQueue.Post(new BufferItem(default, null, value));
 		}
 
 		public BlockState GetBlockState(uint p)
@@ -212,7 +282,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 		{
 			foreach (KeyValuePair<ulong, byte[]> kv in message.blobs)
 			{
-				_dataQueue.Post(new BufferItem(kv, null));
+				_dataQueue.Post(new BufferItem(kv, null, null));
 			}
 		}
 
@@ -277,7 +347,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 		internal BedrockChunkSection ReadSection(NbtBinaryReader defStream)
 		{
 			int version = defStream.ReadByte();
-
+			
 			if (version == 1 || version == 8)
 			{
 				return ReadPalletedSection(defStream, version);
@@ -439,37 +509,74 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			return section;
 		}
 
-		private BedrockChunkColumn HandleChunk(ChunkData chunk)
+		public WorldSettings WorldSettings { get; set; } = new WorldSettings(384, -64);
+		private BedrockChunkColumn HandleChunk(ChunkData chunkData)
 		{
-			if (chunk.SubChunkCount == 0)
+			if (chunkData.SubChunkCount == 0)
 				return null;
+			
+			if (chunkData.SubChunkRequestMode != SubChunkRequestMode.SubChunkRequestModeLegacy)
+			{
+				/*McpeSubChunkRequestPacket subChunkRequestPacket = McpeSubChunkRequestPacket.CreateObject();
+				subChunkRequestPacket.dimension = (int) Client.World.Dimension;
+
+				subChunkRequestPacket.basePosition =
+					new MiNET.Utils.Vectors.BlockCoordinates(chunk.X, 0, chunk.Z);
+
+				List<SubChunkPositionOffset> offsets = new List<SubChunkPositionOffset>();
+
+				for (int y = 0; y < 24; y++)
+				{
+					offsets.Add(new SubChunkPositionOffset()
+					{
+						XOffset = 0,
+						YOffset = y - (4),
+						ZOffset = 0
+					});
+				}
+				subChunkRequestPacket.offsets = offsets.ToArray();
+						
+				Client.SendPacket(subChunkRequestPacket);*/
+
+				/*subChunkRequestPacket.offsets = new SubChunkPositionOffset[]
+				{
+					new SubChunkPositionOffset() {XOffset = 0, ZOffset = 0, YOffset = -2}
+				};*/
+			}
 
 			try
 			{
-				using (MemoryStream stream = new MemoryStream(chunk.Data))
+				using (MemoryStream stream = new MemoryStream(chunkData.Data))
 				{
-					BedrockChunkColumn chunkColumn = new BedrockChunkColumn(chunk.X, chunk.Z);
+					BedrockChunkColumn chunkColumn = new BedrockChunkColumn(chunkData.X, chunkData.Z, WorldSettings);
 
 					using NbtBinaryReader defStream = new NbtBinaryReader(stream, true);
-
-					for (int s = 0; s < chunk.SubChunkCount; s++)
+					//Log.Info($"SubchunkCount: {chunkData.SubChunkCount} | Mode={chunkData.SubChunkRequestMode} | CacheEnabled={chunkData.CacheEnabled}");
+					if (chunkData.SubChunkRequestMode != SubChunkRequestMode.SubChunkRequestModeLimitless
+					    && !chunkData.CacheEnabled)
 					{
-						chunkColumn.Sections[s] = ReadSection(defStream);
+						for (int s = 0; s < chunkData.SubChunkCount; s++)
+						{
+							chunkColumn.Sections[s] = ReadSection(defStream);
+						}
 					}
 
-					byte[] biomeIds = new byte[256];
-
-					if (defStream.Read(biomeIds, 0, 256) != 256) return chunkColumn;
-
-					for (int x = 0; x < 16; x++)
+					if (!chunkData.CacheEnabled)
 					{
-						for (int z = 0; z < 16; z++)
-						{
-							var biomeId = biomeIds[(z << 4) + (x)];
+						byte[] biomeIds = new byte[256];
 
-							for (int y = 0; y < 255; y++)
+						if (defStream.Read(biomeIds, 0, 256) != 256) return chunkColumn;
+
+						for (int x = 0; x < 16; x++)
+						{
+							for (int z = 0; z < 16; z++)
 							{
-								chunkColumn.SetBiome(x, y, z, BiomeUtils.GetBiome(biomeId));
+								var biomeId = biomeIds[(z << 4) + (x)];
+
+								for (int y = 0; y < 255; y++)
+								{
+									chunkColumn.SetBiome(x, y, z, BiomeUtils.GetBiome(biomeId));
+								}
 							}
 						}
 					}
@@ -510,27 +617,26 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 				stream.Read(bytes, 0, len);
 			}
 
-			if (stream.Position < stream.Length - 1)
+
+			while (stream.Position < stream.Length - 1)
 			{
-				while (stream.Position < stream.Length - 1)
+				try
 				{
-					try
-					{
-						NbtFile file = new NbtFile() { BigEndian = false, UseVarInt = true };
+					NbtFile file = new NbtFile() {BigEndian = false, UseVarInt = true};
 
-						file.LoadFromStream(stream, NbtCompression.None);
-						var blockEntityTag = file.RootTag;
+					file.LoadFromStream(stream, NbtCompression.None);
+					var blockEntityTag = file.RootTag;
 
-						int x = blockEntityTag["x"].IntValue;
-						int y = blockEntityTag["y"].IntValue;
-						int z = blockEntityTag["z"].IntValue;
+					int x = blockEntityTag["x"].IntValue;
+					int y = blockEntityTag["y"].IntValue;
+					int z = blockEntityTag["z"].IntValue;
 
-						chunkColumn.AddBlockEntity(new BlockCoordinates(x, y, z), (NbtCompound)file.RootTag);
-					}
-					catch (EndOfStreamException) { }
-
-					// if (Log.IsTraceEnabled()) Log.Trace($"Blockentity:\n{file.RootTag}");
+					chunkColumn.AddBlockEntity(new BlockCoordinates(x, y, z), (NbtCompound) file.RootTag);
 				}
+				catch (EndOfStreamException) { }
+				catch(NbtFormatException){}
+
+				// if (Log.IsTraceEnabled()) Log.Trace($"Blockentity:\n{file.RootTag}");
 			}
 
 			if (stream.Position < stream.Length - 1)
@@ -631,19 +737,41 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 		private class ChunkData
 		{
 			public readonly bool CacheEnabled;
+			public readonly SubChunkRequestMode SubChunkRequestMode;
 			public readonly ulong[] Blobs;
 			public readonly uint SubChunkCount;
 			public readonly byte[] Data;
 			public readonly int X;
 			public readonly int Z;
 
-			public ChunkData(bool cacheEnabled, ulong[] blobs, uint subChunkCount, byte[] chunkData, int cx, int cz)
+			public ChunkData(bool cacheEnabled,SubChunkRequestMode subChunkRequestMode, ulong[] blobs, uint subChunkCount, byte[] chunkData, int cx, int cz)
 			{
 				CacheEnabled = cacheEnabled;
+				SubChunkRequestMode = subChunkRequestMode;
 				Blobs = blobs;
 				SubChunkCount = subChunkCount;
 				Data = chunkData;
 				X = cx;
+				Z = cz;
+			}
+		}
+
+		private class SubChunkData
+		{
+			public SubChunkRequestResult Result { get; }
+			public ulong? BlobHash { get; }
+			public byte[] Data { get; }
+			public int X { get; }
+			public int Y { get; }
+			public int Z { get; }
+
+			public SubChunkData(SubChunkRequestResult result, ulong? blobHash, byte[] data, int cx, int cy, int cz)
+			{
+				Result = result;
+				BlobHash = blobHash;
+				Data = data;
+				X = cx;
+				Y = cy;
 				Z = cz;
 			}
 		}

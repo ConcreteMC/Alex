@@ -224,10 +224,30 @@ namespace Alex
 
 		private void ReloadFonts()
 		{
-			var f = ActiveResourcePacks.Where(x => x is IFontSourceProvider fontSourceProvider && fontSourceProvider.FontSources != null && fontSourceProvider.FontSources.Length > 0).Cast<IFontSourceProvider>().SelectMany(x => x.FontSources).ToArray();
+			List<BitmapFontSource> fontSources = new List<BitmapFontSource>();
+
+			foreach (var active in ActiveResourcePacks.Reverse())
+			{
+				if (active is IFontSourceProvider fontSourceProvider && fontSourceProvider.FontSources != null
+				                                                     && fontSourceProvider.FontSources.Length > 0)
+				{
+					foreach (var source in fontSourceProvider.FontSources)
+					{
+					//	if (fontSources.Any(x => string.Equals(x.Name, source.Name, StringComparison.InvariantCultureIgnoreCase)))
+					//		continue;
+
+						fontSources.Add(source);
+					}
+				}
+			}
+			/*var f = ActiveResourcePacks.Reverse()
+			   .Where(
+					x => x is IFontSourceProvider fontSourceProvider && fontSourceProvider.FontSources != null
+					                                                 && fontSourceProvider.FontSources.Length > 0)
+			   .Cast<IFontSourceProvider>().SelectMany(x => x.FontSources).ToArray();*/
+
 			//var f2 = ActiveBedrockResourcePacks.Where(x => x is IFontSourceProvider fontSourceProvider && fontSourceProvider.FontSources != null && fontSourceProvider.FontSources.Length > 0).Cast<IFontSourceProvider>().SelectMany(x => x.FontSources).ToArray();
-			OnFontsLoaded?.Invoke(this, new FontsLoadedEventArgs(f));
-			
+			OnFontsLoaded?.Invoke(this, new FontsLoadedEventArgs(fontSources.ToArray()));
 		}
 
 		internal bool Remove(ResourcePack resourcePack)
@@ -254,12 +274,11 @@ namespace Alex
 			IProgressReceiver progress = null,
 			string contentKey = null)
 		{
-			foreach (var resourcePack in LoadResourcePack(progress, fs, null))
+			foreach (var resourcePack in LoadResourcePack(progress, fs, null, contentKey))
 			{
 				if (resourcePack.Info.Type == ResourcePackType.Bedrock)
 				{
 					var pack = (MCBedrockResourcePack)resourcePack;
-					pack.ContentKey = contentKey;
 
 					ActiveResourcePacks.AddLast(pack);
 					ActiveBedrockResourcePacks.AddLast(pack);
@@ -271,7 +290,7 @@ namespace Alex
 
 		private IEnumerable<ResourcePack> LoadResourcePack(IProgressReceiver progressReceiver,
 			IFilesystem fs,
-			McResourcePackPreloadCallback preloadCallback = null)
+			McResourcePackPreloadCallback preloadCallback = null, string contentKey = null)
 		{
 			Stopwatch sw = Stopwatch.StartNew();
 
@@ -299,7 +318,7 @@ namespace Alex
 				{
 					var brp = new MCBedrockResourcePack(
 						fs, manifest,
-						(percentage, file) => { progressReceiver?.UpdateProgress(percentage, null, file); });
+						(percentage, file) => { progressReceiver?.UpdateProgress(percentage, null, file); }, contentKey);
 
 					sw.Stop();
 

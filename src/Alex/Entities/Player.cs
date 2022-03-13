@@ -187,22 +187,6 @@ namespace Alex.Entities
 		}
 
 		/// <inheritdoc />
-		public override void SetSprinting(bool sprinting)
-		{
-			bool wasSprinting = IsSprinting;
-			base.SetSprinting(sprinting);
-
-			/*if (wasSprinting && !IsSprinting)
-			{
-				Network?.EntityAction((int)EntityId, EntityAction.StopSprinting);
-			}
-			else if (!wasSprinting && IsSprinting)
-			{
-				Network?.EntityAction((int)EntityId, EntityAction.StartSprinting);
-			}*/
-		}
-
-		/// <inheritdoc />
 		protected override void OnSkinValueChanged(MiNET.Utils.Skins.Skin newSkin)
 		{
 			//Do nothing.
@@ -211,26 +195,10 @@ namespace Alex.Entities
 		/// <inheritdoc />
 		public override float CollidedWithWorld(Vector3 direction, Vector3 position, float impactVelocity)
 		{
-			//var dirVelocity = direction * impactVelocity;
 			if (direction == Vector3.Down)
 			{
-				//Velocity = new Vector3(Velocity.X, 0f, Velocity.Z);
 				KnownPosition.OnGround = true;
 				StopFalling();
-
-				// if (bs?.Block is SlimeBlock sb)
-				// {
-				// if (MathF.Abs(imp))
-				//    return -(impactVelocity * 0.8f);
-				//}
-			}
-			else if (direction == Vector3.Left || direction == Vector3.Right)
-			{
-				//	Velocity = new Vector3(0, Velocity.Y, Velocity.Z);
-			}
-			else if (direction == Vector3.Forward || direction == Vector3.Backward)
-			{
-				//	Velocity = new Vector3(Velocity.X, Velocity.Y, 0);
 			}
 
 			return 0;
@@ -436,11 +404,6 @@ namespace Alex.Entities
 							item, IsLeftHanded ? 1 : 0,
 							IsLeftHanded ? Inventory.OffHandSlot : (Inventory.HotbarOffset + Inventory.SelectedSlot));
 					}
-
-					/*if (!handledClick && Inventory.OffHand != null && !(Inventory.OffHand is ItemAir))
-					{
-						handledClick = HandleRightClick(Inventory.OffHand, 1);
-					}*/
 				}
 			}
 			else
@@ -459,11 +422,6 @@ namespace Alex.Entities
 				Network?.HeldItemChanged(Inventory[Inventory.SelectedSlot], (short)slot);
 				PreviousSlot = slot;
 			}
-
-			//if (FeetInWater && HeadInWater)
-			//    IsSwimming = true;
-			//else
-			//    IsSwimming = false;
 		}
 
 		private void InteractWithEntity(Entity entity, bool attack, int hand, Vector3 cursorPosition)

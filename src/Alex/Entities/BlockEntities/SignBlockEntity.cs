@@ -2,6 +2,7 @@ using System;
 using System.Linq;
 using Alex.Blocks;
 using Alex.Blocks.Minecraft;
+using Alex.Blocks.Minecraft.Signs;
 using Alex.Common.Blocks;
 using Alex.Common.Graphics;
 using Alex.Common.Resources;

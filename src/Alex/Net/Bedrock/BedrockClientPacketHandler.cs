@@ -53,6 +53,7 @@ using Entity = Alex.Entities.Entity;
 using MessageType = Alex.Common.Data.MessageType;
 using Player = Alex.Entities.Player;
 using PlayerLocation = Alex.Common.Utils.Vectors.PlayerLocation;
+using Version = Alex.Common.Services.Version;
 
 namespace Alex.Net.Bedrock
 {
@@ -246,6 +247,18 @@ namespace Alex.Net.Bedrock
 
 		public void HandleMcpeStartGame(McpeStartGame message)
 		{
+			Log.Warn($"Experimental gameplay override={message.levelSettings.experimentalGameplayOverride} Experiments={message.levelSettings.experiments.Count} BaseGameVersion={message.levelSettings.gameVersion}");
+
+			if (message.levelSettings.gameVersion.Trim().StartsWith("1.17"))
+			{
+				ChunkProcessor.WorldSettings = new WorldSettings(256, 0);
+			}
+
+			foreach (var experiment in message.levelSettings.experiments)
+			{
+				Log.Info($"Experiment: name={experiment.Name} enabled={experiment.Enabled}");
+			}
+			
 			var player = Client.World.Player;
 
 			if (message.movementType > 0)
@@ -258,16 +271,16 @@ namespace Alex.Net.Bedrock
 			{
 				player.EntityId = Client.EntityId = message.runtimeEntityId;
 				Client.NetworkEntityId = message.entityIdSelf;
-				Client.World.SetRain(false, message.rainLevel);
-				Client.World.SetThunder(false, message.lightningLevel);
+				Client.World.SetRain(false, message.levelSettings.rainLevel);
+				Client.World.SetThunder(false, message.levelSettings.lightningLevel);
 				Client.Tick = message.currentTick;
 
 				//Client.World.SpawnPoint 
 				//	Client.SpawnPoint = new Vector3(
 				//		message.spawn.X, message.spawn.Y - Player.EyeLevel, message.spawn.Z); //message.spawn;
 
-				Client.World.Dimension = (Dimension)message.dimension;
-				Client.World.Difficulty = (Difficulty)message.difficulty;
+				Client.World.Dimension = (Dimension)message.levelSettings.spawnSettings.Dimension;
+				Client.World.Difficulty = (Difficulty)message.levelSettings.difficulty;
 
 				Client.World?.UpdatePlayerPosition(
 					new PlayerLocation(
@@ -287,12 +300,12 @@ namespace Alex.Net.Bedrock
 
 				player.SetInventory(new BedrockInventory(46));
 				player.UpdateGamemode((GameMode)message.playerGamemode);
-				player.PermissionLevel = (PermissionLevel)message.permissionLevel;
+				player.PermissionLevel = (PermissionLevel)message.levelSettings.permissionLevel;
 
 				player.Controller.SetRewindHistorySize(
 					message.movementRewindHistorySize); //.RewindHistory = message.movementRewindHistorySize;
 
-				foreach (var gr in message.gamerules)
+				foreach (var gr in message.levelSettings.gamerules)
 				{
 					Client.World.SetGameRule(gr);
 				}
@@ -744,6 +757,12 @@ namespace Alex.Net.Bedrock
 
 		/// <inheritdoc />
 		public void HandleMcpeFilterTextPacket(McpeFilterTextPacket message)
+		{
+			UnhandledPackage(message);
+		}
+
+		/// <inheritdoc />
+		public void HandleMcpeUpdateSubChunkBlocksPacket(McpeUpdateSubChunkBlocksPacket message)
 		{
 			UnhandledPackage(message);
 		}
@@ -1554,6 +1573,7 @@ namespace Alex.Net.Bedrock
 		{
 			var blobs = msg.blobHashes;
 			var cacheEnabled = msg.cacheEnabled;
+			var requestMode = msg.subChunkRequestMode;
 			var subChunkCount = msg.subChunkCount;
 			var chunkData = msg.chunkData;
 			var cx = msg.chunkX;
@@ -1567,7 +1587,34 @@ namespace Alex.Net.Bedrock
 				return;
 			}
 
-			ChunkProcessor.HandleChunkData(cacheEnabled, blobs, subChunkCount, chunkData, cx, cz);
+			ChunkProcessor.HandleChunkData(cacheEnabled, requestMode, blobs, subChunkCount, chunkData, cx, cz);
+		}
+		
+		/// <inheritdoc />
+		public void HandleMcpeSubChunkPacket(McpeSubChunkPacket message)
+		{
+			var baseCoordinates = message.subchunkCoordinates;
+
+			foreach (var entry in message.entries)
+			{
+				var pos = new BlockCoordinates(
+					baseCoordinates.X + entry.Offset.XOffset, baseCoordinates.Y + entry.Offset.YOffset,
+					baseCoordinates.Z + entry.Offset.ZOffset);
+
+				var result = entry.RequestResult;
+				
+				if (entry is SubChunkEntryWithCache entryWithCache)
+				{
+					ChunkProcessor.HandleSubChunkData(result, (ulong) entryWithCache.usedBlobHash, entry.Data, pos.X, pos.Y, pos.Z);
+				}
+				else if (entry is SubChunkEntryWithoutCache entryWithoutCache)
+				{
+					ChunkProcessor.HandleSubChunkData(result, null, entry.Data, pos.X, pos.Y, pos.Z);
+				}
+			}
+			
+			message?.PutPool();
+			//UnhandledPackage(message);
 		}
 
 		//private object _changeDimensionLock = new object();
@@ -2015,18 +2062,20 @@ namespace Alex.Net.Bedrock
 						continue;
 
 					collection = resourcePack.SoundBindings;
-
 					SoundBinding soundBinding;
 
 					if (!string.IsNullOrWhiteSpace(entityType))
 					{
-						if (collection.EntitySounds.Entities.TryGetValue(entityType, out soundBinding))
+						if (collection.EntitySounds?.Entities != null)
 						{
-							if (soundBinding.Events.TryGetValue(soundEvent, out se))
+							if (collection.EntitySounds.Entities.TryGetValue(entityType, out soundBinding))
 							{
-								if (!string.IsNullOrWhiteSpace(se.Sound))
+								if (soundBinding.Events.TryGetValue(soundEvent, out se))
 								{
-									sound = se.Sound;
+									if (!string.IsNullOrWhiteSpace(se.Sound))
+									{
+										sound = se.Sound;
+									}
 								}
 							}
 						}
@@ -2034,14 +2083,17 @@ namespace Alex.Net.Bedrock
 
 					if (!string.IsNullOrWhiteSpace(blockName))
 					{
-						if (collection.BlockSounds.TryGetValue(blockName, out soundBinding)
-						    || collection.InteractiveSounds.BlockSounds.TryGetValue(blockName, out soundBinding))
+						if (collection.BlockSounds != null && collection.InteractiveSounds != null)
 						{
-							if (soundBinding.Events.TryGetValue(soundEvent, out se))
+							if (collection.BlockSounds.TryGetValue(blockName, out soundBinding)
+							    || collection.InteractiveSounds.BlockSounds.TryGetValue(blockName, out soundBinding))
 							{
-								if (!string.IsNullOrWhiteSpace(se.Sound))
+								if (soundBinding.Events.TryGetValue(soundEvent, out se))
 								{
-									sound = se.Sound;
+									if (!string.IsNullOrWhiteSpace(se.Sound))
+									{
+										sound = se.Sound;
+									}
 								}
 							}
 						}
@@ -2049,24 +2101,31 @@ namespace Alex.Net.Bedrock
 
 					if (!string.IsNullOrWhiteSpace(soundCategory))
 					{
-						if (collection.BlockSounds.TryGetValue(soundCategory, out soundBinding)
-						    || collection.InteractiveSounds.BlockSounds.TryGetValue(soundCategory, out soundBinding))
+						if (collection.BlockSounds != null && collection.InteractiveSounds != null)
 						{
-							if (soundBinding.Events.TryGetValue(soundEvent, out se))
+							if (collection.BlockSounds.TryGetValue(soundCategory, out soundBinding)
+							    || collection.InteractiveSounds.BlockSounds.TryGetValue(
+								    soundCategory, out soundBinding))
 							{
-								if (!string.IsNullOrWhiteSpace(se.Sound))
+								if (soundBinding.Events.TryGetValue(soundEvent, out se))
 								{
-									sound = se.Sound;
+									if (!string.IsNullOrWhiteSpace(se.Sound))
+									{
+										sound = se.Sound;
+									}
 								}
 							}
 						}
 					}
 
-					if (collection.EntitySounds.Defaults.Events.TryGetValue(soundEvent, out se))
+					if (collection.EntitySounds?.Defaults?.Events != null)
 					{
-						if (!string.IsNullOrWhiteSpace(se.Sound))
+						if (collection.EntitySounds.Defaults.Events.TryGetValue(soundEvent, out se))
 						{
-							sound = se.Sound;
+							if (!string.IsNullOrWhiteSpace(se.Sound))
+							{
+								sound = se.Sound;
+							}
 						}
 					}
 				}

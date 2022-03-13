@@ -1,13 +1,14 @@
 ﻿using Alex.Blocks.Materials;
 
-namespace Alex.Blocks.Minecraft
+namespace Alex.Blocks.Minecraft.Plants
 {
-	public class OxeyeDaisy : FlowerBase
+	public class CornFlower : FlowerBase
 	{
-		public OxeyeDaisy()
+		public CornFlower()
 		{
 			Transparent = true;
 			Solid = false;
+			IsFullCube = false;
 
 			BlockMaterial = Material.Plants;
 		}

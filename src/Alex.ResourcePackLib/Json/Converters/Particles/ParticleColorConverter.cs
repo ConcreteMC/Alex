@@ -47,7 +47,7 @@ namespace Alex.ResourcePackLib.Json.Converters.Particles
 
 	public class GradientColors
 	{
-		[JsonProperty("gradient")] public MoLangVector4Expression[] Gradient { get; set; }
+		//[JsonProperty("gradient")] public MoLangVector4Expression[] Gradient { get; set; }
 
 		[JsonProperty("interpolant")] public IExpression Interpolant { get; set; }
 
