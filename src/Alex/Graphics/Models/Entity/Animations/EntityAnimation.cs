@@ -6,6 +6,7 @@ using Alex.ResourcePackLib.Json.Bedrock.Entity;
 using Alex.ResourcePackLib.Json.Bedrock.MoLang;
 using ConcreteMC.MolangSharp.Runtime;
 using ConcreteMC.MolangSharp.Runtime.Exceptions;
+using ConcreteMC.MolangSharp.Runtime.Value;
 using Microsoft.Xna.Framework;
 using NLog;
 
@@ -25,6 +26,10 @@ namespace Alex.Graphics.Models.Entity.Animations
 		private readonly Animation _definition;
 		private bool _loop;
 
+		public bool HoldOnLastFrame { get; set; } = false;
+		private double _startDelay = -1;
+		private double _loopDelay = -1;
+		private bool _isFirstLoop = true;
 		public EntityAnimation(AnimationComponent parent, Animation definition, string name)
 		{
 			_parent = parent;
@@ -38,7 +43,20 @@ namespace Alex.Graphics.Models.Entity.Animations
 			{
 				if (definition.Loop != null)
 				{
-					_loop = parent.Execute(definition.Loop).AsBool();
+					var loop = definition.Loop;
+
+					if (loop == "hold_on_last_frame")
+					{
+						HoldOnLastFrame = true;
+						_loop = false;
+					}
+					else
+					{
+						if (bool.TryParse(loop, out _loop))
+						{
+							
+						}
+					}
 				}
 				else
 				{
@@ -59,6 +77,9 @@ namespace Alex.Graphics.Models.Entity.Animations
 
 		public bool CanPlay()
 		{
+			if (HoldOnLastFrame && !_isFirstLoop)
+				return false;
+			
 			return true;
 		}
 
@@ -71,6 +92,18 @@ namespace Alex.Graphics.Models.Entity.Animations
 			if (!Playing)
 				return;
 
+			if (_startDelay > 0d)
+			{
+				if (_timeSinceStart.Elapsed.TotalSeconds < _startDelay)
+					return;
+			}
+
+			if (_loopDelay > 0d && !_isFirstLoop)
+			{
+				if (_timeSinceLastLoop.Elapsed.TotalSeconds < _loopDelay)
+					return;
+			}
+			
 			try
 			{
 				var entity = _parent.Entity;
@@ -92,7 +125,7 @@ namespace Alex.Graphics.Models.Entity.Animations
 
 					bone.Tick(
 						_parent.Runtime, _elapsedTimer.Elapsed.TotalSeconds, _animationTime,
-						anim.OverridePreviousAnimation);
+						false);
 				}
 			}
 			finally
@@ -102,9 +135,17 @@ namespace Alex.Graphics.Models.Entity.Animations
 
 			if (_animationLength > 0 && _animationTime >= _animationLength)
 			{
+				_isFirstLoop = false;
 				if (_loop)
 				{
 					_animationTime = 0;
+
+					if (_definition.LoopDelay != null)
+					{
+						var loopDelay = _parent.Execute(_definition.LoopDelay);
+						_loopDelay = loopDelay.AsDouble();
+					}
+					_timeSinceLastLoop.Restart();
 				}
 				else
 				{
@@ -124,15 +165,22 @@ namespace Alex.Graphics.Models.Entity.Animations
 				}
 			}
 		}
-
+		
 		public void Play()
 		{
 			if (Playing)
 				return;
-
+			
+			if (_definition.StartDelay != null)
+			{
+				var startDelay = _parent.Execute(_definition.StartDelay);
+				_startDelay = startDelay.AsDouble();
+			}
+			
+			_timeSinceStart.Restart();
 			foreach (var bone in _components)
 			{
-				bone.Start();
+				bone.Start(_definition.OverridePreviousAnimation);
 			}
 
 			Playing = true;
@@ -140,6 +188,8 @@ namespace Alex.Graphics.Models.Entity.Animations
 			_elapsedTimer.Restart();
 		}
 
+		private Stopwatch _timeSinceLastLoop = new Stopwatch();
+		private Stopwatch _timeSinceStart = new Stopwatch();
 		public void Stop()
 		{
 			if (Playing)
@@ -176,7 +226,7 @@ namespace Alex.Graphics.Models.Entity.Animations
 		private Vector3 _startPosition = Vector3.Zero;
 		private Vector3 _startScale = Vector3.Zero;
 
-		public void Start()
+		public void Start(bool reset = false)
 		{
 			if (_started) return;
 

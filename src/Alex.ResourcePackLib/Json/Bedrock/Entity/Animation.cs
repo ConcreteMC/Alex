@@ -6,6 +6,11 @@ using Newtonsoft.Json;
 
 namespace Alex.ResourcePackLib.Json.Bedrock.Entity
 {
+	public class LoopElement
+	{
+		public bool IsString { get; set; }
+		public bool IsExpression { get; set; }
+	}
 	/// <summary>
 	///		Defines a model's animations.
 	/// </summary>
@@ -22,8 +27,23 @@ namespace Alex.ResourcePackLib.Json.Bedrock.Entity
 		///		Determines whether the animation should go back to T0 when finished.
 		/// </summary>
 		[JsonProperty("loop")]
-		public IExpression Loop { get; set; } = new BooleanExpression(false);
+		public string Loop { get; set; } 
 
+		/// <summary>
+		///		 How long to wait in seconds before playing this animation.
+		///		Note that this expression is evaluated once before playing, and only re-evaluated if asked to play from the beginning again.
+		///		A looping animation should use 'loop_delay' if it wants a delay between loops.
+		/// </summary>
+		[JsonProperty("start_delay")]
+		public IExpression StartDelay { get; set; }
+		
+		/// <summary>
+		///		How long to wait in seconds before looping this animation.
+		///		Note that this expression is evaluated after each loop and on looping animation only.
+		/// </summary>
+		[JsonProperty("loop_delay")]
+		public IExpression LoopDelay { get; set; }
+		
 		/// <summary>
 		///		How does time pass when playing the animation.
 		///     Defaults to "query.anim_time + query.delta_time" which means advance in seconds.
@@ -45,8 +65,7 @@ namespace Alex.ResourcePackLib.Json.Bedrock.Entity
 		public float AnimationLength { get; set; } = 0f;
 
 		/// <summary>
-		///		Should this animation override the rotation etc?
-		///		If set to true, all animations applied before this one don't have any effect.
+		///	 reset bones in this animation to the default pose before applying this animation
 		/// </summary>
 		[JsonProperty("override_previous_animation")]
 		public bool OverridePreviousAnimation { get; set; } = false;
