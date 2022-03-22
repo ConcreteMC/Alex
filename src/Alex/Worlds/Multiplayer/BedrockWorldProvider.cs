@@ -347,7 +347,9 @@ namespace Alex.Worlds.Multiplayer
 		public override void Dispose()
 		{
 			//World?.Ticker?.UnregisterTicked(this);
-
+			FormManager?.Dispose();
+			FormManager = null;
+			
 			base.Dispose();
 			Client.Dispose();
 		}

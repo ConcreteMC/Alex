@@ -69,7 +69,7 @@ public class BoneMatrices
 
 		if (posData.IsValid)
 		{
-			_positionData = _positionData.WithValues(_position, posData.Target * new Vector3(-1f, 1f, 1f), posData.TargetTime);
+			_positionData = _positionData.WithValues(_position, posData.Target * new Vector3(1f, 1f, 1f), posData.TargetTime); // (-1, 1, 1) for fixed LBSG npc
 			_tempPositionData.Reset();
 		}
 

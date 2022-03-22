@@ -1,8 +1,12 @@
 using System;
 using System.Collections.Concurrent;
+using System.IO;
 using System.Net;
+using System.Net.Http;
 using System.Threading;
+using System.Threading.Tasks;
 using Alex.Common.Utils;
+using Microsoft.Xna.Framework;
 using RocketUI;
 using NLog;
 using SixLabors.ImageSharp.PixelFormats;
@@ -20,36 +24,77 @@ namespace Alex.Gui.Forms
 		public FormImage(string url)
 		{
 			Image = url;
+		}
 
-			ThreadPool.QueueUserWorkItem(
-				(o) =>
+		private bool _didLoad = false;
+		private SemaphoreSlim _loadingLock = new SemaphoreSlim(1);
+		/// <inheritdoc />
+		protected override void OnDraw(GuiSpriteBatch graphics, GameTime gameTime)
+		{
+			base.OnDraw(graphics, gameTime);
+
+			if (!_didLoad)
+			{
+				_ = LoadAsync();
+			}
+		}
+
+		private async Task LoadAsync()
+		{
+			if (!await _loadingLock.WaitAsync(0))
+				return;
+
+			try
+			{
+				var path = Image;
+				if (!_cache.TryGetValue(path, out var data))
 				{
-					try
-					{
-						byte[] imageData = _cache.GetOrAdd(
-							Image, (path) =>
-							{
-								using (WebClient wc = new WebClient())
-								{
-									var data = wc.DownloadData(path);
+					HttpClient httpClient = new HttpClient();
+					data = await httpClient.GetByteArrayAsync(path);
+					_cache.TryAdd(path, data);
+				}
 
-									return data;
-								}
-							});
+				if (data == null)
+					return;
 
-						var image = SixLabors.ImageSharp.Image.Load<Rgba32>(imageData);
-						TextureUtils.BitmapToTexture2DAsync(
-							this, Alex.Instance.GraphicsDevice, image, texture =>
-							{
-								Background = (TextureSlice2D)texture;
-								image.Dispose();
-							}, $"FormImage - {url}");
-					}
-					catch (Exception ex)
-					{
-						Log.Error(ex, $"Could not convert image!");
-					}
-				});
+				using (MemoryStream ms = new MemoryStream(data))
+				{
+					var image = await SixLabors.ImageSharp.Image.LoadAsync<Rgba32>(ms);
+
+					TextureUtils.BitmapToTexture2DAsync(
+						this, Alex.Instance.GraphicsDevice, image, texture =>
+						{
+							Background = (TextureSlice2D) texture;
+							image?.Dispose();
+						}, $"FormImage - {path}");
+				}
+			}
+			catch (Exception ex)
+			{
+				Log.Error(ex, $"Could not convert image!");
+			}
+			finally
+			{
+				_didLoad = true;
+				_loadingLock.Release();
+			}
+		}
+
+		/// <inheritdoc />
+		protected override void Dispose(bool disposing)
+		{
+			if (disposing)
+			{
+				_loadingLock?.Dispose();
+				_loadingLock = null;
+			}
+			
+			base.Dispose(disposing);
+		}
+
+		public static void ClearCache()
+		{
+			_cache?.Clear();
 		}
 	}
 }

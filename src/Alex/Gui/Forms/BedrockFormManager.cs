@@ -1,3 +1,4 @@
+using System;
 using Alex.Net;
 using Alex.Net.Bedrock;
 using Alex.Worlds.Multiplayer.Bedrock;
@@ -9,7 +10,7 @@ using RocketUI.Input;
 
 namespace Alex.Gui.Forms
 {
-	public class BedrockFormManager
+	public class BedrockFormManager : IDisposable
 	{
 		private static readonly ILogger Log = LogManager.GetCurrentClassLogger();
 
@@ -78,6 +79,16 @@ namespace Alex.Gui.Forms
 
 			if (active != null)
 				Hide(active.FormId);
+		}
+
+		/// <inheritdoc />
+		public void Dispose()
+		{
+			FormImage.ClearCache();
+			
+			_activeForm?.Dispose();
+			GuiManager?.Dispose();
+			InputManager?.Dispose();
 		}
 	}
 }
