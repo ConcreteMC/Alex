@@ -359,7 +359,7 @@ namespace Alex.Graphics.Models
 				parent.Disposed += ParentDisposed;
 			}
 
-			private void ParentDisposed(object? sender, EventArgs e)
+			private void ParentDisposed(object sender, EventArgs e)
 			{
 				Disposed?.Invoke(this, EventArgs.Empty);
 			}

@@ -1,9 +1,7 @@
 ﻿using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using Alex.Blocks;
-using Alex.Blocks.Minecraft;
 using Alex.Blocks.State;
 using Alex.Common;
 using Alex.Common.Blocks;
@@ -14,16 +12,13 @@ using Alex.Common.Utils.Vectors;
 using Alex.ResourcePackLib.Json;
 using Alex.ResourcePackLib.Json.BlockStates;
 using Alex.ResourcePackLib.Json.Models;
-using Alex.ResourcePackLib.Json.Models.Blocks;
 using Alex.Utils;
 using Alex.Worlds;
 using Alex.Worlds.Abstraction;
 using Alex.Worlds.Chunks;
 using Alex.Worlds.Singleplayer;
 using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics.PackedVector;
 using NLog;
-using Matrix = System.Drawing.Drawing2D.Matrix;
 
 namespace Alex.Graphics.Models.Blocks
 {
@@ -423,9 +418,6 @@ namespace Alex.Graphics.Models.Blocks
 						cullFace = RotateDirection(cullFace, offset, FACE_ROTATION, INVALID_FACE_ROTATION);
 						facing = RotateDirection(facing, offset, FACE_ROTATION, INVALID_FACE_ROTATION);
 					}
-
-					float minX = float.MaxValue, minY = float.MaxValue, minZ = float.MaxValue;
-					float maxX = float.MinValue, maxY = float.MinValue, maxZ = float.MinValue;
 
 					if (!ShouldRenderFace(world, facing, position, baseBlock))
 						continue;

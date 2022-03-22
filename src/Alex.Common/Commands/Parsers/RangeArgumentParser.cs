@@ -6,8 +6,8 @@ namespace Alex.Common.Commands.Parsers
 	public abstract class RangeArgumentParser<T> : ArgumentParser
 	{
 		public byte Flags { get; set; }
-		public T? Min { get; set; }
-		public T? Max { get; set; }
+		public T Min { get; set; }
+		public T Max { get; set; }
 
 		/// <inheritdoc />
 		public override bool TryParse(SeekableTextReader input)

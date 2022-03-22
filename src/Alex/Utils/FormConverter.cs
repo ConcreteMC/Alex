@@ -27,7 +27,7 @@ namespace Alex.Utils
 			}
 		}
 
-		public override void WriteJson(JsonWriter writer, object? value, JsonSerializer serializer)
+		public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
 		{
 			throw new NotImplementedException();
 		}
@@ -69,7 +69,7 @@ namespace Alex.Utils
 			}
 		}
 
-		public override void WriteJson(JsonWriter writer, object? value, JsonSerializer serializer)
+		public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
 		{
 			throw new NotImplementedException();
 		}

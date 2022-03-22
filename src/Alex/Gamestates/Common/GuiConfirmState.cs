@@ -22,7 +22,7 @@ namespace Alex.Gamestates.Common
 			public string WarningText { get; set; } = null;
 			public string WarningTranslationKey { get; set; } = null;
 
-			public object?[] WarningParameters { get; set; } = Array.Empty<string>();
+			public object[] WarningParameters { get; set; } = Array.Empty<string>();
 		}
 
 		public GuiConfirmState(string message, Action<bool> callbackAction) : this(

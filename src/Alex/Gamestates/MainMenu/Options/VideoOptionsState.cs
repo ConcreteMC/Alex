@@ -165,7 +165,7 @@ namespace Alex.Gamestates.MainMenu.Options
 			FrameRateLimiter.ValueChanged -= FrameRateLimiterOnValueChanged;
 		}
 
-		private void FrameRateLimiterOnValueChanged(object? sender, bool e)
+		private void FrameRateLimiterOnValueChanged(object sender, bool e)
 		{
 			FpsSlider.Enabled = e;
 		}

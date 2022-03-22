@@ -16,15 +16,15 @@ namespace Alex.ResourcePackLib.Json.Converters.Particles
 		public override bool CanWrite => false;
 
 		/// <inheritdoc />
-		public override void WriteJson(JsonWriter writer, object? value, JsonSerializer serializer)
+		public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
 		{
 			throw new NotImplementedException();
 		}
 
 		/// <inheritdoc />
-		public override object? ReadJson(JsonReader reader,
+		public override object ReadJson(JsonReader reader,
 			Type objectType,
-			object? existingValue,
+			object existingValue,
 			JsonSerializer serializer)
 		{
 			Dictionary<string, ParticleComponent> components = new Dictionary<string, ParticleComponent>();

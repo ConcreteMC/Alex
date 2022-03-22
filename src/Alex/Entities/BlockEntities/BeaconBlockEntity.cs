@@ -152,7 +152,7 @@ public class BeaconBlockEntity : BlockEntity
 		return base.BlockChanged(oldBlock, newBlock);
 	}
 
-	private void OnChunkUpdate(object? sender, ChunkUpdatedEventArgs e)
+	private void OnChunkUpdate(object sender, ChunkUpdatedEventArgs e)
 	{
 		if (e.Position == new ChunkCoordinates(KnownPosition))
 		{

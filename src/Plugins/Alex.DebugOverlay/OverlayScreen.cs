@@ -17,7 +17,6 @@ namespace Alex.DebugOverlay
     {
         private Alex           _alex;
         private TextElement    _fpsElement;
-        private GuiGraph       _graph;
         private InfluxDBClient _infucksClient;
         private WriteApiAsync  _writeApiAsync;
         private WriteApi  _writeApi;
@@ -72,7 +71,7 @@ namespace Alex.DebugOverlay
             //_alex.UiTaskManager.TaskCreated += TaskCreated;
         }
 
-        private void OnEntityUpdated(object? sender, EntityUpdateEventArgs e)
+        private void OnEntityUpdated(object sender, EntityUpdateEventArgs e)
         {
             var entityType = (e.Entity?.Type);
 
@@ -97,7 +96,7 @@ namespace Alex.DebugOverlay
             return input.Replace(" ", "_").ToLower();
         }
 
-        private void OnEntityTicked(object? sender, EntityUpdateEventArgs e)
+        private void OnEntityTicked(object sender, EntityUpdateEventArgs e)
         {
             var entityType = e.Entity?.Type;
 
@@ -134,7 +133,7 @@ namespace Alex.DebugOverlay
         //     }
         // }
 
-        private void TaskFinished(object? sender, TaskFinishedEventArgs e)
+        private void TaskFinished(object sender, TaskFinishedEventArgs e)
         {
             _writeApiAsync.WritePointAsync(_taskExecTimeBuilder()
                 .Field("queued", e.TimeTillExecution.TotalMilliseconds)
@@ -151,7 +150,7 @@ namespace Alex.DebugOverlay
             var frameTime = _alex.FpsMonitor.LastFrameTime;
             _writeApiAsync.WritePointAsync(_frameTimeBuilder().Field("value", frameTime));
 
-            _graph?.Add(_frameCount++, frameTime, Color.Green);
+         //   _graph?.Add(_frameCount++, frameTime, Color.Green);
 
             //_history.Push(new Record(_frameCount++, frameTime));
             _fpsElement.Text =

@@ -253,7 +253,7 @@ namespace Alex
 			}
 		}
 
-		private void WindowOnKeyDown(object? sender, InputKeyEventArgs e)
+		private void WindowOnKeyDown(object sender, InputKeyEventArgs e)
 		{
 			if (!e.Key.TryConvertKeyboardInput(out _))
 			{

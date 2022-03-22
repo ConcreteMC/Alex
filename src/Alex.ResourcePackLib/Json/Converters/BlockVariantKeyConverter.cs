@@ -11,13 +11,13 @@ namespace Alex.ResourcePackLib.Json.Converters
 	public class BlockVariantKeyTypeConverter : TypeConverter
 	{
 		/// <inheritdoc />
-		public override object? ConvertFrom(ITypeDescriptorContext? context, CultureInfo? culture, object value)
+		public override object ConvertFrom(ITypeDescriptorContext context, CultureInfo culture, object value)
 		{
 			return value is string str ? new BlockVariantKey(str) : base.ConvertFrom(context, culture, value);
 		}
 
 		/// <inheritdoc />
-		public override bool CanConvertFrom(ITypeDescriptorContext? context, Type sourceType)
+		public override bool CanConvertFrom(ITypeDescriptorContext context, Type sourceType)
 		{
 			return sourceType == typeof(string) || base.CanConvertFrom(context, sourceType);
 		}
@@ -26,15 +26,15 @@ namespace Alex.ResourcePackLib.Json.Converters
 	public class BlockVariantKeyConverter : JsonConverter
 	{
 		/// <inheritdoc />
-		public override void WriteJson(JsonWriter writer, object? value, JsonSerializer serializer)
+		public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
 		{
 			throw new NotImplementedException();
 		}
 
 		/// <inheritdoc />
-		public override object? ReadJson(JsonReader reader,
+		public override object ReadJson(JsonReader reader,
 			Type objectType,
-			object? existingValue,
+			object existingValue,
 			JsonSerializer serializer)
 		{
 			var obj = JToken.Load(reader);

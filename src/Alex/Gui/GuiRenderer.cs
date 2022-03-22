@@ -933,7 +933,7 @@ namespace Alex.Gui
 		{
 			return _styleSheet.ResolveStyles(elementType, classNames);
 
-			if (elementType.IsAssignableFrom(typeof(StackMenuItem)))
+			/*if (elementType.IsAssignableFrom(typeof(StackMenuItem)))
 			{
 				return new[]
 				{
@@ -983,7 +983,7 @@ namespace Alex.Gui
 				};
 			}
 
-			return null;
+			return null;*/
 		}
 	}
 }

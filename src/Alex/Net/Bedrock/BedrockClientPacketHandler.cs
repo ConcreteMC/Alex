@@ -776,6 +776,7 @@ namespace Alex.Net.Bedrock
 				message.coordinates.X, message.coordinates.Y, message.coordinates.Z);
 
 			Client.ChunkPublisherRadius = message.radius;
+			Log.Info($"ChunkPublisherUpdate: radius={message.radius} coordinates={message.coordinates}");
 		}
 
 		public void HandleMcpeBiomeDefinitionList(McpeBiomeDefinitionList message)

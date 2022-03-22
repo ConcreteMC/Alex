@@ -105,7 +105,7 @@ namespace Alex.Common.Utils.Fnbt
 
 		private static object DeserializeChild(Type type, NbtTag tag)
 		{
-			if (typeof(NbtTag).IsAssignableFrom((Type?)type))
+			if (typeof(NbtTag).IsAssignableFrom((Type)type))
 			{
 				tag = (NbtTag)tag.Clone();
 				tag.Name = null;

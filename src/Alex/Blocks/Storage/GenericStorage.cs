@@ -231,7 +231,6 @@ public abstract class GenericStorage<TValue> : IDisposable where TValue : class,
 			storage = new FlexibleStorage(MaxBitsPerEntry, _size);
 
 			return storage;
-			bitsPerEntry = 1;
 		}
 
 		storage = new FlexibleStorage(bitsPerEntry, _size);

@@ -22,7 +22,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Plugins", "Plugins", "{5604
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Other", "Other", "{5339DA92-BA8E-441B-AF71-27B75FEEC760}"
 ProjectSection(SolutionItems) = preProject
-	..\Directory.Build.props = ..\Directory.Build.props
+	Directory.Build.props = Directory.Build.props
 EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Submodules", "Submodules", "{66F9179F-DEB1-45B9-B067-D613A2857D5C}"

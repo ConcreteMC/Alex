@@ -63,7 +63,7 @@ namespace Alex.ResourcePackLib.Json.Converters
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(MobsModelConverter));
 
 		/// <inheritdoc />
-		public override void WriteJson(JsonWriter writer, object? value, JsonSerializer serializer)
+		public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
 		{
 			throw new NotImplementedException();
 		}
@@ -328,9 +328,9 @@ namespace Alex.ResourcePackLib.Json.Converters
 		}
 
 		/// <inheritdoc />
-		public override object? ReadJson(JsonReader reader,
+		public override object ReadJson(JsonReader reader,
 			Type objectType,
-			object? existingValue,
+			object existingValue,
 			JsonSerializer serializer)
 		{
 			var obj = JToken.Load(reader);

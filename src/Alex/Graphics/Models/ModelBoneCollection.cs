@@ -36,7 +36,7 @@ namespace Alex.Graphics.Models
 				_items.Add(modelBone);
 		}
 
-		private void ItemsChanged(object? sender, NotifyCollectionChangedEventArgs e)
+		private void ItemsChanged(object sender, NotifyCollectionChangedEventArgs e)
 		{
 			var items = _items;
 

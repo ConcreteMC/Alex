@@ -27,7 +27,7 @@ namespace Alex.Blocks.Mapping
 		public override bool CanWrite => false;
 
 		/// <inheritdoc />
-		public override void WriteJson(JsonWriter writer, object? value, JsonSerializer serializer)
+		public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
 		{
 			throw new NotImplementedException();
 		}
@@ -36,9 +36,9 @@ namespace Alex.Blocks.Mapping
 			@"(?'key'[\:a-zA-Z_\d][^\[]*)(\[(?'data'.*)\])?", RegexOptions.Compiled);
 
 		/// <inheritdoc />
-		public override object? ReadJson(JsonReader reader,
+		public override object ReadJson(JsonReader reader,
 			Type objectType,
-			object? existingValue,
+			object existingValue,
 			JsonSerializer serializer)
 		{
 			BlockMap result = new BlockMap();

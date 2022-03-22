@@ -39,9 +39,9 @@ namespace Alex.ResourcePackLib.Json.Converters
 		}
 
 		/// <inheritdoc />
-		public override EntityModelUV? ReadJson(JsonReader reader,
+		public override EntityModelUV ReadJson(JsonReader reader,
 			Type objectType,
-			EntityModelUV? existingValue,
+			EntityModelUV existingValue,
 			bool hasExistingValue,
 			JsonSerializer serializer)
 		{

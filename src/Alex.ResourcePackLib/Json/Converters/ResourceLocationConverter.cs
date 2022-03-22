@@ -8,15 +8,15 @@ namespace Alex.ResourcePackLib.Json.Converters
 	public class ResourceLocationConverter : JsonConverter<ResourceLocation>
 	{
 		/// <inheritdoc />
-		public override void WriteJson(JsonWriter writer, ResourceLocation? value, JsonSerializer serializer)
+		public override void WriteJson(JsonWriter writer, ResourceLocation value, JsonSerializer serializer)
 		{
 			throw new NotImplementedException();
 		}
 
 		/// <inheritdoc />
-		public override ResourceLocation? ReadJson(JsonReader reader,
+		public override ResourceLocation ReadJson(JsonReader reader,
 			Type objectType,
-			ResourceLocation? existingValue,
+			ResourceLocation existingValue,
 			bool hasExistingValue,
 			JsonSerializer serializer)
 		{

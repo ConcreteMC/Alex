@@ -99,7 +99,7 @@ namespace Alex.Services
 
 							while (!cancellationToken.IsCancellationRequested)
 							{
-								IPEndPoint? remoteEndPoint = null;
+								IPEndPoint remoteEndPoint = null;
 
 								byte[] received = udp.Receive(ref remoteEndPoint);
 

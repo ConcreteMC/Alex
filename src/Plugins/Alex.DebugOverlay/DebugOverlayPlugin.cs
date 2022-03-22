@@ -18,7 +18,7 @@ namespace Alex.DebugOverlay
 		}
 
 		private const string Filename = "report.csv";
-		private StreamWriter _streamWriter;
+		//private StreamWriter _streamWriter;
 		/// <inheritdoc />
 		public override void Enabled()
 		{
@@ -35,10 +35,10 @@ namespace Alex.DebugOverlay
 			_alex.OnBeginDraw += OnBeginDraw;
 		}
 
-		private ulong _frameCounter = 0;
+	//	private ulong _frameCounter = 0;
 		private void OnBeginDraw(object sender, EventArgs e)
 		{
-			var frameTime = _alex.FpsMonitor.LastFrameTime;
+		//	var frameTime = _alex.FpsMonitor.LastFrameTime;
 			
 			//_streamWriter.WriteLine($"{_frameCounter++},{frameTime}");
 		}

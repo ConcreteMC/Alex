@@ -11,7 +11,7 @@
     </ItemGroup>
 
     <ItemGroup>
-        <PackageReference Include="NLog" Version="4.7.12" />
+        <PackageReference Include="NLog" Version="4.7.14" />
         <PackageReference Update="MonoGame.Framework.Compute.DesktopGL" Version="3.8.1.3" />
     </ItemGroup>
 

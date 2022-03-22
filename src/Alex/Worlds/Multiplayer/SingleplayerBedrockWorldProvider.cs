@@ -100,7 +100,7 @@ public class SingleplayerBedrockWorldProvider : BedrockWorldProvider
 
 	private Player _minetPlayer = null;
 
-	private void PlayerFactoryOnPlayerCreated(object? sender, PlayerEventArgs e)
+	private void PlayerFactoryOnPlayerCreated(object sender, PlayerEventArgs e)
 	{
 		_minetPlayer = e.Player;
 		e.Player.MaxViewDistance = _renderDistance;

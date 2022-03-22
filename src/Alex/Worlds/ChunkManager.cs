@@ -151,7 +151,7 @@ namespace Alex.Worlds
 			_resourceManager.OnResourcesReloaded += OnResourcesReloaded;
 		}
 
-		private void OnResourcesReloaded(object? sender, EventArgs e)
+		private void OnResourcesReloaded(object sender, EventArgs e)
 		{
 			InitTextures();
 
@@ -174,7 +174,7 @@ namespace Alex.Worlds
 			blockAtlas.AtlasGenerated += AtlasGenerated;
 		}
 
-		private void AtlasGenerated(object? sender, AtlasTexturesGeneratedEventArgs e)
+		private void AtlasGenerated(object sender, AtlasTexturesGeneratedEventArgs e)
 		{
 			SetTextures(e.Texture);
 		}

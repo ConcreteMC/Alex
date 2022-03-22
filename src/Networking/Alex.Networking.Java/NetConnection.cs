@@ -127,7 +127,7 @@ namespace Alex.Networking.Java
 				if (CancellationToken.IsCancellationRequested) return;
 				CancellationToken.Cancel();
 
-				if (SocketConnected(Client.Client))
+				if (SocketConnected(Client?.Client))
 				{
 					//TODO
 					Disconnected(true);
@@ -531,6 +531,9 @@ namespace Alex.Networking.Java
 
 		private bool SocketConnected(Socket s)
 		{
+			if (s == null)
+				return false;
+			
 			try
 			{
 				bool part1 = s.Poll(1000, SelectMode.SelectRead);

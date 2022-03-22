@@ -38,7 +38,7 @@ namespace Alex.Gui.Elements.Hud
 			player.HealthManager.OnAvailableAirChanged += OnAvailableAirChanged;
 		}
 
-		private void OnAvailableAirChanged(object? sender, AirChangedEventArgs e)
+		private void OnAvailableAirChanged(object sender, AirChangedEventArgs e)
 		{
 			UpdateAir(e.AirAvailable, e.MaxAirAvailable);
 		}

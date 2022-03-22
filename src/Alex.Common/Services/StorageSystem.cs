@@ -107,7 +107,7 @@ namespace Alex.Common.Services
 
 				return true;
 			}
-			catch (Exception ex)
+			catch (Exception)
 			{
 				return false;
 			}
@@ -133,7 +133,7 @@ namespace Alex.Common.Services
 
 				return true;
 			}
-			catch (Exception ex)
+			catch (Exception)
 			{
 				value = null;
 
@@ -146,7 +146,6 @@ namespace Alex.Common.Services
 		{
 			var fileName = Path.Combine(DataDirectory, key);
 
-			bool isWriting = false;
 			FileAccess access = FileAccess.Read;
 			FileShare fileShare = FileShare.Read;
 
@@ -155,7 +154,6 @@ namespace Alex.Common.Services
 				case FileMode.CreateNew:
 					access = FileAccess.Write;
 					fileShare = FileShare.None;
-					isWriting = true;
 
 					break;
 
@@ -163,7 +161,6 @@ namespace Alex.Common.Services
 				case FileMode.Create:
 					access = FileAccess.ReadWrite;
 					fileShare = FileShare.None;
-					isWriting = true;
 
 					break;
 			}
@@ -230,7 +227,7 @@ namespace Alex.Common.Services
 
 				return true;
 			}
-			catch (Exception ex)
+			catch (Exception)
 			{
 				value = null;
 
@@ -271,7 +268,7 @@ namespace Alex.Common.Services
 
 				return true;
 			}
-			catch (Exception ex)
+			catch (Exception)
 			{
 				return false;
 			}

@@ -44,8 +44,6 @@ namespace Alex.Blocks.Minecraft
 			//	return true;
 
 			return false;
-
-			return base.CanAttach(face, block);
 		}
 
 		public override bool TryGetStateProperty(string prop, out IStateProperty stateProperty)

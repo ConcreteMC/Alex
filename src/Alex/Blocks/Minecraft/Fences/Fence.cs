@@ -37,8 +37,6 @@ namespace Alex.Blocks.Minecraft.Fences
 			//current = Check(world, position, position + BlockCoordinates.Up, current);
 			//current = Check(world, position, position + BlockCoordinates.Down, current);
 			return newState;
-
-			return base.BlockPlaced(world, state, position);
 		}
 
 		/// <inheritdoc />

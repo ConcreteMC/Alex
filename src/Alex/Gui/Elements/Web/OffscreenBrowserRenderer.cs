@@ -218,7 +218,7 @@ namespace Alex.Gui.Elements.Web
 
 		private string _previousUrl = null;
 
-		private async void PageOnFrameNavigated(object? sender, FrameEventArgs e)
+		private async void PageOnFrameNavigated(object sender, FrameEventArgs e)
 		{
 			if (e.Frame.ParentFrame != null)
 				return;
@@ -237,7 +237,7 @@ namespace Alex.Gui.Elements.Web
 			}
 		}
 
-		private void PageOnConsole(object? sender, ConsoleEventArgs e)
+		private void PageOnConsole(object sender, ConsoleEventArgs e)
 		{
 			switch (e.Message.Type) { }
 

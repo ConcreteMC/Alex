@@ -163,10 +163,11 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			}
 
 			BedrockChunkSection section = null;
+			int subChunkIndex = int.MaxValue;
 			using (MemoryStream ms = new MemoryStream(data.Data))
 			{
 				using NbtBinaryReader defStream = new NbtBinaryReader(ms, true);
-				section = ReadSection(defStream);
+				section = ReadSection(defStream, out subChunkIndex);
 			}
 
 			if (section == null)
@@ -344,13 +345,23 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			}
 		}
 
-		internal BedrockChunkSection ReadSection(NbtBinaryReader defStream)
+		internal BedrockChunkSection ReadSection(NbtBinaryReader defStream, out int subChunkIndex)
 		{
 			int version = defStream.ReadByte();
+			subChunkIndex = int.MaxValue;
 			
-			if (version == 1 || version == 8)
+			if (version == 1 || version == 8 || version == 9)
 			{
-				return ReadPalletedSection(defStream, version);
+				var section = ReadPalletedSection(defStream, version, out var subChunkYValue);
+
+				if (subChunkYValue != int.MaxValue)
+				{
+					//Calculate subchunk index
+					subChunkIndex = subChunkYValue >> 4;
+					subChunkIndex += WorldSettings.MinY < 0 ? Math.Abs(WorldSettings.MinY >> 4) : 0;
+				}
+				
+				return section;
 			}
 			else if (version == 0)
 			{
@@ -364,10 +375,17 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			return null;
 		}
 
-		private BedrockChunkSection ReadPalletedSection(NbtBinaryReader defStream, int version)
+		private BedrockChunkSection ReadPalletedSection(NbtBinaryReader defStream, int version, out int subChunkYValue)
 		{
 			var stream = defStream.BaseStream;
 			int storageSize = version == 1 ? 1 : defStream.ReadByte();
+			
+			subChunkYValue = int.MaxValue;
+			if (version == 9)
+			{
+				subChunkYValue = defStream.ReadByte();
+				Log.Info($"Got subchunk Y value: {subChunkYValue}");
+			}
 
 			var section = new BedrockChunkSection(storageSize);
 
@@ -461,7 +479,6 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 					stream.Position = afterPos;
 				}
 			}
-
 			return section;
 		}
 
@@ -557,7 +574,15 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 					{
 						for (int s = 0; s < chunkData.SubChunkCount; s++)
 						{
-							chunkColumn.Sections[s] = ReadSection(defStream);
+							var sectionIndex = s;
+							var section = ReadSection(defStream, out int subChunkIndex);
+
+							if (subChunkIndex != int.MaxValue)
+							{
+								sectionIndex = subChunkIndex;
+							}
+
+							chunkColumn.Sections[sectionIndex] = section;
 						}
 					}
 

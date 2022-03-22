@@ -27,7 +27,7 @@ namespace Alex
 			CurrentFile.Profiles.CollectionChanged += ProfilesOnCollectionChanged;
 		}
 
-		private void ProfilesOnCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
+		private void ProfilesOnCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
 		{
 			Save();
 		}

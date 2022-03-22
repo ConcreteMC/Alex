@@ -62,7 +62,7 @@ namespace Alex.Entities.Projectiles
 			foreach (var position in GetParticlePositions(10f))
 			{
 				Alex.Instance?.ParticleManager?.SpawnParticle(
-					"redstone_wire_dust_particle", center + position, out var particleInstance, 0l,
+					"redstone_wire_dust_particle", center + position, out var particleInstance, 0L,
 					ParticleDataMode.Color);
 			}
 		}

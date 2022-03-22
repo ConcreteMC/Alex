@@ -7,7 +7,7 @@ namespace Alex.ResourcePackLib.Json.Converters
 	public class GuidConverter : JsonConverter
 	{
 		/// <inheritdoc />
-		public override void WriteJson(JsonWriter writer, object? value, JsonSerializer serializer)
+		public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
 		{
 			throw new NotImplementedException();
 		}
@@ -15,7 +15,7 @@ namespace Alex.ResourcePackLib.Json.Converters
 		/// <inheritdoc />
 		public override object ReadJson(JsonReader reader,
 			Type objectType,
-			object? existingValue,
+			object existingValue,
 			JsonSerializer serializer)
 		{
 			var obj = JToken.Load(reader);

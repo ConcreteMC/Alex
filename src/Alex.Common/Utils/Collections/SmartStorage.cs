@@ -32,19 +32,6 @@ namespace Alex.Common.Utils.Collections
 				return index;
 
 			return -1;
-
-			lock (_writeLock)
-			{
-				for (int i = 0; i < Data.Length; i++)
-				{
-					if (EqualityComparer.Equals(Data[i], data))
-					{
-						return i;
-					}
-				}
-
-				return -1;
-			}
 		}
 
 		public int Add(T data)
@@ -69,22 +56,12 @@ namespace Alex.Common.Utils.Collections
 
 		public void IncreaseUsage(int index)
 		{
-			return;
-
-			lock (_writeLock)
-			{
-				//References[index] += 1;
-			}
+			
 		}
 
 		public void DecrementUsage(int index)
 		{
-			return;
-
-			lock (_writeLock)
-			{
-				//	References[index] -= 1;
-			}
+			
 		}
 
 		public T this[int index]

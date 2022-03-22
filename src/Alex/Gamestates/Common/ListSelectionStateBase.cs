@@ -84,7 +84,7 @@ namespace Alex.Gamestates.Common
 			GuiManager.FocusManager.FocusChanged += OnFocusChanged;
 		}
 
-		private void OnFocusChanged(object? sender, GuiFocusChangedEventArgs e)
+		private void OnFocusChanged(object sender, GuiFocusChangedEventArgs e)
 		{
 			if (e.FocusedElement == null || !(e.FocusedElement is TGuiListItemContainer listItem))
 				return;

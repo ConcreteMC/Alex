@@ -222,7 +222,7 @@ namespace Alex.Entities
 			Alex.Instance.OnEndDraw += OnEndDraw;
 		}
 
-		private void OnEndDraw(object? sender, EventArgs e)
+		private void OnEndDraw(object sender, EventArgs e)
 		{
 			Alex.Instance.OnEndDraw -= OnEndDraw;
 			var w = Graphics.PresentationParameters.BackBufferWidth;

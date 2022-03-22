@@ -101,8 +101,8 @@
         <PackageReference Include="MojangAPI" Version="1.1.0" />
         <PackageReference Include="Mono.Cecil" Version="0.11.4" />
         <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
-        <PackageReference Include="NLog" Version="4.7.12" />
-        <PackageReference Include="PuppeteerSharp" Version="5.1.0" />
+        <PackageReference Include="NLog" Version="4.7.14" />
+        <PackageReference Include="PuppeteerSharp" Version="6.2.0" />
         <PackageReference Include="System.Globalization" Version="4.3.0" />
         <PackageReference Include="System.Reactive.Core" Version="5.0.0" />
         <PackageReference Include="System.Reactive.Interfaces" Version="5.0.0" />

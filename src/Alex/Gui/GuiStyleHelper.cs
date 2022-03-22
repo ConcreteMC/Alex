@@ -11,7 +11,7 @@ namespace Alex.Gui
 		public static TSlider ApplyStyle<TSlider, TValue>(this TSlider slider)
 			where TSlider : Slider<TValue> where TValue : IConvertible
 		{
-			return slider;
+			return slider;/*
 
 			slider.Background = AlexGuiTextures.ButtonDisabled;
 			slider.ThumbBackground = AlexGuiTextures.ButtonDefault;
@@ -51,14 +51,14 @@ namespace Alex.Gui
 			    {
 			        toggleButton.CheckedColor = (Color) TextColor.Yellow;
 			    }
-			}*/
+			}#1#
 
-			return slider;
+			return slider;*/
 		}
 
 		public static TSlider ApplyStyle<TSlider>(this TSlider slider) where TSlider : Slider
 		{
-			return slider;
+			return slider;/*
 
 			slider.Background = AlexGuiTextures.ButtonDisabled;
 			slider.ThumbBackground = AlexGuiTextures.ButtonDefault;
@@ -98,9 +98,9 @@ namespace Alex.Gui
 			    {
 			        toggleButton.CheckedColor = (Color) TextColor.Yellow;
 			    }
-			}*/
+			}#1#
 
-			return slider;
+			return slider;*/
 		}
 
 		public static TButton ApplyModernStyle<TButton>(this TButton button, bool modern = true) where TButton : Button

@@ -189,7 +189,7 @@ namespace Alex.Gui.Dialogs
 			UpdateActionButtons();
 		}
 
-		private void OnMapClicked(object? sender, MapClickedEventArgs e)
+		private void OnMapClicked(object sender, MapClickedEventArgs e)
 		{
 			if (e.EventType == ClickEventType.DoubleClick && e.MouseButton == MouseButton.Left)
 			{
