@@ -6,8 +6,8 @@ A Minecraft (Java & Bedrock Edition) client written in C#
 
 
 #### This is NOT a hacked/cracked client!
+##### I'm not responsible for any bans or other when using Alex, use at your own risk.
 Alex does and always will require a valid Minecraft/Xbox account inorder to play!
-
 
 ![Title screen](https://raw.githubusercontent.com/kennyvv/Alex/master/screenshots/alex-home.png)
 ![Nethergames Lobby](https://raw.githubusercontent.com/kennyvv/Alex/master/screenshots/alex-ng-new.png)
