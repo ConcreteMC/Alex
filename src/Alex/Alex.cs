@@ -624,6 +624,9 @@ namespace Alex
 					// Font = new BitmapFont(
 					// 	GraphicsDevice, fontBitmap, bitmapCharacters[0].Length, bitmapCharacters.Length,
 					// 	bitmapCharacters);
+					var font = Font;
+					font?.Dispose();
+					
 					Font = new BitmapFont(GraphicsDevice, sources);
 
 					GuiManager.ApplyFont(Font);

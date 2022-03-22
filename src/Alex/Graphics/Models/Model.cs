@@ -320,11 +320,15 @@ namespace Alex.Graphics.Models
 
 				Bones = null;
 			}
+
+			if (!disposing)
+			{
+				Log.Warn($"Model not garbage collected!");
+			}
 		}
 
 		~Model()
 		{
-			Log.Warn($"Model not garbage collected!");
 			Dispose(false);
 		}
 

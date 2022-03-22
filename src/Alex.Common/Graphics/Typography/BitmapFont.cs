@@ -485,6 +485,9 @@ namespace Alex.Common.Graphics.Typography
             var asciiSource = sources.LastOrDefault(x => x.IsAscii && x.Image != null);
             if (asciiSource != null)
             {
+                var previous = AsciiTexture;
+                previous?.Dispose();
+                
                 AsciiTexture = TextureUtils.BitmapToTexture2D(this, graphics, asciiSource.Image);
                 LoadGlyphs(ref glyphs, asciiSource.Image, AsciiTexture, asciiSource.Characters.Chunk(16).Select(c => new string(c)).ToArray(), false);
             }
@@ -509,6 +512,9 @@ namespace Alex.Common.Graphics.Typography
 
         private void LoadGlyphs(ref Dictionary<char, IFontGlyph> glyphs, Image<Rgba32> bitmap, Texture2D texture, string[] data, bool isUnicode)
         {
+            if (bitmap == null)
+                return;
+            
             if (_isInitialised) return;
 
             if (bitmap.DangerousTryGetSinglePixelMemory(out var mem))
@@ -646,6 +652,23 @@ namespace Alex.Common.Graphics.Typography
             {
                 return $"CharacterIndex={Character}, Glyph={Texture}, Width={Width}, Height={Height}, Scale={Scale}";
             }
+        }
+
+        /// <inheritdoc />
+        public void Dispose()
+        {
+            AsciiTexture?.Dispose();
+            AsciiTexture = null;
+
+            var unicodeTextures = UnicodeTextures;
+
+            if (unicodeTextures != null)
+            {
+                foreach(var texture in unicodeTextures)
+                    texture?.Dispose();
+            }
+
+            UnicodeTextures = null;
         }
     }
 }

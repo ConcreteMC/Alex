@@ -555,7 +555,8 @@ namespace Alex.Gamestates.InGame
 						_playingHud?.Unload();
 
 						genericLoadingDialog.Text = "Reloading resources...";
-						Alex.Resources.ReloadBedrockResources(genericLoadingDialog);
+						Alex.Resources.ReloadBedrockResources(genericLoadingDialog, true);
+						//Alex.Resources.ReloadPacks(genericLoadingDialog);
 
 						RichPresenceProvider.ClearPresence();
 						GC.Collect();

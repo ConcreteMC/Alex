@@ -937,27 +937,39 @@ namespace Alex.ResourcePackLib
 			return false;
 		}
 
-		public void Dispose()
+		/// <inheritdoc />
+		protected override void Dispose(bool disposing)
 		{
-			_archive?.Dispose();
+			base.Dispose(disposing);
 
-			EntityDefinitions?.Clear();
-			EntityDefinitions = null;
-			Attachables?.Clear();
-			Attachables = null;
-			RenderControllers?.Clear();
-			RenderControllers = null;
-			AnimationControllers?.Clear();
-			AnimationControllers = null;
-			Animations?.Clear();
-			Animations = null;
-			_bitmaps?.Clear();
-			_bitmaps = null;
-			/*public IReadOnlyDictionary<ResourceLocation, EntityDescription> EntityDefinitions { get; private set; } = new ConcurrentDictionary<ResourceLocation, EntityDescription>();
-			public IReadOnlyDictionary<string, AttachableDefinition> Attachables { get; private set; } = new ConcurrentDictionary<string, AttachableDefinition>();
-			public IReadOnlyDictionary<string, RenderController> RenderControllers { get; private set; } = new ConcurrentDictionary<string, RenderController>();
-			public IReadOnlyDictionary<string, AnimationController> AnimationControllers { get; private set; } = new ConcurrentDictionary<string, AnimationController>();
-			public IReadOnlyDictionary<string, Animation> Animations { get; private set; } = new ConcurrentDictionary<string, Animation>();*/
+			if (disposing)
+			{
+				if (FontSources != null)
+				{
+					var fontSources = FontSources.ToArray();
+					FontSources = null;
+
+					foreach (var fontSource in fontSources)
+					{
+						fontSource?.Image?.Dispose();
+					}
+				}
+
+				_archive?.Dispose();
+
+				EntityDefinitions?.Clear();
+				EntityDefinitions = null;
+				Attachables?.Clear();
+				Attachables = null;
+				RenderControllers?.Clear();
+				RenderControllers = null;
+				AnimationControllers?.Clear();
+				AnimationControllers = null;
+				Animations?.Clear();
+				Animations = null;
+				_bitmaps?.Clear();
+				_bitmaps = null;
+			}
 		}
 
 		/// <inheritdoc />

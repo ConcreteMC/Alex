@@ -14,6 +14,7 @@ using Alex.Blocks;
 using Alex.Blocks.Mapping;
 using Alex.Blocks.Minecraft;
 using Alex.Blocks.State;
+using Alex.Common.GameStates;
 using Alex.Common.Graphics.GpuResources;
 using Alex.Common.Graphics.Typography;
 using Alex.Common.Resources;
@@ -65,13 +66,13 @@ namespace Alex
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(ResourceManager));
 
 		private LinkedList<ResourcePack> ActiveResourcePacks { get; } = new LinkedList<ResourcePack>();
-		private LinkedList<MCJavaResourcePack> ActiveJavaResourcePacks { get; } = new LinkedList<MCJavaResourcePack>();
+		private IEnumerable<MCJavaResourcePack> ActiveJavaResourcePacks => ActiveResourcePacks.Where(x => x is MCJavaResourcePack).Cast<MCJavaResourcePack>();
 
-		private LinkedList<MCBedrockResourcePack> ActiveBedrockResourcePacks { get; } =
-			new LinkedList<MCBedrockResourcePack>();
+		private IEnumerable<MCBedrockResourcePack> ActiveBedrockResourcePacks => ActiveResourcePacks
+		   .Where(x => x is MCBedrockResourcePack).Cast<MCBedrockResourcePack>();
 
-		public IReadOnlyCollection<MCBedrockResourcePack> ActiveBedrockResources => ActiveBedrockResourcePacks;
-		public MCBedrockResourcePack BedrockResourcePack => ActiveBedrockResourcePacks.First?.Value;
+		public IEnumerable<MCBedrockResourcePack> ActiveBedrockResources => ActiveBedrockResourcePacks;
+		public MCBedrockResourcePack BedrockResourcePack => ActiveBedrockResourcePacks.FirstOrDefault();
 		public Registries Registries { get; private set; }
 		public AtlasGenerator BlockAtlas { get; private set; }
 		public AtlasGenerator ItemAtlas { get; private set; }
@@ -128,18 +129,30 @@ namespace Alex
 				{
 					try
 					{
-						if (!ProcessResourcePacks(Alex.GraphicsDevice, splashScreen, PreloadCallback))
-						{
-							Log.Warn($"F!");
-						}
+						ReloadPacks(splashScreen);
 					}
 					finally
 					{
+						
 						Alex.GameStateManager.RemoveState(splashScreen);
+						
+
 						Alex.GameStateManager.Back();
 					}
 				});
 			//GenerateTextureAtlases(Alex.GraphicsDevice, progress);
+		}
+
+		public void ReloadPacks(IProgressReceiver progressReceiver)
+		{
+			
+			UnloadResourcePacks();
+
+			if (!ProcessResourcePacks(Alex.GraphicsDevice, progressReceiver, PreloadCallback))
+			{
+				Log.Warn($"F!");
+			}
+
 		}
 
 		public bool TryLoadResourcePackInfo(string file, out ResourcePackManifest[] manifests)
@@ -177,7 +190,7 @@ namespace Alex
 		}
 
 		private SemaphoreSlim _reloadSemaphore = new SemaphoreSlim(1, 1);
-		internal void ReloadBedrockResources(IProgressReceiver progress)
+		internal void ReloadBedrockResources(IProgressReceiver progress, bool reset = false)
 		{
 			_reloadSemaphore.Wait();
 
@@ -188,6 +201,16 @@ namespace Alex
 
 				var activeBedrockPacks = ActiveBedrockResourcePacks.ToArray();
 
+				if (reset)
+				{
+					/*foreach (var active in activeBedrockPacks.Skip(1))
+					{
+						Remove(active);
+					}
+					
+					activeBedrockPacks = ActiveBedrockResourcePacks.ToArray();*/
+				}
+				
 				ProcessEntityModels(progress, activeBedrockPacks);
 
 				for (int index = 0; index < activeBedrockPacks.Length; index++)
@@ -247,13 +270,21 @@ namespace Alex
 			   .Cast<IFontSourceProvider>().SelectMany(x => x.FontSources).ToArray();*/
 
 			//var f2 = ActiveBedrockResourcePacks.Where(x => x is IFontSourceProvider fontSourceProvider && fontSourceProvider.FontSources != null && fontSourceProvider.FontSources.Length > 0).Cast<IFontSourceProvider>().SelectMany(x => x.FontSources).ToArray();
-			if(fontSources.Count > 0)
+			if (fontSources.Count > 0)
+			{
 				OnFontsLoaded?.Invoke(this, new FontsLoadedEventArgs(fontSources.ToArray()));
+			}
 		}
 
 		internal bool Remove(ResourcePack resourcePack)
 		{
-			if (resourcePack.Info.Type == ResourcePackType.Bedrock)
+			if (ActiveResourcePacks.Remove(resourcePack))
+			{
+				resourcePack?.Dispose();
+				return true;
+			}
+			
+			/*if (resourcePack.Info.Type == ResourcePackType.Bedrock)
 			{
 				if (ActiveBedrockResourcePacks.Remove((MCBedrockResourcePack)resourcePack))
 				{
@@ -266,7 +297,7 @@ namespace Alex
 				{
 					return true;
 				}
-			}
+			}*/
 
 			return false;
 		}
@@ -282,7 +313,7 @@ namespace Alex
 					var pack = (MCBedrockResourcePack)resourcePack;
 
 					ActiveResourcePacks.AddLast(pack);
-					ActiveBedrockResourcePacks.AddLast(pack);
+					//ActiveBedrockResourcePacks.AddLast(pack);
 
 					yield return pack;
 				}
@@ -533,47 +564,33 @@ namespace Alex
 			return true;
 		}
 
-		private bool ProcessResourcePacks(GraphicsDevice device,
-			IProgressReceiver progressReceiver,
-			McResourcePackPreloadCallback preloadCallback)
+		public void UnloadResourcePacks()
 		{
-			string defaultResources;
-			string defaultBedrock;
-
-			if (!CheckJavaAssets(progressReceiver, out defaultResources))
+			foreach (var active in ActiveResourcePacks.ToArray())
+			{
+				Remove(active);
+				//active?.Dispose();
+			}
+		}
+		
+		private bool LoadVanillaResources(GraphicsDevice device, IProgressReceiver progressReceiver, McResourcePackPreloadCallback preloadCallback = null)
+		{
+			if (!CheckJavaAssets(progressReceiver, out var defaultResources))
 			{
 				return false;
 			}
 
-			if (!CheckBedrockAssets(progressReceiver, out defaultBedrock))
+			if (!CheckBedrockAssets(progressReceiver, out var defaultBedrock))
 			{
 				return false;
 			}
-
+			
 			List<ResourcePack> resourcePacks = new List<ResourcePack>();
 
 			progressReceiver?.UpdateProgress(0, "Loading vanilla resources...");
 
 			BlockAtlas.Reset();
 			ItemAtlas.Reset();
-
-			bool wasInit = _hasInit;
-			
-			ActiveResourcePacks.Clear();
-
-			foreach (var active in ActiveJavaResourcePacks.ToArray())
-			{
-				active?.Dispose();
-			}
-
-			ActiveJavaResourcePacks.Clear();
-
-			foreach (var active in ActiveBedrockResourcePacks.ToArray())
-			{
-				active?.Dispose();
-			}
-
-			ActiveBedrockResourcePacks.Clear();
 
 			foreach (var vanilla in LoadResourcePack(
 				         progressReceiver, new DiskFileSystem(defaultResources), preloadCallback))
@@ -602,7 +619,7 @@ namespace Alex
 					if (pack.Info != null && string.IsNullOrWhiteSpace(pack.Info.Name))
 						pack.Info.Name = "Vanilla";
 
-					ActiveJavaResourcePacks.AddLast((MCJavaResourcePack)pack);
+					//	ActiveJavaResourcePacks.AddLast((MCJavaResourcePack)pack);
 					ActiveResourcePacks.AddLast(pack);
 				}
 				else if (pack.Info.Type == ResourcePackType.Bedrock)
@@ -610,10 +627,22 @@ namespace Alex
 					if (pack.Info != null && string.IsNullOrWhiteSpace(pack.Info.Name))
 						pack.Info.Name = "Vanilla Bedrock";
 
-					ActiveBedrockResourcePacks.AddLast((MCBedrockResourcePack)pack);
+					//	ActiveBedrockResourcePacks.AddLast((MCBedrockResourcePack)pack);
 					ActiveResourcePacks.AddLast(pack);
 				}
 			}
+
+			return true;
+		}
+
+		private bool ProcessResourcePacks(GraphicsDevice device,
+			IProgressReceiver progressReceiver,
+			McResourcePackPreloadCallback preloadCallback)
+		{
+			bool wasInit = _hasInit;
+			if (!LoadVanillaResources(device, progressReceiver, preloadCallback))
+				return false;
+			//h
 
 			Storage.TryGetDirectory(Path.Combine("assets", "resourcepacks"), out DirectoryInfo root);
 			ResourcePackDirectory = root;
@@ -636,7 +665,7 @@ namespace Alex
 						{
 							if (pack is MCBedrockResourcePack bedrockPack)
 							{
-								ActiveBedrockResourcePacks.AddLast(bedrockPack);
+								//ActiveBedrockResourcePacks.AddLast(bedrockPack);
 								ActiveResourcePacks.AddLast(bedrockPack);
 							}
 						}
@@ -649,7 +678,7 @@ namespace Alex
 									pack.Info.Name = Path.GetFileNameWithoutExtension(file);
 								}
 
-								ActiveJavaResourcePacks.AddLast(javaPack);
+								//ActiveJavaResourcePacks.AddLast(javaPack);
 								ActiveResourcePacks.AddLast(javaPack);
 							}
 						}

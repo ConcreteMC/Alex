@@ -848,11 +848,27 @@ namespace Alex.ResourcePackLib
         }
 
 
-        public void Dispose()
+        /// <inheritdoc />
+        protected override void Dispose(bool disposing)
         {
-            Filesystem?.Dispose();
-            Filesystem = null;
-            //_archive?.Dispose();
+            base.Dispose(disposing);
+
+            if (disposing)
+            {
+                Filesystem?.Dispose();
+                Filesystem = null;
+
+                if (FontSources != null)
+                {
+                    var fontSources = FontSources.ToArray();
+                    FontSources = null;
+
+                    foreach (var fontSource in fontSources)
+                    {
+                        fontSource?.Image?.Dispose();
+                    }
+                }
+            }
         }
 
         public BitmapFontSource[] FontSources { get; private set; }

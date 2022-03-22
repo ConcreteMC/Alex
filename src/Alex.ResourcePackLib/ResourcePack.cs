@@ -16,7 +16,7 @@ using Image = SixLabors.ImageSharp.Image;
 
 namespace Alex.ResourcePackLib
 {
-	public class ResourcePack
+	public class ResourcePack : IDisposable
 	{
 		public delegate void LoadProgress(int percentage, string file);
 
@@ -125,6 +125,17 @@ namespace Alex.ResourcePackLib
 				if (manifest != null)
 					yield return manifest;
 			}
+		}
+
+		protected virtual void Dispose(bool disposing)
+		{
+			
+		}
+
+		/// <inheritdoc />
+		public void Dispose()
+		{
+			Dispose(true);
 		}
 	}
 }
