@@ -7,7 +7,7 @@ using Alex.Blocks.State;
 
 namespace Alex.Blocks.Storage.Palette
 {
-	public class IntIdentityHashBiMap<TValue> : IEnumerable<TValue>, IPallete<TValue> where TValue : class, IHasKey
+	public class IntIdentityHashBiMap<TValue> : IEnumerable<TValue>, IPalette<TValue> where TValue : class, IHasKey
 	{
 		private static object _empty = null;
 		private TValue[] _values;

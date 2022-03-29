@@ -352,7 +352,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			
 			if (version == 1 || version == 8 || version == 9)
 			{
-				var section = ReadPalletedSection(defStream, version, out var subChunkYValue);
+				var section = ReadPalettedSection(defStream, version, out var subChunkYValue);
 
 				if (subChunkYValue != int.MaxValue)
 				{
@@ -375,7 +375,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			return null;
 		}
 
-		private BedrockChunkSection ReadPalletedSection(NbtBinaryReader defStream, int version, out int subChunkYValue)
+		private BedrockChunkSection ReadPalettedSection(NbtBinaryReader defStream, int version, out int subChunkYValue)
 		{
 			var stream = defStream.BaseStream;
 			int storageSize = version == 1 ? 1 : defStream.ReadByte();
@@ -430,9 +430,6 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 					{
 						int runtimeId = VarInt.ReadSInt32(stream);
 						palette[j] = runtimeId;
-						//if (bedrockPalette == null || internalBlockPallet == null) continue;
-
-						// palette[j] = GetServerRuntimeId(bedrockPalette, internalBlockPallet, runtimeId);
 					}
 
 					if (palette[j] != 0)
@@ -481,6 +478,11 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			}
 			return section;
 		}
+
+		/*private bool ReadStore(NbtBinaryReader reader, out short[] entries)
+		{
+			
+		}*/
 
 		private BedrockChunkSection ReadLegacyChunkSection(NbtBinaryReader defStream)
 		{

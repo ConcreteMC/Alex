@@ -12,7 +12,7 @@ public abstract class GenericStorage<TValue> : IDisposable where TValue : class,
 
 	private int _bits;
 	private readonly int _size;
-	protected IPallete<TValue> Pallette { get; set; }
+	protected IPalette<TValue> Pallette { get; set; }
 
 	private object _lock = new object();
 	protected int MaxBitsPerEntry = 8;
@@ -31,7 +31,7 @@ public abstract class GenericStorage<TValue> : IDisposable where TValue : class,
 
 	protected int X = 16, Y = 16, Z = 16;
 
-	protected abstract DirectPallete<TValue> GetGlobalPalette();
+	protected abstract DirectPalette<TValue> GetGlobalPalette();
 
 	public void Set(int x, int y, int z, TValue state)
 	{
@@ -138,7 +138,7 @@ public abstract class GenericStorage<TValue> : IDisposable where TValue : class,
 
 	protected abstract int CalculateDirectPaletteSize();
 
-	protected virtual IPallete<TValue> ReadIndirectPalette(MinecraftStream ms)
+	protected virtual IPalette<TValue> ReadIndirectPalette(MinecraftStream ms)
 	{
 		int palleteLength = ms.ReadVarInt();
 		uint[] pallette = new uint[palleteLength];
@@ -162,20 +162,20 @@ public abstract class GenericStorage<TValue> : IDisposable where TValue : class,
 		return palette;
 	}
 
-	protected virtual IPallete<TValue> ReadSingleValuedPalette(MinecraftStream ms)
+	protected virtual IPalette<TValue> ReadSingleValuedPalette(MinecraftStream ms)
 	{
 		var value = ms.ReadVarInt();
 		var directPalette = GetGlobalPalette();
 
-		return new SinglePallete<TValue>(directPalette.Get((uint)value));
+		return new SinglePalette<TValue>(directPalette.Get((uint)value));
 	}
 
-	protected virtual IPallete<TValue> ReadDirectPalette(MinecraftStream ms)
+	protected virtual IPalette<TValue> ReadDirectPalette(MinecraftStream ms)
 	{
 		return GetGlobalPalette();
 	}
 
-	protected virtual IPallete<TValue> ReadPalette(MinecraftStream ms, ref int bitsPerEntry)
+	protected virtual IPalette<TValue> ReadPalette(MinecraftStream ms, ref int bitsPerEntry)
 	{
 		if (bitsPerEntry > 0 && bitsPerEntry <= MaxBitsPerEntry)
 			return ReadIndirectPalette(ms);

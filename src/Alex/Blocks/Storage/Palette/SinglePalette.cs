@@ -1,10 +1,10 @@
 namespace Alex.Blocks.Storage.Palette;
 
-public class SinglePallete<TValue> : IPallete<TValue> where TValue : class, IHasKey
+public class SinglePalette<TValue> : IPalette<TValue> where TValue : class, IHasKey
 {
 	private readonly TValue _value;
 
-	public SinglePallete(TValue value)
+	public SinglePalette(TValue value)
 	{
 		_value = value;
 	}

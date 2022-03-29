@@ -35,9 +35,9 @@ namespace Alex.Blocks.Storage
 		}
 
 		/// <inheritdoc />
-		protected override DirectPallete<BlockState> GetGlobalPalette()
+		protected override DirectPalette<BlockState> GetGlobalPalette()
 		{
-			return new DirectPallete<BlockState>(GlobalLookup);
+			return new DirectPalette<BlockState>(GlobalLookup);
 		}
 
 		private static BlockState GlobalLookup(uint arg)

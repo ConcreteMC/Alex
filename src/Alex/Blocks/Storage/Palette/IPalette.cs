@@ -1,9 +1,8 @@
 using System;
-using Alex.Blocks.State;
 
 namespace Alex.Blocks.Storage.Palette
 {
-	public interface IPallete<TValue> : IDisposable where TValue : class
+	public interface IPalette<TValue> : IDisposable where TValue : class
 	{
 		uint GetId(TValue state);
 

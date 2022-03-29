@@ -8,11 +8,11 @@ namespace Alex.Blocks.Storage.Palette
 		uint Id { get; }
 	}
 
-	public class DirectPallete<TValue> : IPallete<TValue> where TValue : class, IHasKey
+	public class DirectPalette<TValue> : IPalette<TValue> where TValue : class, IHasKey
 	{
 		private readonly Func<uint, TValue> _getById;
 
-		public DirectPallete(Func<uint, TValue> getById)
+		public DirectPalette(Func<uint, TValue> getById)
 		{
 			_getById = getById;
 		}
