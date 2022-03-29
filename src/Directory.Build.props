@@ -32,8 +32,9 @@
         </When>
         <Otherwise>
             <PropertyGroup>
-                <TargetFramework>net6.0</TargetFramework>
                 <RuntimeIdentifiers>linux-x64</RuntimeIdentifiers>
+                <LibTargetFrameworks>net6.0</LibTargetFrameworks>
+                <GameTargetFramework>net6.0</GameTargetFramework>
             </PropertyGroup>
             <ItemGroup>
                 <PackageReference Include="MonoGame.Framework.Compute.DesktopGL" Version="3.8.1.3"/>

@@ -12,6 +12,7 @@
         <PackageLicenseUrl>https://github.com/kennyvv/Alex/blob/master/LICENSE</PackageLicenseUrl>
         <RepositoryUrl>https://github.com/kennyvv/Alex</RepositoryUrl>
         <PackageVersion />
+        <TargetFramework>$(GameTargetFramework)</TargetFramework>
     </PropertyGroup>
 
     <PropertyGroup>

@@ -241,7 +241,7 @@ namespace Alex.Networking.Bedrock.RakNet
 			//Log.Debug($"CreateDatagrams multiple ({messages.Count}) messages");
 			Datagram datagram = CreateObject();
 
-			foreach (Packet message in messages)
+			foreach (var message in messages)
 			{
 				List<MessagePart> messageParts = CreateMessageParts(message, mtuSize, session);
 
@@ -278,7 +278,7 @@ namespace Alex.Networking.Bedrock.RakNet
 
 			if (encodedMessage.Length == 0) return new List<MessagePart>(0);
 
-			if (message.IsMcpe) Log.Error($"Got bedrock message in unexpected place {message.GetType().Name}");
+			//if (message.IsMcpe) Log.Error($"Got bedrock message in unexpected place {message.GetType().Name}");
 
 			int maxPayloadSizeNoSplit = mtuSize - RaknetConnection.UdpHeaderSize - 4
 			                            - GetHeaderSize(message.ReliabilityHeader, false);

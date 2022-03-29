@@ -6,6 +6,7 @@
         <Configurations>Release;Debug;Appveyor;DirectX</Configurations>
         <Platforms>x64;AnyCPU</Platforms>
         <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+        <TargetFrameworks>$(LibTargetFrameworks)</TargetFrameworks>
     </PropertyGroup>
 
     <PropertyGroup>

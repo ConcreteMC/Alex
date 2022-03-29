@@ -11,6 +11,7 @@
         <PackageLicenseUrl>https://github.com/kennyvv/Alex/blob/master/LICENSE</PackageLicenseUrl>
         <RepositoryUrl>https://github.com/kennyvv/Alex</RepositoryUrl>
         <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
+        <TargetFrameworks>$(LibTargetFrameworks)</TargetFrameworks>
     </PropertyGroup>
     <ItemGroup>
         <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />

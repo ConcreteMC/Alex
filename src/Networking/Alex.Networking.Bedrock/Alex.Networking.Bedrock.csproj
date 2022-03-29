@@ -3,6 +3,7 @@
     <PropertyGroup>
         <Configurations>Debug;Release</Configurations>
         <Platforms>AnyCPU;x64</Platforms>
+        <TargetFrameworks>$(LibTargetFrameworks)</TargetFrameworks>
     </PropertyGroup>
 
     <ItemGroup>

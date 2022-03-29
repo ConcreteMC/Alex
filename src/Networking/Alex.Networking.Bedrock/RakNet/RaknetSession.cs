@@ -667,8 +667,8 @@ namespace Alex.Networking.Bedrock.RakNet
 
 				for (var index = 0; index < prepareSend.Count; index++)
 				{
-					Packet packet = prepareSend[index];
-					Packet message = packet;
+					var packet = prepareSend[index];
+					var message = packet;
 
 					Reliability reliability = message.ReliabilityHeader.Reliability;
 

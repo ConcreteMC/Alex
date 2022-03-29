@@ -94,13 +94,6 @@ namespace Alex.Networking.Bedrock.RakNet
 			if (_listener != null) return;
 			_listener = CreateListener(_endpoint);
 			_listener.BeginReceive(ReceiveCallback, _listener);
-
-			//var receiveTask = new Task(
-			//	ReceiveCallback, _cancellationTokenSource.Token, TaskCreationOptions.LongRunning);
-
-			//	receiveTask.Start();
-			//_readingThread = new Thread(ReceiveCallback);
-			//_readingThread.Start();
 		}
 
 		public bool TryConnect(IPEndPoint targetEndPoint,

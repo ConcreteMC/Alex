@@ -4,6 +4,7 @@
         <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
         <Configurations>Debug;Release;DirectX</Configurations>
         <Platforms>AnyCPU;x64</Platforms>
+        <TargetFrameworks>$(LibTargetFrameworks)</TargetFrameworks>
     </PropertyGroup>
 
     <ItemGroup>

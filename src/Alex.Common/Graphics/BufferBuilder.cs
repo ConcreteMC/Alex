@@ -1,9 +1,10 @@
-﻿using Alex.Common.Graphics.GpuResources;
+﻿using System;
+using Alex.Common.Graphics.GpuResources;
 using Microsoft.Xna.Framework.Graphics;
 
 namespace Alex.Common.Graphics
 {
-	public class BufferBuilder<TVertexType> where TVertexType : struct, IVertexType
+	public class BufferBuilder<TVertexType> : IDisposable where TVertexType : struct, IVertexType
 	{
 		public int IndexSize { get; }
 		public int DataSize { get; }
@@ -64,5 +65,18 @@ namespace Alex.Common.Graphics
 		}
 
 		public ref TVertexType this[int index, int subIndex] => ref Data[index * 4 + subIndex];
+
+		private void Dispose(bool disposing)
+		{
+			VertexBuffer?.Dispose();
+			IndexBuffer?.Dispose();
+		}
+		
+		/// <inheritdoc />
+		public void Dispose()
+		{
+			Dispose(true);
+			GC.SuppressFinalize(this);
+		}
 	}
 }
