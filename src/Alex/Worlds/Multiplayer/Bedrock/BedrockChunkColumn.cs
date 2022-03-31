@@ -56,7 +56,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 					return column;
 
 				BiomeStorage last = null;
-				for (int i = 0; i < subChunkCount; i++)
+				for (int i = 0; i < 25; i++)
 				{
 					if (ms.Position >= ms.Length)
 						return column;

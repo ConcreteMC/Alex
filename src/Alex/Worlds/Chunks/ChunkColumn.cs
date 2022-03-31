@@ -73,7 +73,7 @@ namespace Alex.Worlds.Chunks
 			int realHeight = worldSettings.WorldHeight + Math.Abs(worldSettings.MinY);
 
 			Sections = new ChunkSection[realHeight / 16];
-			BiomeStorages = new BiomeStorage[realHeight / 16];
+			BiomeStorages = new BiomeStorage[25];
 			
 			for (int i = 0; i < Sections.Length; i++)
 			{
