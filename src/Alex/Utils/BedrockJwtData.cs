@@ -48,7 +48,7 @@ namespace Alex.Utils
 		public string CapeData { get; set; } = "";
 
 		public string SkinGeometryData { get; set; } = "";
-
+		public string SkinGeometryDataEngineVersion { get; set; } = "";
 		public string SkinAnimationData { get; set; } = "";
 		public SkinAnimation[] AnimatedImageData { get; set; } = new SkinAnimation[0];
 

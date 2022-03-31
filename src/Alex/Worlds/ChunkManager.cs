@@ -371,6 +371,7 @@ namespace Alex.Worlds
 					//{
 						if (chunk.UpdateBuffer(World, true))
 						{
+							chunk.Scheduled = false;
 							OnChunkUpdate?.Invoke(this, new ChunkUpdatedEventArgs(chunk, timingWatch.Elapsed));
 						}
 					//}
@@ -378,7 +379,7 @@ namespace Alex.Worlds
 				finally
 				{
 					_queued.Remove(data.Coordinates);
-					chunk.Scheduled = false;
+					//chunk.Scheduled = false;
 					Monitor.Exit(chunk.UpdateLock);
 				}
 			}

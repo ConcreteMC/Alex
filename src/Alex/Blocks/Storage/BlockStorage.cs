@@ -1,16 +1,21 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Threading.Tasks;
 using Alex.Blocks.State;
 using Alex.Blocks.Storage.Palette;
+using fNbt;
+using MiNET.Utils;
+using NLog;
 
 namespace Alex.Blocks.Storage
 {
 	public class BlockStorage : GenericStorage<BlockState>
 	{
+		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(BlockStorage));
 		private BlockState Air { get; }
 
-		public BlockStorage() : base(BlockFactory.GetBlockState("minecraft:air"))
+		public BlockStorage(int bitsPerBlock = 8, int size = 4096) : base(BlockFactory.GetBlockState("minecraft:air"), bitsPerBlock, size)
 		{
 			Air = BlockFactory.GetBlockState("minecraft:air");
 			X = Y = Z = 16;

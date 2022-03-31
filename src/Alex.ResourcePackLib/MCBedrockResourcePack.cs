@@ -570,7 +570,7 @@ namespace Alex.ResourcePackLib
 		private void ProcessRenderController(IFile entry, Dictionary<string, RenderController> renderControllers)
 		{
 			string json = entry.ReadAsEncodedString(EncryptionProvider);
-
+			File.WriteAllText(Path.Combine($"/home/kenny/Desktop/test", entry.Name), json);
 			var versionedResource = MCJsonConvert.DeserializeObject<VersionedResource<RenderController>>(
 				json, new VersionedResourceConverter<RenderController>("render_controllers"));
 

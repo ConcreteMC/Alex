@@ -193,9 +193,9 @@ namespace Alex.Worlds.Multiplayer
 				int skyBit = 0;
 				int blockBit = 0;
 
-				for (int y = 0; y < result.Sections.Length; y++)
+				for (int y = 0; y < result.ChunkSections; y++)
 				{
-					if (result.Sections[y] == null)
+					if (result[y] == null)
 						continue;
 
 					if (lightingData.SkyLightMask.Count >= y + 1)
@@ -203,7 +203,7 @@ namespace Alex.Worlds.Multiplayer
 						if (lightingData.SkyLightMask.IsSet(y + 1))
 						{
 							var skyLightData = lightingData.SkyLight[skyBit++];
-							result.Sections[y].SkyLight = new LightArray(skyLightData);
+							result[y].SkyLight = new LightArray(skyLightData);
 						}
 					}
 
@@ -212,7 +212,7 @@ namespace Alex.Worlds.Multiplayer
 						if (lightingData.BlockLightMask.IsSet(y + 1))
 						{
 							var blockLightData = lightingData.BlockLight[blockBit++];
-							result.Sections[y].BlockLight = new LightArray(blockLightData);
+							result[y].BlockLight = new LightArray(blockLightData);
 						}
 					}
 				}
@@ -2742,18 +2742,18 @@ namespace Alex.Worlds.Multiplayer
 				int skyBit = 0;
 				int blockBit = 0;
 
-				for (int y = 0; y < chunk.Sections.Length; y++)
+				for (int y = 0; y < chunk.ChunkSections; y++)
 				{
 					if (packet.Data.SkyLightMask.IsSet(y + 1))
 					{
 						var skyLightData = packet.Data.SkyLight[skyBit++];
-						chunk.Sections[y].SkyLight = new LightArray(skyLightData);
+						chunk[y].SkyLight = new LightArray(skyLightData);
 					}
 
 					if (packet.Data.BlockLightMask.IsSet(y + 1))
 					{
 						var blockLightData = packet.Data.BlockLight[blockBit++];
-						chunk.Sections[y].BlockLight = new LightArray(blockLightData);
+						chunk[y].BlockLight = new LightArray(blockLightData);
 					}
 				}
 

@@ -83,6 +83,8 @@ namespace Alex.Worlds.Multiplayer
 
 						UnloadChunks(new ChunkCoordinates(pos), Client.World.ChunkManager.RenderDistance + 2);
 						_lastPrioritization = _tickTime;
+
+						Client.ChunkProcessor.RequestMissing();
 					}
 
 					SendLocation(World.Player.RenderLocation);
@@ -319,7 +321,15 @@ namespace Alex.Worlds.Multiplayer
 				{
 					return loadResult;
 				}
+				
+				Client.RequestRenderDistance(0, Client.World.ChunkManager.RenderDistance);
 
+				McpeInteract interact = McpeInteract.CreateObject();
+				interact.actionId = (byte) McpeInteract.Actions.MouseOver;
+				interact.targetRuntimeEntityId = 0;
+				interact.Position = System.Numerics.Vector3.Zero;
+				Client.SendPacket(interact);
+				
 				Client.MarkAsInitialized();
 
 				timer.Stop();

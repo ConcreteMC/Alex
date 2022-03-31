@@ -1,4 +1,5 @@
-﻿using System.Collections.Concurrent;
+﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
@@ -482,6 +483,27 @@ namespace Alex.Worlds
 			}
 
 			return first ?? new Biome { Id = biomeId };
+		}
+
+		public static Biome GetBiome(string name)
+		{
+			var values = Overrides.Values.ToArray();
+
+			var firstBiome =
+				values.FirstOrDefault(x => x.Name.Equals(name, StringComparison.InvariantCultureIgnoreCase));
+
+			if (firstBiome != default)
+				return firstBiome;
+			
+			foreach (var biome in Biomes)
+			{
+				if (biome.Name.Equals(name, StringComparison.InvariantCultureIgnoreCase))
+				{
+					return biome;
+				}
+			}
+
+			return GetBiome(0);
 		}
 	}
 }

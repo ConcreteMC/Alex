@@ -203,8 +203,13 @@ namespace Alex.Networking.Bedrock.RakNet
 
 		private void ReceiveCallback(IAsyncResult ar)
 		{
-			_readingThread = Thread.CurrentThread;
-			_readingThread.Name = $"RaknetConnection Read ({_endpoint})";
+			var thread = Thread.CurrentThread;
+
+			if (thread == null)
+				return;
+			
+			thread.Name = $"RaknetConnection Read ({_endpoint})";
+			_readingThread = thread;
 
 			bool hasReadData = false;
 

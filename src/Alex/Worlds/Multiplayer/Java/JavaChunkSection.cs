@@ -89,7 +89,6 @@ namespace Alex.Worlds.Multiplayer.Java
 		{
 			var blockCount = ms.ReadShort();
 			BlockStorages[0].Read(ms);
-			BiomeStorages[0].Read(ms);
 		}
 	}
 }

@@ -1,6 +1,8 @@
 using System;
+using System.IO;
 using Alex.Blocks.Storage.Palette;
 using Alex.Networking.Java.Util;
+using MiNET.Utils;
 using NLog;
 
 namespace Alex.Blocks.Storage;
@@ -8,15 +10,15 @@ namespace Alex.Blocks.Storage;
 public abstract class GenericStorage<TValue> : IDisposable where TValue : class, IHasKey
 {
 	private static readonly Logger Log = LogManager.GetCurrentClassLogger();
-	private IStorage Storage { get; set; }
+	public IStorage Storage { get; set; }
 
 	private int _bits;
 	private readonly int _size;
-	protected IPalette<TValue> Pallette { get; set; }
+	public IPalette<TValue> Palette { get; set; }
 
 	private object _lock = new object();
-	protected int MaxBitsPerEntry = 8;
-	protected int SmallestValue = 4;
+	public int MaxBitsPerEntry = 8;
+	public int SmallestValue = 4;
 
 	public GenericStorage(TValue defaultValue, int bitsPerBlock = 8, int size = 4096)
 	{
@@ -24,9 +26,9 @@ public abstract class GenericStorage<TValue> : IDisposable where TValue : class,
 		_size = size;
 
 		Storage = new FlexibleStorage(_bits, size);
-		Pallette = new IntIdentityHashBiMap<TValue>((1 << _bits));
+		Palette = new IntIdentityHashBiMap<TValue>((1 << _bits));
 
-		Pallette.Add(defaultValue);
+		Palette.Add(defaultValue);
 	}
 
 	protected int X = 16, Y = 16, Z = 16;
@@ -51,11 +53,11 @@ public abstract class GenericStorage<TValue> : IDisposable where TValue : class,
 
 	private uint IdFor(TValue state)
 	{
-		uint i = Pallette.GetId(state);
+		uint i = Palette.GetId(state);
 
 		if (i == uint.MaxValue)
 		{
-			i = Pallette.Add(state);
+			i = Palette.Add(state);
 
 			if (i >= (1 << this._bits))
 			{
@@ -83,12 +85,12 @@ public abstract class GenericStorage<TValue> : IDisposable where TValue : class,
 				else
 				{
 					_bits = CalculateDirectPaletteSize();
-					var oldPalette = Pallette;
+					var oldPalette = Palette;
 					var oldStorage = Storage;
 
 					try
 					{
-						Pallette = GetGlobalPalette();
+						Palette = GetGlobalPalette();
 						Storage = new FlexibleStorage(_bits, _size);
 
 						for (int s = 0; s < _size; s++)
@@ -105,7 +107,7 @@ public abstract class GenericStorage<TValue> : IDisposable where TValue : class,
 						oldStorage?.Dispose();
 					}
 
-					return Pallette.GetId(state);
+					return Palette.GetId(state);
 				}
 				//return Resize(_bits + 1, state);
 			}
@@ -123,7 +125,7 @@ public abstract class GenericStorage<TValue> : IDisposable where TValue : class,
 	{
 		// lock (_lock)
 		{
-			var result = Pallette.Get(Storage[index]);
+			var result = Palette.Get(Storage[index]);
 
 			if (result == null)
 				return GetDefault();
@@ -191,7 +193,7 @@ public abstract class GenericStorage<TValue> : IDisposable where TValue : class,
 	public void Read(MinecraftStream ms)
 	{
 		var oldStorage = Storage;
-		var oldPalette = Pallette;
+		var oldPalette = Palette;
 
 		int bitsPerEntry = (byte)ms.ReadUnsignedByte();
 
@@ -204,7 +206,7 @@ public abstract class GenericStorage<TValue> : IDisposable where TValue : class,
 
 		try
 		{
-			Pallette = palette;
+			Palette = palette;
 			Storage = storage;
 		}
 		finally
@@ -284,6 +286,6 @@ public abstract class GenericStorage<TValue> : IDisposable where TValue : class,
 	public void Dispose()
 	{
 		Storage?.Dispose();
-		Pallette?.Dispose();
+		Palette?.Dispose();
 	}
 }

@@ -283,6 +283,7 @@ namespace Alex.Entities
 		private bool _previousHasActiveDialog = false;
 		public Biome CurrentBiome { get; private set; }
 
+		private long _previousEntity = -1;// = false;
 		public override void Update(IUpdateArgs args)
 		{
 			base.Update(args);
@@ -341,25 +342,35 @@ namespace Alex.Entities
 
 				if (hitEntity != null)
 				{
+					var adjacent = EntityTracerPoint;
+					var flooredAdj = Vector3.Floor(adjacent);
+
+					var cursorPosition = new Vector3(
+						adjacent.X - flooredAdj.X, adjacent.Y - flooredAdj.Y, adjacent.Z - flooredAdj.Z);
+
+					if (hitEntity.EntityId != _previousEntity)
+					{
+						Network?.EntityInteraction(
+							this, hitEntity, ItemUseOnEntityAction.MouseOver, IsLeftHanded ? 1 : 0,
+							IsLeftHanded ? Inventory.OffHandSlot : Inventory.SelectedSlot, cursorPosition);
+					}
+
+					_previousEntity = hitEntity.EntityId;
 					//if (hitEntity is LivingEntity)
 					{
 						if (didLeftClick || didRightClick)
 						{
 							if (_destroyingBlock)
 								StopBreakingBlock(forceCanceled: true);
+							
 
-							var adjacent = EntityTracerPoint;
-							var flooredAdj = Vector3.Floor(adjacent);
-
-							var remainder = new Vector3(
-								adjacent.X - flooredAdj.X, adjacent.Y - flooredAdj.Y, adjacent.Z - flooredAdj.Z);
-
-							InteractWithEntity(hitEntity, didLeftClick, IsLeftHanded ? 1 : 0, remainder);
+							InteractWithEntity(hitEntity, didLeftClick, IsLeftHanded ? 1 : 0, cursorPosition);
 						}
 					}
 				}
 				else
 				{
+					_previousEntity = -1;
 					if (_destroyingBlock)
 					{
 						if (!leftMouseBtnDown)

@@ -683,6 +683,7 @@ namespace Alex.Net.Bedrock
 
 		public void HandleMcpeTickSync(McpeTickSync message)
 		{
+			Log.Info($"Received TickSync! RequestTime={message.requestTime} ResponseTime={message.responseTime} Delay={(message.responseTime - message.requestTime)}");
 			UnhandledPackage(message);
 		}
 
@@ -1612,6 +1613,10 @@ namespace Alex.Net.Bedrock
 				{
 					ChunkProcessor.HandleSubChunkData(result, null, entry.Data, pos.X, pos.Y, pos.Z);
 				}
+				else
+				{
+					Log.Warn($"Unknwon subchunk type. Result={result}");
+				}
 			}
 			
 			message?.PutPool();
@@ -1781,6 +1786,11 @@ namespace Alex.Net.Bedrock
 				$"Received chunkradius. Requested={AlexInstance.Options.AlexOptions.VideoOptions.RenderDistance.Value} Received={message.chunkRadius}");
 
 			Client.World.ChunkManager.RenderDistance = message.chunkRadius;
+
+			if (Client.PlayerStatus != McpePlayStatus.PlayStatus.PlayerSpawn)
+			{
+				Client.SendTickSync();
+			}
 			//	Client.ChunkRadius = message.chunkRadius;
 		}
 

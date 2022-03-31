@@ -154,6 +154,10 @@ namespace Alex.Net.Java
 			int slot,
 			Vector3 cursorPosition)
 		{
+			if (action == ItemUseOnEntityAction.MouseOver)
+				return;
+
+			
 			if (hand < 0) hand = 0;
 			if (hand > 1) hand = 1;
 

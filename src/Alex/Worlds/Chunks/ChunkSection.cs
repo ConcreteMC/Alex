@@ -24,8 +24,7 @@ namespace Alex.Worlds.Chunks
 		public int Blocks => BlockRefCount;
 		public int StorageCount => BlockStorages.Length;
 
-		protected readonly BlockStorage[] BlockStorages;
-		protected readonly BiomeStorage[] BiomeStorages;
+		protected BlockStorage[] BlockStorages;
 
 		public LightArray BlockLight { get; set; }
 		public LightArray SkyLight { get; set; }
@@ -34,28 +33,43 @@ namespace Alex.Worlds.Chunks
 
 		public bool IsAllAir => BlockRefCount == 0;
 
-		public ChunkSection(int sections = 1)
+		public ChunkSection(int sections = 1) : this(sections <= 0 ? new BlockStorage[1] : new BlockStorage[sections])
 		{
-			if (sections <= 0)
-				sections = 1;
-
-			BlockStorages = new BlockStorage[sections];
-			BiomeStorages = new BiomeStorage[sections];
-
-			for (int i = 0; i < sections; i++)
-			{
-				BlockStorages[i] = new BlockStorage();
-				BiomeStorages[i] = new BiomeStorage();
-			}
-
+			
+		}
+		
+		public ChunkSection(BlockStorage[] storages)
+		{
+			BlockStorages = storages;
+			
 			this.BlockLight = new LightArray();
 			this.SkyLight = new LightArray();
-
-			//BiomeIds = new int[16 * 16 * 16];
 
 			ResetLight(true, true);
 		}
 
+		internal void Initialize()
+		{
+			for (int i = 0; i < BlockStorages.Length; i++)
+			{
+				if (BlockStorages[i] == default)
+					BlockStorages[i] = CreateBlockStorage();
+				
+			//	if (BiomeStorages[i] == default)
+			//		BiomeStorages[i] = CreateBiomeStorage();
+			}
+		}
+
+		protected virtual BiomeStorage CreateBiomeStorage()
+		{
+			return new BiomeStorage();
+		}
+
+		protected virtual BlockStorage CreateBlockStorage()
+		{
+			return new BlockStorage();
+		}
+		
 		internal void ResetLight(bool blockLight, bool skyLight)
 		{
 			if (blockLight)
@@ -70,7 +84,7 @@ namespace Alex.Worlds.Chunks
 			return (y << 8 | z << 4 | x);
 		}
 
-		public Biome GetBiome(int x, int y, int z)
+		/*public Biome GetBiome(int x, int y, int z)
 		{
 			return BiomeStorages[0].Get(x, y, z);
 			// return BiomeIds[GetCoordinateIndex(x, y, z)];
@@ -80,7 +94,7 @@ namespace Alex.Worlds.Chunks
 		{
 			BiomeStorages[0].Set(x, y, z, biome);
 			// BiomeIds[GetCoordinateIndex(x, y, z)] = biomeId;
-		}
+		}*/
 
 		public BlockState Get(int x, int y, int z)
 		{
@@ -302,15 +316,12 @@ namespace Alex.Worlds.Chunks
 			{
 				Log.Warn($"Dispose was never called. Cleaning up.");
 			}
-			else
-			{
-				GC.SuppressFinalize(this);
-			}
 		}
 
 		public void Dispose()
 		{
 			Dispose(true);
+			GC.SuppressFinalize(this);
 		}
 
 		~ChunkSection()

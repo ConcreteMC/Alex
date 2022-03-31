@@ -7,6 +7,7 @@ using System.Linq;
 using System.Threading;
 using Alex.Blocks;
 using Alex.Blocks.State;
+using Alex.Blocks.Storage;
 using Alex.Common.Utils;
 using Alex.Common.Utils.Vectors;
 using Alex.Worlds.Abstraction;
@@ -31,8 +32,9 @@ namespace Alex.Worlds.Chunks
 		public bool IsNew { get; set; } = true;
 		public bool CalculateLighting { get; set; } = true;
 
-		public ChunkSection[] Sections { get; set; }
-
+		protected ChunkSection[] Sections { get; set; }
+		protected internal BiomeStorage[] BiomeStorages { get; set; }
+		
 		//	private readonly int[] _biomeId;
 		private readonly short[] _height = new short[256];
 
@@ -71,10 +73,16 @@ namespace Alex.Worlds.Chunks
 			int realHeight = worldSettings.WorldHeight + Math.Abs(worldSettings.MinY);
 
 			Sections = new ChunkSection[realHeight / 16];
-
+			BiomeStorages = new BiomeStorage[realHeight / 16];
+			
 			for (int i = 0; i < Sections.Length; i++)
 			{
 				Sections[i] = null;
+			}
+
+			for (int i = 0; i < BiomeStorages.Length; i++)
+			{
+				BiomeStorages[i] = null;
 			}
 
 			BlockEntities = new ConcurrentDictionary<BlockCoordinates, NbtCompound>();
@@ -84,6 +92,24 @@ namespace Alex.Worlds.Chunks
 		}
 
 		public ChunkColumn(int x, int z) : this(x, z, WorldSettings.Default) { }
+
+		public int ChunkSections => Sections.Length;
+		public ChunkSection this[int index]
+		{
+			get
+			{
+				return Sections[index];
+			}
+			set
+			{
+				var oldSection = Sections[index];
+				value?.Initialize();
+				Sections[index] = value;
+				
+				if (oldSection != value)
+					oldSection?.Dispose();
+			}
+		}
 
 		private bool CheckWithinCoordinates(int x, int y, int z, bool throwException = true)
 		{
@@ -251,12 +277,44 @@ namespace Alex.Worlds.Chunks
 			if (section == null)
 			{
 				var storage = CreateSection(true, 2);
-				Sections[y] = storage;
+				this[y] = storage;
 
 				return storage;
 			}
 
 			return (ChunkSection)section;
+		}
+		
+		protected virtual BiomeStorage CreateBiomeStorage()
+		{
+			return new BiomeStorage();
+		}
+		
+		public BiomeStorage GetBiomes(int y)
+		{
+			if (_disposed)
+				return null;
+
+			y = y >> 4;
+			y += _sectionOffset;
+
+			if (y >= BiomeStorages.Length || y < 0)
+			{
+				throw new IndexOutOfRangeException(
+					$"Y value out of range! Expected a number between 0 & {BiomeStorages.Length}, Got: {y}");
+			}
+
+			var section = BiomeStorages[y];
+
+			if (section == null)
+			{
+				var storage = CreateBiomeStorage();
+				BiomeStorages[y] = storage;
+
+				return storage;
+			}
+
+			return section;
 		}
 
 		public void SetBlockState(int x, int y, int z, BlockState blockState)
@@ -434,11 +492,11 @@ namespace Alex.Worlds.Chunks
 			if ((bx < 0 || bx > ChunkWidth) || (bz < 0 || bz > ChunkDepth))
 				return;
 
-			var section = GetSection(by);
+			var section = GetBiomes(by);
 
 			if (section == null) return;
 
-			section.SetBiome(bx, by & 0xf, bz, biome);
+			section.Set(bx, by & 0xf, bz, biome);
 		}
 
 		public Biome GetBiome(int bx, int by, int bz)
@@ -449,12 +507,12 @@ namespace Alex.Worlds.Chunks
 			if ((bx < 0 || bx > ChunkWidth) || (bz < 0 || bz > ChunkDepth))
 				return BiomeUtils.Biomes[0];
 
-			var section = GetSection(by);
+			var section = GetBiomes(by);
 
 			if (section == null)
 				return BiomeUtils.Biomes[0];
 
-			return section.GetBiome(bx, by & 0xf, bz);
+			return section.Get(bx, by & 0xf, bz);
 		}
 
 		public byte GetBlocklight(int bx, int by, int bz)
@@ -578,7 +636,17 @@ namespace Alex.Worlds.Chunks
 
 				chunksSection?.Dispose();
 			}
+			
+			var biomes = BiomeStorages.ToImmutableArray();
 
+			for (var index = 0; index < biomes.Length; index++)
+			{
+				var chunksSection = biomes[index];
+				BiomeStorages[index] = null;
+
+				chunksSection?.Dispose();
+			}
+			
 			var blockEntities = BlockEntities.ToArray();
 			BlockEntities.Clear();
 
@@ -586,16 +654,12 @@ namespace Alex.Worlds.Chunks
 
 			_chunkData?.Dispose();
 			_chunkData = null;
-
-			if (disposing)
-			{
-				GC.SuppressFinalize(this);
-			}
 		}
 
 		public void Dispose()
 		{
 			Dispose(true);
+			GC.SuppressFinalize(this);
 		}
 
 		~ChunkColumn()

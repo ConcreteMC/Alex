@@ -109,15 +109,16 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 					var sectionIndex = i;
 					using (MemoryStream ms = new MemoryStream(sectionData))
 					{
-						using NbtBinaryReader defStream = new NbtBinaryReader(ms, true);
-						var section = processor.ReadSection(defStream, out var sectionYIndex);
+						var sectionYIndex = sectionIndex;
+						//using NbtBinaryReader defStream = new NbtBinaryReader(ms, true);
+						var section = BedrockChunkSection.Read(processor, ms, ref sectionYIndex, processor.WorldSettings);
 
 						if (sectionYIndex != int.MaxValue)
 						{
 							sectionIndex = sectionYIndex;
 						}
 						
-						Chunk.Sections[sectionIndex] = section;
+						Chunk[sectionIndex] = section;
 					}
 				}
 			}

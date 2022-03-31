@@ -24,7 +24,7 @@ namespace Alex.Blocks.Storage.Palette
 
 		public uint Add(TValue state)
 		{
-			throw new System.NotImplementedException();
+			return state.Id;
 		}
 
 		public TValue Get(uint id)

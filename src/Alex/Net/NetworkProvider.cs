@@ -18,6 +18,8 @@ namespace Alex.Net
 		Interact,
 		Attack,
 		ItemInteract,
+		
+		MouseOver
 	}
 
 	public abstract class NetworkProvider

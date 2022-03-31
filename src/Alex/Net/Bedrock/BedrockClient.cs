@@ -96,7 +96,7 @@ namespace Alex.Net.Bedrock
 		public override bool IsConnected => Session?.State != ConnectionState.Unconnected;
 
 		public bool GameStarted { get; set; } = false;
-		private ChunkProcessor ChunkProcessor { get; }
+		internal ChunkProcessor ChunkProcessor { get; }
 		private BedrockClientPacketHandler PacketHandler { get; set; }
 
 		private readonly List<IDisposable> _disposables = new List<IDisposable>();
@@ -348,6 +348,15 @@ namespace Alex.Net.Bedrock
 		{
 			Log.Warn($"Resetting initialized status...");
 			_markedAsInitialized = false;
+		}
+
+		private long _tickSyncTime = 0;
+		public void SendTickSync()
+		{
+			Log.Info($"Syncing ticks...");
+			McpeTickSync tickSync = McpeTickSync.CreateObject();
+			tickSync.requestTime = _tickSyncTime = Tick;
+			SendPacket(tickSync);
 		}
 
 		public void MarkAsInitialized()
@@ -746,7 +755,7 @@ namespace Alex.Net.Bedrock
 							Encoding.UTF8.GetBytes((string)payload.SkinGeometryData ?? string.Empty)),
 					AnimationData = payload.AnimationData,
 					IsPremiumSkin = payload.IsPremiumSkin,
-					IsPersonaSkin = payload.IsPersonaSkin,
+					IsPersonaSkin = payload.IsPersonaSkin
 				};
 			}
 
@@ -1083,6 +1092,18 @@ namespace Alex.Net.Bedrock
 			int slot,
 			Vector3 cursorPosition)
 		{
+			if (action == ItemUseOnEntityAction.MouseOver)
+			{
+				McpeInteract interact = McpeInteract.CreateObject();
+				interact.targetRuntimeEntityId = target.EntityId;
+				interact.actionId = (byte) McpeInteract.Actions.MouseOver;
+				interact.Position = cursorPosition.ToNumerics();
+				
+				SendPacket(interact);
+				
+				return;
+			}
+			
 			if (player is Player p)
 			{
 				McpeInventoryTransaction.ItemUseOnEntityAction realAction;
@@ -1217,6 +1238,7 @@ namespace Alex.Net.Bedrock
 			packet.slot = (byte)slot;
 
 			packet.item = GetMiNETItem(item);
+			packet.runtimeEntityId = EntityId;
 
 			SendPacket(packet);
 		}

@@ -27,10 +27,10 @@ namespace Alex.Worlds.Lighting
 
 		public void RecalculateChunk(ChunkColumn chunk)
 		{
-			foreach (var section in chunk.Sections)
+			for (int i = 0; i < chunk.ChunkSections; i++)
 			{
 				//section?.ResetLight(true, false);
-				section?.RemoveInvalidBlocks();
+				chunk[i]?.RemoveInvalidBlocks();
 			}
 
 			var chunkpos = new BlockCoordinates(chunk.X << 4, 0, chunk.Z << 4);

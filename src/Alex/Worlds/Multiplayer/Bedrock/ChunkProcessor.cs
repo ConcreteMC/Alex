@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.Collections.Specialized;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -11,6 +13,8 @@ using Alex.Blocks;
 using Alex.Blocks.Mapping;
 using Alex.Blocks.Minecraft;
 using Alex.Blocks.Minecraft.Fences;
+using Alex.Blocks.Storage;
+using Alex.Blocks.Storage.Palette;
 using Alex.Common.Utils.Collections;
 using Alex.Common.World;
 using Alex.Entities.BlockEntities;
@@ -55,7 +59,8 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 		public BlobCache Cache { get; }
 
 		private BufferBlock<BufferItem> _dataQueue;
-
+		
+		private ObservableCollection<BlockCoordinates> _pendingRequests = new ObservableCollection<BlockCoordinates>();
 		public ChunkProcessor(BedrockClient client, CancellationToken cancellationToken, BlobCache blobCache)
 		{
 			Client = client;
@@ -77,6 +82,28 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			var handleBufferItemBlock = new ActionBlock<BufferItem>(HandleBufferItem, blockOptions);
 			var linkOptions = new DataflowLinkOptions { PropagateCompletion = true };
 			_dataQueue.LinkTo(handleBufferItemBlock, linkOptions);
+			
+			_pendingRequests.CollectionChanged += PendingRequestsOnCollectionChanged;
+		}
+
+		private void PendingRequestsOnCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
+		{
+			List<ChunkCoordinates> handled = new List<ChunkCoordinates>();
+			if (e.Action == NotifyCollectionChangedAction.Remove && e.OldItems != null)
+			{
+				foreach (BlockCoordinates item in e.OldItems)
+				{
+					//if (!_pendingRequests.Any(x => x.X == item.X && x.Z == item.Z))
+					{	
+						var chunkManager = Client?.World?.ChunkManager;
+
+						if (chunkManager == null)
+							continue;
+						
+						chunkManager.ScheduleChunkUpdate(new ChunkCoordinates(item.X, item.Z), ScheduleType.Full);
+					}
+				}
+			}
 		}
 
 		private void HandleBufferItem(BufferItem item)
@@ -113,8 +140,56 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			}
 		}
 
+		private List<BlockCoordinates> _missing = new List<BlockCoordinates>();
+
+		public void RequestMissing()
+		{
+			var missing = _missing.ToList();
+
+
+			McpeSubChunkRequestPacket subChunkRequestPacket = McpeSubChunkRequestPacket.CreateObject();
+			subChunkRequestPacket.dimension = (int) Client.World.Dimension;
+
+			var basePosition = new ChunkCoordinates(Client.World.Player.KnownPosition);
+			var baseY = Client.World.Player.KnownPosition.Y;
+
+			subChunkRequestPacket.basePosition =
+				new MiNET.Utils.Vectors.BlockCoordinates(basePosition.X, 0, basePosition.Z);
+
+			List<SubChunkPositionOffset> offsets = new List<SubChunkPositionOffset>();
+
+			foreach (var bc in missing)
+			{
+				var cc = new ChunkCoordinates(bc.X, bc.Z);
+				var dx = basePosition.X - cc.X;
+				var dz = basePosition.Z - cc.Z;
+				
+				if (dx < sbyte.MinValue || dx > sbyte.MaxValue)
+					continue;
+				
+				if (dz < sbyte.MinValue || dz > sbyte.MaxValue)
+					continue;
+				
+				//	for (uint y = enqueuedChunk.SubChunkCount; y > 0; y--)
+				{
+					offsets.Add(
+						new SubChunkPositionOffset()
+						{
+							XOffset = (sbyte) dx, YOffset = (sbyte) bc.Y, ZOffset = (sbyte) dz
+						});
+				}
+
+				_missing.Remove(bc);
+			}
+
+			subChunkRequestPacket.offsets = offsets.ToArray();
+
+			Client.SendPacket(subChunkRequestPacket);
+		}
+
 		private void HandleChunkData(ChunkData enqueuedChunk)
 		{
+			
 			var chunkManager = Client?.World?.ChunkManager;
 
 			if (chunkManager == null)
@@ -131,62 +206,94 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 			if (handledChunk != null)
 			{
-				chunkManager.AddChunk(handledChunk, new ChunkCoordinates(enqueuedChunk.X, enqueuedChunk.Z), true);
-
-				return;
+				if (enqueuedChunk.SubChunkRequestMode == SubChunkRequestMode.SubChunkRequestModeLimited)
+				{
+					if (enqueuedChunk.SubChunkCount > 0)
+					{
+						for (uint y = enqueuedChunk.SubChunkCount; y > 0; y--)
+						{
+							_missing.Add(new BlockCoordinates(handledChunk.X, (int) y, handledChunk.Z));
+						}
+					}
+				}
 			}
 		}
-
+		
 		private void HandleSubChunkData(SubChunkData data)
 		{
-			var chunkManager = Client?.World?.ChunkManager;
+			var cc = new ChunkCoordinates(data.X, data.Z);
 
-			if (chunkManager == null)
-				return;
-			
-			if (data.Result != SubChunkRequestResult.Success)
+			try
 			{
-				Log.Warn($"Got subchunk response: {data.Result}");
-				return;
-			}
+				var chunkManager = Client?.World?.ChunkManager;
 
-			if (data.BlobHash != null)
-			{
-				//Cache based
-				return;
-			}
+				if (chunkManager == null)
+					return;
 
-			if (data.Data == null)
-			{
-				Log.Error($"Invalid subchunk data!");
-				return;
-			}
+				if (data.Result != SubChunkRequestResult.Success)
+				{
+					if (data.Result != SubChunkRequestResult.SuccessAllAir)
+						Log.Warn($"Got subchunk response: {data.Result}");
 
-			BedrockChunkSection section = null;
-			int subChunkIndex = int.MaxValue;
-			using (MemoryStream ms = new MemoryStream(data.Data))
-			{
-				using NbtBinaryReader defStream = new NbtBinaryReader(ms, true);
-				section = ReadSection(defStream, out subChunkIndex);
-			}
+					return;
+				}
 
-			if (section == null)
-			{
-				Log.Warn($"Read null section!");
-				return;
-			}
+				if (data.BlobHash != null)
+				{
+					Log.Info($"Blobhash!");
 
-			if (chunkManager.TryGetChunk(new ChunkCoordinates(data.X, data.Z), out var chunk))
-			{
-				var sY = data.Y + (chunk.WorldSettings.MinY / 16);
-				//chunk.WorldSettings.WorldHeight
+					//Cache based
+					return;
+				}
+
+				if (data.Data == null)
+				{
+					Log.Error($"Invalid subchunk data!");
+
+					return;
+				}
+
+				BedrockChunkSection section = null;
+				int subChunkIndex = int.MaxValue;
+
+				using (MemoryStream ms = new MemoryStream(data.Data))
+				{
+					section = BedrockChunkSection.Read(
+						this, ms, ref subChunkIndex,
+						WorldSettings);
+				}
+
+				if (section == null)
+				{
+					Log.Warn($"Read null section!");
+
+					return;
+				}
 				
-				var currentSection = chunk.Sections[sY];
-				chunk.Sections[sY] = section;
-				
-				currentSection?.Dispose();
-				
-				chunkManager.ScheduleChunkUpdate(new ChunkCoordinates(data.X, data.Z), ScheduleType.Full);
+				var sY = data.Y - (WorldSettings.MinY >> 4);
+				ChunkColumn chunk;
+				if (!chunkManager.TryGetChunk(cc, out chunk))
+				{
+					chunk = new BedrockChunkColumn(cc.X, cc.Z, WorldSettings);
+					chunk[sY] = section;
+					
+					chunkManager.AddChunk(chunk, cc, true);
+					
+					//	Log.Info($"Updating chunk! X={data.X} Y={data.Y} Z={data.Z}");
+				}
+				else
+				{
+					chunk[sY] = section;
+
+					chunk.CalculateHeight();
+					chunkManager.ScheduleChunkUpdate(cc, ScheduleType.Full);
+				}
+			}
+			finally
+			{
+				/*var matching = _pendingRequests.FirstOrDefault(x => x.X == data.X && x.Z == data.Z && x.Y == data.Y);
+				if (matching != null)
+					_pendingRequests.Remove(matching);*/
 			}
 		}
 		
@@ -254,14 +361,11 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 					return convertedState;
 				}
 
-				var t = BlockFactory.GetBlockState(copy.Name); /* TranslateBlockState(
-			        BlockFactory.GetBlockState(copy.Name),
-			        -1, copy.Data);*/
+				var t = BlockFactory.GetBlockState(copy.Name);
 
 				if (t.Name == "Unknown")
 				{
 					return t;
-					//  File.WriteAllText(Path.Combine("failed", bs.Name + ".json"), JsonConvert.SerializeObject(bs, Formatting.Indented));
 				}
 				else
 				{
@@ -334,293 +438,28 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			status.hashMisses = misses.ToArray();
 			Client.SendPacket(status);
 
-			using (MemoryStream ms = new MemoryStream(chunkData.Data))
-			{
-				ReadExtra(chunk.Chunk, ms);
-			}
-
 			if (chunk.IsComplete)
 			{
 				chunk.TryBuild(Client, this);
 			}
 		}
 
-		internal BedrockChunkSection ReadSection(NbtBinaryReader defStream, out int subChunkIndex)
-		{
-			int version = defStream.ReadByte();
-			subChunkIndex = int.MaxValue;
-			
-			if (version == 1 || version == 8 || version == 9)
-			{
-				var section = ReadPalettedSection(defStream, version, out var subChunkYValue);
-
-				if (subChunkYValue != int.MaxValue)
-				{
-					//Calculate subchunk index
-					subChunkIndex = subChunkYValue >> 4;
-					subChunkIndex += WorldSettings.MinY < 0 ? Math.Abs(WorldSettings.MinY >> 4) : 0;
-				}
-				
-				return section;
-			}
-			else if (version == 0)
-			{
-				return ReadLegacyChunkSection(defStream);
-			}
-			else
-			{
-				Log.Warn($"Unsupported storage version: {version}");
-			}
-
-			return null;
-		}
-
-		private BedrockChunkSection ReadPalettedSection(NbtBinaryReader defStream, int version, out int subChunkYValue)
-		{
-			var stream = defStream.BaseStream;
-			int storageSize = version == 1 ? 1 : defStream.ReadByte();
-			
-			subChunkYValue = int.MaxValue;
-			if (version == 9)
-			{
-				subChunkYValue = defStream.ReadByte();
-				Log.Info($"Got subchunk Y value: {subChunkYValue}");
-			}
-
-			var section = new BedrockChunkSection(storageSize);
-
-			for (int storage = 0; storage < storageSize; storage++)
-			{
-				int flags = stream.ReadByte();
-				bool isRuntime = (flags & 1) != 0;
-				int bitsPerBlock = flags >> 1;
-				int blocksPerWord = (int)Math.Floor(32f / bitsPerBlock);
-				int wordsPerChunk = (int)Math.Ceiling(4096f / blocksPerWord);
-
-				long jumpPos = stream.Position;
-				stream.Seek(wordsPerChunk * 4, SeekOrigin.Current);
-
-				int paletteCount = VarInt.ReadSInt32(stream);
-				var palette = new int[paletteCount];
-				bool allZero = true;
-
-				for (int j = 0; j < paletteCount; j++)
-				{
-					if (!isRuntime)
-					{
-						var file = new NbtFile { BigEndian = false, UseVarInt = true };
-						file.LoadFromStream(stream, NbtCompression.None);
-						var tag = (NbtCompound)file.RootTag;
-
-						var block = MiNET.Blocks.BlockFactory.GetBlockByName(tag["name"].StringValue);
-
-						if (block != null && block.GetType() != typeof(Block) && !(block is Air))
-						{
-							List<IBlockState> blockState = ReadBlockState(tag);
-							block.SetState(blockState);
-						}
-						else
-						{
-							block = new MiNET.Blocks.Air();
-						}
-
-						palette[j] = block.GetRuntimeId();
-					}
-					else
-					{
-						int runtimeId = VarInt.ReadSInt32(stream);
-						palette[j] = runtimeId;
-					}
-
-					if (palette[j] != 0)
-						allZero = false;
-				}
-
-				if (allZero) continue;
-
-				{
-					long afterPos = stream.Position;
-					stream.Position = jumpPos;
-					int position = 0;
-
-					for (int w = 0; w < wordsPerChunk; w++)
-					{
-						uint word = defStream.ReadUInt32();
-
-						for (uint block = 0; block < blocksPerWord; block++)
-						{
-							if (position >= 4096)
-								continue;
-
-							uint state = (uint)((word >> ((position % blocksPerWord) * bitsPerBlock))
-							                    & ((1 << bitsPerBlock) - 1));
-
-							int x = (position >> 8) & 0xF;
-							int y = position & 0xF;
-							int z = (position >> 4) & 0xF;
-
-							int runtimeId = palette[state];
-
-							if (runtimeId != 0)
-							{
-								var blockState = GetBlockState((uint)runtimeId);
-
-								if (blockState != null)
-									section.Set(storage, x, y, z, blockState);
-							}
-
-							position++;
-						}
-					}
-
-					stream.Position = afterPos;
-				}
-			}
-			return section;
-		}
-
-		/*private bool ReadStore(NbtBinaryReader reader, out short[] entries)
-		{
-			
-		}*/
-
-		private BedrockChunkSection ReadLegacyChunkSection(NbtBinaryReader defStream)
-		{
-			byte[] blockIds = new byte[4096];
-
-			if (defStream.Read(blockIds, 0, blockIds.Length) != blockIds.Length)
-				return null;
-
-			NibbleArray data = new NibbleArray(4096);
-
-			if (defStream.Read(data.Data, 0, data.Data.Length) != data.Data.Length)
-				return null;
-
-			var section = new BedrockChunkSection(1);
-
-			for (int x = 0; x < 16; x++)
-			{
-				for (int z = 0; z < 16; z++)
-				{
-					for (int y = 0; y < 16; y++)
-					{
-						int idx = (x << 8) + (z << 4) + y;
-						var id = blockIds[idx];
-						var meta = data[idx];
-
-						//var ruid = BlockFactory.GetBlockStateID(id, meta);
-
-						var block = MiNET.Blocks.BlockFactory.GetRuntimeId(id, meta);
-						BlockState result = GetBlockState(block);
-
-						if (result != null)
-						{
-							section.Set(x, y, z, result);
-						}
-						else
-						{
-							Log.Info($"Unknown block: {id}:{meta}");
-						}
-					}
-				}
-			}
-
-			return section;
-		}
-
 		public WorldSettings WorldSettings { get; set; } = new WorldSettings(384, -64);
 		private BedrockChunkColumn HandleChunk(ChunkData chunkData)
 		{
+			if (chunkData.SubChunkRequestMode != SubChunkRequestMode.SubChunkRequestModeLegacy)
+			{
+				return new BedrockChunkColumn(chunkData.X, chunkData.Z, WorldSettings);
+			}
+			
 			if (chunkData.SubChunkCount == 0)
 				return null;
 			
-			if (chunkData.SubChunkRequestMode != SubChunkRequestMode.SubChunkRequestModeLegacy)
-			{
-				/*McpeSubChunkRequestPacket subChunkRequestPacket = McpeSubChunkRequestPacket.CreateObject();
-				subChunkRequestPacket.dimension = (int) Client.World.Dimension;
-
-				subChunkRequestPacket.basePosition =
-					new MiNET.Utils.Vectors.BlockCoordinates(chunk.X, 0, chunk.Z);
-
-				List<SubChunkPositionOffset> offsets = new List<SubChunkPositionOffset>();
-
-				for (int y = 0; y < 24; y++)
-				{
-					offsets.Add(new SubChunkPositionOffset()
-					{
-						XOffset = 0,
-						YOffset = y - (4),
-						ZOffset = 0
-					});
-				}
-				subChunkRequestPacket.offsets = offsets.ToArray();
-						
-				Client.SendPacket(subChunkRequestPacket);*/
-
-				/*subChunkRequestPacket.offsets = new SubChunkPositionOffset[]
-				{
-					new SubChunkPositionOffset() {XOffset = 0, ZOffset = 0, YOffset = -2}
-				};*/
-			}
-
 			try
 			{
-				using (MemoryStream stream = new MemoryStream(chunkData.Data))
-				{
-					BedrockChunkColumn chunkColumn = new BedrockChunkColumn(chunkData.X, chunkData.Z, WorldSettings);
-
-					using NbtBinaryReader defStream = new NbtBinaryReader(stream, true);
-					//Log.Info($"SubchunkCount: {chunkData.SubChunkCount} | Mode={chunkData.SubChunkRequestMode} | CacheEnabled={chunkData.CacheEnabled}");
-					if (chunkData.SubChunkRequestMode != SubChunkRequestMode.SubChunkRequestModeLimitless
-					    && !chunkData.CacheEnabled)
-					{
-						for (int s = 0; s < chunkData.SubChunkCount; s++)
-						{
-							var sectionIndex = s;
-							var section = ReadSection(defStream, out int subChunkIndex);
-
-							if (subChunkIndex != int.MaxValue)
-							{
-								sectionIndex = subChunkIndex;
-							}
-
-							chunkColumn.Sections[sectionIndex] = section;
-						}
-					}
-
-					if (!chunkData.CacheEnabled)
-					{
-						byte[] biomeIds = new byte[256];
-
-						if (defStream.Read(biomeIds, 0, 256) != 256) return chunkColumn;
-
-						for (int x = 0; x < 16; x++)
-						{
-							for (int z = 0; z < 16; z++)
-							{
-								var biomeId = biomeIds[(z << 4) + (x)];
-
-								for (int y = 0; y < 255; y++)
-								{
-									chunkColumn.SetBiome(x, y, z, BiomeUtils.GetBiome(biomeId));
-								}
-							}
-						}
-					}
-
-					if (stream.Position >= stream.Length - 1)
-					{
-						chunkColumn.CalculateHeight();
-
-						return chunkColumn;
-					}
-
-					ReadExtra(chunkColumn, stream);
-
-					chunkColumn.CalculateHeight();
-
-					return chunkColumn;
-				}
+				var chunkColumn = BedrockChunkColumn.ReadFrom(this, chunkData.Data, chunkData.X, chunkData.Z, chunkData.SubChunkCount, WorldSettings);
+				
+				return chunkColumn;
 			}
 			catch (Exception ex)
 			{
@@ -631,74 +470,9 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			finally { }
 		}
 
-		private void ReadExtra(ChunkColumn chunkColumn, MemoryStream stream)
+		public Biome GetBiome(uint id)
 		{
-			int borderBlock =
-				VarInt.ReadSInt32(
-					stream); // defStream.ReadByte();// defStream.ReadVarInt(); //VarInt.ReadSInt32(stream);
-
-			if (borderBlock != 0)
-			{
-				int len = (int)(stream.Length - stream.Position);
-				var bytes = new byte[len];
-				stream.Read(bytes, 0, len);
-			}
-
-
-			while (stream.Position < stream.Length - 1)
-			{
-				try
-				{
-					NbtFile file = new NbtFile() {BigEndian = false, UseVarInt = true};
-
-					file.LoadFromStream(stream, NbtCompression.None);
-					var blockEntityTag = file.RootTag;
-
-					int x = blockEntityTag["x"].IntValue;
-					int y = blockEntityTag["y"].IntValue;
-					int z = blockEntityTag["z"].IntValue;
-
-					chunkColumn.AddBlockEntity(new BlockCoordinates(x, y, z), (NbtCompound) file.RootTag);
-				}
-				catch (EndOfStreamException) { }
-				catch(NbtFormatException){}
-
-				// if (Log.IsTraceEnabled()) Log.Trace($"Blockentity:\n{file.RootTag}");
-			}
-
-			if (stream.Position < stream.Length - 1)
-			{
-				int len = (int)(stream.Length - stream.Position);
-				var bytes = new byte[len];
-				stream.Read(bytes, 0, len);
-				Log.Warn($"Still have data to read\n{Packet.HexDump(new ReadOnlyMemory<byte>(bytes))}");
-			}
-		}
-
-		private static List<IBlockState> ReadBlockState(NbtCompound tag)
-		{
-			//Log.Debug($"Palette nbt:\n{tag}");
-
-			var states = new List<IBlockState>();
-			var nbtStates = (NbtCompound)tag["states"];
-
-			foreach (NbtTag stateTag in nbtStates)
-			{
-				IBlockState state = stateTag.TagType switch
-				{
-					NbtTagType.Byte => (IBlockState)new BlockStateByte()
-					{
-						Name = stateTag.Name, Value = stateTag.ByteValue
-					},
-					NbtTagType.Int    => new BlockStateInt() { Name = stateTag.Name, Value = stateTag.IntValue },
-					NbtTagType.String => new BlockStateString() { Name = stateTag.Name, Value = stateTag.StringValue },
-					_                 => throw new ArgumentOutOfRangeException()
-				};
-
-				states.Add(state);
-			}
-
-			return states;
+			return BiomeUtils.GetBiome(id);
 		}
 
 		private bool TryConvertBlockState(BlockStateContainer record, out BlockState result)
