@@ -189,7 +189,6 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 		private void HandleChunkData(ChunkData enqueuedChunk)
 		{
-			
 			var chunkManager = Client?.World?.ChunkManager;
 
 			if (chunkManager == null)
@@ -215,6 +214,14 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 							_missing.Add(new BlockCoordinates(handledChunk.X, (int) y, handledChunk.Z));
 						}
 					}
+				}
+				else if (enqueuedChunk.SubChunkRequestMode == SubChunkRequestMode.SubChunkRequestModeLegacy)
+				{
+					chunkManager.AddChunk(handledChunk, new ChunkCoordinates(handledChunk.X, handledChunk.Z), true);
+				}
+				else
+				{
+					handledChunk?.Dispose();
 				}
 			}
 		}
@@ -331,53 +338,6 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			_dataQueue.Post(new BufferItem(default, null, value));
 		}
 
-		public BlockState GetBlockState(uint p)
-		{
-			if (_convertedStates.TryGetValue(p, out var existing))
-			{
-				return BlockFactory.GetBlockState(existing);
-			}
-
-			var bs = MiNET.Blocks.BlockFactory.BlockPalette.FirstOrDefault(x => x.RuntimeId == p);
-
-			if (bs != null)
-			{
-				var copy = new BlockStateContainer()
-				{
-					Data = bs.Data,
-					Id = bs.Id,
-					Name = bs.Name,
-					States = bs.States,
-					RuntimeId = bs.RuntimeId
-				};
-
-				if (TryConvertBlockState(copy, out var convertedState))
-				{
-					if (convertedState != null)
-					{
-						_convertedStates.TryAdd(p, convertedState.Id);
-					}
-
-					return convertedState;
-				}
-
-				var t = BlockFactory.GetBlockState(copy.Name);
-
-				if (t.Name == "Unknown")
-				{
-					return t;
-				}
-				else
-				{
-					_convertedStates.TryAdd(p, t.Id);
-
-					return t;
-				}
-			}
-
-			return null;
-		}
-
 		public ThreadSafeList<CachedChunk> _futureChunks = new ThreadSafeList<CachedChunk>();
 
 		public ConcurrentDictionary<BlockCoordinates, NbtCompound> _futureBlockEntities =
@@ -475,6 +435,55 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			return BiomeUtils.GetBiome(id);
 		}
 
+		public uint TranslateBlockState(uint stateId)
+		{
+			if (_convertedStates.TryGetValue(stateId, out var translated))
+			{
+				return translated;
+			}
+			
+			var bs = MiNET.Blocks.BlockFactory.BlockPalette.FirstOrDefault(x => x.RuntimeId == stateId);
+
+			if (bs == null) return stateId;
+
+			var copy = new BlockStateContainer()
+			{
+				Data = bs.Data,
+				Id = bs.Id,
+				Name = bs.Name,
+				States = bs.States,
+				RuntimeId = bs.RuntimeId
+			};
+
+			if (TryConvertBlockState(copy, out var convertedState))
+			{
+				if (convertedState != null)
+				{
+					_convertedStates.TryAdd(stateId, convertedState.Id);
+
+					return convertedState.Id;
+				}
+			}
+
+			var t = BlockFactory.GetBlockState(copy.Name);
+
+			if (t.Name == "Unknown")
+			{
+				return t.Id;
+			}
+			else
+			{
+				_convertedStates.TryAdd(stateId, t.Id);
+
+				return t.Id;
+			}
+		}
+
+		public BlockState GetBlockState(uint p)
+		{
+			return BlockFactory.GetBlockState(TranslateBlockState(p));
+		}
+		
 		private bool TryConvertBlockState(BlockStateContainer record, out BlockState result)
 		{
 			if (_convertedStates.TryGetValue((uint)record.RuntimeId, out var alreadyConverted))

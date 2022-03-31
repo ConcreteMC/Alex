@@ -622,12 +622,7 @@ namespace Alex.Worlds.Chunks
 
 			_disposed = true;
 
-			if (!disposing)
-			{
-				Log.Warn($"Disposing via deconstructor!");
-			}
-
-			var sections = Sections.ToImmutableArray();
+			var sections = Sections.ToArray();
 
 			for (var index = 0; index < sections.Length; index++)
 			{
@@ -637,7 +632,7 @@ namespace Alex.Worlds.Chunks
 				chunksSection?.Dispose();
 			}
 			
-			var biomes = BiomeStorages.ToImmutableArray();
+			var biomes = BiomeStorages.ToArray();
 
 			for (var index = 0; index < biomes.Length; index++)
 			{
@@ -664,6 +659,7 @@ namespace Alex.Worlds.Chunks
 
 		~ChunkColumn()
 		{
+			Log.Warn($"Disposing via destructor!");
 			Dispose(false);
 		}
 

@@ -12,6 +12,7 @@ public abstract class GenericStorage<TValue> : IDisposable where TValue : class,
 	private static readonly Logger Log = LogManager.GetCurrentClassLogger();
 	public IStorage Storage { get; set; }
 
+	private readonly TValue _defaultValue;
 	private int _bits;
 	private readonly int _size;
 	public IPalette<TValue> Palette { get; set; }
@@ -22,6 +23,7 @@ public abstract class GenericStorage<TValue> : IDisposable where TValue : class,
 
 	public GenericStorage(TValue defaultValue, int bitsPerBlock = 8, int size = 4096)
 	{
+		_defaultValue = defaultValue;
 		_bits = bitsPerBlock;
 		_size = size;
 
@@ -128,13 +130,11 @@ public abstract class GenericStorage<TValue> : IDisposable where TValue : class,
 			var result = Palette.Get(Storage[index]);
 
 			if (result == null)
-				return GetDefault();
+				return _defaultValue;
 
 			return result;
 		}
 	}
-
-	protected abstract TValue GetDefault();
 
 	protected abstract int GetIndex(int x, int y, int z);
 
@@ -152,7 +152,7 @@ public abstract class GenericStorage<TValue> : IDisposable where TValue : class,
 
 		var directPalette = GetGlobalPalette();
 		var palette = new IntIdentityHashBiMap<TValue>(palleteLength + 1);
-		palette.Add(GetDefault());
+		palette.Add(_defaultValue);
 
 		for (uint id = 0; id < palleteLength; id++)
 		{

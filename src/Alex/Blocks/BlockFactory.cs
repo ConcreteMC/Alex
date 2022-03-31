@@ -11,6 +11,7 @@ using Alex.Blocks.Mapping;
 using Alex.Blocks.Minecraft;
 using Alex.Blocks.Properties;
 using Alex.Blocks.State;
+using Alex.Blocks.Storage.Palette;
 using Alex.Common.Blocks.Properties;
 using Alex.Common.Resources;
 using Alex.Common.Utils;
@@ -42,6 +43,8 @@ namespace Alex.Blocks
 
 		public static readonly ConcurrentDictionary<ResourceLocation, BlockStateVariantMapper> BedrockStates =
 			new ConcurrentDictionary<ResourceLocation, BlockStateVariantMapper>();
+
+		public static IPalette<BlockState> BlockPalette { get; } = new DirectPalette<BlockState>(GetBlockState);
 
 		private static bool _builtin = false;
 

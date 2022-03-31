@@ -13,18 +13,10 @@ namespace Alex.Blocks.Storage
 	public class BlockStorage : GenericStorage<BlockState>
 	{
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(BlockStorage));
-		private BlockState Air { get; }
 
 		public BlockStorage(int bitsPerBlock = 8, int size = 4096) : base(BlockFactory.GetBlockState("minecraft:air"), bitsPerBlock, size)
 		{
-			Air = BlockFactory.GetBlockState("minecraft:air");
 			X = Y = Z = 16;
-		}
-
-		/// <inheritdoc />
-		protected override BlockState GetDefault()
-		{
-			return Air;
 		}
 
 		/// <inheritdoc />

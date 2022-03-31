@@ -54,15 +54,7 @@ namespace Alex.Worlds.Chunks
 			{
 				if (BlockStorages[i] == default)
 					BlockStorages[i] = CreateBlockStorage();
-				
-			//	if (BiomeStorages[i] == default)
-			//		BiomeStorages[i] = CreateBiomeStorage();
 			}
-		}
-
-		protected virtual BiomeStorage CreateBiomeStorage()
-		{
-			return new BiomeStorage();
 		}
 
 		protected virtual BlockStorage CreateBlockStorage()
@@ -83,19 +75,7 @@ namespace Alex.Worlds.Chunks
 		{
 			return (y << 8 | z << 4 | x);
 		}
-
-		/*public Biome GetBiome(int x, int y, int z)
-		{
-			return BiomeStorages[0].Get(x, y, z);
-			// return BiomeIds[GetCoordinateIndex(x, y, z)];
-		}
-
-		public void SetBiome(int x, int y, int z, Biome biome)
-		{
-			BiomeStorages[0].Set(x, y, z, biome);
-			// BiomeIds[GetCoordinateIndex(x, y, z)] = biomeId;
-		}*/
-
+		
 		public BlockState Get(int x, int y, int z)
 		{
 			return this.Get(x, y, z, 0);
@@ -311,11 +291,6 @@ namespace Alex.Worlds.Chunks
 
 			LightSources?.Clear();
 			LightSources = null;
-
-			if (!disposing)
-			{
-				Log.Warn($"Dispose was never called. Cleaning up.");
-			}
 		}
 
 		public void Dispose()
@@ -326,6 +301,7 @@ namespace Alex.Worlds.Chunks
 
 		~ChunkSection()
 		{
+			Log.Warn($"Disposing chunk via destructor");
 			Dispose(false);
 		}
 

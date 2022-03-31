@@ -26,15 +26,6 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			
 		}
 
-		/// <inheritdoc />
-		protected override BiomeStorage CreateBiomeStorage()
-		{
-			BiomeStorage biomeStorage = new BiomeStorage(8, 4096, 16, 16, 16);
-			biomeStorage.MaxBitsPerEntry = 8;
-
-			return biomeStorage;
-		}
-
 		public static BedrockChunkSection Read(ChunkProcessor processor, Stream stream, ref int index, WorldSettings worldSettings)
 		{
 			var version = (byte)stream.ReadByte();
@@ -87,53 +78,48 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			var blockSize = (byte)stream.ReadByte();
 			bool isRuntime = (blockSize & 1) != 0;
 			
-			var bitsPerBlock = (byte)(blockSize >> 1);
+			var bitsPerEntry = (byte)(blockSize >> 1);
 
 			if (blockSize == 0x7f)
 				return null;
 			
-			var words = ChunkProcessingUtils.ReadWordArray(stream, bitsPerBlock);
-
-			if (words == null || words.Length == 0)
+			var dataArray = ChunkProcessingUtils.ReadWordArray(stream, bitsPerEntry);
+			
+			if (dataArray == null || dataArray.Length == 0)
 				return null;
 
-			var palette = ChunkProcessingUtils.ReadPalette(stream, bitsPerBlock, new BlockPaletteEncoding(isRuntime));
+			var palette = ChunkProcessingUtils.ReadPalette(stream, bitsPerEntry, new BlockPaletteEncoding(isRuntime));
 
 			if (palette == null)
 				return null;
 			
+			var blocksPerWord = (int) Math.Ceiling(4096f / dataArray.Length);
 			BlockStorage blockStorage = new BlockStorage();
-			var blocksPerWord = (int) Math.Ceiling(4096f / words.Length);
-
+			
 			int position = 0;
-			foreach (var word in words)
+			foreach (var word in dataArray)
 			{
+				if (position >= 4096)
+					break;
+				
 				for (uint block = 0; block < blocksPerWord; block++)
 				{
 					if (position >= 4096)
+						break;
+
+					var state = (uint) ((word >> ((position % blocksPerWord) * bitsPerEntry))
+					                    & ((1 << bitsPerEntry) - 1));
+					
+					if (state >= palette.Length)
 						continue;
 
-					var state = (uint) ((word >> ((position % blocksPerWord) * bitsPerBlock))
-					                    & ((1 << bitsPerBlock) - 1));
+					var id = palette[state];
+					
+					int x = (position >> 8) & 0xF;
+					int y = position & 0xF;
+					int z = (position >> 4) & 0xF;
 
-					if (state < palette.Length)
-					{
-						var runtimeId = palette[state];
-
-						if (runtimeId != 0)
-						{
-							int x = (position >> 8) & 0xF;
-							int y = position & 0xF;
-							int z = (position >> 4) & 0xF;
-
-							var blockState = processor.GetBlockState((uint) runtimeId);
-
-							if (blockState != null)
-							{
-								blockStorage.Set(x, y, z, blockState);
-							}
-						}
-					}
+					blockStorage.Set(x,y,z, processor.GetBlockState(id));
 
 					position++;
 				}
