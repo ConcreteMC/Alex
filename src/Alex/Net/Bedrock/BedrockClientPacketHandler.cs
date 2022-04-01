@@ -8,8 +8,6 @@ using System.Numerics;
 using System.Threading;
 using Alex.Audio;
 using Alex.Blocks;
-using Alex.Common.Commands;
-using Alex.Common.Commands.Nodes;
 using Alex.Common.Resources;
 using Alex.Common.Services;
 using Alex.Common.Utils;
@@ -19,14 +17,12 @@ using Alex.Entities.BlockEntities;
 using Alex.Entities.Components.Effects;
 using Alex.Entities.Projectiles;
 using Alex.Gui.Dialogs;
-using Alex.Gui.Elements;
 using Alex.Gui.Elements.Scoreboard;
 using Alex.Net.Bedrock.Packets;
 using Alex.Networking.Java.Packets.Play;
 using Alex.ResourcePackLib.Json.Bedrock.Sound;
 using Alex.Services;
 using Alex.Utils;
-using Alex.Utils.Auth;
 using Alex.Utils.Commands;
 using Alex.Utils.Inventories;
 using Alex.Worlds;
@@ -34,7 +30,6 @@ using Alex.Worlds.Abstraction;
 using Alex.Worlds.Multiplayer.Bedrock;
 using fNbt;
 using Jose;
-using Microsoft.Extensions.DependencyInjection;
 using MiNET;
 using MiNET.Net;
 using MiNET.Particles;
@@ -45,7 +40,6 @@ using Newtonsoft.Json;
 using NLog;
 using AnvilWorldProvider = Alex.Worlds.Singleplayer.AnvilWorldProvider;
 using BlockCoordinates = Alex.Common.Utils.Vectors.BlockCoordinates;
-using ChunkCoordinates = Alex.Common.Utils.Vectors.ChunkCoordinates;
 using Color = Microsoft.Xna.Framework.Color;
 using CommandProperty = Alex.Utils.Commands.CommandProperty;
 using Dimension = Alex.Worlds.Dimension;
@@ -53,7 +47,6 @@ using Entity = Alex.Entities.Entity;
 using MessageType = Alex.Common.Data.MessageType;
 using Player = Alex.Entities.Player;
 using PlayerLocation = Alex.Common.Utils.Vectors.PlayerLocation;
-using Version = Alex.Common.Services.Version;
 
 namespace Alex.Net.Bedrock
 {
@@ -299,7 +292,7 @@ namespace Alex.Net.Bedrock
 				}
 
 				player.SetInventory(new BedrockInventory(46));
-				player.UpdateGamemode((GameMode)message.playerGamemode);
+				player.UpdateGamemode((Interfaces.GameMode)message.playerGamemode);
 				player.PermissionLevel = (PermissionLevel)message.levelSettings.permissionLevel;
 
 				player.Controller.SetRewindHistorySize(
@@ -712,7 +705,9 @@ namespace Alex.Net.Bedrock
 						_entityIdentifiers[id.Value] = realId.Value;
 
 						if (LoggingConstants.LogServerEntityDefinitions)
+#pragma warning disable CS0162
 							Log.Debug($"Registered entity identifier: {id.Value}");
+#pragma warning restore CS0162
 					}
 				}
 			}
@@ -1747,7 +1742,7 @@ namespace Alex.Net.Bedrock
 
 		public void HandleMcpeSetPlayerGameType(McpeSetPlayerGameType message)
 		{
-			Client.World.Player.UpdateGamemode((GameMode)message.gamemode);
+			Client.World.Player.UpdateGamemode((Interfaces.GameMode)message.gamemode);
 		}
 
 		public void HandleMcpeSimpleEvent(McpeSimpleEvent message)
@@ -2503,7 +2498,7 @@ namespace Alex.Net.Bedrock
 			if (packet.PlayerEntityUniqueId != Client.EntityId)
 				return;
 
-			Client.World.Player.UpdateGamemode(packet.GameMode);
+			Client.World.Player.UpdateGamemode((Interfaces.GameMode)packet.GameMode);
 			//packet.
 		}
 

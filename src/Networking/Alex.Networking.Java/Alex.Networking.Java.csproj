@@ -4,21 +4,35 @@
         <Configurations>Release;Debug;Appveyor;DirectX</Configurations>
         <Platforms>x64;AnyCPU</Platforms>
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-        <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-        <Description>Provides the MC:Java networking implementation in Alex</Description>
-        <Copyright>Kenny van Vulpen - 2020</Copyright>
-        <PackageProjectUrl>https://github.com/kennyvv/Alex</PackageProjectUrl>
-        <PackageLicenseUrl>https://github.com/kennyvv/Alex/blob/master/LICENSE</PackageLicenseUrl>
-        <RepositoryUrl>https://github.com/kennyvv/Alex</RepositoryUrl>
-        <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
         <TargetFrameworks>$(LibTargetFrameworks)</TargetFrameworks>
+        <LangVersion>8</LangVersion>
     </PropertyGroup>
+    
+    <PropertyGroup>
+        <Title>ConcreteMC.Networking.Java</Title>
+        <Description>Provides the MC:Java networking implementation in Alex</Description>
+        <PackageTags>Minecraft java mojang alex concretemc networking protocol</PackageTags>
+        <Authors>Kenny van Vulpen</Authors>
+        <Company>Kenny van Vulpen</Company>
+        <Copyright>Kenny van Vulpen 2016 - 2022</Copyright>
+        <PackageProjectUrl>https://github.com/ConcreteMC/Alex</PackageProjectUrl>
+        <RepositoryUrl>https://github.com/ConcreteMC/Alex</RepositoryUrl>
+
+        <PackageVersion>1.0.0</PackageVersion>
+        <PackageReleaseNotes>
+            Support for Java Edition 1.18.10 - Protocol #758
+        </PackageReleaseNotes>
+        
+        <PackageLicenseExpression>MPL-2.0</PackageLicenseExpression>
+        <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
+        <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    </PropertyGroup>
+    
     <ItemGroup>
+        <PackageReference Include="MiNET.fnbt" Version="1.0.22" />
         <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
         <PackageReference Include="NLog" Version="4.7.14" />
-    </ItemGroup>
-    <ItemGroup>
-        <ProjectReference Include="..\..\Alex.Common\Alex.Common.csproj" />
+        <PackageReference Include="Portable.BouncyCastle" Version="1.9.0" />
     </ItemGroup>
     <ItemGroup>
         <Compile Update="Properties\Resources.Designer.cs">
@@ -32,5 +46,8 @@
             <Generator>ResXFileCodeGenerator</Generator>
             <LastGenOutput>Resources.Designer.cs</LastGenOutput>
         </EmbeddedResource>
+    </ItemGroup>
+    <ItemGroup>
+      <ProjectReference Include="..\..\Alex.Primitives\Alex.Primitives.csproj" />
     </ItemGroup>
 </Project>

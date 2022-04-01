@@ -334,11 +334,11 @@ namespace Alex.Gui.Screens.Ingame
 		protected override void OnUpdate(GameTime gameTime)
 		{
 			_experienceComponent.IsVisible = _hotbar.ShowItemCount = _hungerComponent.IsVisible =
-				_healthComponent.IsVisible = Player.Gamemode != GameMode.Creative;
+				_healthComponent.IsVisible = Player.Gamemode != Interfaces.GameMode.Creative;
 
 			int offset = 0;
 
-			if (Player.Gamemode == GameMode.Creative)
+			if (Player.Gamemode == Interfaces.GameMode.Creative)
 			{
 				offset = RenderBounds.Bottom - _hotbar.RenderBounds.Top;
 			}

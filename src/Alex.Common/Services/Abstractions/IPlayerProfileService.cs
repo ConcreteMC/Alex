@@ -1,13 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Text;
-using System.Threading.Tasks;
-using MojangAPI;
 using MojangAPI.Model;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using Skin = Alex.Common.Utils.Skin;
 
 namespace Alex.Common.Services
 {

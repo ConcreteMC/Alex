@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using Alex.Common.Blocks;
+using Alex.Interfaces;
 using Microsoft.Xna.Framework;
 
 namespace Alex.ResourcePackLib.Json.Models

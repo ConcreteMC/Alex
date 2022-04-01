@@ -1,11 +1,11 @@
-using Alex.Common.Utils.Vectors;
+using Alex.Interfaces;
 using Alex.Networking.Java.Util;
 
 namespace Alex.Networking.Java.Packets.Play
 {
 	public class AcknowledgePlayerDiggingPacket : Packet<AcknowledgePlayerDiggingPacket>
 	{
-		public BlockCoordinates Position { get; set; }
+		public IVector3I Position { get; set; }
 		public int Block { get; set; }
 		public DigStatus Status { get; set; }
 		public bool Successful { get; set; }

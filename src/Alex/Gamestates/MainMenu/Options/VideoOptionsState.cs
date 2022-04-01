@@ -1,8 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using Alex.Common.Utils;
+﻿using Alex.Common.Utils;
 using Alex.Gui;
-using Microsoft.Xna.Framework;
+using Alex.Interfaces;
 using RocketUI;
 
 namespace Alex.Gamestates.MainMenu.Options

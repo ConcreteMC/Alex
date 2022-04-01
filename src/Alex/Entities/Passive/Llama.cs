@@ -1,7 +1,5 @@
-using Alex.Graphics.Models.Entity;
 using Alex.Networking.Java.Packets.Play;
 using Alex.Worlds;
-using MiNET.Entities;
 
 namespace Alex.Entities.Passive
 {
@@ -15,7 +13,7 @@ namespace Alex.Entities.Passive
 
 		public void SetVariant(int variant)
 		{
-			var texture = "creamy";
+			/*var texture = "creamy";
 
 			switch (variant)
 			{
@@ -43,7 +41,7 @@ namespace Alex.Entities.Passive
 					return;
 			}
 
-			//TryUpdateTexture("minecraft:llama", texture);
+			//TryUpdateTexture("minecraft:llama", texture);*/
 		}
 
 		/// <inheritdoc />

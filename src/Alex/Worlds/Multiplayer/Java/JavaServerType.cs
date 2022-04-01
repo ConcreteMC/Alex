@@ -1,32 +1,20 @@
 using System;
-using System.IO;
-using System.Linq;
 using System.Threading.Tasks;
-using Alex.Common;
 using Alex.Common.Data.Servers;
 using Alex.Common.Services;
 using Alex.Common.Utils;
 using Alex.Gamestates.Login;
 using Alex.Gamestates.Multiplayer;
 using Alex.Gui;
-using Alex.Gui.Dialogs;
-using Alex.Gui.Elements;
 using Alex.Net;
 using Alex.Networking.Java;
 using Alex.Services;
 using Alex.Utils;
-using Alex.Utils.Auth;
-using Alex.Utils.Skins;
 using Alex.Worlds.Abstraction;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Xna.Framework.Graphics;
 using MiNET.Utils;
-using MojangAPI;
-using MojangAPI.Model;
 using NLog;
 using MojangAuthResponse = Alex.Utils.Auth.MojangAuthResponse;
 using PlayerProfile = Alex.Common.Services.PlayerProfile;
-using Skin = MiNET.Utils.Skins.Skin;
 
 namespace Alex.Worlds.Multiplayer.Java
 {

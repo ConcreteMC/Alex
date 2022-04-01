@@ -1,13 +1,7 @@
-using System;
 using System.Collections.Generic;
-using System.Numerics;
-using Alex.Common.Graphics;
 using Alex.Common.Utils;
-using Alex.Common.Utils.Collections;
-using Alex.Graphics.Models.Entity;
 using Microsoft.Xna.Framework;
 using NLog;
-using Quaternion = Microsoft.Xna.Framework.Quaternion;
 using Vector3 = Microsoft.Xna.Framework.Vector3;
 
 namespace Alex.Graphics.Models

@@ -9,19 +9,17 @@ using System.Net;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
 using Alex.Common;
-using Alex.Common.Blocks;
 using Alex.Common.Data.Options;
 using Alex.Common.Items;
 using Alex.Common.Services;
 using Alex.Common.Utils;
 using Alex.Entities;
-using Alex.Gamestates;
 using Alex.Gamestates.InGame;
 using Alex.Items;
 using Alex.Net.Bedrock.Packets;
 using Alex.Networking.Bedrock.RakNet;
+using Alex.Networking.Java.Models;
 using Alex.ResourcePackLib.Json;
 using Alex.Utils;
 using Alex.Utils.Auth;
@@ -54,13 +52,12 @@ using Org.BouncyCastle.Security;
 using Org.BouncyCastle.X509;
 using SicStream;
 using BlockCoordinates = Alex.Common.Utils.Vectors.BlockCoordinates;
-using BlockFace = Alex.Common.Blocks.BlockFace;
+using BlockFace = Alex.Interfaces.BlockFace;
 using CertificateData = Alex.Utils.CertificateData;
-using ConnectionInfo = Alex.Common.Utils.ConnectionInfo;
+using ConnectionInfo = Alex.Interfaces.Net.ConnectionInfo;
 using ExtraData = Alex.Utils.ExtraData;
 using GeometryIdentifier = Alex.Utils.Skins.GeometryIdentifier;
 using Item = Alex.Items.Item;
-using LevelInfo = MiNET.Worlds.LevelInfo;
 using Player = Alex.Entities.Player;
 using PlayerLocation = Alex.Common.Utils.Vectors.PlayerLocation;
 using Skin = MiNET.Utils.Skins.Skin;
@@ -299,7 +296,9 @@ namespace Alex.Net.Bedrock
 			             + $"Latency {Connection.ConnectionInfo.Latency:00}ms";
 
 			if (LoggingConstants.LogNetworkStatistics)
+#pragma warning disable CS0162
 				Log.Info(str);
+#pragma warning restore CS0162
 
 			ConnectionInfo.NetworkState networkState = ConnectionInfo.NetworkState.Ok;
 
@@ -439,7 +438,7 @@ namespace Alex.Net.Bedrock
 			}
 
 			LoginSent = true;
-			JWT.JsonMapper = new JWTMapper();
+			JWT.DefaultSettings.JsonMapper = new JWTMapper();
 
 			var clientKey = XboxAuthService.MinecraftKeyPair; // CryptoUtils.GenerateClientKey();
 
@@ -571,11 +570,13 @@ namespace Alex.Net.Bedrock
 
 		public void InitiateEncryption(byte[] serverKey, byte[] randomKeyToken)
 		{
+			var handler = BedrockMessageHandler;
+			var semaphore = handler.PacketHandlingSemaphore;
+			semaphore.Wait();
+
 			try
 			{
-				ECPublicKeyParameters remotePublicKey = (ECPublicKeyParameters)PublicKeyFactory.CreateKey(serverKey);
-
-				var handler = BedrockMessageHandler;
+				ECPublicKeyParameters remotePublicKey = (ECPublicKeyParameters) PublicKeyFactory.CreateKey(serverKey);
 
 				ECDHBasicAgreement agreement = new ECDHBasicAgreement();
 				agreement.Init(handler.CryptoContext.ClientKey.Private);
@@ -585,7 +586,7 @@ namespace Alex.Net.Bedrock
 				{
 					secret = sha.ComputeHash(
 						randomKeyToken.Concat(agreement.CalculateAgreement(remotePublicKey).ToByteArrayUnsigned())
-						   .ToArray());
+							.ToArray());
 				}
 
 				// Create a decrytor to perform the stream transform.
@@ -596,12 +597,12 @@ namespace Alex.Net.Bedrock
 				decryptor.Init(
 					false,
 					new ParametersWithIV(
-						new KeyParameter(secret), secret.Take(12).Concat(new byte[] { 0, 0, 0, 2 }).ToArray()));
+						new KeyParameter(secret), secret.Take(12).Concat(new byte[] {0, 0, 0, 2}).ToArray()));
 
 				encryptor.Init(
 					true,
 					new ParametersWithIV(
-						new KeyParameter(secret), secret.Take(12).Concat(new byte[] { 0, 0, 0, 2 }).ToArray()));
+						new KeyParameter(secret), secret.Take(12).Concat(new byte[] {0, 0, 0, 2}).ToArray()));
 
 				//Thread.Sleep(1250);
 
@@ -624,6 +625,10 @@ namespace Alex.Net.Bedrock
 			catch (Exception e)
 			{
 				Log.Error(e, $"Initiate encryption: {e.ToString()}");
+			}
+			finally
+			{
+				semaphore.Release();
 			}
 		}
 
@@ -1267,11 +1272,6 @@ namespace Alex.Net.Bedrock
 			if (newItem.Count <= 0)
 			{
 				newItem = new ItemAir() { Count = 0 };
-			}
-
-			if (player.Gamemode != GameMode.Creative)
-			{
-				// newItem.Count--;
 			}
 
 			var packet = McpeInventoryTransaction.CreateObject();

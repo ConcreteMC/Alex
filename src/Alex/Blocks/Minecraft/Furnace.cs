@@ -1,5 +1,3 @@
-using Alex.Blocks.Properties;
-
 namespace Alex.Blocks.Minecraft
 {
 	public class Furnace : Block

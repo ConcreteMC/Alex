@@ -1,5 +1,4 @@
 using Alex.Common.Gui.Graphics;
-using Alex.Utils;
 using Alex.Utils.Inventories;
 
 namespace Alex.Gui.Dialogs.Containers

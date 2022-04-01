@@ -6,7 +6,7 @@ namespace Alex.Entities.Passive
 {
 	public class Parrot : TameableMob
 	{
-		private ParrotType _variant = ParrotType.RedBlue;
+		/*private ParrotType _variant = ParrotType.RedBlue;
 
 		public ParrotType Variant
 		{
@@ -27,7 +27,9 @@ namespace Alex.Entities.Passive
 
 				//TryUpdateTexture("minecraft:parrot", texture);
 			}
-		}
+		}*/
+
+		public ParrotType ParrotVariant => (ParrotType) base.Variant;
 
 		public Parrot(World level) : base((EntityType)0, level)
 		{
@@ -42,7 +44,7 @@ namespace Alex.Entities.Passive
 
 			if (entry.Index == 19 && entry is MetadataVarInt varint)
 			{
-				Variant = (ParrotType)varint.Value;
+				Variant = varint.Value;
 			}
 		}
 

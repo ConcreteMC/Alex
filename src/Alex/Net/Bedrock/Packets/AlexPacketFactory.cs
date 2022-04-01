@@ -2,7 +2,6 @@ using System;
 using MiNET.Net;
 using MiNET.Net.RakNet;
 using NLog;
-using Datagram = Alex.Networking.Bedrock.RakNet.Datagram;
 
 namespace Alex.Net.Bedrock.Packets
 {

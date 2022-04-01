@@ -1,4 +1,3 @@
-using Alex.Items;
 using RocketUI.Input;
 
 namespace Alex.Utils.Inventories

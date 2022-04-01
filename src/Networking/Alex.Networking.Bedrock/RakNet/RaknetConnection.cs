@@ -25,19 +25,14 @@
 
 using System;
 using System.Buffers;
-using System.Collections.Generic;
-using System.Diagnostics;
 using System.Net;
 using System.Net.Sockets;
 using System.Runtime.InteropServices;
 using System.Threading;
-using System.Threading.Tasks;
-using Alex.Common.Utils;
 using MiNET;
 using MiNET.Net;
 using MiNET.Net.RakNet;
 using NLog;
-using ConnectionInfo = Alex.Common.Utils.ConnectionInfo;
 
 namespace Alex.Networking.Bedrock.RakNet
 {
@@ -48,14 +43,12 @@ namespace Alex.Networking.Bedrock.RakNet
 		private UdpClient _listener;
 		private readonly IPEndPoint _endpoint;
 
-		private Thread _readingThread;
-
 		public const int UdpHeaderSize = 28;
 
 		public short MtuSize { get; set; } = 1400;
 
 		public RaknetSession Session { get; set; } = null;
-		public ConnectionInfo ConnectionInfo { get; }
+		public Interfaces.Net.ConnectionInfo ConnectionInfo { get; }
 
 		public bool FoundServer => HaveServer;
 
@@ -77,15 +70,15 @@ namespace Alex.Networking.Bedrock.RakNet
 
 		public long ClientGuid { get; }
 		private CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
-
+		
 		public RaknetConnection()
 		{
 			_endpoint = new IPEndPoint(IPAddress.Any, 0);
 
-			ConnectionInfo = new ConnectionInfo();
+			ConnectionInfo = new Interfaces.Net.ConnectionInfo();
 
 			byte[] buffer = new byte[8];
-			FastRandom.Instance.NextBytes(buffer);
+			new Random().NextBytes(buffer);
 			ClientGuid = BitConverter.ToInt64(buffer, 0);
 		}
 
@@ -209,7 +202,6 @@ namespace Alex.Networking.Bedrock.RakNet
 				return;
 			
 			thread.Name = $"RaknetConnection Read ({_endpoint})";
-			_readingThread = thread;
 
 			bool hasReadData = false;
 
@@ -263,7 +255,7 @@ namespace Alex.Networking.Bedrock.RakNet
 							$"Unexpected end of transmission for {RemoteEndpoint} from {senderEndpoint} (Any data received? {hasReadData} Servername: {RemoteServerName})");
 					}
 				}
-				catch (ObjectDisposedException e) { }
+				catch (ObjectDisposedException) { }
 				catch (SocketException e)
 				{
 					// 10058 (just regular disconnect while listening)
@@ -279,8 +271,6 @@ namespace Alex.Networking.Bedrock.RakNet
 					Log.Warn(ex, $"Unexpected end of transmission");
 				}
 			}
-
-			_readingThread = null;
 		}
 
 		private void ReceiveDatagram(ReadOnlyMemory<byte> receivedBytes, IPEndPoint clientEndpoint)

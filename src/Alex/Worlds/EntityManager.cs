@@ -3,7 +3,6 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using System.Runtime.InteropServices;
 using System.Threading;
 using Alex.Common;
 using Alex.Common.Graphics;
@@ -14,17 +13,14 @@ using Alex.Common.Utils.Vectors;
 using Alex.Common.World;
 using Alex.Entities;
 using Alex.Entities.BlockEntities;
-using Alex.Entities.Components;
 using Alex.Entities.Events;
-using Alex.Graphics.Camera;
-using Alex.Graphics.Models;
+using Alex.Interfaces;
 using Alex.Net;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using NLog;
 using RocketUI;
-using ContainmentType = Microsoft.Xna.Framework.ContainmentType;
 using UUID = MiNET.Utils.UUID;
 
 namespace Alex.Worlds
@@ -36,8 +32,8 @@ namespace Alex.Worlds
 		public static EventHandler<EntityUpdateEventArgs> EntityTicked;
 		
 		private ConcurrentDictionary<long, Entity> Entities { get; }
-		private ConcurrentDictionary<MiNET.Utils.UUID, Entity> EntityByUUID { get; }
-		private ConcurrentDictionary<BlockCoordinates, BlockEntity> BlockEntities { get; }
+		private ConcurrentDictionary<Guid, Entity> EntityByUUID { get; }
+		private ConcurrentDictionary<IVector3I, BlockEntity> BlockEntities { get; }
 		private GraphicsDevice Device { get; }
 
 		public int EntityCount => Entities.Count + BlockEntities.Count;
@@ -67,8 +63,8 @@ namespace Alex.Worlds
 			World = world;
 			Device = device;
 			Entities = new ConcurrentDictionary<long, Entity>();
-			EntityByUUID = new ConcurrentDictionary<MiNET.Utils.UUID, Entity>();
-			BlockEntities = new ConcurrentDictionary<BlockCoordinates, BlockEntity>();
+			EntityByUUID = new ConcurrentDictionary<Guid, Entity>();
+			BlockEntities = new ConcurrentDictionary<IVector3I, BlockEntity>();
 			_rendered = new Entity[0];
 
 			OptionsProvider = serviceProvider.GetService<IOptionsProvider>(); //.AlexOptions.VideoOptions.
@@ -86,7 +82,7 @@ namespace Alex.Worlds
 			world.ChunkManager.OnChunkRemoved += OnChunkRemoved;
 		}
 
-		private void OnChunkRemoved(object? sender, ChunkRemovedEventArgs e)
+		private void OnChunkRemoved(object sender, ChunkRemovedEventArgs e)
 		{
 			var chunk = e.Chunk;
 
@@ -97,7 +93,7 @@ namespace Alex.Worlds
 			}
 		}
 
-		private void OnChunkAdded(object? sender, ChunkAddedEventArgs e)
+		private void OnChunkAdded(object sender, ChunkAddedEventArgs e)
 		{
 			var chunk = e.Chunk;
 
@@ -432,7 +428,7 @@ namespace Alex.Worlds
 			}
 		}
 
-		private void Remove(MiNET.Utils.UUID entity, bool removeId = true)
+		private void Remove(Guid entity, bool removeId = true)
 		{
 			if (EntityByUUID.TryRemove(entity, out Entity e))
 			{
@@ -491,12 +487,12 @@ namespace Alex.Worlds
 			return true;
 		}
 
-		public bool TryGetBlockEntity(BlockCoordinates coordinates, out BlockEntity entity)
+		public bool TryGetBlockEntity(IVector3I coordinates, out BlockEntity entity)
 		{
 			return BlockEntities.TryGetValue(coordinates, out entity);
 		}
 
-		public void RemoveBlockEntity(BlockCoordinates coordinates)
+		public void RemoveBlockEntity(IVector3I coordinates)
 		{
 			if (BlockEntities.TryRemove(coordinates, out var entity))
 			{
@@ -520,6 +516,11 @@ namespace Alex.Worlds
 		public bool TryGet(long id, out Entity entity)
 		{
 			return Entities.TryGetValue(id, out entity);
+		}
+
+		public bool TryGet(Guid uuid, out Entity entity)
+		{
+			return EntityByUUID.TryGetValue(uuid, out entity);
 		}
 
 		public bool TryGet(UUID uuid, out Entity entity)

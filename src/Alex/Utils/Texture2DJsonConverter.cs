@@ -1,7 +1,6 @@
 ﻿using System;
 using System.IO;
 using System.Threading;
-using Alex.Common.Graphics.GpuResources;
 using Microsoft.Xna.Framework.Graphics;
 using Newtonsoft.Json;
 

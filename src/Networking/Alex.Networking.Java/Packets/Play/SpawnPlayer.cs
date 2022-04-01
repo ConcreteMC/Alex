@@ -1,6 +1,5 @@
 ﻿using System;
 using Alex.Networking.Java.Util;
-using MiNET.Utils;
 
 namespace Alex.Networking.Java.Packets.Play
 
@@ -13,7 +12,7 @@ namespace Alex.Networking.Java.Packets.Play
 		}
 
 		public int EntityId;
-		public UUID Uuid;
+		public Guid Uuid;
 		public double X;
 		public double Y;
 		public double Z;

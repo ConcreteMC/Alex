@@ -2,17 +2,16 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Net;
-using System.Threading;
-using Alex.Common.Utils;
+using System.Net.Http;
+using System.Net.Http.Headers;
 using Alex.ResourcePackLib.Json.Models.Entities;
-using Microsoft.Xna.Framework.Graphics;
+using Alex.Worlds.Multiplayer;
 using MiNET.Utils.Skins;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Serialization;
 using NLog;
 using SixLabors.ImageSharp;
-using SixLabors.ImageSharp.Formats.Png;
 using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp.Processing;
 using Image = SixLabors.ImageSharp.Image;
@@ -272,7 +271,7 @@ namespace Alex.Utils.Skins
 			return output;
 		}
 
-		public static void TryGetSkin(object owner, string json, Action<Image<Rgba32>, bool> onComplete)
+		public static async void TryGetSkin(object owner, string json, Action<Image<Rgba32>, bool> onComplete)
 		{
 			//isSlim = false;
 			try
@@ -285,21 +284,16 @@ namespace Alex.Utils.Skins
 
 					if (url != null)
 					{
-						byte[] data;
-
-						using (WebClient wc = new WebClient())
+						Image<Rgba32> t = null;
+						using (HttpClient httpClient = new HttpClient())
 						{
-							data = wc.DownloadData(url);
+							using (var stream = await httpClient.GetStreamAsync(new Uri(url)))
+							{
+								t = Image.Load<Rgba32>(stream);
+							}
 						}
 
-						var t = Image.Load<Rgba32>(data);
 						onComplete?.Invoke(t, r.textures.SKIN.metadata?.model == "slim");
-						//resetEvent.WaitOne();
-
-						//texture = text;
-						//isSlim = (r.textures.SKIN.metadata?.model == "slim");
-
-						//return true;
 					}
 				}
 			}
@@ -307,9 +301,6 @@ namespace Alex.Utils.Skins
 			{
 				Log.Warn(ex, $"Could not retrieve skin: {ex.ToString()}");
 			}
-
-			//texture = null;
-			//return false;
 		}
 
 		public static bool TryGetBitmap(this MiNET.Utils.Skins.Skin skin, EntityModel model, out Image<Rgba32> result)

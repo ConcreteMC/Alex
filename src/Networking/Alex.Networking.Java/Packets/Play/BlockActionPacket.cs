@@ -1,11 +1,11 @@
-using Alex.Common.Utils.Vectors;
+using Alex.Interfaces;
 using Alex.Networking.Java.Util;
 
 namespace Alex.Networking.Java.Packets.Play
 {
 	public class BlockActionPacket : Packet<BlockActionPacket>
 	{
-		public BlockCoordinates Location { get; set; }
+		public IVector3I Location { get; set; }
 		public byte ActionId { get; set; }
 		public byte Parameter { get; set; }
 		public int BlockType { get; set; }

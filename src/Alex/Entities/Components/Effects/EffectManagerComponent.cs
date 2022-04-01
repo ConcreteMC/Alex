@@ -2,7 +2,6 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using Alex.Common.World;
-using Microsoft.Xna.Framework;
 
 namespace Alex.Entities.Components.Effects
 {

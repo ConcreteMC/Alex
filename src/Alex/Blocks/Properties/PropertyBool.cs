@@ -2,7 +2,7 @@
 using Alex.Blocks.State;
 using Alex.Common.Blocks.Properties;
 using Alex.Common.Utils;
-using MiNET.Utils;
+using Alex.Interfaces;
 
 namespace Alex.Blocks.Properties
 {

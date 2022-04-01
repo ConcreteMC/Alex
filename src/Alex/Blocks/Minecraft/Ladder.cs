@@ -1,7 +1,7 @@
 using System;
 using Alex.Blocks.Materials;
 using Alex.Common.Blocks;
-using Alex.ResourcePackLib.Json;
+using Alex.Interfaces;
 
 namespace Alex.Blocks.Minecraft
 {

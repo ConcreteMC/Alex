@@ -1,5 +1,4 @@
 using System.IO;
-using Alex.ResourcePackLib;
 using Alex.ResourcePackLib.IO;
 using MiNET.Utils;
 using NLog;

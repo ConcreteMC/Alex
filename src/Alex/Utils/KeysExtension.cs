@@ -1,5 +1,3 @@
-using Microsoft.Xna.Framework.Input;
-
 namespace Alex.Utils
 {
 	/*public static class KeysExtension

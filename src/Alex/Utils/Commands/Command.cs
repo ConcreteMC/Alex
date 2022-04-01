@@ -2,8 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using Alex.Common.Commands.Parsers;
 using Alex.Common.Data;
+using Alex.Networking.Java.Commands.Parsers;
 
 namespace Alex.Utils.Commands
 {

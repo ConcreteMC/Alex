@@ -5,17 +5,12 @@ using System.Globalization;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
-using System.Net;
 using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using Alex.Blocks;
 using Alex.Blocks.Mapping;
-using Alex.Blocks.Minecraft;
-using Alex.Blocks.State;
-using Alex.Common.GameStates;
-using Alex.Common.Graphics.GpuResources;
 using Alex.Common.Graphics.Typography;
 using Alex.Common.Resources;
 using Alex.Common.Services;
@@ -24,8 +19,6 @@ using Alex.Entities;
 using Alex.Entities.BlockEntities;
 using Alex.Gamestates;
 using Alex.Graphics;
-using Alex.Graphics.Effect;
-using Alex.Graphics.Models.Blocks;
 using Alex.Gui;
 using Alex.Items;
 using Alex.Networking.Java;
@@ -504,8 +497,6 @@ namespace Alex
 				//bedrockResources = null;
 				return false;
 			}
-
-			return true;
 		}
 
 		public string DeviceID { get; } = Guid.NewGuid().ToString();
@@ -1127,7 +1118,7 @@ namespace Alex
 
 			entityDef = null;
 
-			return false;
+			return false;/*
 
 			foreach (var resourcePack in ActiveBedrockResourcePacks.Reverse())
 			{
@@ -1149,9 +1140,9 @@ namespace Alex
 			            return true;
 			        }
 			    }
-			}*/
+			}#1#
 
-			return false;
+			return false;*/
 		}
 
 		public bool TryGetBlockState(ResourceLocation location, out BlockStateResource resource)

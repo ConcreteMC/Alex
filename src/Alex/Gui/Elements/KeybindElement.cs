@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Alex.Common.Utils;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
 using RocketUI;
@@ -98,7 +97,6 @@ namespace Alex.Gui.Elements
 			UpdateText(key);
 		}
 
-		private float _cursorAlpha = 1f;
 		private List<Keys> _tempBinding = new List<Keys>();
 		private TimeSpan _timer = TimeSpan.Zero;
 

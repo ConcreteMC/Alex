@@ -3,15 +3,14 @@ using System.Collections.Generic;
 using Alex.Common;
 using Alex.Common.Data.Options;
 using Alex.Common.GameStates;
-using Alex.Common.Graphics;
 using Alex.Common.Gui.Elements;
 using Alex.Common.Services;
 using Alex.Common.Utils;
 using Alex.Gamestates.Common;
 using Alex.Gui;
 using Alex.Gui.Elements;
+using Alex.Interfaces;
 using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Input;
 using NLog;
 using RocketUI;
 
@@ -20,8 +19,6 @@ namespace Alex.Gamestates.MainMenu.Options
 	public class OptionsStateBase : GuiMenuStateBase
 	{
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(OptionsStateBase));
-
-		protected AlexOptions Options => OptionsProvider.AlexOptions;
 
 		private IOptionsProvider OptionsProvider => GetService<IOptionsProvider>();
 

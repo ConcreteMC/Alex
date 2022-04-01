@@ -7,42 +7,36 @@ namespace Alex.Graphics.Effect
 	{
 		#region Effect Parameters
 
-		EffectParameter textureParam;
+		private EffectParameter _alphaTestParam;
 
-		// EffectParameter diffuseColorParam;
-		EffectParameter alphaTestParam;
-		EffectParameter fogColorParam;
-		EffectParameter fogVectorParam;
+		private EffectParameter _worldParam;
 
-		private EffectParameter worldParam;
+		private EffectParameter _projParam;
 
-		private EffectParameter projParam;
+		private EffectParameter _viewParam;
 
-		private EffectParameter viewParam;
-
-		private EffectParameter lightOffsetParam;
-		//EffectParameter worldViewProjParam;
+		private EffectParameter _lightOffsetParam;
 
 		#endregion
 
 		#region Fields
 
-		Matrix world = Matrix.Identity;
-		Matrix view = Matrix.Identity;
-		Matrix projection = Matrix.Identity;
+		private Matrix _world = Matrix.Identity;
+		private Matrix _view = Matrix.Identity;
+		private Matrix _projection = Matrix.Identity;
 
-		Matrix worldView;
+		private Matrix _worldView;
 
-		float alpha = 1;
+		private float _alpha = 1;
 
-		float fogStart = 0;
-		float fogEnd = 1;
+		private float _fogStart = 0;
+		private float _fogEnd = 1;
 
-		CompareFunction alphaFunction = CompareFunction.Greater;
-		int referenceAlpha;
-		bool isEqNe;
+		private CompareFunction _alphaFunction = CompareFunction.Greater;
+		private int _referenceAlpha;
+		private bool _isEqNe;
 
-		EffectDirtyFlags dirtyFlags = EffectDirtyFlags.All;
+		private EffectDirtyFlags _dirtyFlags = EffectDirtyFlags.All;
 
 		#endregion
 
@@ -53,12 +47,12 @@ namespace Alex.Graphics.Effect
 		/// </summary>
 		public Matrix World
 		{
-			get { return world; }
+			get { return _world; }
 
 			set
 			{
-				world = value;
-				dirtyFlags |= EffectDirtyFlags.WorldViewProj | EffectDirtyFlags.Fog;
+				_world = value;
+				_dirtyFlags |= EffectDirtyFlags.WorldViewProj | EffectDirtyFlags.Fog;
 			}
 		}
 
@@ -68,12 +62,12 @@ namespace Alex.Graphics.Effect
 		/// </summary>
 		public Matrix View
 		{
-			get { return view; }
+			get { return _view; }
 
 			set
 			{
-				view = value;
-				dirtyFlags |= EffectDirtyFlags.WorldViewProj | EffectDirtyFlags.Fog;
+				_view = value;
+				_dirtyFlags |= EffectDirtyFlags.WorldViewProj | EffectDirtyFlags.Fog;
 			}
 		}
 
@@ -83,12 +77,12 @@ namespace Alex.Graphics.Effect
 		/// </summary>
 		public Matrix Projection
 		{
-			get { return projection; }
+			get { return _projection; }
 
 			set
 			{
-				projection = value;
-				dirtyFlags |= EffectDirtyFlags.WorldViewProj;
+				_projection = value;
+				_dirtyFlags |= EffectDirtyFlags.WorldViewProj;
 			}
 		}
 
@@ -98,12 +92,12 @@ namespace Alex.Graphics.Effect
 		/// </summary>
 		public float Alpha
 		{
-			get { return alpha; }
+			get { return _alpha; }
 
 			set
 			{
-				alpha = value;
-				dirtyFlags |= EffectDirtyFlags.MaterialColor;
+				_alpha = value;
+				_dirtyFlags |= EffectDirtyFlags.MaterialColor;
 			}
 		}
 
@@ -118,7 +112,7 @@ namespace Alex.Graphics.Effect
 			set
 			{
 				_lightOffset = value;
-				dirtyFlags |= EffectDirtyFlags.LightOffset;
+				_dirtyFlags |= EffectDirtyFlags.LightOffset;
 			}
 		}
 
@@ -127,12 +121,12 @@ namespace Alex.Graphics.Effect
 		/// </summary>
 		public CompareFunction AlphaFunction
 		{
-			get { return alphaFunction; }
+			get { return _alphaFunction; }
 
 			set
 			{
-				alphaFunction = value;
-				dirtyFlags |= EffectDirtyFlags.AlphaTest;
+				_alphaFunction = value;
+				_dirtyFlags |= EffectDirtyFlags.AlphaTest;
 			}
 		}
 
@@ -142,12 +136,12 @@ namespace Alex.Graphics.Effect
 		/// </summary>
 		public int ReferenceAlpha
 		{
-			get { return referenceAlpha; }
+			get { return _referenceAlpha; }
 
 			set
 			{
-				referenceAlpha = value;
-				dirtyFlags |= EffectDirtyFlags.AlphaTest;
+				_referenceAlpha = value;
+				_dirtyFlags |= EffectDirtyFlags.AlphaTest;
 			}
 		}
 
@@ -175,17 +169,17 @@ namespace Alex.Graphics.Effect
 		{
 			CacheEffectParameters();
 
-			world = cloneSource.world;
-			view = cloneSource.view;
-			projection = cloneSource.projection;
+			_world = cloneSource._world;
+			_view = cloneSource._view;
+			_projection = cloneSource._projection;
 
-			alpha = cloneSource.alpha;
+			_alpha = cloneSource._alpha;
 
-			fogStart = cloneSource.fogStart;
-			fogEnd = cloneSource.fogEnd;
+			_fogStart = cloneSource._fogStart;
+			_fogEnd = cloneSource._fogEnd;
 
-			alphaFunction = cloneSource.alphaFunction;
-			referenceAlpha = cloneSource.referenceAlpha;
+			_alphaFunction = cloneSource._alphaFunction;
+			_referenceAlpha = cloneSource._referenceAlpha;
 		}
 
 		/// <summary>
@@ -199,17 +193,17 @@ namespace Alex.Graphics.Effect
 		/// <summary>
 		/// Looks up shortcut references to our effect parameters.
 		/// </summary>
-		void CacheEffectParameters()
+		private void CacheEffectParameters()
 		{
-			alphaTestParam = Parameters["AlphaTest"];
+			_alphaTestParam = Parameters["AlphaTest"];
 
-			worldParam = Parameters["World"];
+			_worldParam = Parameters["World"];
 
-			projParam = Parameters["Projection"];
+			_projParam = Parameters["Projection"];
 
-			viewParam = Parameters["View"];
+			_viewParam = Parameters["View"];
 
-			lightOffsetParam = Parameters["LightOffset"];
+			_lightOffsetParam = Parameters["LightOffset"];
 		}
 
 		internal static EffectDirtyFlags SetWorldViewProjAndFog(EffectDirtyFlags dirtyFlags,
@@ -238,28 +232,28 @@ namespace Alex.Graphics.Effect
 		protected override void OnApply()
 		{
 			// Recompute the world+view+projection matrix or fog vector?
-			dirtyFlags = SetWorldViewProjAndFog(
-				dirtyFlags, ref world, ref view, ref projection, ref worldView, worldParam, viewParam, projParam);
+			_dirtyFlags = SetWorldViewProjAndFog(
+				_dirtyFlags, ref _world, ref _view, ref _projection, ref _worldView, _worldParam, _viewParam, _projParam);
 
-			if ((dirtyFlags & EffectDirtyFlags.LightOffset) != 0)
+			if ((_dirtyFlags & EffectDirtyFlags.LightOffset) != 0)
 			{
-				lightOffsetParam.SetValue((float)_lightOffset);
-				dirtyFlags &= ~EffectDirtyFlags.LightOffset;
+				_lightOffsetParam.SetValue((float)_lightOffset);
+				_dirtyFlags &= ~EffectDirtyFlags.LightOffset;
 			}
 
 			// Recompute the alpha test settings?
-			if ((dirtyFlags & EffectDirtyFlags.AlphaTest) != 0)
+			if ((_dirtyFlags & EffectDirtyFlags.AlphaTest) != 0)
 			{
 				Vector4 alphaTest = new Vector4();
 				bool eqNe = false;
 
 				// Convert reference alpha from 8 bit integer to 0-1 float format.
-				float reference = (float)referenceAlpha / 255f;
+				float reference = (float)_referenceAlpha / 255f;
 
 				// Comparison tolerance of half the 8 bit integer precision.
 				const float threshold = 0.5f / 255f;
 
-				switch (alphaFunction)
+				switch (_alphaFunction)
 				{
 					case CompareFunction.Less:
 						// Shader will evaluate: clip((a < x) ? z : w)
@@ -329,23 +323,23 @@ namespace Alex.Graphics.Effect
 						break;
 				}
 
-				alphaTestParam.SetValue(alphaTest);
+				_alphaTestParam.SetValue(alphaTest);
 
-				dirtyFlags &= ~EffectDirtyFlags.AlphaTest;
+				_dirtyFlags &= ~EffectDirtyFlags.AlphaTest;
 
 				// If we changed between less/greater vs. equal/notequal
 				// compare modes, we must also update the shader index.
-				if (isEqNe != eqNe)
+				if (_isEqNe != eqNe)
 				{
-					isEqNe = eqNe;
-					dirtyFlags |= EffectDirtyFlags.ShaderIndex;
+					_isEqNe = eqNe;
+					_dirtyFlags |= EffectDirtyFlags.ShaderIndex;
 				}
 			}
 
 			// Recompute the shader index?
-			if ((dirtyFlags & EffectDirtyFlags.ShaderIndex) != 0)
+			if ((_dirtyFlags & EffectDirtyFlags.ShaderIndex) != 0)
 			{
-				dirtyFlags &= ~EffectDirtyFlags.ShaderIndex;
+				_dirtyFlags &= ~EffectDirtyFlags.ShaderIndex;
 
 				CurrentTechnique = Techniques[0];
 			}

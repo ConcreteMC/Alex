@@ -3,7 +3,7 @@ using Alex.Blocks.State;
 using Alex.Common.Blocks;
 using Alex.Common.Blocks.Properties;
 using Alex.Common.Utils;
-using Alex.ResourcePackLib.Json;
+using Alex.Interfaces;
 
 namespace Alex.Blocks.Properties
 {

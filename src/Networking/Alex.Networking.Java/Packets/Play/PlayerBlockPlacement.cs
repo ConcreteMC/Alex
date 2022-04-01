@@ -1,6 +1,5 @@
 ﻿using System;
-using Alex.Common.Blocks;
-using Alex.Common.Utils.Vectors;
+using Alex.Interfaces;
 using Alex.Networking.Java.Util;
 using Microsoft.Xna.Framework;
 
@@ -8,7 +7,7 @@ namespace Alex.Networking.Java.Packets.Play
 {
 	public class PlayerBlockPlacementPacket : Packet<PlayerBlockPlacementPacket>
 	{
-		public BlockCoordinates Location;
+		public IVector3I Location;
 		public BlockFace Face;
 		public int Hand;
 		public Vector3 CursorPosition;

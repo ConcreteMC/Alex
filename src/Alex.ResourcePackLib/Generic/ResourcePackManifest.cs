@@ -1,8 +1,4 @@
-﻿using System.Drawing;
-using System.IO;
-using System.Text;
-using Alex.Common.Utils;
-using Alex.ResourcePackLib.Properties;
+﻿using Alex.Common.Utils;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
 using Image = SixLabors.ImageSharp.Image;
@@ -15,11 +11,10 @@ namespace Alex.ResourcePackLib.Generic
 
 		static ResourcePackManifest()
 		{
-			if (UnknownPack == null)
-			{
-				UnknownPack = Image.Load<Rgba32>(
-					EmbeddedResourceUtils.GetApiRequestFile("Alex.ResourcePackLib.Resources.unknown_pack.png"));
-			}
+			var embedded =
+					EmbeddedResourceUtils.GetApiRequestFile("Alex.ResourcePackLib.Resources.unknown_pack.png");
+			if (embedded != null)
+				UnknownPack = Image.Load<Rgba32>(embedded);
 		}
 
 		public string Name { get; set; }

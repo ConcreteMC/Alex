@@ -1,6 +1,7 @@
+using System;
 using System.Threading.Tasks;
-using Alex.Common.Data;
-using Alex.Common.Utils.Vectors;
+using Alex.Interfaces;
+using Alex.Networking.Java.Models;
 using fNbt;
 using Microsoft.Xna.Framework;
 
@@ -42,7 +43,7 @@ namespace Alex.Networking.Java.Util
 
 		Task<Vector3> ReadPositionAsync();
 
-		Task<BlockCoordinates> ReadBlockCoordinatesAsync();
+		Task<IVector3I> ReadBlockCoordinatesAsync();
 
 		Task<SlotData> ReadSlotAsync();
 
@@ -50,7 +51,7 @@ namespace Alex.Networking.Java.Util
 
 		Task WritePositionAsync(Vector3 position);
 
-		Task WritePositionAsync(BlockCoordinates pos);
+		Task WritePositionAsync(IVector3I pos);
 
 		Task<int> WriteRawVarInt32Async(uint value);
 
@@ -76,9 +77,9 @@ namespace Alex.Networking.Java.Util
 
 		Task WriteULongAsync(ulong data);
 
-		Task WriteUuidAsync(MiNET.Utils.UUID uuid);
+		Task WriteUuidAsync(Guid uuid);
 
-		Task<MiNET.Utils.UUID> ReadUuidAsync();
+		Task<Guid> ReadUuidAsync();
 
 		Task<NbtCompound> ReadNbtCompoundAsync();
 
@@ -123,7 +124,7 @@ namespace Alex.Networking.Java.Util
 
 		Vector3 ReadPosition();
 
-		BlockCoordinates ReadBlockCoordinates();
+		IVector3I ReadBlockCoordinates();
 
 		SlotData ReadSlot();
 
@@ -131,7 +132,7 @@ namespace Alex.Networking.Java.Util
 
 		void WritePosition(Vector3 position);
 
-		void WritePosition(BlockCoordinates pos);
+		void WritePosition(IVector3I pos);
 
 		int WriteRawVarInt32(uint value);
 
@@ -157,9 +158,9 @@ namespace Alex.Networking.Java.Util
 
 		void WriteULong(ulong data);
 
-		void WriteUuid(MiNET.Utils.UUID uuid);
+		void WriteUuid(Guid uuid);
 
-		MiNET.Utils.UUID ReadUuid();
+		Guid ReadUuid();
 
 		NbtCompound ReadNbtCompound();
 

@@ -1,6 +1,5 @@
 ﻿using System;
 using Microsoft.Xna.Framework;
-using Rectangle = System.Drawing.Rectangle;
 
 namespace Alex.Utils
 {

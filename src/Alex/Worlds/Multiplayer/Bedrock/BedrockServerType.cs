@@ -1,17 +1,12 @@
 using System;
-using System.IO;
-using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
-using Alex.Common;
 using Alex.Common.Data.Servers;
 using Alex.Common.Services;
 using Alex.Gamestates.Login;
 using Alex.Gamestates.Multiplayer;
 using Alex.Gui;
-using Alex.Gui.Dialogs;
-using Alex.Gui.Elements;
 using Alex.Net;
 using Alex.Services;
 using Alex.Utils;
@@ -21,8 +16,6 @@ using Alex.Worlds.Multiplayer.Java;
 using Microsoft.Extensions.DependencyInjection;
 using MiNET.Net;
 using MiNET.Utils;
-using MojangAPI.Model;
-using Newtonsoft.Json;
 using NLog;
 using PlayerProfile = Alex.Common.Services.PlayerProfile;
 

@@ -6,7 +6,6 @@ using Alex.Common.Utils.Vectors;
 using Alex.Worlds.Chunks;
 using fNbt;
 using MiNET.Net;
-using MiNET.Utils;
 using NLog;
 
 namespace Alex.Worlds.Multiplayer.Bedrock

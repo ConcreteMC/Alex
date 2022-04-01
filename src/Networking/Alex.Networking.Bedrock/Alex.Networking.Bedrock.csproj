@@ -4,11 +4,32 @@
         <Configurations>Debug;Release</Configurations>
         <Platforms>AnyCPU;x64</Platforms>
         <TargetFrameworks>$(LibTargetFrameworks)</TargetFrameworks>
+        <LangVersion>8</LangVersion>
+    </PropertyGroup>
+
+    <PropertyGroup>
+        <Title>ConcreteMC.Networking.Bedrock</Title>
+        <Description>Provides the MC:Bedrock networking implementation in Alex</Description>
+        <PackageTags>Minecraft bedrock mojang alex concretemc networking protocol MiNET</PackageTags>
+        <Authors>Kenny van Vulpen</Authors>
+        <Company>Kenny van Vulpen</Company>
+        <Copyright>Kenny van Vulpen 2016 - 2022</Copyright>
+        <PackageProjectUrl>https://github.com/ConcreteMC/Alex</PackageProjectUrl>
+        <RepositoryUrl>https://github.com/ConcreteMC/Alex</RepositoryUrl>
+
+        <PackageVersion>1.0.0</PackageVersion>
+        <PackageReleaseNotes>
+            Support for MC Bedrock version 1.18.10 - Protocol #486
+        </PackageReleaseNotes>
+
+        <PackageLicenseExpression>MPL-2.0</PackageLicenseExpression>
+        <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
+        <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     </PropertyGroup>
 
     <ItemGroup>
         <ProjectReference Include="..\..\..\submodules\MiNET\src\MiNET\MiNET\MiNET.csproj" />
-        <ProjectReference Include="..\..\Alex.Common\Alex.Common.csproj" />
+        <ProjectReference Include="..\..\Alex.Primitives\Alex.Primitives.csproj" />
     </ItemGroup>
 
     <ItemGroup>

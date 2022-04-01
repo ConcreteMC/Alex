@@ -1,11 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using Alex.Common.Data;
-using Alex.Common.Utils;
+using Alex.Interfaces;
+using Alex.Networking.Java.Models;
 using Alex.Networking.Java.Util;
 using fNbt;
-using JetBrains.Annotations;
 using Microsoft.Xna.Framework;
 
 namespace Alex.Networking.Java.Packets.Play
@@ -126,7 +125,7 @@ namespace Alex.Networking.Java.Packets.Play
 							var hasUUID = stream.ReadBool();
 
 							meta = new MetadataOptUUID(
-								index, hasUUID, hasUUID ? stream.ReadUuid() : null); // stream.ReadUuid();
+								index, hasUUID, hasUUID ? stream.ReadUuid() : default); // stream.ReadUuid();
 						}
 
 							break;
@@ -382,10 +381,10 @@ namespace Alex.Networking.Java.Packets.Play
 	public class MetadataOptUUID : MetaDataEntry
 	{
 		public bool HasValue { get; set; }
-		public MiNET.Utils.UUID Value { get; set; }
+		public Guid Value { get; set; }
 
 		/// <inheritdoc />
-		public MetadataOptUUID(byte index, bool hasValue, MiNET.Utils.UUID uuid) : base(index, MetadataType.OptUUID)
+		public MetadataOptUUID(byte index, bool hasValue, Guid uuid) : base(index, MetadataType.OptUUID)
 		{
 			HasValue = hasValue;
 			Value = uuid;

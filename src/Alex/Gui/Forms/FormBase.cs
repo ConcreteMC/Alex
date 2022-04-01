@@ -1,5 +1,6 @@
 using Alex.Common.Input;
 using Alex.Common.Utils;
+using Alex.Interfaces;
 using Microsoft.Xna.Framework;
 using RocketUI;
 using RocketUI.Input;

@@ -1,7 +1,4 @@
 using Alex.Common.Gui.Graphics;
-using Alex.Gui.Elements.Inventory;
-using Alex.Items;
-using Alex.Utils;
 using Alex.Utils.Inventories;
 
 namespace Alex.Gui.Dialogs.Containers

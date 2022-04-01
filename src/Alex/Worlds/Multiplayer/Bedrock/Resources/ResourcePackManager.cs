@@ -3,9 +3,7 @@ using System.Collections.Concurrent;
 using System.Linq;
 using System.Threading;
 using Alex.Common.Utils;
-using Alex.Gamestates.InGame;
 using Alex.Net.Bedrock;
-using Alex.Utils;
 using Alex.Utils.Caching;
 using MiNET.Net;
 using MiNET.Utils;
@@ -302,15 +300,11 @@ namespace Alex.Worlds.Multiplayer.Bedrock.Resources
 		/// <inheritdoc />
 		public void Dispose()
 		{
-			bool anyComplete = false;
 			var entries = _resourcePackEntries.ToArray();
 			_resourcePackEntries.Clear();
 
 			foreach (var entry in entries)
 			{
-				if (entry.Value.IsComplete)
-					anyComplete = true;
-
 				entry.Value?.Dispose();
 			}
 

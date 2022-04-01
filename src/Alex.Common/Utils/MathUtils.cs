@@ -108,7 +108,6 @@ namespace Alex.Common.Utils
 		public static float AngleToNotchianDegree(sbyte angle)
 		{
 			return (float)(angle * 360) / 256.0F;
-			return AngleToDegree(angle);
 		}
 
 		public static float FromFixedPoint(short f)

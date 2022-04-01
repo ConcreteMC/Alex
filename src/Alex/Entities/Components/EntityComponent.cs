@@ -1,6 +1,5 @@
 using System;
 using System.Diagnostics;
-using Alex.Common.World;
 using Microsoft.Xna.Framework;
 
 namespace Alex.Entities.Components

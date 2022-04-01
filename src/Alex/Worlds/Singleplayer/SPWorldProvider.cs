@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading;
-using System.Threading.Tasks;
 using Alex.Common;
 using Alex.Common.Data.Options;
 using Alex.Common.Items;
@@ -11,16 +10,16 @@ using Alex.Common.Utils;
 using Alex.Common.Utils.Vectors;
 using Alex.Common.World;
 using Alex.Entities;
+using Alex.Interfaces.Net;
 using Alex.Items;
 using Alex.Net;
+using Alex.Networking.Java.Models;
 using Alex.Worlds.Abstraction;
 using Alex.Worlds.Chunks;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Xna.Framework;
-using MiNET;
-using MiNET.Net;
 using NLog;
-using BlockFace = Alex.Common.Blocks.BlockFace;
+using BlockFace = Alex.Interfaces.BlockFace;
 using Player = Alex.Entities.Player;
 
 namespace Alex.Worlds.Singleplayer
@@ -161,8 +160,6 @@ namespace Alex.Worlds.Singleplayer
 				}
 			}
 		}
-
-		private long _spEntityIdCounter = 0;
 
 		private void LoadEntities(ChunkColumn chunk)
 		{

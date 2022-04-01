@@ -1,20 +1,15 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net;
 using System.Threading.Tasks;
-using Alex.Common;
 using Alex.Common.Data.Servers;
 using Alex.Common.Services;
 using Alex.Gamestates.Multiplayer;
 using Alex.Gui;
 using Alex.Net;
-using Alex.Utils.Auth;
 using Alex.Worlds.Abstraction;
 using Alex.Worlds.Multiplayer.Java;
 using Microsoft.Extensions.DependencyInjection;
-using MojangAPI.Model;
-using SimpleInjector;
 using PlayerProfile = Alex.Common.Services.PlayerProfile;
 
 namespace Alex.Utils

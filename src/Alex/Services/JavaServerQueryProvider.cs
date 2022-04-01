@@ -13,8 +13,6 @@ using Alex.Networking.Java;
 using Alex.Networking.Java.Packets;
 using Alex.Networking.Java.Packets.Handshake;
 using Alex.Networking.Java.Packets.Status;
-using Alex.Utils;
-using MiNET.Utils;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using NLog;
@@ -165,8 +163,6 @@ namespace Alex.Services
 					}
 					catch (Exception) { }
 				}, cancellationToken);
-
-			return Task.CompletedTask;
 		}
 
 		private class QueryPacketHandler : IPacketHandler

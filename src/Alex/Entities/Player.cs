@@ -1,8 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
 using System.Threading;
 using Alex.Blocks;
 using Alex.Blocks.Minecraft;
@@ -16,31 +14,20 @@ using Alex.Common.Utils;
 using Alex.Common.Utils.Vectors;
 using Alex.Entities.Components;
 using Alex.Entities.Projectiles;
-using Alex.Gamestates;
 using Alex.Gamestates.InGame;
 using Alex.Gui.Elements.Map;
+using Alex.Interfaces;
 using Alex.Items;
 using Alex.Net;
 using Alex.Net.Bedrock;
-using Alex.ResourcePackLib.Json;
-using Alex.ResourcePackLib.Json.Models.Entities;
-using Alex.Utils;
-using Alex.Utils.Inventories;
 using Alex.Utils.Skins;
 using Alex.Worlds;
-using Alex.Worlds.Multiplayer.Bedrock;
-using LibNoise.Combiner;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using MiNET.LevelDB;
 using MiNET.Net;
-using MiNET.Utils.Skins;
+using MiNET.Utils;
 using MiNET.Worlds;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Converters;
-using Newtonsoft.Json.Serialization;
 using NLog;
-using NLog.Fluent;
 using RocketUI;
 using RocketUI.Input;
 using SixLabors.ImageSharp;
@@ -48,11 +35,8 @@ using SixLabors.ImageSharp.Formats.Png;
 using SixLabors.ImageSharp.PixelFormats;
 using Biome = Alex.Worlds.Biome;
 using BlockCoordinates = Alex.Common.Utils.Vectors.BlockCoordinates;
-using BoundingBox = Microsoft.Xna.Framework.BoundingBox;
 using ContainmentType = Microsoft.Xna.Framework.ContainmentType;
 using Image = SixLabors.ImageSharp.Image;
-using Skin = Alex.Common.Utils.Skin;
-using SkinResourcePatch = Alex.Utils.Skins.SkinResourcePatch;
 
 namespace Alex.Entities
 {
@@ -61,7 +45,7 @@ namespace Alex.Entities
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(Player));
 
 		public static readonly float EyeLevel = 1.625F;
-		public static readonly float Height = 1.8F;
+		public static readonly float PlayerHeight = 1.8F;
 
 		public PlayerController Controller { get; }
 		public NetworkProvider Network { get; set; }
@@ -380,11 +364,6 @@ namespace Alex.Entities
 						else if (_destroyingTarget != Raytracer.ResultingCoordinates)
 						{
 							StopBreakingBlock(true);
-
-							if (Gamemode != GameMode.Creative)
-							{
-								//	StartBreakingBlock();
-							}
 						}
 					}
 					else
@@ -541,7 +520,7 @@ namespace Alex.Entities
 			var packet = McpePlayerSkin.CreateObject();
 			packet.skin = skin;
 
-			packet.uuid = UUID;
+			packet.uuid = (UUID) UUID;
 			packet.isVerified = skin.IsVerified;
 			packet.skinName = skin.SkinId;
 			packet.oldSkinName = Skin?.SkinId ?? "";
@@ -600,7 +579,7 @@ namespace Alex.Entities
 			var item = Inventory.MainHand;
 			Network?.DropItem(floored, face, item, fullStack);
 
-			if (Gamemode != GameMode.Creative)
+			if (Gamemode != Interfaces.GameMode.Creative)
 			{
 				item.Count -= 1;
 
@@ -657,7 +636,7 @@ namespace Alex.Entities
 
 			Level?.AddOrUpdateBlockBreak(_destroyingTarget, _destroyTimeNeeded);
 
-			if ((Gamemode == GameMode.Creative))
+			if ((Gamemode == Interfaces.GameMode.Creative))
 			{
 				StopBreakingBlock(true, false);
 			}
@@ -679,7 +658,7 @@ namespace Alex.Entities
 				return;
 			}
 
-			if ((Gamemode == GameMode.Creative || ticks >= _destroyTimeNeeded) && !forceCanceled)
+			if ((Gamemode == Interfaces.GameMode.Creative || ticks >= _destroyTimeNeeded) && !forceCanceled)
 			{
 				Network?.PlayerDigging(
 					DiggingStatus.Finished, _destroyingTarget, _destroyingFace, Raytracer.CursorPosition);

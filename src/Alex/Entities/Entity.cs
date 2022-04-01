@@ -1,40 +1,28 @@
 ﻿using System;
 using System.Collections;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Diagnostics;
 using System.Linq;
-using System.Text;
-using System.Threading;
-using Alex.Blocks.Minecraft;
-using Alex.Common.Entities.Properties;
 using Alex.Common.Graphics;
-using Alex.Common.Graphics.GpuResources;
 using Alex.Common.Resources;
 using Alex.Common.Utils;
 using Alex.Common.World;
 using Alex.Entities.Components;
 using Alex.Entities.Components.Effects;
-using Alex.Entities.Events;
 using Alex.Entities.Properties;
-using Alex.Gamestates;
-using Alex.Graphics.Camera;
 using Alex.Graphics.Models;
 using Alex.Graphics.Models.Entity;
 using Alex.Graphics.Models.Entity.Animations;
 using Alex.Graphics.Models.Items;
-using Alex.Gui;
 using Alex.Gui.Elements.Map;
 using Alex.Items;
-using Alex.Net;
+using Alex.Networking.Java.Models;
 using Alex.Networking.Java.Packets.Play;
 using Alex.ResourcePackLib.Json.Bedrock.Entity;
 using Alex.ResourcePackLib.Json.Models.Items;
-using Alex.Utils;
 using Alex.Utils.Inventories;
 using Alex.Worlds;
-using Alex.Worlds.Multiplayer.Java;
 using ConcreteMC.MolangSharp.Attributes;
 using ConcreteMC.MolangSharp.Runtime;
 using ConcreteMC.MolangSharp.Runtime.Struct;
@@ -134,6 +122,8 @@ namespace Alex.Entities
 			get => _nameTag;
 			set
 			{
+				_nameTagBackup = _nameTag;
+				
 				_nameTag = value;
 				_nameTagLines = null;
 			}
@@ -211,7 +201,7 @@ namespace Alex.Entities
 		public double Gravity { get; set; } = 0.08f; //16.8f; //9.81f; //1.6f;
 		//Drag & gravity etc is Vanilla * 400
 
-		public MiNET.Utils.UUID UUID { get; set; }
+		public Guid UUID { get; set; }
 
 		[MoProperty("can_fly")] public bool CanFly { get; set; } = false;
 		public bool IsFlying { get; set; } = false;
@@ -564,7 +554,7 @@ namespace Alex.Entities
 			}
 		}
 
-		private void InventoryOnSelectedHotbarSlotChanged(object? sender, SelectedSlotChangedEventArgs e)
+		private void InventoryOnSelectedHotbarSlotChanged(object sender, SelectedSlotChangedEventArgs e)
 		{
 			CheckHeldItem();
 		}
@@ -771,6 +761,8 @@ namespace Alex.Entities
 
 		protected virtual void OnSprintingChanged(bool newValue) { }
 
+		private string _customName = String.Empty;
+		private string _nameTagBackup = string.Empty;
 		public void HandleJavaMetadata(MetaDataEntry entry)
 		{
 			if (entry.Index == 0 && entry is MetadataByte flags)
@@ -784,7 +776,10 @@ namespace Alex.Entities
 			{
 				if (customName.HasValue)
 				{
-					NameTag = customName.Value;
+					var displayName = customName.Value;
+					_customName = displayName;
+
+					NameTag = displayName;
 				}
 			}
 			else if (entry.Index == 3 && entry is MetadataBool showNametag)
@@ -1060,8 +1055,10 @@ namespace Alex.Entities
 						if (!HandleMetadata((MiNET.Entities.Entity.MetadataFlags)meta.Key, meta.Value))
 						{
 							if (LoggingConstants.LogUnimplementedEntityFlags)
+#pragma warning disable CS0162
 								Log.Debug(
 									$"({GetType().Name}) Unimplemented flag: {(MiNET.Entities.Entity.MetadataFlags)meta.Key}");
+#pragma warning restore CS0162
 						}
 
 						break;

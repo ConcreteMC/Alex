@@ -3,6 +3,8 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using Alex.Common.Utils;
+using Alex.Networking.Java.Models;
 using Microsoft.Xna.Framework;
 using NLog;
 using RocketUI;
@@ -13,9 +15,9 @@ namespace Alex.Gui.Elements.Scoreboard
 	{
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(ScoreboardObjective));
 		private ConcurrentDictionary<string, ScoreboardEntry> Entries { get; }
-		private List<ScoreboardEntry> _removed { get; } = new List<ScoreboardEntry>();
+		private List<ScoreboardEntry> Removed { get; } = new List<ScoreboardEntry>();
 
-		public string Name { get; set; }
+		public string ObjectiveName { get; set; }
 
 		public string DisplayName
 		{
@@ -25,7 +27,9 @@ namespace Alex.Gui.Elements.Scoreboard
 			}
 			set
 			{
-				_displayNameElement.Text = value;
+				string newValue = value;
+
+				_displayNameElement.Text = newValue;
 			}
 		}
 
@@ -38,12 +42,12 @@ namespace Alex.Gui.Elements.Scoreboard
 		private int _changes = 0;
 		public bool HasChanges => _changes > 0;
 
-		public ScoreboardObjective(string name, string displayName, int sortOrder, string criteriaName)
+		public ScoreboardObjective(string objectiveName, string displayName, int sortOrder, string criteriaName)
 		{
 			_displayNameElement = new TextElement(displayName) { Anchor = Alignment.CenterX };
 
 			Entries = new ConcurrentDictionary<string, ScoreboardEntry>(StringComparer.InvariantCulture);
-			Name = name;
+			ObjectiveName = objectiveName;
 			DisplayName = displayName;
 			SortOrder = sortOrder;
 			CriteriaName = criteriaName;
@@ -82,11 +86,11 @@ namespace Alex.Gui.Elements.Scoreboard
 			}
 			else
 			{
-				var firstRemoved = _removed.FirstOrDefault();
+				var firstRemoved = Removed.FirstOrDefault();
 
 				if (firstRemoved != null)
 				{
-					_removed.Remove(firstRemoved);
+					Removed.Remove(firstRemoved);
 					firstRemoved.Score = entry.Score;
 					firstRemoved.DisplayName = entry.DisplayName;
 					firstRemoved.EntryId = id;
@@ -104,7 +108,7 @@ namespace Alex.Gui.Elements.Scoreboard
 		{
 			if (Entries.TryRemove(id, out var old))
 			{
-				_removed.Add(old);
+				Removed.Add(old);
 
 				OnEntryRemoved?.Invoke(this, id);
 
@@ -142,7 +146,10 @@ namespace Alex.Gui.Elements.Scoreboard
 				entries = entries.OrderByDescending(x => x.Value.Score).ToArray();
 			}
 
-			previousScore = entries[0].Value.Score;
+			if (entries.Length > 0)
+			{
+				previousScore = entries[0].Value.Score;
+			}
 
 			RemoveChild(_spacer);
 
@@ -153,8 +160,8 @@ namespace Alex.Gui.Elements.Scoreboard
 
 				RemoveChild(sbe);
 
-				if (_removed.Contains(sbe))
-					_removed.Remove(sbe);
+				if (Removed.Contains(sbe))
+					Removed.Remove(sbe);
 			}
 
 			bool showScores = false;

@@ -1,4 +1,4 @@
-using Alex.Common.Entities.Properties;
+using System;
 using Alex.Networking.Java.Packets.Play;
 using Microsoft.Xna.Framework;
 
@@ -11,7 +11,7 @@ namespace Alex.Entities.Components.Effects
 		//private MiNET.Utils.UUID _uuid = new MiNET.Utils.UUID("91AEAA56-376B-4498-935B-2F7F68070635");
 
 		private Modifier _modifier = new Modifier(
-			new MiNET.Utils.UUID("91AEAA56-376B-4498-935B-2F7F68070635"), 0d, ModifierMode.Multiply);
+			Guid.Parse("91AEAA56-376B-4498-935B-2F7F68070635"), 0d, ModifierMode.Multiply);
 
 		public SpeedEffect() : base(EffectType.Speed)
 		{

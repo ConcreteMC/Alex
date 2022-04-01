@@ -1,4 +1,4 @@
-using Alex.Common.Utils.Vectors;
+using Alex.Interfaces;
 using Alex.Networking.Java.Util;
 using Microsoft.Xna.Framework;
 
@@ -7,7 +7,7 @@ namespace Alex.Networking.Java.Packets.Play
 	public class BlockBreakAnimationPacket : Packet<BlockBreakAnimationPacket>
 	{
 		public int EntityId { get; set; }
-		public BlockCoordinates Position { get; set; }
+		public IVector3I Position { get; set; }
 		public byte DestroyStage { get; set; }
 
 		/// <inheritdoc />

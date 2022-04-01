@@ -1,15 +1,10 @@
 ﻿using System.IO;
 using System.IO.Compression;
 using System.Linq;
-using Alex.Common.Utils;
-using Alex.Networking.Java.Util;
 using Alex.ResourcePackLib.IO.Abstract;
 using Org.BouncyCastle.Crypto;
-using Org.BouncyCastle.Crypto.Engines;
-using Org.BouncyCastle.Crypto.Modes;
 using Org.BouncyCastle.Crypto.Parameters;
 using Org.BouncyCastle.Security;
-using SicStream;
 using CipherStream = Org.BouncyCastle.Crypto.IO.CipherStream;
 
 namespace Alex.ResourcePackLib

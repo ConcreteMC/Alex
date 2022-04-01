@@ -1,4 +1,5 @@
 ﻿using Alex.Common.Blocks;
+using Alex.Interfaces;
 using Newtonsoft.Json;
 
 namespace Alex.ResourcePackLib.Json.Models

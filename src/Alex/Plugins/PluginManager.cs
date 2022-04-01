@@ -1,12 +1,9 @@
 ﻿using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Text;
 using Alex.Common.Services;
-using Microsoft.Extensions.DependencyInjection;
 using Mono.Cecil;
 using NLog;
 using SimpleInjector;
@@ -49,7 +46,7 @@ namespace Alex.Plugins
 			LaunchSettings launchSettings)
 		{
 			string pluginDirectoryPaths =
-				Path.GetDirectoryName(new Uri(Assembly.GetExecutingAssembly().CodeBase).LocalPath);
+				Path.GetDirectoryName(new Uri(Assembly.GetExecutingAssembly().Location).LocalPath);
 
 			var pluginDir = options.AlexOptions.ResourceOptions.PluginDirectory.Value;
 

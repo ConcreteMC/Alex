@@ -140,8 +140,7 @@ namespace Alex.DebugOverlay
                 .Field("duration", e.ExecutionTime.TotalMilliseconds)
             );
         }
-
-        private ulong        _frameCount   = 0;
+        
         private bool         _setup        = false;
         private PlayingState _playingState = null;
 

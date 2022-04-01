@@ -1,4 +1,3 @@
-using Alex.Common.Entities.Properties;
 using Alex.Entities.Properties;
 using Alex.Networking.Java.Packets.Play;
 

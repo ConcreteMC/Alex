@@ -1,3 +1,5 @@
+using Alex.Interfaces;
+
 namespace Alex.Utils.Commands
 {
 	public class FloatCommandProperty : CommandProperty
@@ -9,7 +11,7 @@ namespace Alex.Utils.Commands
 		public FloatCommandProperty(string name, bool required = true) : base(name, required, "float") { }
 
 		/// <inheritdoc />
-		public override bool TryParse(SeekableTextReader reader)
+		public override bool TryParse(ISeekableTextReader reader)
 		{
 			if (reader.ReadSingleWord(out string result) > 0)
 			{

@@ -43,7 +43,7 @@ namespace Alex.ResourcePackLib
 					ResourcePackInfoWrapper wrap =
 						MCJsonConvert.DeserializeObject<ResourcePackInfoWrapper>(reader.ReadToEnd());
 
-					info = wrap.pack;
+					info = wrap.Pack;
 				}
 
 				try

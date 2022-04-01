@@ -4,7 +4,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using Alex.Networking.Java.Framework;
 using Alex.Networking.Java.Util;
-using MiNET.Net;
 using Newtonsoft.Json;
 using NLog;
 

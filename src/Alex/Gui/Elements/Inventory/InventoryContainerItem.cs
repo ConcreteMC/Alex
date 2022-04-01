@@ -1,8 +1,7 @@
 using Alex.Common.Utils;
+using Alex.Interfaces;
 using Alex.Items;
 using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
-using Microsoft.Xna.Framework.Input;
 using NLog;
 using RocketUI;
 
@@ -101,19 +100,16 @@ namespace Alex.Gui.Elements.Inventory
 			}
 		}
 
-		private bool _showTooltip = false;
-		private bool _cursorInContainer = false;
-
 		protected override void OnCursorMove(Point cursorPosition, Point previousCursorPosition, bool isCursorDown)
 		{
-			if (_cursorInContainer)
-			{
-				_showTooltip = true;
-			}
-			else
-			{
-				_showTooltip = false;
-			}
+			//if (_cursorInContainer)
+			//{
+			//	_showTooltip = true;
+			//}
+			//else
+			//{
+			//	_showTooltip = false;
+			//}
 			// TextOverlay.RenderPosition = RenderPosition;
 
 			base.OnCursorMove(cursorPosition, previousCursorPosition, isCursorDown);
@@ -121,8 +117,8 @@ namespace Alex.Gui.Elements.Inventory
 
 		protected override void OnCursorEnter(Point cursorPosition)
 		{
-			_showTooltip = true;
-			_cursorInContainer = true;
+			//_showTooltip = true;
+			//_cursorInContainer = true;
 			//  AddChild(TextOverlay);
 
 			base.OnCursorEnter(cursorPosition);
@@ -131,8 +127,8 @@ namespace Alex.Gui.Elements.Inventory
 		protected override void OnCursorLeave(Point cursorPosition)
 		{
 			base.OnCursorLeave(cursorPosition);
-			_cursorInContainer = false;
-			_showTooltip = false;
+			//_cursorInContainer = false;
+			//_showTooltip = false;
 
 			//  RemoveChild(TextOverlay);
 		}

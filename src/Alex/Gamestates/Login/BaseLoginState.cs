@@ -1,9 +1,9 @@
 ﻿using Alex.Common;
-using Alex.Common.Graphics;
 using Alex.Common.Gui.Elements;
 using Alex.Common.Utils;
 using Alex.Gamestates.Common;
 using Alex.Gui;
+using Alex.Interfaces;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
 using RocketUI;

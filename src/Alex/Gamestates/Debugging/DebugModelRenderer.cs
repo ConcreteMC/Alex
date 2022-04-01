@@ -1,13 +1,3 @@
-using System;
-using System.Numerics;
-using RocketUI;
-using Alex.Graphics.Camera;
-using Alex.Gui.Elements.Context3D;
-using Alex.Worlds;
-using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
-using Vector3 = Microsoft.Xna.Framework.Vector3;
-
 namespace Alex.Gamestates.Debugging
 {
 	/*public class DebugModelRenderer : GuiContext3DElement

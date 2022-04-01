@@ -1,13 +1,10 @@
-using Alex.Blocks.Minecraft;
-using Alex.Common.Graphics.GpuResources;
 using Alex.Common.Resources;
 using Alex.Common.Utils;
 using Alex.Common.Utils.Vectors;
-using Alex.ResourcePackLib;
+using Alex.Interfaces;
 using Alex.Worlds;
 using fNbt;
 using Microsoft.Xna.Framework.Graphics;
-using MiNET.Items;
 using NLog;
 
 namespace Alex.Entities.BlockEntities
@@ -118,7 +115,7 @@ namespace Alex.Entities.BlockEntities
 
 		public static BlockEntity GetById(ResourceLocation id,
 			World world,
-			BlockCoordinates blockCoordinates,
+			IVector3I blockCoordinates,
 			NbtCompound compound = null)
 		{
 			BlockEntity blockEntity = null;
@@ -264,7 +261,7 @@ namespace Alex.Entities.BlockEntities
 			return blockEntity;
 		}
 
-		public static BlockEntity ReadFrom(NbtCompound compound, World world, BlockCoordinates blockCoordinates)
+		public static BlockEntity ReadFrom(NbtCompound compound, World world, IVector3I blockCoordinates)
 		{
 			BlockEntity blockEntity = null;
 			ResourceLocation id = string.Empty;

@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Net;
 using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
@@ -15,7 +16,6 @@ using MojangAPI.Cache;
 using MojangAPI.Model;
 using MojangAPI.SecurityQuestion;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 using NLog;
 using MojangAuthResponse = Alex.Utils.Auth.MojangAuthResponse;
 using PlayerProfile = MojangAPI.Model.PlayerProfile;
@@ -317,25 +317,18 @@ namespace Alex.Common.Utils
 			try
 			{
 				var baseAddress = "https://sessionserver.mojang.com/session/minecraft/join";
+				var request = new HttpRequestMessage(HttpMethod.Post, new Uri(baseAddress)) { };
 
-				var http = (HttpWebRequest)WebRequest.Create(new Uri(baseAddress));
-				http.Accept = "application/json";
-				http.ContentType = "application/json";
-				http.Method = "POST";
-
-				var bytes = Encoding.ASCII.GetBytes(
+				request.Content = new StringContent(
 					JsonConvert.SerializeObject(
 						new JavaWorldProvider.JoinRequest()
 						{
 							ServerId = server, SelectedProfile = session.UUID, AccessToken = session.AccessToken
 						}));
+				request.Content.Headers.ContentType = new MediaTypeHeaderValue("application/json");
+				request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
 
-				using (Stream newStream = http.GetRequestStream())
-				{
-					await newStream.WriteAsync(bytes, 0, bytes.Length);
-				}
-
-				await http.GetResponseAsync();
+				await _httpClient.SendAsync(request);
 
 				return true;
 			}

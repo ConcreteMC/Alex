@@ -2,7 +2,6 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
-using Alex.Common.Entities.Properties;
 using Alex.Networking.Java.Util;
 
 namespace Alex.Networking.Java.Packets.Play
@@ -55,7 +54,7 @@ namespace Alex.Networking.Java.Packets.Play
 			return new EntityProperty(key, value, modifiers);
 		}
 
-		public virtual Modifier CreateModifier(MiNET.Utils.UUID uuid, double amount, ModifierMode modifierMode)
+		public virtual Modifier CreateModifier(Guid uuid, double amount, ModifierMode modifierMode)
 		{
 			return new Modifier(uuid, amount, modifierMode);
 		}
@@ -75,13 +74,13 @@ namespace Alex.Networking.Java.Packets.Play
 
 		public string Key { get; }
 		public double Value { get; set; }
-		private ConcurrentDictionary<MiNET.Utils.UUID, Modifier> Modifiers { get; }
+		private ConcurrentDictionary<Guid, Modifier> Modifiers { get; }
 
 		public EntityProperty(string key, double value, Modifier[] modifiers)
 		{
 			Key = key;
 			Value = value;
-			Modifiers = new ConcurrentDictionary<MiNET.Utils.UUID, Modifier>();
+			Modifiers = new ConcurrentDictionary<Guid, Modifier>();
 
 			if (modifiers != null)
 			{
@@ -106,7 +105,7 @@ namespace Alex.Networking.Java.Packets.Play
 			}
 		}
 
-		public void RemoveModifier(MiNET.Utils.UUID key)
+		public void RemoveModifier(Guid key)
 		{
 			if (Modifiers.TryRemove(key, out _)) { }
 		}
@@ -149,5 +148,28 @@ namespace Alex.Networking.Java.Packets.Play
 
 			return value;
 		}
+	}
+	
+	public class Modifier
+	{
+		public Guid Uuid;
+		public double Amount;
+		public ModifierMode Operation;
+
+		public Modifier() { }
+
+		public Modifier(Guid uuid, double amount, ModifierMode mode)
+		{
+			Uuid = uuid;
+			Amount = amount;
+			Operation = mode;
+		}
+	}
+	
+	public enum ModifierMode
+	{
+		Add = 0,
+		AddMultiplied = 1,
+		Multiply = 2
 	}
 }

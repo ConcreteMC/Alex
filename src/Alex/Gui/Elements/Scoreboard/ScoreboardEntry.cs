@@ -1,4 +1,6 @@
 using Alex.Common.Utils;
+using Alex.Interfaces;
+using Alex.Networking.Java.Models;
 using RocketUI;
 
 namespace Alex.Gui.Elements.Scoreboard
@@ -31,8 +33,10 @@ namespace Alex.Gui.Elements.Scoreboard
 			get => _displayName;
 			set
 			{
-				_displayName = value;
-				Left.Text = $"{value}  ";
+				string newValue = value;
+
+				_displayName = newValue;
+				Left.Text = $"{newValue}  ";
 			}
 		}
 

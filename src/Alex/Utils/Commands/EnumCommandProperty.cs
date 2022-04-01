@@ -1,6 +1,7 @@
 using System;
 using System.Linq;
-using Alex.Common.Commands.Parsers;
+using Alex.Interfaces;
+using Alex.Networking.Java.Commands.Parsers;
 using NLog;
 
 namespace Alex.Utils.Commands
@@ -18,13 +19,13 @@ namespace Alex.Utils.Commands
 		}
 
 		/// <inheritdoc />
-		public override bool TryParse(SeekableTextReader reader)
+		public override bool TryParse(ISeekableTextReader reader)
 		{
 			return TryParse(reader, out _);
 		}
 
 		/// <inheritdoc />
-		public bool TryParse(SeekableTextReader reader, out string[] matches)
+		public bool TryParse(ISeekableTextReader reader, out string[] matches)
 		{
 			matches = null;
 

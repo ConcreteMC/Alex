@@ -62,8 +62,6 @@ namespace Alex.Utils.Collections.Queue
 				{
 					if (predicate != null)
 					{
-						//List<T> candidates = 
-						double lowest = double.MaxValue;
 						var currentItem = first;
 
 						while (currentItem.Next != null)

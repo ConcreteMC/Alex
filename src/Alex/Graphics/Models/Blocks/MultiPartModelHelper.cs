@@ -5,12 +5,12 @@ using Alex.Blocks;
 using Alex.Blocks.Materials;
 using Alex.Blocks.Minecraft;
 using Alex.Blocks.State;
+using Alex.Common;
 using Alex.Common.Blocks;
 using Alex.Common.Utils.Vectors;
+using Alex.Interfaces;
 using Alex.ResourcePackLib.Json.BlockStates;
-using Alex.Worlds;
 using Alex.Worlds.Abstraction;
-using Microsoft.Xna.Framework;
 using NLog;
 
 namespace Alex.Graphics.Models.Blocks

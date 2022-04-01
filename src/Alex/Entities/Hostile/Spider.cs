@@ -1,10 +1,6 @@
-using System;
 using System.Diagnostics;
-using Alex.Graphics.Models.Entity;
 using Alex.Networking.Java.Packets.Play;
 using Alex.Worlds;
-using Microsoft.Xna.Framework;
-using MiNET.Entities;
 
 namespace Alex.Entities.Hostile
 {
@@ -26,10 +22,6 @@ namespace Alex.Entities.Hostile
 				IsWallClimbing = (mtd.Value & 0x01) != 0;
 			}
 		}
-
-		private bool _wasMoving = false;
-
-		private Stopwatch _timeSinceStartMoving = new Stopwatch();
 		/// <inheritdoc />
 		/*protected override void Animate(float dt, float mvSpeed)
 		{

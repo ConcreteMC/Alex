@@ -1,6 +1,5 @@
 using Alex.Common.Resources;
 using Alex.Items;
-using Alex.Net;
 using Alex.Worlds;
 using Microsoft.Xna.Framework;
 

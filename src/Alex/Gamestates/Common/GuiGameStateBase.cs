@@ -1,11 +1,9 @@
-﻿using System;
-using Alex.Common;
-using Alex.Common.Data.Options;
+﻿using Alex.Common.Data.Options;
 using Alex.Common.GameStates;
 using Alex.Common.Graphics;
 using Alex.Common.Services;
 using Alex.Common.Utils;
-using Alex.Services;
+using Alex.Interfaces;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Xna.Framework;
 using NLog;

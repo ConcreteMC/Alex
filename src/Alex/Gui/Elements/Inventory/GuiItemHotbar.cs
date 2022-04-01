@@ -1,8 +1,7 @@
 ﻿using System.Linq;
 using Alex.Common.Gui.Graphics;
 using Alex.Common.Utils;
-using Alex.Items;
-using Alex.Utils;
+using Alex.Interfaces;
 using Alex.Utils.Inventories;
 using Microsoft.Xna.Framework;
 using NLog;

@@ -1,6 +1,4 @@
 using System;
-using System.Linq;
-using System.Threading.Tasks;
 using Alex.Blocks.Storage;
 using Alex.Networking.Java.Util;
 using Alex.Worlds.Chunks;
@@ -106,6 +104,11 @@ namespace Alex.Worlds.Multiplayer.Java
 					{
 						jcs.Read(ms);
 					}
+					
+					BiomeStorage biomeStorage = new BiomeStorage();
+					biomeStorage.Read(ms);
+
+					this.BiomeStorages[sectionY] = biomeStorage;
 
 					storage.RemoveInvalidBlocks();
 					this.Sections[sectionY] = storage;

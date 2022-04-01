@@ -3,10 +3,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.Linq;
-using System.Threading;
 using Alex.Common.Services;
-using Alex.Common.Utils;
-using Microsoft.Extensions.DependencyInjection;
 using NLog;
 
 namespace Alex

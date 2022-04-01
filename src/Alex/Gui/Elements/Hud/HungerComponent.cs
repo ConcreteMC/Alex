@@ -1,7 +1,6 @@
 using System;
 using Alex.Common.Gui.Graphics;
 using Alex.Entities;
-using Microsoft.Xna.Framework;
 using RocketUI;
 
 namespace Alex.Gui.Elements.Hud

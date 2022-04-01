@@ -1,8 +1,8 @@
 using System;
 using System.Collections.Generic;
-using Alex.Common.Commands;
-using Alex.Common.Commands.Nodes;
-using Alex.Common.Commands.Parsers;
+using Alex.Networking.Java.Commands;
+using Alex.Networking.Java.Commands.Nodes;
+using Alex.Networking.Java.Commands.Parsers;
 using Alex.Networking.Java.Util;
 using NLog;
 using NLog.Fluent;

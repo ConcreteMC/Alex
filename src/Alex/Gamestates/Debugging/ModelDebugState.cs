@@ -13,12 +13,11 @@ using Alex.Common.Utils;
 using Alex.Common.Utils.Vectors;
 using Alex.Entities;
 using Alex.Gamestates.Common;
-using Alex.Gamestates.InGame;
 using Alex.Graphics.Models.Entity;
 using Alex.Gui;
 using Alex.Gui.Elements;
+using Alex.Gui.Elements.Containers;
 using Alex.Gui.Elements.Context3D;
-using Alex.ResourcePackLib;
 using Alex.ResourcePackLib.Json.Bedrock.Entity;
 using Alex.ResourcePackLib.Json.Models.Entities;
 using Alex.Utils;
@@ -37,7 +36,6 @@ namespace Alex.Gamestates.Debugging
 {
 	public class ModelDebugState : GuiGameStateBase
 	{
-		private StackContainer _wrap;
 		private GuiModelExplorerView _modelExplorerView;
 		private readonly StackMenu _mainMenu;
 
@@ -59,25 +57,42 @@ namespace Alex.Gamestates.Debugging
 			BlockModelExplorer = new BlockModelExplorer(Alex.Instance, null);
 			EntityModelExplorer = new EntityModelExplorer(Alex.Instance, null);
 
+			var tab1 = new GuiTab();
+			tab1.Label = "tab1";
+			tab1.AddChild(new TextElement("This is tab 1"));
+			
+			var tab2 = new GuiTab();
+			tab2.Label = "tab2";
+			tab2.AddChild(new TextElement("This is tab 2"));
+			
+			GuiTabContainer tabContainer = new GuiTabContainer()
+			{
+				Anchor = Alignment.Fill
+			};
+			tabContainer.Tabs.Add(tab1);
+			tabContainer.Tabs.Add(tab2);
+			
+			AddChild(tabContainer);
+			
 			ModelExplorer = BlockModelExplorer;
 
-			AddChild(
-				_modelExplorerView =
-					new GuiModelExplorerView(ModelExplorer, new Vector3(8, 8, 8), new Vector3(0f, 0f, 0f))
-					{
-						Anchor = Alignment.Fill,
-						Background = Color.Black * 0.8f,
-						BackgroundOverlay = new Color(Color.Black, 0.15f),
-						Margin = new Thickness(0),
-						Width = 92,
-						Height = 128,
-						AutoSizeMode = AutoSizeMode.GrowAndShrink,
+			//AddChild(
+			_modelExplorerView =
+				new GuiModelExplorerView(ModelExplorer, new Vector3(8, 8, 8), new Vector3(0f, 0f, 0f))
+				{
+					Anchor = Alignment.Fill,
+					Background = Color.Black * 0.8f,
+					BackgroundOverlay = new Color(Color.Black, 0.15f),
+					Margin = new Thickness(0),
+					Width = 92,
+					Height = 128,
+					AutoSizeMode = AutoSizeMode.GrowAndShrink,
 
-						//Anchor = Alignment.BottomRight,
+					//Anchor = Alignment.BottomRight,
 
-						// Width = 100,
-						// Height = 100
-					});
+					// Width = 100,
+					// Height = 100
+				};//);
 
 			_modelExplorerView.AddChild(
 				_mainMenu = new StackMenu()
@@ -131,8 +146,6 @@ namespace Alex.Gamestates.Debugging
 
 					return ModelExplorer.GetDebugInfo();
 				});
-
-			_keyState = Keyboard.GetState();
 		}
 
 		public ModelExplorer ModelExplorer { get; set; }
@@ -179,10 +192,6 @@ namespace Alex.Gamestates.Debugging
 		}
 
 		private DateTime _previousMemUpdate = DateTime.UtcNow;
-
-		//private Vector3 _rotation = Vector3.Zero;
-		private KeyboardState _keyState = default;
-		private float _i = 0;
 
 		protected override void OnUpdate(GameTime gameTime)
 		{
@@ -384,33 +393,13 @@ namespace Alex.Gamestates.Debugging
 
 		public override void Skip()
 		{
-			return;
-			int start = _index;
-			var currentState = _entityDefinitions[start];
-
-			for (int i = start; i < _entityDefinitions.Length; i++)
-			{
-				var state = _entityDefinitions[i];
-				/*if (!string.Equals(currentState.Name, state.Name))
-				{
-					_index = i;
-					SetVertices();
-					break;
-				}*/
-			}
+			
 		}
-
-		//private PlayerLocation Location { get; set; } = new PlayerLocation(Vector3.Zero);
-
+		
 		public override void SetLocation(PlayerLocation location)
 		{
-			//Location = location;
-
-			//  Location.Yaw = Location.HeadYaw = MathUtils.RadianToDegree(rotation.Y);
-			//  Location.Pitch = MathUtils.RadianToDegree(rotation.Z);
+			
 		}
-
-		private int _previousIndex = -1;
 
 		public override string GetDebugInfo()
 		{

@@ -1,7 +1,5 @@
-﻿using System;
-using Alex.Common.Data.Options;
+﻿using Alex.Common.Data.Options;
 using Alex.Common.Services;
-using Newtonsoft.Json;
 using NLog;
 
 namespace Alex.Services

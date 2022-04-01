@@ -1,21 +1,17 @@
 using System;
 using System.Buffers;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Diagnostics;
-using System.Linq;
 using System.Threading;
 using Alex.Common;
 using Alex.Common.Blocks;
 using Alex.Common.Graphics;
 using Alex.Common.Utils;
 using Alex.Common.Utils.Vectors;
-using Alex.Utils.Threading;
+using Alex.Interfaces;
 using Alex.Worlds.Abstraction;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using Microsoft.Xna.Framework.Graphics.PackedVector;
-using MiNET.Blocks;
 using NLog;
 
 namespace Alex.Worlds.Chunks

@@ -5,6 +5,7 @@ using Alex.Common.Blocks;
 using Alex.Common.Graphics;
 using Alex.Common.Resources;
 using Alex.Common.Utils.Vectors;
+using Alex.Interfaces;
 using Alex.Utils;
 using Alex.Worlds.Abstraction;
 using Alex.Worlds.Chunks;
@@ -139,8 +140,6 @@ namespace Alex.Graphics.Models.Blocks
 
 				case BlockFace.West:
 					return new[] { topLeft, bottomLeft, topRight, bottomLeft, bottomRight, topRight };
-
-					break;
 
 				default:
 					return new BlockShaderVertex[0];

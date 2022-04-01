@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using Alex.Blocks.Properties;
 using Alex.Common.Blocks.Properties;
 
 namespace Alex.Blocks.State

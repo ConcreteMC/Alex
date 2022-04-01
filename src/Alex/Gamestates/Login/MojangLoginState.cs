@@ -1,20 +1,14 @@
-﻿using System;
-using System.Threading;
-using System.Threading.Tasks;
-using Alex.Common.Gui.Elements;
+﻿using System.Threading.Tasks;
 using Alex.Common.Services;
 using Alex.Common.Utils;
 using Alex.Gamestates.Multiplayer;
 using Alex.Gui;
-using Alex.Utils;
-using Alex.Utils.Skins;
+using Alex.Interfaces;
 using Alex.Worlds.Multiplayer.Java;
 using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
 using MojangAPI.Model;
 using NLog;
 using PlayerProfile = Alex.Common.Services.PlayerProfile;
-using Skin = Alex.Common.Utils.Skin;
 
 namespace Alex.Gamestates.Login
 {

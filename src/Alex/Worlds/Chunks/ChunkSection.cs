@@ -1,16 +1,11 @@
 ﻿using System;
-using System.Buffers;
 using System.Collections.Generic;
-using System.Threading;
 using Alex.Blocks;
 using Alex.Blocks.Minecraft;
 using Alex.Blocks.State;
 using Alex.Blocks.Storage;
-using Alex.Common.Utils;
 using Alex.Common.Utils.Vectors;
-using Alex.Networking.Java.Util;
 using Alex.Worlds.Lighting;
-using Microsoft.Xna.Framework;
 using NLog;
 
 namespace Alex.Worlds.Chunks

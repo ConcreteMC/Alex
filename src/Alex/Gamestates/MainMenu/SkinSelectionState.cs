@@ -10,10 +10,8 @@ using Alex.Common.Services;
 using Alex.Common.Utils;
 using Alex.Entities;
 using Alex.Gamestates.Common;
-using Alex.Graphics.Models.Entity;
 using Alex.Gui;
 using Alex.Gui.Elements.MainMenu;
-using Alex.ResourcePackLib;
 using Alex.ResourcePackLib.Bedrock;
 using Alex.ResourcePackLib.Json;
 using Microsoft.Xna.Framework;
@@ -30,7 +28,6 @@ namespace Alex.Gamestates.MainMenu
 
 		private GuiPanoramaSkyBox _skyBox;
 		private IStorageSystem Storage { get; }
-		private Alex Alex { get; }
 
 		private Button _cancelBtn, _selectBtn;
 
@@ -54,7 +51,6 @@ namespace Alex.Gamestates.MainMenu
 
 		public SkinSelectionState(GuiPanoramaSkyBox skyBox, Alex alex)
 		{
-			Alex = alex;
 			_skyBox = skyBox;
 			Storage = GetService<IStorageSystem>();
 

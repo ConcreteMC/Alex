@@ -1,12 +1,16 @@
 ﻿using System;
+using Alex.Interfaces;
 using Microsoft.Xna.Framework;
 
 namespace Alex.Common.Utils.Vectors
 {
-	public readonly struct ChunkCoordinates : IEquatable<ChunkCoordinates>
+	public readonly struct ChunkCoordinates : IEquatable<ChunkCoordinates>, IVector2I
 	{
 		public readonly int X, Z;
-
+		
+		int IVector2I.X => X;
+		int IVector2I.Y => Z;
+		
 		public ChunkCoordinates(int value)
 		{
 			X = Z = value;
@@ -36,8 +40,6 @@ namespace Alex.Common.Utils.Vectors
 		{
 			X = ((int)Math.Floor(location.X)) >> 4;
 			Z = ((int)Math.Floor(location.Z)) >> 4;
-			//X = coordinates.X >> 4;
-			//Z = coordinates.Z >> 4;
 		}
 
 		public ChunkCoordinates(PlayerLocation location)

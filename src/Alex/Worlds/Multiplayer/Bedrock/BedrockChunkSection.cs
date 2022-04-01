@@ -1,12 +1,8 @@
 using System;
 using System.IO;
-using Alex.Blocks;
 using Alex.Blocks.State;
 using Alex.Blocks.Storage;
-using Alex.Blocks.Storage.Palette;
 using Alex.Worlds.Chunks;
-using fNbt;
-using MiNET.Net;
 using MiNET.Utils;
 using NLog;
 
@@ -31,8 +27,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			var version = (byte)stream.ReadByte();
 
 			BedrockChunkSection section = null;// = new BedrockChunkSection(0);
-			
-			int blockStorages = 1;
+
 			switch (version)
 			{
 				case 1:

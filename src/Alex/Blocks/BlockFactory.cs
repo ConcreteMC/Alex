@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Linq;
 using System.Text.RegularExpressions;
@@ -15,15 +14,10 @@ using Alex.Blocks.Storage.Palette;
 using Alex.Common.Blocks.Properties;
 using Alex.Common.Resources;
 using Alex.Common.Utils;
-using Alex.Common.Utils.Collections;
 using Alex.Graphics.Models.Blocks;
-using Alex.ResourcePackLib;
 using Alex.ResourcePackLib.Json.BlockStates;
 using Alex.Utils;
-using MiNET.Blocks;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
-using Block = Alex.Blocks.Block;
 using BlockModel = Alex.Graphics.Models.Blocks.BlockModel;
 using LightBlock = Alex.Blocks.Minecraft.LightBlock;
 

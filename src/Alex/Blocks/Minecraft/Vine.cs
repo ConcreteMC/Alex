@@ -1,10 +1,10 @@
 using Alex.Blocks.Materials;
-using Alex.Blocks.Minecraft.Slabs;
 using Alex.Blocks.Properties;
 using Alex.Blocks.State;
 using Alex.Common.Blocks;
 using Alex.Common.Blocks.Properties;
 using Alex.Common.Utils.Vectors;
+using Alex.Interfaces;
 using Alex.Worlds;
 using Alex.Worlds.Abstraction;
 using Microsoft.Xna.Framework;

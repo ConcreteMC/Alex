@@ -7,7 +7,6 @@ using Alex.Common.Services;
 using Alex.Net.Bedrock;
 using Alex.Networking.Bedrock.RakNet;
 using Alex.Utils;
-using Alex.Worlds.Multiplayer.Bedrock;
 using MiNET.Net;
 using NLog;
 using Version = Alex.Common.Services.Version;

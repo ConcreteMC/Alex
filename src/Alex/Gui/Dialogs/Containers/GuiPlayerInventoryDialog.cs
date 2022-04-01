@@ -1,17 +1,11 @@
-﻿using System;
-using System.Linq;
-using Alex.Common.Gui.Graphics;
+﻿using Alex.Common.Gui.Graphics;
 using Alex.Common.Utils.Vectors;
 using Alex.Entities;
-using Alex.Graphics.Models.Entity;
-using Alex.Gui.Elements;
 using Alex.Gui.Elements.Context3D;
 using Alex.Gui.Elements.Inventory;
 using Alex.Items;
-using Alex.Utils;
 using Alex.Utils.Inventories;
 using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Input;
 using NLog;
 using RocketUI;
 
@@ -24,11 +18,7 @@ namespace Alex.Gui.Dialogs.Containers
 		protected Player Player { get; }
 
 
-		private GuiEntityModelView _playerEntityModelView;
-
-		private AutoUpdatingTextElement _debug;
-
-		private const int ItemSize = 16;
+		private readonly GuiEntityModelView _playerEntityModelView;
 
 		private InventoryContainerItem CraftingOutput { get; }
 
@@ -142,8 +132,6 @@ namespace Alex.Gui.Dialogs.Containers
 		}
 
 		private readonly float _playerViewDepth = -512.0f;
-		private bool _mouseDown = false;
-
 		protected override void OnUpdate(GameTime gameTime)
 		{
 			base.OnUpdate(gameTime);

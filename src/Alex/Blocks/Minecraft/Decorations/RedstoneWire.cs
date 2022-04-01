@@ -6,6 +6,7 @@ using Alex.Common.Blocks;
 using Alex.Common.Blocks.Properties;
 using Alex.Common.Utils.Vectors;
 using Alex.Graphics.Models.Blocks;
+using Alex.Interfaces;
 using Alex.Worlds.Abstraction;
 using Microsoft.Xna.Framework;
 

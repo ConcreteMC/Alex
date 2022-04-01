@@ -1,5 +1,4 @@
 using System;
-using Alex.Blocks.State;
 
 namespace Alex.Blocks.Storage.Palette
 {

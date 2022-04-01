@@ -3,6 +3,7 @@ using System.Linq;
 using Alex.Blocks;
 using Alex.Blocks.Minecraft;
 using Alex.Common.Utils.Vectors;
+using Alex.Interfaces;
 using Alex.Networking.Java.Packets.Play;
 using Alex.Worlds;
 using Alex.Worlds.Abstraction;
@@ -51,7 +52,7 @@ public class BeaconBlockEntity : BlockEntity
 
 	public int Levels { get; set; } = 0;
 
-	public BeaconBlockEntity(World level, BlockCoordinates coordinates) : base(level)
+	public BeaconBlockEntity(World level, IVector3I coordinates) : base(level)
 	{
 		Type = "minecraft:beacon_beam";
 

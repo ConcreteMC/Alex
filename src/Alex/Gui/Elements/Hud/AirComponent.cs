@@ -3,7 +3,6 @@ using Alex.Common.Gui.Graphics;
 using Alex.Entities;
 using Alex.Entities.Meta;
 using Microsoft.Xna.Framework;
-using MiNET.Effects;
 using RocketUI;
 
 namespace Alex.Gui.Elements.Hud

@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using Alex.Common.Data.Options;
 using Alex.Common.Utils.Vectors;
@@ -12,9 +11,7 @@ using Alex.Worlds;
 using ConcurrentCollections;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using MiNET.Worlds;
 using NLog;
-using NLog.Fluent;
 using RocketUI;
 
 namespace Alex.Gui.Elements.Map

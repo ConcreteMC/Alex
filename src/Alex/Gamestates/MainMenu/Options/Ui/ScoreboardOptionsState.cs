@@ -1,4 +1,3 @@
-using System;
 using Alex.Common.Gui;
 using Alex.Gui;
 

@@ -1,7 +1,6 @@
 using Alex.Networking.Java.Packets.Play;
 using Alex.Worlds;
 using ConcreteMC.MolangSharp.Attributes;
-using MiNET.Entities;
 using MiNET.Utils.Metadata;
 using MetadataByte = MiNET.Utils.Metadata.MetadataByte;
 

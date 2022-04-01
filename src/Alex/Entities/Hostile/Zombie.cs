@@ -1,7 +1,4 @@
-using System;
 using Alex.Worlds;
-using Microsoft.Xna.Framework;
-using MiNET.Entities;
 
 namespace Alex.Entities.Hostile
 {

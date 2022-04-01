@@ -2,8 +2,6 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.CompilerServices;
-using Alex.Blocks.State;
 
 namespace Alex.Blocks.Storage.Palette
 {

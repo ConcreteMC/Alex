@@ -1,31 +1,19 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
-using System.Text;
 using System.Threading;
-using Alex.Common.Resources;
 using Alex.Common.Utils;
 using Alex.Common.Utils.Vectors;
-using Alex.Gamestates;
-using Alex.Graphics.Camera;
-using Alex.Graphics.Models.Entity;
 using Alex.Graphics.Models.Items;
-using Alex.Net;
 using Alex.Networking.Java.Packets.Play;
 using Alex.ResourcePackLib;
-using Alex.ResourcePackLib.Json;
 using Alex.ResourcePackLib.Json.Converters;
 using Alex.ResourcePackLib.Json.Models.Entities;
 using Alex.ResourcePackLib.Json.Models.Items;
 using Alex.Utils;
 using Alex.Utils.Skins;
 using Alex.Worlds;
-using Alex.Worlds.Multiplayer.Bedrock;
-using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
-using MiNET;
 using MiNET.Net;
 using MiNET.Utils.Metadata;
 using MiNET.Worlds;
@@ -33,7 +21,6 @@ using Newtonsoft.Json;
 using NLog;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
-using SixLabors.ImageSharp.Processing;
 using Color = Microsoft.Xna.Framework.Color;
 using LogManager = NLog.LogManager;
 using MetadataByte = Alex.Networking.Java.Packets.Play.MetadataByte;
@@ -47,7 +34,7 @@ namespace Alex.Entities
 	public class RemotePlayer : LivingEntity
 	{
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(RemotePlayer));
-		public GameMode Gamemode { get; private set; }
+		public Interfaces.GameMode Gamemode { get; private set; }
 
 		public PlayerSkinFlags SkinFlags { get; } = PlayerSkinFlags.Default;
 
@@ -555,11 +542,11 @@ namespace Alex.Entities
 			return base.HandleMetadata(flag, entry);
 		}
 
-		public void UpdateGamemode(GameMode gamemode)
+		public void UpdateGamemode(Interfaces.GameMode gamemode)
 		{
 			Gamemode = gamemode;
 
-			if (Gamemode == GameMode.Creative)
+			if (Gamemode == Interfaces.GameMode.Creative)
 			{
 				CanFly = true;
 			}

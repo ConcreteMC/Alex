@@ -19,7 +19,6 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using MiNET.Utils;
 using NLog;
-using RocketUI;
 using GpuResourceManager = Alex.Common.Graphics.GpuResources.GpuResourceManager;
 using PlayerLocation = Alex.Common.Utils.Vectors.PlayerLocation;
 
@@ -600,7 +599,7 @@ namespace Alex.Gamestates.InGame
 			//_playingHud.Chat = 
 		}
 
-		private void OnDialogClosed(object? sender, EventArgs e)
+		private void OnDialogClosed(object sender, EventArgs e)
 		{
 			if (sender is DisconnectedDialog dialog)
 			{

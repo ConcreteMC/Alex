@@ -1,13 +1,12 @@
 using System;
 using Alex.Networking.Java.Util;
-using MiNET.Utils;
 
 namespace Alex.Networking.Java.Packets.Play
 {
 	public class SpawnEntity : Packet<SpawnEntity>
 	{
 		public int EntityId;
-		public UUID Uuid;
+		public Guid Uuid;
 		public int Type;
 		public double X;
 		public double Y;

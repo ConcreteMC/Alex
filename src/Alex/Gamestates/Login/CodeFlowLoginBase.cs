@@ -1,11 +1,8 @@
 ﻿using System;
-using System.Linq;
-using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 using Alex.Common;
 using Alex.Common.GameStates;
-using Alex.Common.Graphics;
 using Alex.Common.Gui.Elements;
 using Alex.Common.Services;
 using Alex.Common.Utils;
@@ -13,15 +10,14 @@ using Alex.Gamestates.Common;
 using Alex.Gamestates.Multiplayer;
 using Alex.Gui;
 using Alex.Gui.Elements;
+using Alex.Interfaces;
 using Alex.Utils;
 using Alex.Utils.Auth;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
-using Newtonsoft.Json;
 using NLog;
 using RocketUI;
 using RocketUI.Utilities.IO;
-using Skin = Alex.Common.Utils.Skin;
 
 
 namespace Alex.Gamestates.Login

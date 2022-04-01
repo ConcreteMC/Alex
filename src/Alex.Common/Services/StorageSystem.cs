@@ -201,7 +201,7 @@ namespace Alex.Common.Services
 
 				return true;
 			}
-			catch (Exception ex)
+			catch (Exception)
 			{
 				return false;
 			}

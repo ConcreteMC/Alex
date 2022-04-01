@@ -3,14 +3,9 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using System.Text.RegularExpressions;
-using Alex.Blocks.Minecraft;
-using Alex.Blocks.Properties;
 using Alex.Blocks.Storage.Palette;
 using Alex.Common.Blocks.Properties;
-using Alex.Common.Resources;
 using Alex.ResourcePackLib.Json.BlockStates;
-using Microsoft.Xna.Framework;
 using NLog;
 
 namespace Alex.Blocks.State
@@ -60,7 +55,9 @@ namespace Alex.Blocks.State
 			}
 
 			if (LoggingConstants.LogInvalidBlockProperties)
+#pragma warning disable CS0162
 				Log.Debug($"Invalid property on state {Name} ({property}={value})");
+#pragma warning restore CS0162
 
 			return this;
 		}
@@ -73,7 +70,9 @@ namespace Alex.Blocks.State
 			}
 
 			if (LoggingConstants.LogInvalidBlockProperties)
+#pragma warning disable CS0162
 				Log.Debug($"Invalid property on state {Name} ({property}={value})");
+#pragma warning restore CS0162
 
 			return this;
 		}

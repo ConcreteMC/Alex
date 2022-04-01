@@ -378,13 +378,8 @@ namespace Alex.ResourcePackLib
 
         private void LoadFont(IFilesystem archive)
         {
-            List<IFile> asciiFontEntries = new List<IFile>();
-            List<IFile> unicodeFontEntries = new List<IFile>();
             var sources = new List<BitmapFontSource>();
-
-            //FontDefinitionFile fontDefinitionFile = null;
-
-            bool hasAscii = false;
+            
             foreach (var entry in archive.Entries)
             {
                 var fontDefinitionMatch = IsFontDefinition.Match(entry.FullName);
@@ -446,39 +441,9 @@ namespace Alex.ResourcePackLib
                             }
                         }
                     }
-
-                    continue;
-                }
-
-                var fontTextureMatch = IsFontTextureResource.Match(entry.FullName);
-
-                if (fontTextureMatch.Success)
-                {
-                    if (fontTextureMatch.Groups["filename"].Value == "ascii")
-                    {
-                        asciiFontEntries.Add(entry);
-
-                        //break;
-                    }
-                    else if (fontTextureMatch.Groups["filename"].Value.StartsWith("unicode_"))
-                    {
-                        unicodeFontEntries.Add(entry);
-                    }
-
-                    continue;
                 }
             }
-
-
-            /*foreach (var entry in asciiFontEntries)
-            {
-                if (LoadBitmapFontSource(entry, BitmapFontCharacters, out var bitmapFontSource, true))
-                {
-                    sources.Insert(0, bitmapFontSource);
-                    break;   
-                }
-            }*/
-
+            
             FontSources = sources.ToArray();
             
 
@@ -588,7 +553,7 @@ namespace Alex.ResourcePackLib
                 return pixelSpan.ToArray().Select(x => new Color(x.Rgba)).ToArray();
             }
 
-            return null;
+            return null;/*
 
             Color[] colors = new Color[cloned.Width * cloned.Height];
 
@@ -601,7 +566,7 @@ namespace Alex.ResourcePackLib
                 }
             }
 
-            return colors;
+            return colors;*/
         }
 
         private string NormalisePath(string path)
@@ -622,15 +587,6 @@ namespace Alex.ResourcePackLib
             bitmap = null;
 
             return false;
-
-            /*if (_bitmapCache.TryGetValue(textureName, out var val))
-            {
-                bitmap = val.Value;
-                return true;
-            }
-
-            bitmap = null;
-            return false;*/
         }
 
         private void LoadBitmapMeta(IFile entry, Match match)

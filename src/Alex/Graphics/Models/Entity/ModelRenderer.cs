@@ -1,14 +1,7 @@
 ﻿using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Collections.Specialized;
-using System.Linq;
 using Alex.Common.Graphics;
-using Alex.Common.Utils;
 using Alex.Entities;
 using Alex.Graphics.Effect;
-using Alex.ResourcePackLib.Json.Models.Entities;
-using Alex.Utils;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using NLog;

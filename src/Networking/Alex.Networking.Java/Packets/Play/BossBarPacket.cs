@@ -1,11 +1,11 @@
+using System;
 using Alex.Networking.Java.Util;
-using MiNET.Utils;
 
 namespace Alex.Networking.Java.Packets.Play
 {
 	public class BossBarPacket : Packet<BossBarPacket>
 	{
-		public UUID Uuid;
+		public Guid Uuid;
 		public BossBarAction Action;
 
 		public string Title;

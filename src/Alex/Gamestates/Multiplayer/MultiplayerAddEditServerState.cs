@@ -1,11 +1,11 @@
 ﻿using System;
 using Alex.Common;
 using Alex.Common.Data.Servers;
-using Alex.Common.Graphics;
 using Alex.Common.Gui.Elements;
 using Alex.Common.Utils;
 using Alex.Gamestates.Common;
 using Alex.Gui;
+using Alex.Interfaces;
 using Alex.Utils;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;

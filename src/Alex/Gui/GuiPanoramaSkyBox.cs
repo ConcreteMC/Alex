@@ -30,11 +30,9 @@ namespace Alex.Gui
 
 		private Texture2D[] _textures;
 
-		private Alex Game { get; }
-
 		public GuiPanoramaSkyBox(Alex alex) : base(alex)
 		{
-			Game = alex;
+			
 		}
 
 		public void Load(IGuiRenderer renderer)

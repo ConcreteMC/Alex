@@ -10,11 +10,11 @@ namespace Alex.Gui.Elements.Hud
 {
 	public class BossBarContainer : StackContainer
 	{
-		private ConcurrentDictionary<MiNET.Utils.UUID, BossBar> _bossBars;
+		private ConcurrentDictionary<Guid, BossBar> _bossBars;
 
 		public BossBarContainer()
 		{
-			_bossBars = new ConcurrentDictionary<UUID, BossBar>();
+			_bossBars = new ConcurrentDictionary<Guid, BossBar>();
 
 			base.Orientation = Orientation.Vertical;
 			Anchor = Alignment.TopCenter;
@@ -22,7 +22,7 @@ namespace Alex.Gui.Elements.Hud
 			//AddChild(new BossBar());
 		}
 
-		public bool Add(UUID uuid,
+		public bool Add(Guid uuid,
 			string title,
 			float health,
 			BossBarPacket.BossBarColor color,
@@ -54,7 +54,7 @@ namespace Alex.Gui.Elements.Hud
 			return false;
 		}
 
-		public void UpdateTitle(UUID uuid, string title)
+		public void UpdateTitle(Guid uuid, string title)
 		{
 			if (_bossBars.TryGetValue(uuid, out var bar))
 			{
@@ -62,7 +62,7 @@ namespace Alex.Gui.Elements.Hud
 			}
 		}
 
-		public void UpdateStyle(UUID uuid, BossBarPacket.BossBarColor color, BossBarPacket.BossBarDivisions divisions)
+		public void UpdateStyle(Guid uuid, BossBarPacket.BossBarColor color, BossBarPacket.BossBarDivisions divisions)
 		{
 			if (_bossBars.TryGetValue(uuid, out var bar))
 			{
@@ -71,7 +71,7 @@ namespace Alex.Gui.Elements.Hud
 			}
 		}
 
-		public void UpdateHealth(UUID uuid, float health)
+		public void UpdateHealth(Guid uuid, float health)
 		{
 			if (_bossBars.TryGetValue(uuid, out var bar))
 			{
@@ -79,7 +79,7 @@ namespace Alex.Gui.Elements.Hud
 			}
 		}
 
-		public bool Remove(UUID uuid)
+		public bool Remove(Guid uuid)
 		{
 			if (_bossBars.TryRemove(uuid, out var bar))
 			{
@@ -110,7 +110,7 @@ namespace Alex.Gui.Elements.Hud
 		private TextElement _textElement;
 		private float _health;
 
-		private const int MaxWidth = 182;
+		private const int BarMaxWidth = 182;
 
 		public BossBar()
 		{
@@ -121,9 +121,9 @@ namespace Alex.Gui.Elements.Hud
 				Anchor = Alignment.BottomCenter,
 				Height = 5,
 				MinHeight = 5,
-				Width = MaxWidth,
-				MinWidth = MaxWidth,
-				MaxWidth = MaxWidth
+				Width = BarMaxWidth,
+				MinWidth = BarMaxWidth,
+				MaxWidth = BarMaxWidth
 			};
 
 			//_textureElement.Width = _textureElement.MinWidth = 182;
@@ -131,10 +131,10 @@ namespace Alex.Gui.Elements.Hud
 			AddChild(_textElement);
 			AddChild(_textureElement);
 
-			Width = MaxWidth;
+			Width = BarMaxWidth;
 			Height = 18;
 			Color = BossBarPacket.BossBarColor.Pink;
-			base.MaxWidth = MaxWidth;
+			base.MaxWidth = BarMaxWidth;
 		}
 
 		private bool _divisionDirty = false;
@@ -175,9 +175,8 @@ namespace Alex.Gui.Elements.Hud
 		}
 
 		private bool _colorDirty = true;
-		private GuiTextures _guiTexture;
 		private BossBarPacket.BossBarDivisions _divisions;
-		private Color? _customColor = null;
+		private Color? _customColor;
 
 		public Color? CustomColor
 		{

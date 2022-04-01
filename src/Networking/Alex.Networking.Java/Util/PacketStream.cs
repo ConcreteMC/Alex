@@ -6,12 +6,10 @@ using System.Net.Sockets;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using Alex.Common.Data;
-using Alex.Common.Utils;
-using Alex.Common.Utils.Vectors;
+using Alex.Interfaces;
+using Alex.Networking.Java.Models;
 using fNbt;
 using Microsoft.Xna.Framework;
-using MiNET.Utils;
 
 namespace Alex.Networking.Java.Util
 {
@@ -255,7 +253,7 @@ namespace Alex.Networking.Java.Util
 			{
 				read = await ReadUnsignedByteAsync();
 				int value = (read & 0x7f);
-				result |= (value << (7 * numRead));
+				result |= (uint) (value << (7 * numRead));
 
 				numRead++;
 
@@ -304,11 +302,7 @@ namespace Alex.Networking.Java.Util
 			var val = await ReadULongAsync();
 			var x = Convert.ToSingle(val >> 38);
 			var y = Convert.ToSingle(val & 0xFFF);
-
-			//if (y > 2048)
-			//	y = -(0xFFF - y);
-
-			var z = Convert.ToSingle(val << 26 >> 38); //Convert.ToSingle((val << 38 >> 38) >> 12);
+			var z = Convert.ToSingle(val << 26 >> 38);
 
 			if (x >= (2 ^ 25))
 			{
@@ -329,8 +323,26 @@ namespace Alex.Networking.Java.Util
 		}
 
 		/// <inheritdoc />
-		public async Task<BlockCoordinates> ReadBlockCoordinatesAsync()
+		public async Task<IVector3I> ReadBlockCoordinatesAsync()
 		{
+			ulong value = await ReadULongAsync();
+
+			long x = (long)(value >> 38);
+			long y = (long)(value & 0xFFF);
+			long z = (long)(value << 26 >> 38);
+
+			if (x >= Math.Pow(2, 25))
+				x -= (long)Math.Pow(2, 26);
+
+			if (y >= Math.Pow(2, 11))
+				y -= (long)Math.Pow(2, 12);
+
+			if (z >= Math.Pow(2, 25))
+				z -= (long)Math.Pow(2, 26);
+
+			return new Vector3I((int)x, (int)y, (int)z);
+			
+			/*
 			var val = await ReadLongAsync();
 			var x = (val >> 38);
 			var y = (val & 0xFFF);
@@ -355,7 +367,7 @@ namespace Alex.Networking.Java.Util
 				z -= 2 ^ 26;
 			}
 
-			return new BlockCoordinates((int)x, (int)y, (int)z);
+			return new Vector3I((int)x, (int)y, (int)z);*/
 		}
 
 		/// <inheritdoc />
@@ -406,7 +418,7 @@ namespace Alex.Networking.Java.Util
 		}
 
 		/// <inheritdoc />
-		public async Task WritePositionAsync(BlockCoordinates pos)
+		public async Task WritePositionAsync(IVector3I pos)
 		{
 			await WritePositionAsync(new Vector3(pos.X, pos.Y, pos.Z));
 		}
@@ -513,9 +525,9 @@ namespace Alex.Networking.Java.Util
 		}
 
 		/// <inheritdoc />
-		public async Task WriteUuidAsync(UUID uuid)
+		public async Task WriteUuidAsync(Guid uuid)
 		{
-			var guid = uuid.GetBytes();
+			var guid = uuid.ToByteArray();
 			var long1 = new byte[8];
 			var long2 = new byte[8];
 			Array.Copy(guid, 0, long1, 0, 8);
@@ -525,12 +537,14 @@ namespace Alex.Networking.Java.Util
 		}
 
 		/// <inheritdoc />
-		public async Task<UUID> ReadUuidAsync()
+		public async Task<Guid> ReadUuidAsync()
 		{
 			var long1 = await ReadAsync(8);
 			var long2 = await ReadAsync(8);
+			var concat = long1.Concat(long2).ToArray();
 
-			return new MiNET.Utils.UUID(long1.Concat(long2).ToArray());
+			return new Guid(concat);
+			//return new MiNET.Utils.UUID(long1.Concat(long2).ToArray());
 		}
 
 		/// <inheritdoc />
@@ -573,14 +587,15 @@ namespace Alex.Networking.Java.Util
 		/// <inheritdoc />
 		public async Task<string> ReadChatObjectAsync()
 		{
-			string raw = await ReadStringAsync();
+			return await ReadStringAsync();
 
+			/*
 			if (ChatObject.TryParse(raw, out string result))
 			{
 				return result;
 			}
 
-			return raw; // new ChatObject(raw);
+			return raw; // new ChatObject(raw);*/
 		}
 	}
 }

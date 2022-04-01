@@ -5,7 +5,9 @@ using Alex.Common.Data;
 using Alex.Common.Graphics.Typography;
 using Alex.Common.Input;
 using Alex.Common.Utils;
+using Alex.Interfaces;
 using Alex.Net;
+using Alex.Networking.Java.Models;
 using Alex.Utils.Collections;
 using Alex.Utils.Commands;
 using Microsoft.Xna.Framework;
@@ -219,7 +221,7 @@ namespace Alex.Gui.Elements.Hud
 							Font, currentSelection.Match.Tooltip,
 							new Vector2(
 								TextElement.RenderBounds.BottomLeft().X + TextElement.Margin.Left + stringSize.X,
-								TextElement.RenderBounds.Y + TextElement.Margin.Top), Common.Utils.TextColor.Gray,
+								TextElement.RenderBounds.Y + TextElement.Margin.Top), Interfaces.TextColor.Gray,
 							FontStyle.None);
 					}
 				}
@@ -315,28 +317,27 @@ namespace Alex.Gui.Elements.Hud
 
 			Font.DrawString(
 				graphics.SpriteBatch, text, renderPos + new Vector2(Padding.Left, 2),
-				(Color)Common.Utils.TextColor.White, opacity: alpha);
+				(Color)Interfaces.TextColor.White, opacity: alpha);
 
 			offset.Y -= (size.Y + 2);
 		}
 
 		public static TextColor FindLastColor(string message)
 		{
-			TextColor last = Common.Utils.TextColor.White;
+			TextColor last = Interfaces.TextColor.White;
 
 			for (int i = 0; i < message.Length - 1; i++)
 			{
 				if (message[i] == '§')
 				{
-					last = Common.Utils.TextColor.GetColor(message[i + 1]);
+					last = Interfaces.TextColor.GetColor(message[i + 1]);
 					i++;
 				}
 			}
 
 			return last;
 		}
-
-		private int _latestTransactionId = -1;
+		
 		private int _tabCompletePosition = 0;
 		private LinkedListNode<string> _currentNode = null;
 
@@ -584,7 +585,7 @@ namespace Alex.Gui.Elements.Hud
 		{
 			string msg = message;
 
-			TextColor lastColor = Common.Utils.TextColor.White;
+			TextColor lastColor = Interfaces.TextColor.White;
 
 			foreach (var split in msg.Split('\n'))
 			{
@@ -592,7 +593,7 @@ namespace Alex.Gui.Elements.Hud
 				{
 					var t = line;
 
-					if (lastColor != Common.Utils.TextColor.White)
+					if (lastColor != Interfaces.TextColor.White)
 					{
 						t = $"§{lastColor.Code}{t}";
 					}

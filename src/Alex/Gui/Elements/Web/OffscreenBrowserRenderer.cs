@@ -1,9 +1,7 @@
 using System;
 using System.Linq;
 using System.Threading.Tasks;
-using Alex.Common.Graphics.GpuResources;
 using Alex.Common.Utils;
-using Alex.Gui.Dialogs;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using NLog;
@@ -239,8 +237,6 @@ namespace Alex.Gui.Elements.Web
 
 		private void PageOnConsole(object sender, ConsoleEventArgs e)
 		{
-			switch (e.Message.Type) { }
-
 			Log.Info($"Log: {e.Message.Text}");
 		}
 

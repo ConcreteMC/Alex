@@ -2,6 +2,7 @@ using System;
 using Alex.Blocks.State;
 using Alex.Common.Blocks.Properties;
 using Alex.Common.Utils;
+using Alex.Interfaces;
 
 namespace Alex.Blocks.Properties
 {

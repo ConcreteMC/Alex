@@ -1,20 +1,11 @@
 ﻿using System;
-using System.Diagnostics;
-using System.IO;
-using System.Net;
-using System.Text.RegularExpressions;
 using System.Threading;
-using System.Threading.Tasks;
+using Alex.Common;
 using Alex.Common.Utils;
-using Alex.Gamestates.Singleplayer;
 using Alex.Utils;
-using Alex.Utils.Auth;
 using CommandLine;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Xna.Framework;
 using MiNET.Utils;
 using NLog;
-using NLog.Config;
 using RocketUI.Utilities.IO;
 using LogManager = NLog.LogManager;
 

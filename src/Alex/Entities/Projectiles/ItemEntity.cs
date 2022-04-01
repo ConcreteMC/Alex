@@ -1,11 +1,6 @@
 using Alex.Common.Graphics;
-using Alex.Graphics.Models.Items;
 using Alex.Items;
-using Alex.Net;
-using Alex.Networking.Java.Packets.Play;
-using Alex.ResourcePackLib.Json.Models.Items;
 using Alex.Worlds;
-using Alex.Worlds.Multiplayer.Java;
 using Microsoft.Xna.Framework;
 using NLog;
 
@@ -29,20 +24,12 @@ namespace Alex.Entities.Projectiles
 		protected bool DoRotation { get; set; } = true;
 
 		private bool IsBlock { get; set; } = false;
-
-		// private Matrix _worldMatrix = Matrix.Identity;
 		public override void Update(IUpdateArgs args)
 		{
 			if (CanRender)
 			{
-				//    var knownPos = KnownPosition.ToVector3();
-				// var knownPos = bb.GetCenter();
-				float scale = 1f / 16f;
-
 				if (DoRotation)
 				{
-					//var offset = new Vector3((float) Width, (float) Height, (float) Width) / 2f;
-					// var offset = new Vector3((float) Width, 0f, (float) Width);
 					ItemRenderer.Update(args);
 				}
 				else

@@ -1,5 +1,6 @@
 using System;
-using Alex.Common.Commands.Parsers;
+using Alex.Interfaces;
+using Alex.Networking.Java.Commands.Parsers;
 
 namespace Alex.Utils.Commands
 {
@@ -12,7 +13,7 @@ namespace Alex.Utils.Commands
 
 
 		/// <inheritdoc />
-		public override bool TryParse(SeekableTextReader reader)
+		public override bool TryParse(ISeekableTextReader reader)
 		{
 			string textInput = null;
 			int length;

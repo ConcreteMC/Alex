@@ -1,10 +1,8 @@
 using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Linq;
 using Alex.Common.Graphics;
-using Alex.Common.World;
 using Microsoft.Xna.Framework;
 
 namespace Alex.Graphics.Models;
@@ -59,7 +57,7 @@ public class ModelMatrixHolder : IDisposable
 
 	protected virtual void ModelChanged(Model newModel) { }
 
-	private void CollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
+	private void CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
 	{
 		if (e.NewItems != null)
 		{

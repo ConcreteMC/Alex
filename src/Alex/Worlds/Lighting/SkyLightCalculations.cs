@@ -1,22 +1,12 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.Drawing;
-using System.Drawing.Imaging;
-using System.IO;
-using System.Linq;
 using System.Threading;
-using System.Threading.Tasks;
 using Alex.Blocks.Minecraft;
-using Alex.Worlds.Chunks;
-using Microsoft.Xna.Framework;
-using MiNET.Utils;
 using NLog;
 using BlockCoordinates = Alex.Common.Utils.Vectors.BlockCoordinates;
 using ChunkColumn = Alex.Worlds.Chunks.ChunkColumn;
 using ChunkCoordinates = Alex.Common.Utils.Vectors.ChunkCoordinates;
-using Color = System.Drawing.Color;
 using IBlockAccess = Alex.Worlds.Abstraction.IBlockAccess;
 
 namespace Alex.Worlds.Lighting

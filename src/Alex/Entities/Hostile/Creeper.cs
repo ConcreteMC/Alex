@@ -1,11 +1,5 @@
-using Alex.Graphics.Models.Entity;
 using Alex.Networking.Java.Packets.Play;
-using Alex.ResourcePackLib.Json.Models.Entities;
 using Alex.Worlds;
-using MiNET.Entities;
-using SixLabors.ImageSharp;
-using SixLabors.ImageSharp.PixelFormats;
-using SixLabors.ImageSharp.Processing;
 
 namespace Alex.Entities.Hostile
 {

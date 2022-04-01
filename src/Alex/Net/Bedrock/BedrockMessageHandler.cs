@@ -3,10 +3,10 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
+using System.Threading;
 using Alex.Common.Utils;
 using Alex.Networking.Bedrock.RakNet;
 using Microsoft.IO;
-using MiNET;
 using MiNET.Net;
 using MiNET.Net.RakNet;
 using MiNET.Utils;
@@ -174,105 +174,123 @@ namespace Alex.Net.Bedrock
 			return packet;
 		}
 
-		private object _handlingLock = new object();
-
+		//private object _handlingLock = new object();
+		public SemaphoreSlim PacketHandlingSemaphore { get; } = new SemaphoreSlim(1);
 		public void HandlePacket(Packet message)
 		{
 			if (_session.Evicted)
 				return;
-
-			if (message is McpeWrapper wrapper)
+			
+			try
 			{
-				var payload = wrapper.payload;
-
-				lock (_handlingLock)
+				if (message is McpeWrapper wrapper)
 				{
-					// Decrypt byteswrapper
-					if (CryptoContext != null && CryptoContext.UseEncryption)
+					var payload = wrapper.payload;
+
+					//lock (_handlingLock)
 					{
-						payload = CryptoUtils.Decrypt(payload, CryptoContext);
-					}
-
-					using (var compressionStream = new DeflateStream(
-						       new MemoryStreamReader(payload), System.IO.Compression.CompressionMode.Decompress,
-						       false))
-					{
-						payload = compressionStream.ReadToReadOnlyMemory();
-					}
-				}
-
-				//var messages = new List<Packet>();
-
-				// Get bytes to process
-				//	var payload = wrapper.payload;
-
-				using (var ms = new MemoryStreamReader(payload))
-				{
-					ms.Position = 0;
-
-					int count = 0;
-
-					// Get actual packet out of bytes
-					while (ms.Position < ms.Length)
-					{
-						if (_session.Evicted)
-							return;
-
-						uint len = VarInt.ReadUInt32(ms);
-						long pos = ms.Position;
-
-						var data = ms.Read(len);
-
-						ms.Position = pos;
-						int id = VarInt.ReadInt32(ms);
-
-						Packet packet = null;
-
+						PacketHandlingSemaphore.Wait();
 						try
 						{
-							packet = PacketFactory.Create((byte)id, data, "mcpe") ?? new UnknownPacket((byte)id, data);
+							// Decrypt byteswrapper
+							if (CryptoContext != null && CryptoContext.UseEncryption)
+							{
+								payload = CryptoUtils.Decrypt(payload, CryptoContext);
+							}
 
-							packet.ReliabilityHeader = wrapper.ReliabilityHeader;
-
-							//messages.Add(packet);
-							count++;
+							using (var compressionStream = new DeflateStream(
+								       new MemoryStreamReader(payload),
+								       System.IO.Compression.CompressionMode.Decompress,
+								       false))
+							{
+								payload = compressionStream.ReadToReadOnlyMemory();
+							}
 						}
-						catch (Exception e)
+						finally
 						{
-							Log.Warn(
-								e,
-								$"Error parsing bedrock message #{count} id={id} (Buffer size={data.Length} Packet size={len})");
+							PacketHandlingSemaphore.Release();
 						}
+					}
 
+					//var messages = new List<Packet>();
 
-						if (packet != null)
+					// Get bytes to process
+					//	var payload = wrapper.payload;
+
+					using (var ms = new MemoryStreamReader(payload))
+					{
+						ms.Position = 0;
+
+						int count = 0;
+
+						// Get actual packet out of bytes
+						while (ms.Position < ms.Length)
 						{
+							if (_session.Evicted)
+								return;
+
+							uint len = VarInt.ReadUInt32(ms);
+							long pos = ms.Position;
+
+							var data = ms.Read(len);
+
+							ms.Position = pos;
+							int id = VarInt.ReadInt32(ms);
+
+							Packet packet = null;
+
 							try
 							{
-								HandleGamePacket(packet);
+								packet = PacketFactory.Create((byte) id, data, "mcpe") ??
+								         new UnknownPacket((byte) id, data);
+
+								packet.ReliabilityHeader = wrapper.ReliabilityHeader;
+
+								//messages.Add(packet);
+								count++;
 							}
 							catch (Exception e)
 							{
-								Log.Warn(e, $"Error handling game packet #{count} id={id}");
+								Log.Warn(
+									e,
+									$"Error parsing bedrock message #{count} id={id} (Buffer size={data.Length} Packet size={len})");
 							}
-							finally
-							{
-								packet.PutPool();
-							}
-						}
 
-						ms.Position = pos + len;
+
+							if (packet != null)
+							{
+								try
+								{
+									HandleGamePacket(packet);
+								}
+								catch (Exception e)
+								{
+									Log.Warn(e, $"Error handling game packet #{count} id={id}");
+								}
+								finally
+								{
+									packet.PutPool();
+								}
+							}
+
+							ms.Position = pos + len;
+						}
 					}
 				}
+				else if (message is UnknownPacket unknownPacket)
+				{
+					Log.Warn(
+						$"Received unknown packet 0x{unknownPacket.Id:X2}\n{Packet.HexDump(unknownPacket.Message)}");
+				}
+				else
+				{
+					Log.Error(
+						$"Unhandled packet: {message.GetType().Name} 0x{message.Id:X2}, IP {_session.EndPoint.Address}");
+				}
 			}
-			else if (message is UnknownPacket unknownPacket)
+			finally
 			{
-				Log.Warn($"Received unknown packet 0x{unknownPacket.Id:X2}\n{Packet.HexDump(unknownPacket.Message)}");
-			}
-			else
-			{
-				Log.Error(
-					$"Unhandled packet: {message.GetType().Name} 0x{message.Id:X2}, IP {_session.EndPoint.Address}");
+				
 			}
 		}
 

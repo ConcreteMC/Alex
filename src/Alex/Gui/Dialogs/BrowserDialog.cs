@@ -1,10 +1,9 @@
 using System;
-using System.Drawing;
 using Alex.Common.Utils;
 using Alex.Gui.Elements.Web;
+using Alex.Interfaces;
 using Microsoft.Xna.Framework;
 using RocketUI;
-using Color = System.Drawing.Color;
 using FontStyle = RocketUI.FontStyle;
 
 namespace Alex.Gui.Dialogs

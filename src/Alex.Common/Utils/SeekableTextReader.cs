@@ -1,12 +1,15 @@
 using System;
 using System.IO;
 using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
+using Alex.Interfaces;
 using NLog;
 using NLog.Fluent;
 
 namespace Alex.Utils
 {
-	public class SeekableTextReader : TextReader
+	public class SeekableTextReader : TextReader, ISeekableTextReader
 	{
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(SeekableTextReader));
 

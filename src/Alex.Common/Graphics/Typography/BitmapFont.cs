@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using Alex.Common.Utils;
+using Alex.Interfaces;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using MiNET.Worlds;
@@ -69,37 +70,15 @@ namespace Alex.Common.Graphics.Typography
 
         #region Constructors
 
-        /*public BitmapFont(GraphicsDevice graphics, Image<Rgba32> bitmap, int gridSize, string[] characters) : this(
-            graphics, bitmap, gridSize, gridSize, characters)
-        {
-        }
-
-        public BitmapFont(GraphicsDevice graphics,
-            Image<Rgba32> bitmap,
-            int gridWidth,
-            int gridHeight,
-            string[] characters) : this(null, gridWidth, gridHeight, characters)
-        {
-            AsciiTexture = TextureUtils.BitmapToTexture2D(this, graphics, bitmap);
-            Scale = new Vector2(128f / bitmap.Width, 128f / bitmap.Height);
-            LoadGlyphs(graphics, new[] { new BitmapFontSource(bitmap, characters) });
-        }
-
-        public BitmapFont(Texture2D asciiTexture, int gridSize, string[] characters) : this(
-            asciiTexture, gridSize, gridSize, characters)
-        {
-        }
-
-        public BitmapFont(Texture2D asciiTexture, int gridWidth, int gridHeight, string[] characters) : this(
-            gridWidth, gridHeight, characters)
-        {
-            if (asciiTexture != null)
-                AsciiTexture = asciiTexture;
-        }*/
-
         private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(BitmapFont));
-        public BitmapFont(GraphicsDevice graphicsDevice, BitmapFontSource[] sources) : this(16, 16, sources.SelectMany(s => s.Characters).Chunk(16).Select(x => new string(x)).ToArray())
+        public BitmapFont(GraphicsDevice graphicsDevice, BitmapFontSource[] sources)
         {
+            GridWidth = 16;
+            GridHeight = 16;
+            
+            Characters = string.Join("", sources.SelectMany(s => s.Characters)).ToCharArray();
+            DefaultGlyph = new Glyph('\x0000', null, 0, 8, 1f);
+            
             LoadGlyphs(graphicsDevice, sources.Where(
                 x =>
                 {
@@ -111,24 +90,6 @@ namespace Alex.Common.Graphics.Typography
 
                     return true;
                 }).ToArray());
-        }
-
-        public BitmapFont(BitmapFontSource[] sources) : this(16, 16, sources.SelectMany(s => s.Characters).Chunk(16).Select(x => new string(x)).ToArray())
-        {
-        }
-
-        private BitmapFont(int gridWidth, int gridHeight, string[] characters)
-        {
-            GridWidth = gridWidth;
-            GridHeight = gridHeight;
-            Characters = string.Join("", characters).ToCharArray(); // characters.SelectMany(x => x).ToArray();
-
-            DefaultGlyph = new Glyph('\x0000', null, 0, 8, 1f);
-
-            //Glyphs = ArrayOf<Glyph>.Create((int) Characters.Max(x => (int) x), DefaultGlyph).Cast<IFontGlyph>()
-            //   .ToArray();
-
-            //Glyphs = new Dictionary<char, Glyph>(characters.Count); //new Glyph[characters.Count];
         }
 
         #endregion
@@ -144,12 +105,7 @@ namespace Alex.Common.Graphics.Typography
             Vector2 offset = Vector2.Zero;
             var firstGlyphOfLine = true;
 
-            bool styleRandom = false,
-                styleBold = false,
-                styleItalic = false,
-                styleUnderline = false,
-                styleStrikethrough = false;
-
+            var fontStyle = FontStyle.None;
             for (int i = 0; i < text.Length; i++)
             {
                 char c = text[i];
@@ -164,11 +120,7 @@ namespace Alex.Common.Graphics.Typography
                     finalLineHeight = LineSpacing;
                     firstGlyphOfLine = true;
 
-                    styleRandom = false;
-                    styleBold = false;
-                    styleStrikethrough = false;
-                    styleUnderline = false;
-                    styleItalic = false;
+                    fontStyle = FontStyle.None;
                 }
                 else if (c == '\x00A7')
                 {
@@ -182,31 +134,27 @@ namespace Alex.Common.Graphics.Typography
 
                     if (formatChar == 'k')
                     {
-                        styleRandom = true;
+                        //Obfuscated
                     }
                     else if (formatChar == 'l')
                     {
-                        styleBold = true;
+                        fontStyle |= FontStyle.Bold;
                     }
                     else if (formatChar == 'm')
                     {
-                        styleStrikethrough = true;
+                        fontStyle |= FontStyle.StrikeThrough;
                     }
                     else if (formatChar == 'n')
                     {
-                        styleUnderline = true;
+                        fontStyle |= FontStyle.Underline;
                     }
                     else if (formatChar == 'o')
                     {
-                        styleItalic = true;
+                        fontStyle |= FontStyle.Italic;
                     }
                     else if (formatChar == 'r')
                     {
-                        styleRandom = false;
-                        styleBold = false;
-                        styleStrikethrough = false;
-                        styleUnderline = false;
-                        styleItalic = false;
+                        fontStyle = FontStyle.None;
                     }
                 }
                 else
@@ -215,11 +163,10 @@ namespace Alex.Common.Graphics.Typography
 
                     if (firstGlyphOfLine)
                     {
-                        // offset.X += CharacterSpacing;
                         firstGlyphOfLine = false;
                     }
 
-                    offset.X += (glyph.Width) + (styleBold ? 1 : 0) + CharacterSpacing;
+                    offset.X += (glyph.Width) + (((fontStyle & FontStyle.Bold) != 0) ? 1 : 0) + CharacterSpacing;
 
                     finalLineHeight = MathF.Max(finalLineHeight, glyph.Height);
                     width = MathF.Max(width, offset.X);
@@ -243,6 +190,7 @@ namespace Alex.Common.Graphics.Typography
             float layerDepth = 0f) => DrawString(
             sb, text, position, (TextColor)color, style, scale, opacity, rotation, origin, effects, layerDepth);
 
+        private static char[] _colorChars = "0123456789abcdef".ToArray();
         public void DrawString(SpriteBatch sb,
             string text,
             Vector2 position,
@@ -331,6 +279,12 @@ namespace Alex.Common.Graphics.Typography
             var blendFactor = sb.GraphicsDevice.BlendFactor;
             sb.GraphicsDevice.BlendFactor = Color.White * opacity;
 
+            Vector2 underlineStart = Vector2.Zero;
+            Vector2 strikeStart = Vector2.Zero;
+            //Vector2 underlineEnd = Vector2.Zero;
+            
+            bool previousUnderline = false;
+            bool previousStrike = false;
             var p = new Vector2(offsetX, offsetY);
 
             for (int i = 0; i < text.Length; i++)
@@ -392,7 +346,7 @@ namespace Alex.Common.Graphics.Typography
                         styleItalic = false;
                         styleColor = color;
                     }
-                    else if ("0123456789abcdef".IndexOf(formatChar, StringComparison.Ordinal) > 0)
+                    else if (_colorChars.Contains(formatChar))
                     {
                         styleColor = TextColor.GetColor(formatChar);
                     }
@@ -410,12 +364,31 @@ namespace Alex.Common.Graphics.Typography
                     p.Y = offsetY;
                     
                     var width = glyph.Width + (styleBold ? 1f : 0f) + CharacterSpacing;
-
+                    var height = glyph.Height;// + (styleBold ? 1f : 0f) + CharacterSpacing;
                     if (glyph.Texture != null)
                     {
+                        var localRotation = rotation;
                         var localScale = glyph.Scale * scaleVal * Scale;
                         var localForegroundColor = styleColor.ForegroundColor * opacity;
                         var localBackgroundColor = styleColor.BackgroundColor * opacity;
+
+                        if (styleRandom)
+                        {
+                            c = (char)FastRandom.Instance.Next(64, 126);
+                            var g = GetGlyphOrDefault(c);
+
+                            if (g?.Texture != null)
+                            {
+                                //localScale.X *= (1f / glyph.Width) * g.Width;
+                                glyph = g;
+                                
+                            }
+                        }
+
+                        if (styleItalic)
+                        {
+                            localRotation += 0.15f;
+                        }
                         
                         if (dropShadow)
                         {
@@ -426,14 +399,14 @@ namespace Alex.Common.Graphics.Typography
                                 var boldShadowP = Vector2.Transform(shadowP + Vector2.UnitX, transformation);
 
                                 sb.Draw(
-                                    glyph.Texture, boldShadowP, localBackgroundColor, rotation,
+                                    glyph.Texture, boldShadowP, localBackgroundColor, localRotation,
                                     originVal, localScale, effects, layerDepth);
                             }
 
                             shadowP = Vector2.Transform(shadowP, transformation);
 
                             sb.Draw(
-                                glyph.Texture, shadowP, localBackgroundColor, rotation, originVal,
+                                glyph.Texture, shadowP, localBackgroundColor, localRotation, originVal,
                                 localScale, effects, layerDepth);
                         }
 
@@ -442,22 +415,46 @@ namespace Alex.Common.Graphics.Typography
                             var boldP = Vector2.Transform(p + Vector2.UnitX, transformation);
 
                             sb.Draw(
-                                glyph.Texture, boldP, localForegroundColor, rotation, originVal,
+                                glyph.Texture, boldP, localForegroundColor, localRotation, originVal,
                                 localScale, effects, layerDepth);
                         }
-
-                        /*	if (styleUnderline)
-                            {
-                                var lineStart = Vector2.Transform(p + new Vector2(0, 8), transformation);
-                                
-                                sb.DrawLine(2, lineStart, new Vector2(lineStart.X + width, lineStart.Y), styleColor.ForegroundColor * opacity, glyph.Scale * scaleVal * Scale, layerDepth);
-                            }*/
 
                         p = Vector2.Transform(p, transformation);
 
                         sb.Draw(
-                            glyph.Texture, p, localForegroundColor, rotation, originVal,
+                            glyph.Texture, p, localForegroundColor, localRotation, originVal,
                             localScale, effects, layerDepth);
+                    }
+                    
+                    //Underline
+                    if (styleUnderline && !previousUnderline)
+                    {
+                        //Start
+                        underlineStart = Vector2.Transform(p + new Vector2(0, height), transformation);
+                        previousUnderline = true;
+                    }
+                    else if (!styleUnderline && previousUnderline)
+                    {
+                        //End
+                        //underlineEnd = new Vector2(underlineStart.X + width, underlineStart.Y);
+                        previousUnderline = false;
+                        
+                        sb.DrawLine(2, underlineStart,new Vector2(underlineStart.X + width, underlineStart.Y), styleColor.ForegroundColor * opacity, glyph.Scale * scaleVal * Scale, layerDepth);
+                    }
+                    
+                    //Strikethrough
+                    if (styleStrikethrough && !previousStrike)
+                    {
+                        //Start
+                        strikeStart = Vector2.Transform(p + new Vector2(0, (height / 2)), transformation);
+                        styleStrikethrough = true;
+                    }
+                    else if (!styleStrikethrough && previousStrike)
+                    {
+                        //End
+                        styleStrikethrough = false;
+                        
+                        sb.DrawLine(2, strikeStart, new Vector2(strikeStart.X + width, strikeStart.Y), styleColor.ForegroundColor * opacity, glyph.Scale * scaleVal * Scale, layerDepth);
                     }
 
                     offsetX += width;

@@ -1,8 +1,8 @@
 ﻿using System;
-using System.Threading;
 using Alex.Common.Gui.Elements;
 using Alex.Common.Utils;
 using Alex.Common.World;
+using Alex.Interfaces;
 using Microsoft.Xna.Framework;
 using RocketUI;
 using RocketUI.Attributes;
@@ -12,7 +12,6 @@ namespace Alex.Gui.Elements
 {
 	public class TitleComponent : StackContainer, ITitleComponent, ITicked
 	{
-		private float _fadeValue = 1.0f;
 		private TextElement _title;
 		private TextElement _subTitle;
 

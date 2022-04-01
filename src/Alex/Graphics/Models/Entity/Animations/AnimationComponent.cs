@@ -1,30 +1,21 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
-using System.Text.RegularExpressions;
-using System.Threading;
 using Alex.Common.World;
 using Alex.Entities;
 using Alex.Entities.Components;
-using Alex.Entities.Passive;
 using Alex.Items;
 using Alex.ResourcePackLib.Abstraction;
 using Alex.ResourcePackLib.Json.Bedrock.Entity;
 using Alex.ResourcePackLib.Json.Bedrock.MoLang;
 using ConcreteMC.MolangSharp.Parser;
 using ConcreteMC.MolangSharp.Parser.Expressions;
-using ConcreteMC.MolangSharp.Parser.Expressions.BinaryOp;
-using ConcreteMC.MolangSharp.Parser.Visitors;
 using ConcreteMC.MolangSharp.Runtime;
 using ConcreteMC.MolangSharp.Runtime.Exceptions;
 using ConcreteMC.MolangSharp.Runtime.Struct;
 using ConcreteMC.MolangSharp.Runtime.Value;
 using ConcreteMC.MolangSharp.Utils;
-using Microsoft.Xna.Framework;
 using NLog;
-using Org.BouncyCastle.Utilities;
-using RocketUI.Input;
 
 namespace Alex.Graphics.Models.Entity.Animations
 {

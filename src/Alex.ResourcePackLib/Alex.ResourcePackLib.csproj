@@ -31,6 +31,5 @@
     </ItemGroup>
     <ItemGroup>
         <ProjectReference Include="..\Alex.Common\Alex.Common.csproj" />
-        <ProjectReference Include="..\Networking\Alex.Networking.Java\Alex.Networking.Java.csproj" />
     </ItemGroup>
 </Project>

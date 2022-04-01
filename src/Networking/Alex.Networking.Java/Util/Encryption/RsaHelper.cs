@@ -83,28 +83,17 @@ namespace Alex.Networking.Java.Util.Encryption
 					return null;
 				}
 
-
-				CspParameters parms = new CspParameters();
-				parms.Flags = CspProviderFlags.NoFlags;
-				parms.KeyContainerName = Guid.NewGuid().ToString().ToUpperInvariant();
-
-				parms.ProviderType =
-					((Environment.OSVersion.Version.Major > 5) || ((Environment.OSVersion.Version.Major == 5)
-					                                               && (Environment.OSVersion.Version.Minor >= 1))) ?
-						0x18 : 1;
-
 				var rsa = RSA.Create();
-				//RSACryptoServiceProvider rsa = new RSACryptoServiceProvider(parms);
-				RSAParameters rsAparams = new RSAParameters();
+				RSAParameters rsaParameters = new RSAParameters();
 
-				rsAparams.Modulus = rd.ReadBytes(DecodeIntegerSize(rd));
+				rsaParameters.Modulus = rd.ReadBytes(DecodeIntegerSize(rd));
 
-				GetTraits(rsAparams.Modulus.Length * 8, out int sizeMod, out int sizeExp);
+				GetTraits(rsaParameters.Modulus.Length * 8, out int sizeMod, out int sizeExp);
 
-				rsAparams.Modulus = AlignBytes(rsAparams.Modulus, sizeMod);
-				rsAparams.Exponent = AlignBytes(rd.ReadBytes(DecodeIntegerSize(rd)), sizeExp);
+				rsaParameters.Modulus = AlignBytes(rsaParameters.Modulus, sizeMod);
+				rsaParameters.Exponent = AlignBytes(rd.ReadBytes(DecodeIntegerSize(rd)), sizeExp);
 
-				rsa.ImportParameters(rsAparams);
+				rsa.ImportParameters(rsaParameters);
 
 				return rsa;
 			}

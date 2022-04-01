@@ -1,6 +1,3 @@
-using MiNET.Entities;
-using MiNET.Particles;
-
 namespace Alex.Utils
 {
 	public class ParticleConversion

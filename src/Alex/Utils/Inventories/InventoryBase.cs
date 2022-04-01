@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using Alex.Items;
 using Alex.Networking.Java.Packets.Play;
-using MiNET.Utils;
 using NLog;
 using RocketUI.Input;
 

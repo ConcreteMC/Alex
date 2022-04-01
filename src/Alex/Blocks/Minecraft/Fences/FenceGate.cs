@@ -1,8 +1,8 @@
 using Alex.Blocks.Materials;
 using Alex.Blocks.Properties;
-using Alex.Blocks.State;
 using Alex.Common.Blocks;
 using Alex.Common.Blocks.Properties;
+using Alex.Interfaces;
 
 namespace Alex.Blocks.Minecraft.Fences
 {

@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using Alex.Common.Input;
 using Microsoft.Xna.Framework;
 using RocketUI;
 using RocketUI.Events;

@@ -1,6 +1,4 @@
-using Alex.Blocks.Minecraft;
 using Alex.Common.Resources;
-using Alex.Items;
 using Alex.Networking.Java.Packets.Play;
 using Alex.Utils.Inventories;
 using Alex.Worlds;

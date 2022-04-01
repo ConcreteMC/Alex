@@ -1,8 +1,8 @@
+using System;
 using Alex.Networking.Java.Packets.Play;
 using Alex.Worlds;
 using ConcreteMC.MolangSharp.Attributes;
 using ConcreteMC.MolangSharp.Runtime;
-using MiNET.Entities;
 using NLog;
 
 namespace Alex.Entities.Passive
@@ -16,7 +16,7 @@ namespace Alex.Entities.Passive
 			"Saddle", "SaddleMouthL", "SaddleMouthR", "SaddleMouthLine", "SaddleMouthLineR", "HeadSaddle"
 		};
 
-		public MiNET.Utils.UUID Owner { get; set; }
+		public Guid Owner { get; set; }
 
 		public bool HasBred { get; set; }
 		public bool IsRearing { get; set; }
@@ -70,7 +70,7 @@ namespace Alex.Entities.Passive
 
 			if (entry.Index == 17 && entry is MetadataOptUUID uuid)
 			{
-				Owner = uuid.HasValue ? uuid.Value : null;
+				Owner = uuid.HasValue ? uuid.Value : default;
 			}
 		}
 

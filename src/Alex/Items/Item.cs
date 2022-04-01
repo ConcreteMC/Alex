@@ -2,6 +2,7 @@
 using Alex.Common.Items;
 using Alex.Common.Utils;
 using Alex.Graphics.Models.Items;
+using Alex.Networking.Java.Models;
 using fNbt;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;

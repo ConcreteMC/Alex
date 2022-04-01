@@ -1,5 +1,13 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Net.Http;
+using System.Threading;
+using System.Threading.Tasks;
+using Alex.Common.Blocks;
 using Alex.Common.Graphics.GpuResources;
+using Alex.Common.Utils.Vectors;
+using Alex.Interfaces;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
@@ -9,6 +17,20 @@ namespace Alex.Common
 	{
 		private static Texture2D WhiteTexture { get; set; }
 
+		public static BlockCoordinates GetBlockCoordinates(this BlockFace face)
+		{
+			return face switch
+			{
+				BlockFace.Down  => BlockCoordinates.Down,
+				BlockFace.Up    => BlockCoordinates.Up,
+				BlockFace.East  => BlockCoordinates.East,
+				BlockFace.West  => BlockCoordinates.West,
+				BlockFace.North => BlockCoordinates.North,
+				BlockFace.South => BlockCoordinates.South,
+				_               => BlockCoordinates.Zero
+			};
+		}
+		
 		public static void Init(GraphicsDevice gd)
 		{
 			WhiteTexture = new Texture2D(gd, 1, 1);
@@ -268,7 +290,6 @@ namespace Alex.Common
 		};
 
 		private static BasicEffect _effect;
-		private static VertexDeclaration _vertDecl;
 
 		#endregion
 
@@ -320,6 +341,65 @@ namespace Alex.Common
 
 			// Return formatted number with suffix
 			return readable.ToString("0.### ") + suffix;
+		}
+	}
+	
+	public static class HttpClientExtensions
+	{
+		private const int BufferSize = 8192;
+		
+		public struct HttpDownloadProgress
+		{
+			public ulong BytesReceived { get; set; }
+
+			public ulong? TotalBytesToReceive { get; set; }
+		}
+		
+		public static async Task<byte[]> DownloadDataAsync(this HttpClient client, Uri requestUri, Action<HttpDownloadProgress> progress, CancellationToken cancellationToken)
+		{
+			if (client == null)
+			{
+				throw new ArgumentNullException(nameof(client));
+			}
+
+			using (var responseMessage = await client.GetAsync(requestUri, HttpCompletionOption.ResponseHeadersRead, cancellationToken).ConfigureAwait(false))
+			{
+				responseMessage.EnsureSuccessStatusCode();
+
+				var content = responseMessage.Content;
+				if (content == null)
+				{
+					return Array.Empty<byte>();
+				}
+
+				var headers = content.Headers;
+				var contentLength = headers.ContentLength;
+				using (var responseStream = await content.ReadAsStreamAsync(cancellationToken).ConfigureAwait(false))
+				{
+					var buffer = new byte[BufferSize];
+					int bytesRead;
+					var bytes = new List<byte>();
+
+					var downloadProgress = new HttpDownloadProgress();
+					if (contentLength.HasValue)
+					{
+						downloadProgress.TotalBytesToReceive = (ulong)contentLength.Value;
+					}
+					progress?.Invoke(downloadProgress);
+					//progress?.Report(downloadProgress);
+
+					while ((bytesRead = await responseStream.ReadAsync(buffer, 0, BufferSize, cancellationToken).ConfigureAwait(false)) > 0)
+					{
+						bytes.AddRange(buffer.Take(bytesRead));
+
+						downloadProgress.BytesReceived += (ulong)bytesRead;
+						progress?.Invoke(downloadProgress);
+						//progress?.Report(downloadProgress);
+					}
+
+					return bytes.ToArray();
+				}
+			}
 		}
 	}
 }

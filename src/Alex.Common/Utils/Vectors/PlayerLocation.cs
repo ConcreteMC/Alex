@@ -1,75 +1,32 @@
 ﻿using System;
 using Alex.Common.Blocks;
+using Alex.Interfaces;
 using Microsoft.Xna.Framework;
 
 namespace Alex.Common.Utils.Vectors
 {
-	public class PlayerLocation : ICloneable
+	public sealed class PlayerLocation : ICloneable, IVector3
 	{
-		private float _headYaw;
-		private float _yaw;
-		private float _pitch;
+		public float X;
+		float IVector3.X => X;
+		
+		public float Y;
+		float IVector3.Y => Y;
+		
+		public float Z;
+		float IVector3.Z => Z;
 
-		public float X { get; set; }
-		public float Y { get; set; }
-		public float Z { get; set; }
+		public float Yaw;
+		public float Pitch;
+		public float HeadYaw;
+		public bool OnGround;
 
-		public float Yaw
+		public PlayerLocation() : this(0,0,0)
 		{
-			get => _yaw;
-			set
-			{
-				_yaw = value; // FixValue(value);
-			}
+			
 		}
 
-		public float Pitch
-		{
-			get => _pitch;
-			set
-			{
-				var pitch = value;
-				_pitch = pitch;
-			}
-		}
-
-		public float HeadYaw
-		{
-			get
-			{
-				return _headYaw;
-			}
-			set
-			{
-				_headYaw = value; //FixValue(value);
-			}
-		}
-
-		float FixYaw(float value)
-		{
-			if (value < 0f)
-				value = 360 + value;
-
-			return value;
-		}
-
-		float FixValue(float value)
-		{
-			var val = value;
-
-			if (val < 0f)
-				val = 360f - (MathF.Abs(val) % 360f);
-			else if (val > 360f)
-				val = val % 360f;
-
-			return val;
-		}
-
-		public bool OnGround { get; set; }
-
-		public PlayerLocation() { }
-
-		public PlayerLocation(float x, float y, float z, float headYaw = 0f, float yaw = 0f, float pitch = 0f)
+		public PlayerLocation(float x, float y, float z, float headYaw = 0f, float yaw = 0f, float pitch = 0f, bool onGround = false)
 		{
 			X = x;
 			Y = y;
@@ -77,6 +34,7 @@ namespace Alex.Common.Utils.Vectors
 			HeadYaw = headYaw;
 			Yaw = yaw;
 			Pitch = pitch;
+			OnGround = onGround;
 		}
 
 		public PlayerLocation(double x, double y, double z, float headYaw = 0f, float yaw = 0f, float pitch = 0f) :
@@ -87,38 +45,8 @@ namespace Alex.Common.Utils.Vectors
 
 		public void SetPitchBounded(float pitch)
 		{
-			/*pitch = FixValue(pitch);
-
-			if (pitch < 269.99f && pitch > 89.99f)
-			{
-				var max = MathF.Abs(270f - pitch);
-
-				var min = MathF.Abs(90f - pitch);
-
-				if (max < min)
-				{
-					pitch = 270.99f;
-				}
-				else if (min < max)
-				{
-					pitch = 89.99f;
-				}
-			}*/
-
-			_pitch = Math.Clamp(pitch, -89.99f, 89.99f);
+			Pitch = Math.Clamp(pitch, -89.99f, 89.99f);
 		}
-
-		/*public PlayerLocation(MiNET.Utils.PlayerLocation p)
-		{
-			if (p == null) return;
-			X = p.X;
-			Y = p.Y;
-			Z = p.Z;
-
-			Yaw = p.Yaw;
-			HeadYaw = p.HeadYaw;
-			Pitch = p.Pitch;
-		}*/
 
 		public BlockCoordinates GetCoordinates3D()
 		{

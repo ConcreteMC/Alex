@@ -1,5 +1,5 @@
 ﻿using System;
-using Alex.Common.Data;
+using Alex.Networking.Java.Models;
 using Alex.Networking.Java.Util;
 
 namespace Alex.Networking.Java.Packets.Play

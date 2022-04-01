@@ -1,9 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Drawing.Imaging;
 using System.Linq;
-using System.Numerics;
 using Alex.Blocks;
 using Alex.Blocks.Minecraft;
 using Alex.Common.Blocks;
@@ -11,32 +8,17 @@ using Alex.Common.Graphics;
 using Alex.Common.Utils;
 using Alex.Common.Utils.Vectors;
 using Alex.Graphics.Models;
-using Alex.Graphics.Models.Entity;
+using Alex.Interfaces;
 using Alex.Networking.Java.Packets.Play;
-using Alex.ResourcePackLib.Json.Bedrock.Entity;
 using Alex.Worlds;
-using DiscordRPC.Helper;
 using fNbt;
-using Microsoft.Xna.Framework.Graphics;
-using MiNET.Utils;
-using NLog.Fluent;
-using RocketUI.Utilities.Helpers;
 using SixLabors.ImageSharp;
-using SixLabors.ImageSharp.Advanced;
-using SixLabors.ImageSharp.Drawing;
 using SixLabors.ImageSharp.Drawing.Processing;
 using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp.Processing;
-using SixLabors.ImageSharp.Processing.Processors.Binarization;
-using SixLabors.ImageSharp.Processing.Processors.Filters;
 using Color = SixLabors.ImageSharp.Color;
-using ColorMatrix = SixLabors.ImageSharp.ColorMatrix;
-using ModelBone = Alex.Graphics.Models.ModelBone;
-using Point = SixLabors.ImageSharp.Point;
 using Vector3 = Microsoft.Xna.Framework.Vector3;
-using Microsoft.Xna.Framework;
 using NLog;
-using Rectangle = SixLabors.ImageSharp.Rectangle;
 
 namespace Alex.Entities.BlockEntities;
 
@@ -96,7 +78,7 @@ public class BannerBlockEntity : BlockEntity
 		}
 	}
 
-	public BannerBlockEntity(World level, BlockCoordinates coordinates) : base(level)
+	public BannerBlockEntity(World level, IVector3I coordinates) : base(level)
 	{
 		//        _color = color;
 		Type = "minecraft:standing_banner";

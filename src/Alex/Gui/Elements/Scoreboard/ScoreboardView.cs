@@ -31,7 +31,7 @@ namespace Alex.Gui.Elements.Scoreboard
 
 		public void AddObjective(ScoreboardObjective objective)
 		{
-			if (Objectives.TryAdd(objective.Name, objective))
+			if (Objectives.TryAdd(objective.ObjectiveName, objective))
 			{
 				objective.OnEntryAdded += OnEntryAdded;
 				objective.OnEntryRemoved += OnEntryRemoved;
@@ -51,7 +51,7 @@ namespace Alex.Gui.Elements.Scoreboard
 		{
 			if (sender is ScoreboardObjective objective)
 			{
-				EntityObjectives.AddOrUpdate(id, s => objective.Name, (s, s1) => objective.Name);
+				EntityObjectives.AddOrUpdate(id, s => objective.ObjectiveName, (s, s1) => objective.ObjectiveName);
 			}
 		}
 

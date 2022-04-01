@@ -1,10 +1,5 @@
-using System;
 using Alex.Blocks.Materials;
 using Alex.Blocks.Properties;
-using Alex.Blocks.State;
-using Alex.Common.Blocks;
-using Alex.Worlds.Abstraction;
-using Microsoft.Xna.Framework;
 
 namespace Alex.Blocks.Minecraft
 {

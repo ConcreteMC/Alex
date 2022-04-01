@@ -1,4 +1,3 @@
-using Alex.Net;
 using Alex.Worlds;
 
 namespace Alex.Entities.Projectiles

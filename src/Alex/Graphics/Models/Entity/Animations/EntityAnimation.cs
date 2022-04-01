@@ -1,12 +1,8 @@
-using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using Alex.ResourcePackLib.Json.Bedrock.Entity;
-using Alex.ResourcePackLib.Json.Bedrock.MoLang;
 using ConcreteMC.MolangSharp.Runtime;
 using ConcreteMC.MolangSharp.Runtime.Exceptions;
-using ConcreteMC.MolangSharp.Runtime.Value;
 using Microsoft.Xna.Framework;
 using NLog;
 

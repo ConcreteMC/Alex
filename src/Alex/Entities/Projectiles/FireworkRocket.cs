@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using Alex.Net;
 using Alex.Particles;
 using Alex.Worlds;
 using Microsoft.Xna.Framework;

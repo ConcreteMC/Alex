@@ -1,7 +1,5 @@
-using System.IO;
-using Alex.Common.Commands.Parsers;
-using Alex.Common.Data;
-using NLog.Fluent;
+using Alex.Interfaces;
+using Alex.Networking.Java.Commands.Parsers;
 
 namespace Alex.Utils.Commands
 {
@@ -19,7 +17,7 @@ namespace Alex.Utils.Commands
 			TypeIdentifier = typeIdentifier;
 		}
 
-		public virtual bool TryParse(SeekableTextReader reader)
+		public virtual bool TryParse(ISeekableTextReader reader)
 		{
 			if (reader.ReadSingleWord(out _) > 0)
 			{

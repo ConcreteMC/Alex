@@ -1,5 +1,4 @@
-﻿using System.Linq;
-using Alex.Common.Gui.Elements;
+﻿using Alex.Common.Gui.Elements;
 using Alex.Common.Gui.Graphics;
 using Alex.Gamestates.Common;
 using Alex.Gamestates.MainMenu;

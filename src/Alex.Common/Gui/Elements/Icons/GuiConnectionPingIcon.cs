@@ -52,7 +52,6 @@ namespace Alex.Common.Gui.Elements.Icons
 
 		private bool _isPending;
 		private int _animationFrame;
-		private bool _isPendingUpdate;
 		private bool _isOutdated = false;
 		private long _ping = 0;
 		private bool _renderLatency = false;

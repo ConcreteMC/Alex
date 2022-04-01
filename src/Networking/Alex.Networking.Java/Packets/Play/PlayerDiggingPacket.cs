@@ -1,7 +1,5 @@
 ﻿using System;
-using Alex.Common.Blocks;
-using Alex.Common.Utils;
-using Alex.Common.Utils.Vectors;
+using Alex.Interfaces;
 using Alex.Networking.Java.Util;
 
 namespace Alex.Networking.Java.Packets.Play
@@ -9,7 +7,7 @@ namespace Alex.Networking.Java.Packets.Play
 	public class PlayerDiggingPacket : Packet<PlayerDiggingPacket>
 	{
 		public DiggingStatus Status;
-		public BlockCoordinates Location;
+		public IVector3I Location;
 		public BlockFace Face;
 
 		public PlayerDiggingPacket()
@@ -64,6 +62,18 @@ namespace Alex.Networking.Java.Packets.Play
 
 					break;
 			}
+		}
+		
+		public enum DiggingStatus
+		{
+			Started = 0,
+			Cancelled = 1,
+			Finished = 2,
+			DropItemStack = 3,
+			DropItem = 4,
+			ShootArrow = 5,
+			FinishEating = 5,
+			SwapItemInHand = 6
 		}
 	}
 }

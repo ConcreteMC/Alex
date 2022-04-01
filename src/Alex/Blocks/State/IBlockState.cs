@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using Alex.Blocks.Minecraft;
 using Alex.Common.Blocks.Properties;
 using Alex.Graphics.Models.Blocks;
 

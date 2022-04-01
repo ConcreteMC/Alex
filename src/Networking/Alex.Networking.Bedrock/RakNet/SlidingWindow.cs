@@ -291,7 +291,6 @@ namespace Alex.Networking.Bedrock.RakNet
 				return 0;
 
 			return LastRtt;
-			return EstimatedRtt;
 		}
 
 		/// <summary>

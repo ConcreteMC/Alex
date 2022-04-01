@@ -5,10 +5,9 @@ using System.Net;
 using System.Net.Http;
 using System.Text.RegularExpressions;
 using System.Threading;
-using System.Threading.Tasks;
+using Alex.Common;
 using Alex.Common.Services;
 using Alex.Common.Utils;
-using Alex.Gamestates.InGame;
 using NLog;
 
 namespace Alex.Utils.Assets
@@ -88,46 +87,49 @@ namespace Alex.Utils.Assets
 							progressReceiver?.UpdateProgress(
 								0, "Downloading latest bedrock assets...", "This could take a while...");
 
-							/* zipDownloadHeaders = await httpClient.SendAsync(new HttpRequestMessage(HttpMethod.Get,
-							     zipDownloadHeaders.Headers.Location), HttpCompletionOption.ResponseContentRead);
-							 var content = await zipDownloadHeaders.Content.ReadAsByteArrayAsync();*/
 							Stopwatch sw = new Stopwatch();
-							WebClient wc = new WebClient();
 
-							wc.DownloadProgressChanged += (sender, args) =>
+							using (HttpClient c = new HttpClient())
 							{
-								var downloadSpeed =
-									$"Download speed: {FormattingUtils.GetBytesReadable((long)(Convert.ToDouble(args.BytesReceived) / sw.Elapsed.TotalSeconds), 2)}/s";
+								string archivePath = string.Empty;
+								
+								var downloadTask = c.DownloadDataAsync(zipDownloadHeaders.RequestMessage.RequestUri, (p) =>
+								{
+									var downloadSpeed =
+										$"Download speed: {FormattingUtils.GetBytesReadable((long)(Convert.ToDouble(p.BytesReceived) / sw.Elapsed.TotalSeconds), 2)}/s";
 
-								progressReceiver?.UpdateProgress(
-									args.ProgressPercentage, $"Downloading latest bedrock assets...", downloadSpeed);
-							};
+									var totalSize = p.TotalBytesToReceive ?? 1;
+									var progressPercentage = (int)Math.Ceiling((100d / totalSize) * p.BytesReceived);
+									
+									progressReceiver?.UpdateProgress(
+										progressPercentage, $"Downloading latest bedrock assets...", downloadSpeed);
+									
+								}, CancellationToken.None).ContinueWith(
+									r =>
+									{
+										if (r.IsFaulted)
+										{
+											Log.Error(r.Exception, "Failed to download bedrock assets...");
+											return;
+										}
 
-							bool complete = false;
-							string archivePath = string.Empty;
+										var content = r.Result;
 
-							wc.DownloadDataCompleted += (sender, args) =>
-							{
-								var content = args.Result;
+										archivePath = Path.Combine("assets", $"bedrock-{latestVersion}.zip");
 
-								archivePath = Path.Combine("assets", $"bedrock-{latestVersion}.zip");
+										// save locally
 
-								// save locally
+										Storage.TryWriteString(CurrentBedrockVersionStorageKey, latestVersion);
 
-								Storage.TryWriteString(CurrentBedrockVersionStorageKey, latestVersion);
-
-								Storage.TryWriteBytes(archivePath, content);
-
-								complete = true;
-							};
-
-							wc.DownloadDataAsync(zipDownloadHeaders.RequestMessage.RequestUri);
-							sw.Restart();
-
-							SpinWait.SpinUntil(() => complete);
-
-							path = archivePath;
-
+										Storage.TryWriteBytes(archivePath, content);
+									});
+								
+								sw.Restart();
+								
+								SpinWait.SpinUntil(() => downloadTask.IsCompleted);
+								path = archivePath;
+							}
+							
 							return true;
 						}
 					}

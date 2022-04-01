@@ -1,10 +1,8 @@
-using System.Drawing;
 using Alex.Entities.Generic;
 using Alex.Items;
 using Alex.Networking.Java.Packets.Play;
 using Alex.Worlds;
 using Microsoft.Xna.Framework;
-using MiNET.Utils;
 using MiNET.Utils.Metadata;
 
 namespace Alex.Entities.Projectiles

@@ -2,9 +2,7 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using Alex.Blocks;
 using Alex.Items;
-using Alex.Worlds.Multiplayer.Bedrock;
 using Alex.Worlds.Singleplayer;
-using MiNET;
 using Newtonsoft.Json;
 using NLog;
 

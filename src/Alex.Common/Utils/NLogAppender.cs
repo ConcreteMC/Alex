@@ -117,7 +117,7 @@ namespace Alex.Common.Utils
 				(((log4net.Repository.Hierarchy.Hierarchy)repo)).RaiseConfigurationChanged(EventArgs.Empty);
 				BasicConfigurator.Configure(repo, new NLogAppender());
 			}
-			catch (Exception ex) { }
+			catch (Exception) { }
 		}
 	}
 }

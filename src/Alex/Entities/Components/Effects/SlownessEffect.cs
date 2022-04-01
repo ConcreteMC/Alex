@@ -1,6 +1,8 @@
-using Alex.Common.Entities.Properties;
+using System;
 using Alex.Networking.Java.Packets.Play;
 using Microsoft.Xna.Framework;
+using Modifier = Alex.Networking.Java.Packets.Play.Modifier;
+using ModifierMode = Alex.Networking.Java.Packets.Play.ModifierMode;
 
 namespace Alex.Entities.Components.Effects
 {
@@ -9,7 +11,7 @@ namespace Alex.Entities.Components.Effects
 		private double _multiplier = -0.15000000596046448;
 
 		private Modifier _modifier = new Modifier(
-			new MiNET.Utils.UUID("7107de5e-7ce8-4030-940e-514c1f160890"), 0d, ModifierMode.Multiply);
+			 Guid.Parse("7107de5e-7ce8-4030-940e-514c1f160890"), 0d, ModifierMode.Multiply);
 
 		/// <inheritdoc />
 		public SlownessEffect() : base(EffectType.Slowness)

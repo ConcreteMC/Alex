@@ -1,7 +1,6 @@
 using System;
 using System.Net;
 using Alex.Common.Services;
-using Alex.Net;
 using Alex.Net.Bedrock;
 using Alex.Networking.Bedrock.RakNet;
 using Alex.Utils;

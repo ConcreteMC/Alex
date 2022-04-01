@@ -2,21 +2,13 @@
 using System.IO;
 using System.Linq;
 using System.Net;
-using System.Net.Sockets;
-using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using Alex.Common.Data;
-using Alex.Common.Utils;
+using Alex.Interfaces;
+using Alex.Networking.Java.Models;
 using fNbt;
 using Microsoft.Xna.Framework;
-using Org.BouncyCastle.Crypto;
-using Org.BouncyCastle.Crypto.Engines;
-using Org.BouncyCastle.Crypto.IO;
-using Org.BouncyCastle.Crypto.Modes;
-using Org.BouncyCastle.Crypto.Parameters;
-using BlockCoordinates = Alex.Common.Utils.Vectors.BlockCoordinates;
 
 namespace Alex.Networking.Java.Util
 {
@@ -30,8 +22,9 @@ namespace Alex.Networking.Java.Util
 
 		public void Read(Span<byte> memory, int count)
 		{
-			var data = BaseStream.ReadToSpan(count);
-			data.CopyTo(memory);
+			BaseStream.Read(memory.Slice(0, count));
+			//var data = BaseStream.ReadToSpan(count);
+			//data.CopyTo(memory);
 		}
 
 		public void Write(in Memory<byte> buffer, int offset, in int bufferLength)
@@ -144,7 +137,7 @@ namespace Alex.Networking.Java.Util
 			{
 				read = (byte)ReadUnsignedByte();
 				int value = (read & 0x7f);
-				result |= (value << (7 * numRead));
+				result |= (uint) (value << (7 * numRead));
 
 				numRead++;
 
@@ -253,32 +246,7 @@ namespace Alex.Networking.Java.Util
 			return new Vector3(x, y, z);
 		}
 
-		public async Task<Vector3> ReadPositionAsync()
-		{
-			var val = await ReadULongAsync();
-			var x = Convert.ToSingle(val >> 38);
-			var y = Convert.ToSingle(val & 0xFFF);
-			var z = Convert.ToSingle(val << 26 >> 38);
-
-			if (x >= (2 ^ 25))
-			{
-				x -= 2 ^ 26;
-			}
-
-			if (y >= (2 ^ 11))
-			{
-				y -= 2 ^ 12;
-			}
-
-			if (z >= (2 ^ 25))
-			{
-				z -= 2 ^ 26;
-			}
-
-			return new Vector3(x, y, z);
-		}
-
-		public BlockCoordinates ReadBlockCoordinates()
+		public IVector3I ReadBlockCoordinates()
 		{
 			ulong value = ReadULong();
 
@@ -295,27 +263,7 @@ namespace Alex.Networking.Java.Util
 			if (z >= Math.Pow(2, 25))
 				z -= (long)Math.Pow(2, 26);
 
-			return new BlockCoordinates((int)x, (int)y, (int)z);
-		}
-
-		public async Task<BlockCoordinates> ReadBlockCoordinatesAsync()
-		{
-			ulong value = await ReadULongAsync();
-
-			long x = (long)(value >> 38);
-			long y = (long)(value & 0xFFF);
-			long z = (long)(value << 26 >> 38);
-
-			if (x >= Math.Pow(2, 25))
-				x -= (long)Math.Pow(2, 26);
-
-			if (y >= Math.Pow(2, 11))
-				y -= (long)Math.Pow(2, 12);
-
-			if (z >= Math.Pow(2, 25))
-				z -= (long)Math.Pow(2, 26);
-
-			return new BlockCoordinates((int)x, (int)y, (int)z);
+			return new Vector3I((int)x, (int)y, (int)z);
 		}
 
 		public SlotData ReadSlot()
@@ -371,7 +319,7 @@ namespace Alex.Networking.Java.Util
 			WriteLong(toSend);
 		}
 
-		public void WritePosition(BlockCoordinates pos)
+		public void WritePosition(IVector3I pos)
 		{
 			WritePosition(new Vector3(pos.X, pos.Y, pos.Z));
 		}
@@ -395,23 +343,6 @@ namespace Alex.Networking.Java.Util
 		public int WriteVarInt(int value)
 		{
 			return WriteRawVarInt32((uint)value);
-			int write = 0;
-
-			do
-			{
-				byte temp = (byte)(value & 127);
-				value >>= 7;
-
-				if (value != 0)
-				{
-					temp |= 128;
-				}
-
-				WriteByte(temp);
-				write++;
-			} while (value != 0);
-
-			return write;
 		}
 
 		public int WriteVarLong(long value)
@@ -489,9 +420,9 @@ namespace Alex.Networking.Java.Util
 			Write(EndianUtils.HostToNetworkOrderLong(data));
 		}
 
-		public void WriteUuid(MiNET.Utils.UUID uuid)
+		public void WriteUuid(Guid uuid)
 		{
-			var guid = uuid.GetBytes();
+			var guid = uuid.ToByteArray();
 			var long1 = new byte[8];
 			var long2 = new byte[8];
 			Array.Copy(guid, 0, long1, 0, 8);
@@ -500,12 +431,12 @@ namespace Alex.Networking.Java.Util
 			Write(long2);
 		}
 
-		public MiNET.Utils.UUID ReadUuid()
+		public Guid ReadUuid()
 		{
 			var long1 = Read(8);
 			var long2 = Read(8);
 
-			return new MiNET.Utils.UUID(long1.Concat(long2).ToArray());
+			return new Guid(long1.Concat(long2).ToArray());
 		}
 
 		#endregion
@@ -568,14 +499,14 @@ namespace Alex.Networking.Java.Util
 
 		public string ReadChatObject()
 		{
-			string raw = ReadString();
+			var raw = ReadString();
 
 			if (ChatObject.TryParse(raw, out string result))
 			{
 				return result;
 			}
 
-			return raw; // new ChatObject(raw);
+			return raw;
 		}
 	}
 }

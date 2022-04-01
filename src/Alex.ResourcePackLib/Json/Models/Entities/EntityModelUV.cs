@@ -1,5 +1,6 @@
 using System;
 using Alex.Common.Blocks;
+using Alex.Interfaces;
 using Alex.ResourcePackLib.Json.Converters;
 using Microsoft.Xna.Framework;
 using Newtonsoft.Json;
@@ -38,32 +39,21 @@ namespace Alex.ResourcePackLib.Json.Models.Entities
 				case BlockFace.Down:
 					return Down;
 
-					break;
-
 				case BlockFace.Up:
 					return Up;
-
-					break;
 
 				case BlockFace.East:
 					return East;
 
-					break;
 
 				case BlockFace.West:
 					return West;
 
-					break;
-
 				case BlockFace.North:
 					return North;
 
-					break;
-
 				case BlockFace.South:
 					return South;
-
-					break;
 			}
 
 			return null;

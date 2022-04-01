@@ -1,7 +1,6 @@
 using Alex.Worlds;
 using ConcreteMC.MolangSharp.Attributes;
 using Microsoft.Xna.Framework;
-using MiNET.Entities;
 
 namespace Alex.Entities.Hostile
 {

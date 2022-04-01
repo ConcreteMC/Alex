@@ -1,5 +1,6 @@
+using System.Linq;
 using System.Threading;
-using Alex.Common.Commands.Nodes;
+using Alex.Common.Data;
 using Alex.Networking.Java;
 using Alex.Networking.Java.Packets.Play;
 using Alex.Utils.Commands;
@@ -38,7 +39,13 @@ namespace Alex.Net.Java
 		{
 			if (tabComplete.TransactionId == _transactionIds)
 			{
-				_callback?.Invoke(tabComplete.Start, tabComplete.Length, tabComplete.Matches);
+				_callback?.Invoke(tabComplete.Start, tabComplete.Length, tabComplete.Matches.Select(x => new TabCompleteMatch()
+				{
+					Description = x.Description,
+					Match = x.Match,
+					Tooltip = x.Tooltip,
+					HasTooltip = x.HasTooltip
+				}).ToArray());
 			}
 		}
 	}

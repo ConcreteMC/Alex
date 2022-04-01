@@ -1,11 +1,14 @@
 using System;
 using System.IO;
 using System.Reflection;
+using NLog;
 
 namespace Alex.Common.Utils
 {
 	public class EmbeddedResourceUtils
 	{
+		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(EmbeddedResourceUtils));
+		
 		public static byte[] GetApiRequestFile(string namespaceAndFileName)
 		{
 			try
@@ -28,11 +31,11 @@ namespace Alex.Common.Utils
 					return ms.ToArray();
 				}
 			}
-
 			catch (Exception exception)
 			{
-				//ApplicationProvider.WriteToLog<EmbeddedResource>().Error(exception.Message);
-				throw new Exception($"Failed to read Embedded Resource {namespaceAndFileName}");
+				Log.Error(exception, $"Failed to read Embedded Resource {namespaceAndFileName}");
+
+				return null;
 			}
 		}
 	}

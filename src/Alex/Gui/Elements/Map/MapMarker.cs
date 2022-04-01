@@ -1,5 +1,3 @@
-using System;
-
 namespace Alex.Gui.Elements.Map
 {
 	public enum MapMarker

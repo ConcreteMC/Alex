@@ -1,56 +1,38 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.Drawing;
 using System.Linq;
-using System.Runtime.CompilerServices;
 using System.Threading;
 using Alex.Blocks;
-using Alex.Blocks.Minecraft;
 using Alex.Blocks.State;
-using Alex.Blocks.Storage;
 using Alex.Common;
-using Alex.Common.Blocks;
 using Alex.Common.Data.Options;
 using Alex.Common.Graphics;
-using Alex.Common.Graphics.GpuResources;
-using Alex.Common.Services;
 using Alex.Common.Utils;
-using Alex.Common.Utils.Collections;
 using Alex.Common.World;
 using Alex.Entities;
 using Alex.Entities.BlockEntities;
-using Alex.Gamestates;
 using Alex.Graphics.Camera;
 using Alex.Graphics.Models;
-using Alex.Graphics.Models.Entity;
-using Alex.Graphics.Models.Items;
-using Alex.Gui;
 using Alex.Gui.Elements.Map;
+using Alex.Interfaces;
 using Alex.Net;
-using Alex.Net.Bedrock;
-using Alex.Utils;
 using Alex.Utils.Threading;
 using Alex.Worlds.Chunks;
-using Alex.Worlds.Lighting;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using MiNET;
-using MiNET.Utils;
 using MiNET.Worlds;
 using NLog;
 using RocketUI;
 using BlockCoordinates = Alex.Common.Utils.Vectors.BlockCoordinates;
-using BlockFace = Alex.Common.Blocks.BlockFace;
 using ChunkColumn = Alex.Worlds.Chunks.ChunkColumn;
 using ChunkCoordinates = Alex.Common.Utils.Vectors.ChunkCoordinates;
 using Color = Microsoft.Xna.Framework.Color;
 using IBlockAccess = Alex.Worlds.Abstraction.IBlockAccess;
 using Player = Alex.Entities.Player;
 using PlayerLocation = Alex.Common.Utils.Vectors.PlayerLocation;
-using Skin = Alex.Common.Utils.Skin;
 
 //using System.Reflection.Metadata.Ecma335;
 
@@ -1278,7 +1260,7 @@ namespace Alex.Worlds
 			ThunderLevel = thunderLevel;
 		}
 
-		public void SetBlockState(BlockCoordinates coordinates,
+		public void SetBlockState(IVector3I coordinates,
 			BlockState blockState,
 			BlockUpdatePriority priority = BlockUpdatePriority.High)
 		{
@@ -1301,12 +1283,12 @@ namespace Alex.Worlds
 			}
 		}
 
-		public void RemovePlayerListItem(MiNET.Utils.UUID item)
+		public void RemovePlayerListItem(Guid item)
 		{
 			PlayerList.Entries.TryRemove(item, out _);
 		}
 
-		public void UpdatePlayerLatency(MiNET.Utils.UUID uuid, int latency)
+		public void UpdatePlayerLatency(Guid uuid, int latency)
 		{
 			if (Player.UUID.Equals(uuid))
 			{
@@ -1326,7 +1308,7 @@ namespace Alex.Worlds
 			}
 		}
 
-		public void UpdatePlayerListDisplayName(MiNET.Utils.UUID uuid, string displayName)
+		public void UpdatePlayerListDisplayName(Guid uuid, string displayName)
 		{
 			if (PlayerList.Entries.TryGetValue(uuid, out var item))
 			{

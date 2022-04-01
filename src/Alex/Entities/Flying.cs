@@ -1,7 +1,5 @@
 using Alex.Entities.Hostile;
-using Alex.Net;
 using Alex.Worlds;
-using MiNET.Entities;
 
 namespace Alex.Entities
 {

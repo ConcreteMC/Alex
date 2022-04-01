@@ -1,5 +1,4 @@
 using Alex.Blocks.Properties;
-using Alex.Blocks.State;
 using Alex.Common.Blocks.Properties;
 
 namespace Alex.Blocks.Minecraft

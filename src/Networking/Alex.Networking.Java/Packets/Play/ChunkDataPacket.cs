@@ -34,9 +34,10 @@ namespace Alex.Networking.Java.Packets.Play
 			HeightMaps = await stream.ReadNbtCompoundAsync();
 
 			int i = await stream.ReadVarIntAsync();
-			Buffer = new Memory<byte>(new byte[i]);
-			await stream.ReadAsync(Buffer);
-
+			
+			byte[] data = await stream.ReadAsync(i);
+			Buffer = new Memory<byte>(data);
+			
 			int tileEntities = await stream.ReadVarIntAsync();
 
 			for (int k = 0; k < tileEntities; k++)
@@ -106,7 +107,13 @@ namespace Alex.Networking.Java.Packets.Play
 				Data = await stream.ReadNbtCompoundAsync();
 			}
 
-			public async Task WriteAsync(MinecraftStream stream) { }
+			public async Task WriteAsync(MinecraftStream stream)
+			{
+				await stream.WriteByteAsync((byte) (X << 4 | Z));
+				await stream.WriteShortAsync(Y);
+				await stream.WriteVarIntAsync(Type);
+				await stream.WriteNbtCompoundAsync(Data);
+			}
 		}
 	}
 }

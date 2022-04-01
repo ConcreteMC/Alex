@@ -1,4 +1,3 @@
-using System.Threading.Tasks;
 using Alex.Blocks;
 using Alex.Blocks.Materials;
 using Alex.Blocks.Minecraft;
@@ -88,7 +87,21 @@ namespace Alex.Worlds.Multiplayer.Java
 		public void Read(MinecraftStream ms)
 		{
 			var blockCount = ms.ReadShort();
-			BlockStorages[0].Read(ms);
+			
+			var blockStorages = BlockStorages;
+			if (blockStorages == null)
+			{
+				blockStorages = new BlockStorage[1];
+			}
+
+			var firstStorage = blockStorages[0];
+			if (firstStorage == null)
+			{
+				blockStorages[0] = new BlockStorage();
+			}
+			blockStorages[0].Read(ms);
+
+			BlockStorages = blockStorages;
 		}
 	}
 }

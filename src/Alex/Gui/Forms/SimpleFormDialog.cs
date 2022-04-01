@@ -61,8 +61,6 @@ namespace Alex.Gui.Forms
 
 							continue;
 
-							break;
-
 						case "path":
 							break;
 					}

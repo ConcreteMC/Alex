@@ -1,37 +1,20 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.IO;
 using System.Linq;
-using System.Threading;
-using Alex.Blocks;
-using Alex.Blocks.Minecraft;
-using Alex.Blocks.State;
-using Alex.Common.Graphics.GpuResources;
 using Alex.Common.Resources;
 using Alex.Common.Utils;
-using Alex.Gamestates.InGame;
-using Alex.Graphics.Models.Blocks;
 using Alex.Graphics.Packing;
-using Alex.ResourcePackLib;
-using Alex.ResourcePackLib.Abstraction;
-using Alex.ResourcePackLib.Json.BlockStates;
 using Alex.ResourcePackLib.Json.Textures;
-using Alex.Utils;
 using Alex.Worlds.Singleplayer;
-using JetBrains.Annotations;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using NLog;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Advanced;
-using SixLabors.ImageSharp.Formats.Png;
 using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp.Processing;
-using SixLabors.ImageSharp.Processing.Processors.Transforms;
 using Color = SixLabors.ImageSharp.Color;
-using Point = SixLabors.ImageSharp.Point;
-using Rectangle = SixLabors.ImageSharp.Rectangle;
 using TextureInfo = Alex.Graphics.Packing.TextureInfo;
 
 namespace Alex.Graphics
@@ -193,12 +176,9 @@ namespace Alex.Graphics
 			_textureAtlas = GetMipMappedTexture2D(device, img);
 			_atlasLocations = textureInfos;
 
-			int count = 0;
-
 			Log.Debug(
 				$"Atlas size: W={_textureAtlas.Width},H={_textureAtlas.Height} | TW: {TextureWidth} TH: {TextureHeight}");
 
-			// img.SaveAsPng($"/home/kenny/Documents/{Selector}/{count}.png");
 			img?.Dispose();
 
 			oldAtlas?.Dispose();

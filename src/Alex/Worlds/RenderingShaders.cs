@@ -1,8 +1,6 @@
 using System;
 using Alex.Common.Graphics;
-using Alex.Graphics.Camera;
 using Alex.Graphics.Effect;
-using Alex.Graphics.Models;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 

@@ -13,12 +13,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Threading.Tasks.Dataflow;
 using Alex.Blocks;
-using Alex.Common;
-using Alex.Common.Commands.Nodes;
-using Alex.Common.Commands.Parsers;
-using Alex.Common.Data;
 using Alex.Common.Data.Options;
-using Alex.Common.Graphics.GpuResources;
 using Alex.Common.Services;
 using Alex.Common.Utils;
 using Alex.Common.Utils.Collections;
@@ -28,16 +23,17 @@ using Alex.Entities.BlockEntities;
 using Alex.Entities.Components.Effects;
 using Alex.Entities.Generic;
 using Alex.Entities.Projectiles;
-using Alex.Gamestates;
 using Alex.Gamestates.InGame;
 using Alex.Gui.Dialogs.Containers;
-using Alex.Gui.Elements;
 using Alex.Gui.Elements.Scoreboard;
 using Alex.Items;
 using Alex.Net;
 using Alex.Net.Java;
 using Alex.Networking.Java;
+using Alex.Networking.Java.Commands.Nodes;
+using Alex.Networking.Java.Commands.Parsers;
 using Alex.Networking.Java.Events;
+using Alex.Networking.Java.Models;
 using Alex.Networking.Java.Packets;
 using Alex.Networking.Java.Packets.Handshake;
 using Alex.Networking.Java.Packets.Login;
@@ -45,9 +41,7 @@ using Alex.Networking.Java.Packets.Play;
 using Alex.Networking.Java.Util;
 using Alex.Networking.Java.Util.Encryption;
 using Alex.Particles;
-using Alex.ResourcePackLib.Json.Models.Entities;
 using Alex.Utils;
-using Alex.Utils.Commands;
 using Alex.Utils.Inventories;
 using Alex.Utils.Skins;
 using Alex.Worlds.Abstraction;
@@ -55,20 +49,15 @@ using Alex.Worlds.Lighting;
 using Alex.Worlds.Multiplayer.Java;
 using fNbt;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
 using MiNET;
 using MiNET.Entities;
 using MiNET.Worlds;
 using Newtonsoft.Json;
 using NLog;
-using NLog.Fluent;
 using RocketUI.Input;
 using BlockCoordinates = Alex.Common.Utils.Vectors.BlockCoordinates;
-using ChunkColumn = Alex.Worlds.Chunks.ChunkColumn;
 using ChunkCoordinates = Alex.Common.Utils.Vectors.ChunkCoordinates;
 using Command = Alex.Utils.Commands.Command;
-using CommandProperty = Alex.Utils.Commands.CommandProperty;
 using ConnectionState = Alex.Networking.Java.ConnectionState;
 using Effect = Alex.Entities.Components.Effects.Effect;
 using Entity = Alex.Entities.Entity;
@@ -457,7 +446,6 @@ namespace Alex.Worlds.Multiplayer
 			World.ChunkManager.CalculateBlockLighting = false;
 		}
 
-		private bool _hasDoneInitialChunks = false;
 		private int _chunksReceived = 0;
 
 		private LoadResult DetermineDisconnectReason()
@@ -559,7 +547,6 @@ namespace Alex.Worlds.Multiplayer
 					}
 					else
 					{
-						_hasDoneInitialChunks = true;
 						progressReport(LoadingState.Spawning, 99);
 					}
 
@@ -585,7 +572,7 @@ namespace Alex.Worlds.Multiplayer
 
 
 		public Entity SpawnMob(int entityId,
-			MiNET.Utils.UUID uuid,
+			Guid uuid,
 			EntityType type,
 			PlayerLocation position,
 			Vector3 velocity)
@@ -1126,11 +1113,13 @@ namespace Alex.Worlds.Multiplayer
 			if (container == null)
 				return;
 
+			var title = packet.Title;
+
 			switch (packet.Action)
 			{
 				case BossBarPacket.BossBarAction.Add:
 					container.Add(
-						packet.Uuid, packet.Title, packet.Health, packet.Color, packet.Divisions, packet.Flags);
+						packet.Uuid, title, packet.Health, packet.Color, packet.Divisions, packet.Flags);
 
 					break;
 
@@ -1145,7 +1134,7 @@ namespace Alex.Worlds.Multiplayer
 					break;
 
 				case BossBarPacket.BossBarAction.UpdateTitle:
-					container.UpdateTitle(packet.Uuid, packet.Title);
+					container.UpdateTitle(packet.Uuid, title);
 
 					break;
 
@@ -1537,11 +1526,8 @@ namespace Alex.Worlds.Multiplayer
 			{
 				if (packet.Action == UpdateScorePacket.UpdateScoreAction.CreateOrUpdate)
 				{
-					string displayName = packet.EntityName;
-					ScoreboardEntry entry = null;
-
 					obj.AddOrUpdate(
-						packet.EntityName, new ScoreboardEntry(packet.EntityName, (uint)packet.Value, displayName));
+						packet.EntityName, new ScoreboardEntry(packet.EntityName, (uint)packet.Value, packet.EntityName));
 
 					if (TeamsManager.TryGetEntityTeam(packet.EntityName, out var entityTeam))
 					{
@@ -2120,7 +2106,7 @@ namespace Alex.Worlds.Multiplayer
 					break;
 
 				case GameStateReason.ChangeGamemode:
-					World?.Player?.UpdateGamemode((GameMode)packet.Value);
+					World?.Player?.UpdateGamemode((Interfaces.GameMode)packet.Value);
 
 					break;
 
@@ -2186,11 +2172,11 @@ namespace Alex.Worlds.Multiplayer
 		{
 			InventoryBase inventory = null;
 
-			if (packet.WindowId == 0 || packet.WindowId == -2)
+			if (packet.WindowId == 0)
 			{
 				inventory = World.Player.Inventory;
 			}
-			else if (packet.WindowId == -1)
+			/*else if (packet.WindowId == -1)
 			{
 				var active = World.InventoryManager.ActiveWindow;
 
@@ -2198,7 +2184,7 @@ namespace Alex.Worlds.Multiplayer
 				{
 					inventory = active.Inventory;
 				}
-			}
+			}*/
 			else
 			{
 				if (World.InventoryManager.TryGet(packet.WindowId, out GuiInventoryBase gui))
@@ -2211,7 +2197,7 @@ namespace Alex.Worlds.Multiplayer
 
 			inventory.StateId = packet.StateId;
 
-			if (packet.WindowId == -1 && packet.SlotId == -1) //Set cursor
+			if (packet.SlotId == -1) //Set cursor
 			{
 				inventory.SetCursor(GetItemFromSlotData(packet.Slot), true);
 			}
@@ -2286,19 +2272,12 @@ namespace Alex.Worlds.Multiplayer
 			{
 				RemotePlayer entity = new RemotePlayer(World, "geometry.humanoid.custom");
 
-				entity.UpdateGamemode((GameMode)entry.Gamemode);
+				entity.UpdateGamemode((Interfaces.GameMode)entry.Gamemode);
 				entity.UUID = packet.Uuid;
 
 				if (entry.HasDisplayName)
 				{
-					if (ChatObject.TryParse(entry.DisplayName, out string chat))
-					{
-						entity.NameTag = chat;
-					}
-					else
-					{
-						entity.NameTag = entry.DisplayName;
-					}
+					entity.NameTag = entry.DisplayName;
 				}
 				else
 				{
@@ -2331,8 +2310,8 @@ namespace Alex.Worlds.Multiplayer
 			}
 		}
 
-		private ConcurrentDictionary<MiNET.Utils.UUID, PlayerListItemPacket.AddPlayerEntry> _players =
-			new ConcurrentDictionary<MiNET.Utils.UUID, PlayerListItemPacket.AddPlayerEntry>();
+		private ConcurrentDictionary<Guid, PlayerListItemPacket.AddPlayerEntry> _players =
+			new ConcurrentDictionary<Guid, PlayerListItemPacket.AddPlayerEntry>();
 
 		private void HandlePlayerListItemPacket(PlayerListItemPacket packet)
 		{
@@ -2368,16 +2347,9 @@ namespace Alex.Worlds.Multiplayer
 
 					if (World.EntityManager.TryGet(uuid, out var entity))
 					{
-						if (entry.HasDisplayName && !string.IsNullOrWhiteSpace(entry.DisplayName))
+						if (entry.HasDisplayName)
 						{
-							if (ChatObject.TryParse(entry.DisplayName, out string chat))
-							{
-								entity.NameTag = chat;
-							}
-							else
-							{
-								entity.NameTag = entry.DisplayName;
-							}
+							entity.NameTag = entry.DisplayName;
 						}
 						else
 						{
@@ -2664,7 +2636,7 @@ namespace Alex.Worlds.Multiplayer
 			//World.ChunkManager.RenderDistance = packet.ViewDistance / 16;
 
 			World.Player.EntityId = packet.EntityId;
-			World.Player.UpdateGamemode((GameMode)packet.Gamemode);
+			World.Player.UpdateGamemode((Interfaces.GameMode)packet.Gamemode);
 
 			HandleDimensionCodec(packet.DimensionCodec);
 			HandleDimension(packet.Dimension);
@@ -3132,7 +3104,7 @@ namespace Alex.Worlds.Multiplayer
 
 		private static string JavaHexDigest(byte[] input)
 		{
-			var hash = new SHA1Managed().ComputeHash(input);
+			var hash= SHA1.Create().ComputeHash(input);
 			// Reverse the bytes since BigInteger uses little endian
 			Array.Reverse(hash);
 

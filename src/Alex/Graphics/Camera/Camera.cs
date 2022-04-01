@@ -1,8 +1,6 @@
-﻿using System;
-using Alex.Common.Graphics;
+﻿using Alex.Common.Graphics;
 using Alex.Common.Utils;
 using Microsoft.Xna.Framework;
-using MathF = System.MathF;
 
 namespace Alex.Graphics.Camera
 {

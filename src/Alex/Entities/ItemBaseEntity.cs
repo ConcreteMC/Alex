@@ -1,12 +1,10 @@
 using Alex.Common.Graphics;
 using Alex.Graphics.Models.Items;
 using Alex.Items;
-using Alex.Net;
 using Alex.Networking.Java.Packets.Play;
 using Alex.ResourcePackLib.Json.Models.Items;
 using Alex.Worlds;
 using Alex.Worlds.Multiplayer;
-using Alex.Worlds.Multiplayer.Java;
 using Microsoft.Xna.Framework;
 
 namespace Alex.Entities

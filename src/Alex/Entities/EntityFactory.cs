@@ -1,11 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Drawing;
 using System.Linq;
-using System.Reflection;
-using System.Threading;
-using Alex.Common.Graphics.GpuResources;
 using Alex.Common.Utils;
 using Alex.Entities.Generic;
 using Alex.Entities.Hostile;
@@ -14,18 +10,15 @@ using Alex.Entities.Projectiles;
 using Alex.Entities.Vehicles;
 using Alex.Graphics.Models.Entity;
 using Alex.ResourcePackLib;
-using Alex.ResourcePackLib.Json.Bedrock.Entity;
 using Alex.ResourcePackLib.Json.Models.Entities;
 using Alex.Utils;
 using Alex.Worlds;
-using fNbt;
 using Microsoft.Xna.Framework.Graphics;
 using MiNET.Entities;
 using Newtonsoft.Json;
 using NLog;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
-using PlayerLocation = Alex.Common.Utils.Vectors.PlayerLocation;
 using ResourceLocation = Alex.Common.Resources.ResourceLocation;
 
 namespace Alex.Entities

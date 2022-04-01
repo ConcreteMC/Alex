@@ -1,4 +1,5 @@
 using Alex.Common.Blocks;
+using Alex.Interfaces;
 using Alex.ResourcePackLib.Json.Models.Entities;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;

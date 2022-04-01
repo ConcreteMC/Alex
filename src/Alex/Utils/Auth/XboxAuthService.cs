@@ -7,14 +7,11 @@ using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Runtime.InteropServices;
-using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using Alex.Worlds.Multiplayer.Bedrock;
 using Jose;
 using MiNET.Net;
-using MiNET.Utils;
 using MiNET.Utils.Cryptography;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -25,7 +22,6 @@ using Org.BouncyCastle.Crypto.Generators;
 using Org.BouncyCastle.Crypto.Parameters;
 using Org.BouncyCastle.Security;
 using Org.BouncyCastle.X509;
-using CertificateData = MiNET.CertificateData;
 using Logger = NLog.Logger;
 
 namespace Alex.Utils.Auth
@@ -294,8 +290,7 @@ namespace Alex.Utils.Auth
 			MinecraftTokenResponse tokenResponse = null;
 			bool isOk = false;
 			HttpStatusCode statusCode = HttpStatusCode.RequestTimeout;
-			string error = "";
-
+			
 			try
 			{
 				using (var r = new HttpRequestMessage(HttpMethod.Post, LoginWithXbox))
@@ -709,7 +704,7 @@ namespace Alex.Utils.Auth
 
 				return (false, tokenPair);
 			}
-			catch (OperationCanceledException c)
+			catch (OperationCanceledException)
 			{
 				return (false, null);
 			}

@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using Alex.Blocks.Minecraft;
 using Alex.Blocks.Properties;
@@ -6,6 +5,7 @@ using Alex.Blocks.State;
 using Alex.Common.Blocks;
 using Alex.Common.Resources;
 using Alex.Graphics.Models.Blocks;
+using Alex.Interfaces;
 using Alex.ResourcePackLib.Json.BlockStates;
 
 namespace Alex.Blocks

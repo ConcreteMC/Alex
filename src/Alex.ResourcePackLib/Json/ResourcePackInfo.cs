@@ -6,7 +6,8 @@ namespace Alex.ResourcePackLib.Json
 {
 	internal class ResourcePackInfoWrapper
 	{
-		public ResourcePackInfo pack;
+		[JsonProperty("pack")]
+		public ResourcePackInfo Pack { get; set; }
 	}
 
 	public class ResourcePackInfo

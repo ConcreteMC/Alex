@@ -1,13 +1,9 @@
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Linq;
 using Alex.Common.Graphics;
-using Alex.Common.Graphics.GpuResources;
 using Alex.Common.Utils;
 using Alex.Common.World;
-using Alex.Graphics;
 using Alex.Graphics.Camera;
 using Alex.ResourcePackLib;
 using Microsoft.Xna.Framework;

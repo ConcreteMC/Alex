@@ -1,14 +1,10 @@
-using System;
-using System.Linq;
 using Alex.Blocks;
 using Alex.Blocks.Minecraft;
 using Alex.Blocks.Properties;
 using Alex.Common.Blocks;
-using Alex.Common.Graphics;
 using Alex.Common.Resources;
 using Alex.Common.Utils;
-using Alex.Common.Utils.Vectors;
-using Alex.Graphics.Models.Entity;
+using Alex.Interfaces;
 using Alex.ResourcePackLib.Json.Bedrock.Entity;
 using Alex.Utils;
 using Alex.Worlds;
@@ -32,8 +28,6 @@ namespace Alex.Entities.BlockEntities
 
 			Offset = new Vector3(0.5f, 0f, 0.5f);
 		}
-
-		private float _yRotation = 0f;
 
 		public BlockFace Facing
 		{

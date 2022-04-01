@@ -1,7 +1,5 @@
 ﻿using System;
-using System.Buffers;
 using NLog;
-using NLog.Fluent;
 
 namespace Alex.Blocks.Storage
 {

@@ -237,7 +237,7 @@ namespace Alex.Entities.Meta
 
 		public void TakeHit(int damage, DamageCause cause = DamageCause.Unknown)
 		{
-			if (Entity is Player player && player.Gamemode != GameMode.Survival)
+			if (Entity is Player player && player.Gamemode != Interfaces.GameMode.Survival)
 				return;
 
 

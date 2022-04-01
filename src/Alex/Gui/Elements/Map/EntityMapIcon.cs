@@ -1,4 +1,3 @@
-using System;
 using Alex.Entities;
 using Microsoft.Xna.Framework;
 

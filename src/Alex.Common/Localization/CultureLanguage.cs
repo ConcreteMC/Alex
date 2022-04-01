@@ -1,9 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using Alex.Interfaces;
 
 namespace Alex.Common.Localization
 {
-	public class CultureLanguage
+	public class CultureLanguage : ITranslationProvider
 	{
 		public string this[string key]
 		{

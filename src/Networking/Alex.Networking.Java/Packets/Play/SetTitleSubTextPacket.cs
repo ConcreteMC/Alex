@@ -1,20 +1,21 @@
 using Alex.Networking.Java.Util;
 
-namespace Alex.Networking.Java.Packets.Play;
-
-public class SetTitleSubTextPacket : Packet<SetTitleSubTextPacket>
+namespace Alex.Networking.Java.Packets.Play
 {
-	public string Text { get; set; }
-
-	/// <inheritdoc />
-	public override void Decode(MinecraftStream stream)
+	public class SetTitleSubTextPacket : Packet<SetTitleSubTextPacket>
 	{
-		Text = stream.ReadChatObject();
-	}
+		public string Text { get; set; }
 
-	/// <inheritdoc />
-	public override void Encode(MinecraftStream stream)
-	{
-		throw new System.NotImplementedException();
+		/// <inheritdoc />
+		public override void Decode(MinecraftStream stream)
+		{
+			Text = stream.ReadChatObject();
+		}
+
+		/// <inheritdoc />
+		public override void Encode(MinecraftStream stream)
+		{
+			stream.WriteString(Text);
+		}
 	}
 }

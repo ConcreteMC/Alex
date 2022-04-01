@@ -1,8 +1,5 @@
-using Alex.Net;
 using Alex.Networking.Java.Packets.Play;
 using Alex.Worlds;
-using MiNET.Utils;
-using MetadataByte = Alex.Networking.Java.Packets.Play.MetadataByte;
 
 namespace Alex.Entities
 {

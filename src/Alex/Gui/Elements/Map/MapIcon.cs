@@ -1,9 +1,7 @@
 using System;
-using Alex.Common.Gui.Graphics;
 using Alex.Utils;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using RocketUI;
 
 namespace Alex.Gui.Elements.Map
 {

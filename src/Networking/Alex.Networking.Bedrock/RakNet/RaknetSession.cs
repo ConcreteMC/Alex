@@ -43,7 +43,7 @@ using MiNET.Utils.Nbt;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using NLog;
-using ConnectionInfo = Alex.Common.Utils.ConnectionInfo;
+using ConnectionInfo = Alex.Interfaces.Net.ConnectionInfo;
 using LogManager = NLog.LogManager;
 
 namespace Alex.Networking.Bedrock.RakNet
@@ -98,7 +98,7 @@ namespace Alex.Networking.Bedrock.RakNet
 		public int CompressionThreshold { get; set; } = -1;
 		private HighPrecisionTimer _tickerHighPrecisionTimer;
 
-		public RaknetSession(ConnectionInfo connectionInfo,
+		public RaknetSession(Interfaces.Net.ConnectionInfo connectionInfo,
 			RaknetConnection connection,
 			IPEndPoint endPoint,
 			short mtuSize,
@@ -204,7 +204,6 @@ namespace Alex.Networking.Bedrock.RakNet
 		{
 			_orderingThread = Thread.CurrentThread;
 			_orderingThread.Name = $"RaknetSession Ordering ({EndPoint})";
-			int count = 0;
 
 			try
 			{

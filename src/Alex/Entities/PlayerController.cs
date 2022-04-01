@@ -1,28 +1,18 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
-using System.Linq;
 using System.Threading;
 using Alex.Common.Input;
-using Alex.Common.Services;
-using Alex.Common.Utils;
 using Alex.Gamestates.InGame;
-using Alex.Graphics.Camera;
 using Alex.Gui.Dialogs;
 using Alex.Gui.Dialogs.Containers;
-using Alex.Gui.Elements;
 using Alex.Gui.Elements.Hud;
 using Alex.Net.Bedrock;
-using Alex.Worlds;
-using Alex.Worlds.Multiplayer.Bedrock;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using MiNET.Net;
 using MiNET.Utils;
-using MiNET.Utils.Vectors;
 using NLog;
 using RocketUI;
 using RocketUI.Input;
@@ -30,9 +20,7 @@ using RocketUI.Input.Listeners;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Formats.Png;
 using SixLabors.ImageSharp.PixelFormats;
-using Color = Microsoft.Xna.Framework.Color;
 using Image = SixLabors.ImageSharp.Image;
-using MathF = System.MathF;
 
 namespace Alex.Entities
 {
@@ -442,8 +430,6 @@ namespace Alex.Entities
 		private double CursorSensitivity { get; set; } = 30d;
 		private double GamepadSensitivity { get; set; } = 200d;
 		private bool _jumping = false;
-
-		private MouseState _mouseState = new MouseState();
 
 		private void UpdateMovementInput(GameTime gt)
 		{

@@ -2,25 +2,17 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
 using System.Threading;
-using System.Threading.Tasks;
 using System.Threading.Tasks.Dataflow;
 using Alex.Blocks;
-using Alex.Blocks.Minecraft;
 using Alex.Common;
 using Alex.Common.Data.Options;
 using Alex.Common.Graphics;
 using Alex.Common.Services;
 using Alex.Common.Utils.Vectors;
 using Alex.Common.World;
-using Alex.Entities.BlockEntities;
-using Alex.Gamestates;
 using Alex.Graphics;
-using Alex.Graphics.Effect;
 using Alex.Utils;
-using Alex.Utils.Collections.Queue;
-using Alex.Worlds.Abstraction;
 using Alex.Worlds.Chunks;
 using Alex.Worlds.Lighting;
 using Microsoft.Extensions.DependencyInjection;
@@ -28,7 +20,6 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using NLog;
 using RocketUI;
-using MathF = System.MathF;
 
 namespace Alex.Worlds
 {
@@ -122,7 +113,7 @@ namespace Alex.Worlds
 			_resourceManager = serviceProvider.GetRequiredService<ResourceManager>();
 			//var stillAtlas =  serviceProvider.GetRequiredService<ResourceManager>().BlockAtlas.GetAtlas();
 
-			var fogStart = 0;
+			//var fogStart = 0;
 			Shaders = new RenderingShaders();
 			//Shaders.SetTextures(stillAtlas);
 			/*FogEnabled = Options.VideoOptions.Fog.Value;
@@ -500,8 +491,6 @@ namespace Alex.Worlds
 		}
 
 		#region Drawing
-
-		private bool _useWireFrame = false;
 
 		public bool UseWireFrames
 		{

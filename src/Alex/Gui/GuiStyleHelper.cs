@@ -1,7 +1,4 @@
 ﻿using System;
-using Alex.Common.Gui.Graphics;
-using Alex.Common.Utils;
-using Microsoft.Xna.Framework;
 using RocketUI;
 
 namespace Alex.Gui

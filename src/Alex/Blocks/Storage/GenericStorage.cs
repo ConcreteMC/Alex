@@ -1,8 +1,6 @@
 using System;
-using System.IO;
 using Alex.Blocks.Storage.Palette;
 using Alex.Networking.Java.Util;
-using MiNET.Utils;
 using NLog;
 
 namespace Alex.Blocks.Storage;

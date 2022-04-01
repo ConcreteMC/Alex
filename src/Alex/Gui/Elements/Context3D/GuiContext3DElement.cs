@@ -1,6 +1,5 @@
 ﻿using Alex.Common;
 using Alex.Common.Utils.Vectors;
-using Alex.Gamestates;
 using Alex.Graphics.Camera;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;

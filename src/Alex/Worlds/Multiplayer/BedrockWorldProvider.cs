@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Diagnostics;
-using System.Net;
 using System.Numerics;
 using System.Threading;
 using Alex.Common.Services;
@@ -9,7 +8,6 @@ using Alex.Gui.Forms;
 using Alex.Net;
 using Alex.Net.Bedrock;
 using Alex.Worlds.Abstraction;
-using Alex.Worlds.Multiplayer.Bedrock;
 using Alex.Worlds.Multiplayer.Bedrock.Resources;
 using MiNET.Net;
 using NLog;

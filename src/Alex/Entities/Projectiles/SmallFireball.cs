@@ -1,6 +1,3 @@
-using Alex.Items;
-using Microsoft.Xna.Framework;
-
 namespace Alex.Entities.Projectiles
 {
 	public sealed class SmallFireball : ThrowableItemEntity

@@ -1,5 +1,4 @@
-﻿using Alex.Common.Utils;
-using Alex.Networking.Java.Util;
+﻿using Alex.Networking.Java.Util;
 
 namespace Alex.Networking.Java.Packets.Play
 {
@@ -26,6 +25,26 @@ namespace Alex.Networking.Java.Packets.Play
 			stream.WriteVarInt(EntityId);
 			stream.WriteVarInt((int)Action);
 			stream.WriteVarInt(JumpBoost);
+		}
+		
+		public enum EntityAction
+		{
+			StartSneaking = 0,
+			StopSneaking = 1,
+			LeaveBed = 2,
+			StartSprinting = 3,
+			StopSprinting = 4,
+			StartHorseJump = 5,
+			StopHorseJump = 6,
+			OpenHorseInventory = 7,
+			StartElytraFlying = 8,
+			Jump,
+
+			StartFlying = 999,
+			StopFlying = 998,
+
+			StartSwimming = 997,
+			StopSwimming = 996
 		}
 	}
 }

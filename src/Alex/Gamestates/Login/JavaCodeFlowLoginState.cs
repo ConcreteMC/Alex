@@ -6,13 +6,9 @@ using Alex.Gamestates.Multiplayer;
 using Alex.Gui;
 using Alex.Utils;
 using Alex.Utils.Auth;
-using Alex.Utils.Skins;
 using Alex.Worlds.Multiplayer.Java;
-using Microsoft.Xna.Framework.Graphics;
-using MojangAPI.Model;
 using NLog;
 using PlayerProfile = Alex.Common.Services.PlayerProfile;
-using Skin = Alex.Common.Utils.Skin;
 
 namespace Alex.Gamestates.Login
 {

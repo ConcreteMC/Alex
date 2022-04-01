@@ -2,19 +2,16 @@ using System;
 using Alex.Blocks;
 using Alex.Blocks.Minecraft;
 using Alex.Common.Blocks;
-using Alex.Common.Graphics.GpuResources;
 using Alex.Common.Utils;
-using Alex.Common.Utils.Vectors;
 using Alex.Graphics.Models;
-using Alex.Graphics.Models.Entity;
 using Alex.Graphics.Models.Entity.BlockEntities;
+using Alex.Interfaces;
 using Alex.Networking.Java.Packets.Play;
 using Alex.Utils;
 using Alex.Worlds;
 using fNbt;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using ModelBone = Alex.Graphics.Models.ModelBone;
 
 namespace Alex.Entities.BlockEntities
 {

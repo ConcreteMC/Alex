@@ -1,12 +1,10 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
 using Alex.Common;
 using Alex.Common.Data.Servers;
-using Alex.Common.Graphics;
 using Alex.Common.Graphics.Typography;
 using Alex.Common.Gui.Elements;
 using Alex.Common.Services;
@@ -14,6 +12,7 @@ using Alex.Common.Utils;
 using Alex.Gamestates.Common;
 using Alex.Gui;
 using Alex.Gui.Elements;
+using Alex.Interfaces;
 using Alex.Utils;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Xna.Framework;
@@ -380,7 +379,7 @@ namespace Alex.Gamestates.Multiplayer
 					}), true, false);
 		}
 
-		private async void JoinServer(GuiServerListEntryElement item)
+		private void JoinServer(GuiServerListEntryElement item)
 		{
 			if (item == null)
 				return;

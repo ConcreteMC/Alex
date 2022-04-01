@@ -6,7 +6,6 @@ using Alex.Common.Gui.Elements;
 using Alex.Common.Utils.Vectors;
 using Alex.Gui.Elements.Map;
 using Alex.Utils;
-using Alex.Worlds;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
 using RocketUI;

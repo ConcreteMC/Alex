@@ -1,16 +1,16 @@
-using System;
 using System.Threading;
 using Alex.Common;
 using Alex.Common.Items;
 using Alex.Common.Utils;
 using Alex.Common.Utils.Vectors;
 using Alex.Entities;
+using Alex.Interfaces.Net;
 using Alex.Items;
 using Alex.Networking.Java;
+using Alex.Networking.Java.Models;
 using Alex.Networking.Java.Packets.Play;
 using Microsoft.Xna.Framework;
-using MiNET.Utils.IO;
-using BlockFace = Alex.Common.Blocks.BlockFace;
+using BlockFace = Alex.Interfaces.BlockFace;
 using ConnectionState = Alex.Networking.Java.ConnectionState;
 using Player = Alex.Entities.Player;
 
@@ -79,7 +79,7 @@ namespace Alex.Net.Java
 			EntityActionPacket packet = EntityActionPacket.CreateObject();
 
 			packet.EntityId = entityId;
-			packet.Action = action;
+			packet.Action = (EntityActionPacket.EntityAction)((int)action);
 			packet.JumpBoost = 0;
 			Client.SendPacket(packet);
 		}
@@ -143,7 +143,7 @@ namespace Alex.Net.Java
 			var packet = PlayerDiggingPacket.CreateObject();
 			packet.Face = face;
 			packet.Location = position;
-			packet.Status = status;
+			packet.Status = (PlayerDiggingPacket.DiggingStatus)((int)status);
 			Client.SendPacket(packet);
 		}
 
@@ -246,7 +246,7 @@ namespace Alex.Net.Java
 			var packet = PlayerDiggingPacket.CreateObject();
 			packet.Face = face;
 			packet.Location = position;
-			packet.Status = DiggingStatus.DropItem;
+			packet.Status = (PlayerDiggingPacket.DiggingStatus) DiggingStatus.DropItem;
 			Client.SendPacket(packet);
 		}
 

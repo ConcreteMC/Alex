@@ -1,6 +1,8 @@
 using System;
 using System.Text;
 using Alex.Common.Utils;
+using Alex.Interfaces;
+using Alex.Interfaces.Net;
 using Alex.Net;
 using Microsoft.Xna.Framework;
 using RocketUI;

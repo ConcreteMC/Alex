@@ -1,15 +1,20 @@
 ﻿using System;
 using System.Runtime.CompilerServices;
+using Alex.Interfaces;
 using Microsoft.Xna.Framework;
 
 namespace Alex.Common.Utils.Vectors
 {
-	public readonly struct BlockCoordinates : IEquatable<BlockCoordinates>
+	public readonly struct BlockCoordinates : IEquatable<BlockCoordinates>, IVector3I
 	{
 		public readonly int X;
 		public readonly int Y;
 		public readonly int Z;
 
+		int IVector3I.X => X;
+		int IVector3I.Y => Y;
+		int IVector3I.Z => Z;
+		
 		public BlockCoordinates(int value)
 		{
 			X = Y = Z = value;

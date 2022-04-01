@@ -43,6 +43,7 @@ namespace Alex.Graphics.Models.Items
 		{
 			return;
 
+			/*
 			try
 			{
 				if (ResourcePackModel.Display.TryGetValue(
@@ -53,7 +54,7 @@ namespace Alex.Graphics.Models.Items
 					return;
 				}
 			}
-			catch (ArgumentOutOfRangeException) { }
+			catch (ArgumentOutOfRangeException) { }*/
 
 			//ActiveDisplayItem = DisplayElement.Default;
 		}

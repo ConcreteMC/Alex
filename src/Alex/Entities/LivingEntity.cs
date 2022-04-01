@@ -2,13 +2,10 @@
 using System.Collections.Generic;
 using System.Linq;
 using Alex.Blocks.Materials;
-using Alex.Blocks.Minecraft;
 using Alex.Common.Items;
-using Alex.Common.Utils;
 using Alex.Common.Utils.Vectors;
 using Alex.Entities.Components;
 using Alex.Items;
-using Alex.Net;
 using Alex.Networking.Java.Packets.Play;
 using Alex.Worlds;
 using Microsoft.Xna.Framework;
@@ -162,7 +159,7 @@ namespace Alex.Entities
 
 					if (blockBelowFeet != null)
 					{
-						if (blockBelowFeet.Any(b => b.State.Block.BlockMaterial == Material.Water))
+						if (blockBelowFeet.Any(b => b.State?.Block?.BlockMaterial == Material.Water))
 						{
 							AboveWater = true;
 						}

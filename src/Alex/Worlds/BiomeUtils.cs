@@ -1,13 +1,9 @@
 ﻿using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Globalization;
 using System.Linq;
 using Alex.Blocks.Storage.Palette;
 using Alex.Common.Utils;
 using Microsoft.Xna.Framework;
-using MathF = System.MathF;
 
 namespace Alex.Worlds
 {

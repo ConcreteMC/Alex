@@ -1,5 +1,6 @@
 using Alex.Blocks.Materials;
 using Alex.Common.Blocks;
+using Alex.Interfaces;
 
 namespace Alex.Blocks.Minecraft
 {

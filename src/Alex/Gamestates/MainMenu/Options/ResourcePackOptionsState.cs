@@ -8,7 +8,6 @@ using Alex.Common.Utils;
 using Alex.Gamestates.Common;
 using Alex.Gamestates.MainMenu.Options.Elements;
 using Alex.Gui;
-using Alex.ResourcePackLib;
 using Alex.ResourcePackLib.Exceptions;
 using Alex.ResourcePackLib.Generic;
 using Microsoft.Xna.Framework;
@@ -21,16 +20,7 @@ namespace Alex.Gamestates.MainMenu.Options
 	{
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(ResourcePackOptionsState));
 
-		protected ResourcePackEntry[] Items => _items.ToArray();
-		private List<ResourcePackEntry> _items { get; } = new List<ResourcePackEntry>();
-
-		//protected ResourcePackEntry SelectedItem => ListContainer.SelectedItem as ResourcePackEntry;
-
-		//protected readonly SelectionList ListContainer;
-
 		private Button _loadBtn;
-		private AlexOptions Options => Alex.Instance.Options.AlexOptions;
-
 		public ResourcePackOptionsState(GuiPanoramaSkyBox skyBox) : base()
 		{
 			Background = new GuiTexture2D(skyBox, TextureRepeatMode.Stretch);

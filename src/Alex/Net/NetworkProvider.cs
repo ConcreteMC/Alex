@@ -4,10 +4,12 @@ using Alex.Common.Items;
 using Alex.Common.Utils;
 using Alex.Common.Utils.Vectors;
 using Alex.Entities;
+using Alex.Interfaces.Net;
 using Alex.Items;
+using Alex.Networking.Java.Models;
 using Alex.Utils.Commands;
 using Microsoft.Xna.Framework;
-using BlockFace = Alex.Common.Blocks.BlockFace;
+using BlockFace = Alex.Interfaces.BlockFace;
 using Player = Alex.Entities.Player;
 
 

@@ -1,6 +1,4 @@
-using Alex.Items;
 using Alex.Worlds;
-using Microsoft.Xna.Framework;
 
 namespace Alex.Entities.Projectiles
 {

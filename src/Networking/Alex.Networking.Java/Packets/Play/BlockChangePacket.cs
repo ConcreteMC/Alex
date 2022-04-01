@@ -1,4 +1,4 @@
-﻿using Alex.Common.Utils.Vectors;
+﻿using Alex.Interfaces;
 using Alex.Networking.Java.Util;
 
 namespace Alex.Networking.Java.Packets.Play
@@ -10,7 +10,7 @@ namespace Alex.Networking.Java.Packets.Play
 			PacketId = 0x0B;
 		}
 
-		public BlockCoordinates Location;
+		public IVector3I Location;
 		public uint PalleteId;
 
 		public override void Decode(MinecraftStream stream)

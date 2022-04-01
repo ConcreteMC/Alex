@@ -1,4 +1,5 @@
 ﻿using Alex.Common.Blocks;
+using Alex.Interfaces;
 using Microsoft.Xna.Framework;
 
 namespace Alex.Graphics.Models

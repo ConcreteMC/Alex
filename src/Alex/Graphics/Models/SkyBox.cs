@@ -1,15 +1,10 @@
 ﻿using System;
-using System.Drawing;
-using System.Drawing.Imaging;
 using System.Linq;
 using Alex.Common.Data.Options;
 using Alex.Common.Graphics;
-using Alex.Common.Graphics.GpuResources;
 using Alex.Common.Services;
 using Alex.Common.Utils;
-using Alex.Utils;
 using Alex.Worlds;
-using LibNoise.Combiner;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;

@@ -1,6 +1,7 @@
 using Alex.Blocks.Materials;
 using Alex.Common.Blocks;
 using Alex.Entities.BlockEntities;
+using Alex.Interfaces;
 
 namespace Alex.Blocks.Minecraft
 {

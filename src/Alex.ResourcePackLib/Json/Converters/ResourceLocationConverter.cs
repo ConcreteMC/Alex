@@ -28,9 +28,6 @@ namespace Alex.ResourcePackLib.Json.Converters
 			}
 
 			return null;
-			var str = reader.ReadAsString();
-
-			return new ResourceLocation(str);
 		}
 	}
 }

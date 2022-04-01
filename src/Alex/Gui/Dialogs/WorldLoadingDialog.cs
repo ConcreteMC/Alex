@@ -3,6 +3,7 @@ using Alex.Common.Gui.Elements;
 using Alex.Common.Gui.Graphics;
 using Alex.Common.Utils;
 using Alex.Common.World;
+using Alex.Interfaces;
 using Microsoft.Xna.Framework;
 using NLog;
 using RocketUI;
@@ -28,15 +29,12 @@ namespace Alex.Gui.Dialogs
 			}
 		}
 
-		private bool _textDirty = false;
-
 		public string SubText
 		{
 			get { return _subString; }
 			set
 			{
 				_subString = value ?? string.Empty;
-				_textDirty = true;
 			}
 		}
 

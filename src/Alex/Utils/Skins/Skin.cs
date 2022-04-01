@@ -1,10 +1,3 @@
-using System;
-using System.Collections.Generic;
-using MiNET.Utils.Skins;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Converters;
-using Newtonsoft.Json.Serialization;
-
 namespace Alex.Utils.Skins
 {
 	/*public class Skin : ICloneable

@@ -17,8 +17,6 @@ namespace Alex.Graphics.Effect
 		private EffectParameter _fogEndParam;
 		private EffectParameter _fogEnabledParam;
 
-		private EffectParameter _fogVectorParam;
-
 		private EffectParameter _worldParam;
 
 		private EffectParameter _projParam;
@@ -234,7 +232,6 @@ namespace Alex.Graphics.Effect
 			get
 			{
 				return _textureScale;
-				return _textureScaleParam.GetValueVector2();
 			}
 			set
 			{

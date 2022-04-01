@@ -1,5 +1,4 @@
 using Alex.Networking.Java.Packets.Play;
-using Alex.Particles;
 using Alex.Worlds;
 using MiNET.Particles;
 using MiNET.Utils.Metadata;
