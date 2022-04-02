@@ -26,6 +26,7 @@ namespace Alex.Blocks.Minecraft.Walls
 		/// <inheritdoc />
 		public override BlockState BlockPlaced(IBlockAccess world, BlockState state, BlockCoordinates position)
 		{
+			state = state.WithProperty("up", "true");
 			state = Check(world, position, position + BlockCoordinates.North, state);
 			state = Check(world, position, position + BlockCoordinates.South, state);
 			state = Check(world, position, position + BlockCoordinates.East, state);
@@ -41,7 +42,7 @@ namespace Alex.Blocks.Minecraft.Walls
 		{
 			var state = Check(world, position, updatedBlock, BlockState);
 
-			if (state != BlockState)
+			if (state.Id != BlockState.Id)
 				world.SetBlockState(position, state);
 
 			//base.BlockUpdate(world, position, updatedBlock);

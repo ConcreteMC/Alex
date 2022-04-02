@@ -83,7 +83,7 @@ public class ModelMatrixHolder : IDisposable
 	}
 
 	public bool IsMatricesDirty { get; set; } = false;
-	private Matrix[] _transforms = null;
+	protected Matrix[] Transformations { get; private set; }= null;
 
 	public Matrix[] GetTransforms()
 	{
@@ -92,8 +92,8 @@ public class ModelMatrixHolder : IDisposable
 		if (model?.Bones == null)
 			return null;
 
-		if (_transforms != null && !IsMatricesDirty && _transforms.Length == model.Bones.Count)
-			return _transforms;
+		if (Transformations != null && !IsMatricesDirty && Transformations.Length == model.Bones.Count)
+			return Transformations;
 
 		var source = model.Bones.ImmutableArray;
 		Matrix[] destinationBoneTransforms = new Matrix[source.Length];
@@ -132,7 +132,7 @@ public class ModelMatrixHolder : IDisposable
 			}
 		}
 
-		_transforms = destinationBoneTransforms;
+		Transformations = destinationBoneTransforms;
 		IsMatricesDirty = false;
 
 		return destinationBoneTransforms;
@@ -158,6 +158,9 @@ public class ModelMatrixHolder : IDisposable
 			bone.Update(args);
 			//bone.Update(args);
 		}
+
+		//if (IsMatricesDirty)
+		//	Transformations = GetTransforms();
 	}
 
 	public virtual void ApplyMovement()

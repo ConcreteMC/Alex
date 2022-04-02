@@ -92,6 +92,11 @@ namespace Alex.Graphics.Models.Blocks
 				bottomRight = GetAverageLiquidLevels(blockAccess, position + new BlockCoordinates(1, 0, 1));
 			}
 
+			if (topLeft == 0 && topRight == 0 && bottomLeft == 0 && bottomRight == 0)
+			{
+				topLeft = topRight = bottomLeft = bottomRight = 7; //GetLevel(baseBlock);
+			}
+
 			if (baseBlock.Block is FlowingWater || baseBlock.Block is FlowingLava)
 				isFlowing = true;
 
@@ -217,6 +222,9 @@ namespace Alex.Graphics.Models.Blocks
 							height = (int)((16.0 / 8.0) * (bottomRight));
 						}
 
+						//if (height <= 0)
+						//	height = 8;
+						
 						vert.Position.Y = ((float)height) / 16f;
 					}
 

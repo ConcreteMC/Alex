@@ -1363,7 +1363,7 @@ namespace Alex.Entities
 				var headYaw = (KnownPosition.HeadYaw - KnownPosition.Yaw);
 				var pitch = KnownPosition.Pitch;
 
-				head.Rotation = new Vector3(-pitch, headYaw, 0f);
+				head.Rotation = new Vector3(pitch, headYaw, 0f);
 				//_head.Rotation = Quaternion.CreateFromYawPitchRoll(MathUtils.ToRadians(headYaw), MathUtils.ToRadians(pitch), 0f);
 			}
 			

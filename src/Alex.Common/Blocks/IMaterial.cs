@@ -65,6 +65,7 @@ namespace Alex.Common.Blocks
 	public enum BlockCollisionBehavior
 	{
 		None,
-		Blocking
+		Blocking,
+		VerticalClimb
 	}
 }

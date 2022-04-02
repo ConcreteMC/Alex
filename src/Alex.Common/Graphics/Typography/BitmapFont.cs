@@ -176,6 +176,10 @@ namespace Alex.Common.Graphics.Typography
             return new Vector2(width, offset.Y + finalLineHeight);
         }
 
+        private void Rotate(float rotation)
+        {
+
+        }
 
         public void DrawString(SpriteBatch sb,
             string text,

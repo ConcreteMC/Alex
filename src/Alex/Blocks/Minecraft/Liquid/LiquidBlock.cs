@@ -1,5 +1,6 @@
 using Alex.Blocks.Materials;
 using Alex.Blocks.Properties;
+using Alex.Blocks.State;
 using Alex.Common.Blocks;
 using Alex.Common.Blocks.Properties;
 using Alex.Interfaces;
@@ -12,17 +13,33 @@ namespace Alex.Blocks.Minecraft.Liquid
 
 		protected LiquidBlock() { }
 
+		private int GetLevel(BlockState state)
+		{
+			int neighborLevel = LEVEL.GetValue(state);
+			
+			if (neighborLevel == 0)
+				neighborLevel = 8;
+
+			return neighborLevel;
+		}
+		
 		public override bool ShouldRenderFace(BlockFace face, Block neighbor)
 		{
-			int myLevelValue = LEVEL.GetValue(BlockState);
-
+			if (face == BlockFace.Up && (neighbor.BlockMaterial.IsLiquid || neighbor is LiquidBlock))
+				return false;
+			
 			if (neighbor.BlockMaterial == Material.WaterPlant
 			    || neighbor.BlockMaterial == Material.ReplaceableWaterPlant)
 				return false;
 
 			if (neighbor.BlockMaterial.IsLiquid || neighbor is LiquidBlock)
 			{
-				int neighborLevel = LEVEL.GetValue(neighbor.BlockState);
+				int myLevelValue = GetLevel(BlockState);//LEVEL.GetValue(BlockState);
+				int neighborLevel = GetLevel(BlockState);
+
+				if (neighborLevel == myLevelValue)
+					return false;
+				
 				//var neighborLevel = neighbor.BlockState.GetTypedValue(LEVEL);
 
 				if (neighborLevel > myLevelValue)
@@ -32,12 +49,12 @@ namespace Alex.Blocks.Minecraft.Liquid
 
 				return false;
 			}
-
-			if (neighbor.Solid && (!neighbor.Transparent || neighbor.BlockMaterial.IsOpaque))
-				return false;
-
+			
 			if (neighbor.Solid && neighbor.Transparent && !neighbor.IsFullCube)
 				return true;
+			
+			if (neighbor.Solid && (!neighbor.Transparent || neighbor.BlockMaterial.IsOpaque))
+				return false;
 
 			//else if (neighbor.Transparent)
 			return base.ShouldRenderFace(face, neighbor);

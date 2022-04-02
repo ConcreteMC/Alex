@@ -86,7 +86,7 @@ namespace Alex.Entities.Components
 				forward *= 0.3f;
 			}
 
-			heading = ConvertHeading(
+			heading = ApplyHeading(
 				e.KnownPosition.HeadYaw, strafing, forward, (e.IsFlying || e.IsSwimming) ? heading.Y : 0f,
 				movementFactor);
 
@@ -136,7 +136,7 @@ namespace Alex.Entities.Components
 			return slipperiness;
 		}
 
-		private Vector3 ConvertHeading(float yaw, float strafe, float forward, float vertical, float multiplier)
+		private Vector3 ApplyHeading(float yaw, float strafe, float forward, float vertical, float multiplier)
 		{
 			var speed = MathF.Sqrt(strafe * strafe + forward * forward + vertical * vertical);
 

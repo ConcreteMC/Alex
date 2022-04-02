@@ -403,7 +403,8 @@ namespace Alex.Entities.Components
 			if (!TestTerrainCollisionX(blockAccess, amount, out _, out var collisionX, boxes, checkOther))
 				return false;
 
-			if (CheckJump(blockAccess, amount, out float yValue))
+			var climbingResult = CheckClimbing(blockAccess, amount, out float yValue);
+			if (climbingResult == CollisionResult.ClimbHalfBlock)
 			{
 				amount.Y = yValue;
 			}
@@ -427,7 +428,8 @@ namespace Alex.Entities.Components
 			if (!TestTerrainCollisionZ(blockAccess, amount, out _, out var collisionZ, boxes, checkOther))
 				return false;
 
-			if (CheckJump(blockAccess, amount, out float yValue))
+			var climbingResult = CheckClimbing(blockAccess, amount, out float yValue);
+			if (climbingResult == CollisionResult.ClimbHalfBlock)
 			{
 				amount.Y = yValue;
 			}
@@ -445,20 +447,26 @@ namespace Alex.Entities.Components
 
 		public ColoredBoundingBox[] LastCollision { get; private set; } = new ColoredBoundingBox[0];
 
-		private bool CheckJump(IBlockAccess blockAccess, Vector3 amount, out float yValue)
+		private enum CollisionResult
+		{
+			DoNothing,
+			ClimbHalfBlock,
+			VerticalClimb
+		}
+		
+		private CollisionResult CheckClimbing(IBlockAccess blockAccess, Vector3 amount, out float yValue)
 		{
 			yValue = amount.Y;
 			var canJump = false;
+			var canClimb = false;
 
-			//float yTarget = amount.Y;
 			if (Entity.KnownPosition.OnGround && MathF.Abs(Entity.Velocity.Y) < 0.001f)
 			{
 				canJump = true;
 				var adjusted = Entity.GetBoundingBox(Entity.KnownPosition + amount);
-				var intersecting = GetIntersecting(Entity.Level, adjusted);
+				var intersecting = GetIntersecting(blockAccess, adjusted);
 				var targetY = 0f;
 
-				//if (!PhysicsManager.GetIntersecting(Entity.Level, adjusted).Any(bb => bb.Max.Y >= adjusted.Min.Y && bb.Min.Y <= adjusted.Max.Y))
 				foreach (var box in intersecting)
 				{
 					var yDifference = box.Max.Y - adjusted.Min.Y;
@@ -466,7 +474,6 @@ namespace Alex.Entities.Components
 					if (yDifference > MaxClimbingDistance)
 					{
 						canJump = false;
-
 						break;
 					}
 
@@ -476,16 +483,12 @@ namespace Alex.Entities.Components
 
 				if (canJump && targetY > 0f)
 				{
-					//var originalY = amount.Y;
-					//yTarget = targetY;
-					//var a = intersecting.
 					adjusted = Entity.GetBoundingBox(Entity.KnownPosition + new Vector3(amount.X, targetY, amount.Z));
 
 					if (GetIntersecting(Entity.Level, adjusted).Any(
 						    bb => bb.Max.Y > adjusted.Min.Y && bb.Min.Y <= adjusted.Max.Y))
 					{
 						canJump = false;
-						//yTarget = originalY;
 					}
 				}
 				else
@@ -496,17 +499,21 @@ namespace Alex.Entities.Components
 				if (canJump)
 				{
 					yValue = targetY;
-					//amount.Y = targetY;
 				}
 			}
 
-			return canJump;
+			if (canClimb)
+				return CollisionResult.VerticalClimb;
+			
+			if (canJump)
+				return CollisionResult.ClimbHalfBlock;
+			
+			return CollisionResult.DoNothing;
 		}
 
 		private bool DetectOnGround(IBlockAccess blockAccess, Vector3 position)
 		{
 			var entityBoundingBox = Entity.GetBoundingBox(position);
-			//entityBoundingBox.Inflate(0.01f);
 
 			var offset = 0f;
 
@@ -515,15 +522,9 @@ namespace Alex.Entities.Components
 				offset = -1f;
 			}
 
-			bool foundGround = false;
-
 			var minX = entityBoundingBox.Min.X;
-			//if (minX < 0f)
-			//	minX -= 1;
 
 			var minZ = entityBoundingBox.Min.Z;
-			//if (minZ < 0f)
-			//	minZ -= 1;
 
 			var maxX = entityBoundingBox.Max.X;
 			var maxZ = entityBoundingBox.Max.Z;
@@ -558,7 +559,7 @@ namespace Alex.Entities.Components
 				}
 			}
 
-			return foundGround;
+			return false;
 		}
 
 		private bool TestTerrainCollisionY(IBlockAccess blockAccess,
