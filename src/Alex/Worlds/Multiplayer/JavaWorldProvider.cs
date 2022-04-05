@@ -39,7 +39,6 @@ using Alex.Networking.Java.Packets.Handshake;
 using Alex.Networking.Java.Packets.Login;
 using Alex.Networking.Java.Packets.Play;
 using Alex.Networking.Java.Util;
-using Alex.Networking.Java.Util.Encryption;
 using Alex.Particles;
 using Alex.Utils;
 using Alex.Utils.Inventories;
@@ -1267,10 +1266,10 @@ namespace Alex.Worlds.Multiplayer
 						data = packet.BlockStateId.Value;
 						//particleInstance.SetData(packet.BlockStateId.Value, ParticleDataMode.BlockRuntimeId);
 					}
-					else if (packet.Color.HasValue)
+					else if (packet.Color != null)
 					{
 						dataMode = ParticleDataMode.Color;
-						data = packet.Color.Value.PackedValue;
+						data = packet.Color.PackedValue();
 					}
 
 
@@ -1650,7 +1649,7 @@ namespace Alex.Worlds.Multiplayer
 		{
 			Log.Info($"Received SpawnPosition...");
 
-			World.SpawnPoint = packet.SpawnPosition;
+			World.SpawnPoint = packet.SpawnPosition.ToXna();
 			HasSpawnPosition = true;
 		}
 
@@ -2442,7 +2441,7 @@ namespace Alex.Worlds.Multiplayer
 		private void HandleFacePlayer(FacePlayerPacket packet)
 		{
 			bool isEntity = packet.IsEntity;
-			Vector3 targetPosition = packet.Target;
+			Vector3 targetPosition = packet.Target.ToXna();
 
 			if (isEntity)
 			{

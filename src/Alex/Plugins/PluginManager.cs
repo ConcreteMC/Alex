@@ -4,9 +4,9 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using Alex.Common.Services;
+using Microsoft.Extensions.DependencyInjection;
 using Mono.Cecil;
 using NLog;
-using SimpleInjector;
 
 namespace Alex.Plugins
 {
@@ -41,7 +41,7 @@ namespace Alex.Plugins
 
 		private LinkedList<PluginConstructorData> PluginConstructors { get; } = new LinkedList<PluginConstructorData>();
 
-		public void Initiate(Container serviceCollection,
+		public void Initiate(IServiceCollection serviceCollection,
 			IOptionsProvider options,
 			LaunchSettings launchSettings)
 		{
@@ -184,7 +184,7 @@ namespace Alex.Plugins
 			}
 		}
 
-		public void ConfigureServices(Container serviceCollection)
+		public void ConfigureServices(IServiceCollection serviceCollection)
 		{
 			Dictionary<Assembly, List<Plugin>> assemblies = new Dictionary<Assembly, List<Plugin>>();
 

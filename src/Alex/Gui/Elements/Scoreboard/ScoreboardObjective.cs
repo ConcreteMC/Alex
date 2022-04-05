@@ -8,6 +8,7 @@ using Alex.Networking.Java.Models;
 using Microsoft.Xna.Framework;
 using NLog;
 using RocketUI;
+using Color = Microsoft.Xna.Framework.Color;
 
 namespace Alex.Gui.Elements.Scoreboard
 {

@@ -3,7 +3,6 @@ using System.Threading.Tasks;
 using Alex.Interfaces;
 using Alex.Networking.Java.Models;
 using fNbt;
-using Microsoft.Xna.Framework;
 
 namespace Alex.Networking.Java.Util
 {
@@ -41,7 +40,7 @@ namespace Alex.Networking.Java.Util
 
 		Task<ulong> ReadULongAsync();
 
-		Task<Vector3> ReadPositionAsync();
+		Task<IVector3> ReadPositionAsync();
 
 		Task<IVector3I> ReadBlockCoordinatesAsync();
 
@@ -49,7 +48,7 @@ namespace Alex.Networking.Java.Util
 
 		Task WriteSlotAsync(SlotData slot);
 
-		Task WritePositionAsync(Vector3 position);
+		Task WritePositionAsync(NetworkVector3 position);
 
 		Task WritePositionAsync(IVector3I pos);
 
@@ -122,7 +121,7 @@ namespace Alex.Networking.Java.Util
 
 		ulong ReadULong();
 
-		Vector3 ReadPosition();
+		IVector3 ReadPosition();
 
 		IVector3I ReadBlockCoordinates();
 
@@ -130,7 +129,7 @@ namespace Alex.Networking.Java.Util
 
 		void WriteSlot(SlotData slot);
 
-		void WritePosition(Vector3 position);
+		void WritePosition(IVector3 position);
 
 		void WritePosition(IVector3I pos);
 

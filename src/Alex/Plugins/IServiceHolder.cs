@@ -1,9 +1,9 @@
-using SimpleInjector;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Alex.Plugins
 {
 	public interface IServiceHolder
 	{
-		void ConfigureServices(Container serviceCollection);
+		void ConfigureServices(IServiceCollection serviceCollection);
 	}
 }

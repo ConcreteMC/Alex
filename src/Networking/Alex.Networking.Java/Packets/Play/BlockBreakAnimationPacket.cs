@@ -1,6 +1,5 @@
 using Alex.Interfaces;
 using Alex.Networking.Java.Util;
-using Microsoft.Xna.Framework;
 
 namespace Alex.Networking.Java.Packets.Play
 {

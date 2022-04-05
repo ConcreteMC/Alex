@@ -2,7 +2,7 @@
 
 namespace Alex.Networking.Java.Models
 {
-    public class Vector3I : IVector3I
+    public struct Vector3I : IVector3I
     {
         public Vector3I(int x, int y, int z)
         {
@@ -11,8 +11,8 @@ namespace Alex.Networking.Java.Models
             Z = z;
         }
 
-        public int X { get; set; }
-        public int Y { get; set; }
-        public int Z { get; set; }
+        public int X { get; }
+        public int Y { get; }
+        public int Z { get; }
     }
 }

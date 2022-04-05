@@ -98,12 +98,10 @@
         <PackageReference Include="FmodAudio" Version="2.2.5" />
         <PackageReference Include="jose-jwt" Version="3.2.0" />
         <PackageReference Include="Microsoft.Identity.Client" Version="4.37.0" />
-        <PackageReference Include="MiNET.fnbt" Version="1.0.22" />
         <PackageReference Include="MojangAPI" Version="1.1.0" />
         <PackageReference Include="Mono.Cecil" Version="0.11.4" />
         <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
         <PackageReference Include="NLog" Version="4.7.15" />
-        <PackageReference Include="PuppeteerSharp" Version="6.2.0" />
         <PackageReference Include="System.Globalization" Version="4.3.0" />
         <PackageReference Include="System.Reactive.Core" Version="5.0.0" />
         <PackageReference Include="System.Reactive.Interfaces" Version="5.0.0" />

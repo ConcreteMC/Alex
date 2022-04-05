@@ -4,11 +4,9 @@ using System.Linq;
 using System.Net;
 using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
 using Alex.Interfaces;
 using Alex.Networking.Java.Models;
 using fNbt;
-using Microsoft.Xna.Framework;
 
 namespace Alex.Networking.Java.Util
 {
@@ -217,7 +215,7 @@ namespace Alex.Networking.Java.Util
 			return EndianUtils.NetworkToHostOrder(BitConverter.ToUInt64(Read(8), 0));
 		}
 
-		public Vector3 ReadPosition()
+		public IVector3 ReadPosition()
 		{
 			var val = ReadULong();
 			var x = Convert.ToSingle(val >> 38);
@@ -243,7 +241,7 @@ namespace Alex.Networking.Java.Util
 				z -= 2 ^ 26;
 			}
 
-			return new Vector3(x, y, z);
+			return new NetworkVector3(x, y, z);
 		}
 
 		public IVector3I ReadBlockCoordinates()
@@ -310,7 +308,7 @@ namespace Alex.Networking.Java.Util
 			this.Write(data, 0, data.Length);
 		}
 
-		public void WritePosition(Vector3 position)
+		public void WritePosition(IVector3 position)
 		{
 			var x = Convert.ToInt64(position.X);
 			var y = Convert.ToInt64(position.Y);
@@ -321,7 +319,7 @@ namespace Alex.Networking.Java.Util
 
 		public void WritePosition(IVector3I pos)
 		{
-			WritePosition(new Vector3(pos.X, pos.Y, pos.Z));
+			WritePosition(new NetworkVector3(pos.X, pos.Y, pos.Z));
 		}
 
 		public int WriteRawVarInt32(uint value)

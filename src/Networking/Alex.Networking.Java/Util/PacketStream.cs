@@ -9,7 +9,6 @@ using System.Threading.Tasks;
 using Alex.Interfaces;
 using Alex.Networking.Java.Models;
 using fNbt;
-using Microsoft.Xna.Framework;
 
 namespace Alex.Networking.Java.Util
 {
@@ -297,7 +296,7 @@ namespace Alex.Networking.Java.Util
 		}
 
 		/// <inheritdoc />
-		public async Task<Vector3> ReadPositionAsync()
+		public async Task<IVector3> ReadPositionAsync()
 		{
 			var val = await ReadULongAsync();
 			var x = Convert.ToSingle(val >> 38);
@@ -319,7 +318,7 @@ namespace Alex.Networking.Java.Util
 				z -= 2 ^ 26;
 			}
 
-			return new Vector3(x, y, z);
+			return new NetworkVector3(x, y, z);
 		}
 
 		/// <inheritdoc />
@@ -408,7 +407,7 @@ namespace Alex.Networking.Java.Util
 		}
 
 		/// <inheritdoc />
-		public async Task WritePositionAsync(Vector3 position)
+		public async Task WritePositionAsync(NetworkVector3 position)
 		{
 			var x = Convert.ToInt64(position.X);
 			var y = Convert.ToInt64(position.Y);
@@ -420,7 +419,7 @@ namespace Alex.Networking.Java.Util
 		/// <inheritdoc />
 		public async Task WritePositionAsync(IVector3I pos)
 		{
-			await WritePositionAsync(new Vector3(pos.X, pos.Y, pos.Z));
+			await WritePositionAsync(new NetworkVector3(pos.X, pos.Y, pos.Z));
 		}
 
 		/// <inheritdoc />

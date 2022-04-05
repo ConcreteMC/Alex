@@ -84,32 +84,32 @@ namespace Alex.Entities.Generic
 				switch (entry.Index)
 				{
 					case 15: //Head
-						SetHeadRotation(rotation.Rotation);
+						SetHeadRotation(rotation.Rotation.ToXna());
 
 						break;
 
 					case 16: //Body
-						SetBodyRotation(rotation.Rotation);
+						SetBodyRotation(rotation.Rotation.ToXna());
 
 						break;
 
 					case 17: //Left Arm
-						SetArmRotation(rotation.Rotation, true);
+						SetArmRotation(rotation.Rotation.ToXna(), true);
 
 						break;
 
 					case 18: //Right Arm
-						SetArmRotation(rotation.Rotation, false);
+						SetArmRotation(rotation.Rotation.ToXna(), false);
 
 						break;
 
 					case 19: //Left Leg
-						SetLegRotation(rotation.Rotation, true);
+						SetLegRotation(rotation.Rotation.ToXna(), true);
 
 						break;
 
 					case 20: //Right Leg
-						SetLegRotation(rotation.Rotation, false);
+						SetLegRotation(rotation.Rotation.ToXna(), false);
 
 						break;
 				}

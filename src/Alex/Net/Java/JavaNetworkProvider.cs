@@ -126,7 +126,7 @@ namespace Alex.Net.Java
 			if (hand > 1) hand = 1;
 
 			var packet = PlayerBlockPlacementPacket.CreateObject();
-			packet.CursorPosition = cursorPosition;
+			packet.CursorPosition = cursorPosition.ToInterface();
 			packet.Location = position;
 			packet.Face = face;
 			packet.Hand = hand;
@@ -208,7 +208,7 @@ namespace Alex.Net.Java
 			packet.Location = position;
 			packet.Face = face;
 			packet.Hand = hand;
-			packet.CursorPosition = cursorPosition;
+			packet.CursorPosition = cursorPosition.ToInterface();
 			packet.InsideBlock = entity.HeadInBlock;
 
 			Client.SendPacket(packet);

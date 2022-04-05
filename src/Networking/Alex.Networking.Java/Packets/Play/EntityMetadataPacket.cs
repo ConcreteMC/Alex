@@ -5,7 +5,6 @@ using Alex.Interfaces;
 using Alex.Networking.Java.Models;
 using Alex.Networking.Java.Util;
 using fNbt;
-using Microsoft.Xna.Framework;
 
 namespace Alex.Networking.Java.Packets.Play
 {
@@ -96,7 +95,7 @@ namespace Alex.Networking.Java.Packets.Play
 
 						case MetadataType.Rotation:
 							meta = new MetadataRotation(
-								index, new Vector3(stream.ReadFloat(), stream.ReadFloat(), stream.ReadFloat()));
+								index, new NetworkVector3(stream.ReadFloat(), stream.ReadFloat(), stream.ReadFloat()));
 
 							break;
 
@@ -110,7 +109,7 @@ namespace Alex.Networking.Java.Packets.Play
 							bool hasPosition = stream.ReadBool();
 
 							meta = new MetadataOptPosition(
-								index, hasPosition, hasPosition ? stream.ReadPosition() : (Vector3?)null);
+								index, hasPosition, hasPosition ? stream.ReadPosition() : (NetworkVector3?)null);
 						}
 
 							break;
@@ -300,10 +299,10 @@ namespace Alex.Networking.Java.Packets.Play
 
 	public class MetadataPosition : MetaDataEntry
 	{
-		public Vector3 Position { get; set; }
+		public IVector3 Position { get; set; }
 
 		/// <inheritdoc />
-		public MetadataPosition(byte index, Vector3 position) : base(index, MetadataType.Position)
+		public MetadataPosition(byte index, IVector3 position) : base(index, MetadataType.Position)
 		{
 			Position = position;
 		}
@@ -313,10 +312,10 @@ namespace Alex.Networking.Java.Packets.Play
 	public class MetadataOptPosition : MetaDataEntry
 	{
 		public bool HasValue { get; set; }
-		public Vector3? Position { get; set; }
+		public IVector3 Position { get; set; }
 
 		/// <inheritdoc />
-		public MetadataOptPosition(byte index, bool hasPosition, Vector3? position) : base(
+		public MetadataOptPosition(byte index, bool hasPosition, IVector3 position) : base(
 			index, MetadataType.OptPosition)
 		{
 			HasValue = hasPosition;
@@ -327,10 +326,10 @@ namespace Alex.Networking.Java.Packets.Play
 
 	public class MetadataRotation : MetaDataEntry
 	{
-		public Vector3 Rotation { get; }
+		public IVector3 Rotation { get; }
 
 		/// <inheritdoc />
-		public MetadataRotation(byte index, Vector3 rotation) : base(index, MetadataType.Rotation)
+		public MetadataRotation(byte index, IVector3 rotation) : base(index, MetadataType.Rotation)
 		{
 			Rotation = rotation;
 		}

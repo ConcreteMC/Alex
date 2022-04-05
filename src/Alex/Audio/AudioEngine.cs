@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using Alex.Common.Services;
 using Alex.Common.Utils;
+using Alex.Interfaces;
 using Alex.ResourcePackLib;
 using Alex.ResourcePackLib.Json.Bedrock.Sound;
 using FmodAudio;
@@ -256,16 +257,16 @@ namespace Alex.Audio
 			return sound.ToString();
 		}
 
-		public bool PlaySound(Sounds sound, Vector3 position, float pitch, float volume, bool isGlobal = false)
+		public bool PlaySound(Sounds sound, IVector3 position, float pitch, float volume, bool isGlobal = false)
 		{
-			return PlaySound(GetName(sound), position, pitch, volume, isGlobal);
+			return PlaySound(GetName(sound), position.ToXna(), pitch, volume, isGlobal);
 		}
 
-		public bool PlayJavaSound(string sound, Vector3 position, float pitch, float volume, bool isGlobal = false)
+		public bool PlayJavaSound(string sound, IVector3 position, float pitch, float volume, bool isGlobal = false)
 		{
 			if (_soundMapping.TryGetValue(sound, out var mapped))
 			{
-				return PlaySound(mapped, position, pitch, volume, isGlobal);
+				return PlaySound(mapped, position.ToXna(), pitch, volume, isGlobal);
 			}
 
 			return false;

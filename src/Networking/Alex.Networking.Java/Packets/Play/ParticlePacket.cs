@@ -1,7 +1,7 @@
 ﻿using System;
+using Alex.Interfaces;
 using Alex.Networking.Java.Models;
 using Alex.Networking.Java.Util;
-using Microsoft.Xna.Framework;
 
 namespace Alex.Networking.Java.Packets.Play
 {
@@ -20,7 +20,7 @@ namespace Alex.Networking.Java.Packets.Play
 		public float ParticleData;
 		public int ParticleCount;
 
-		public Color? Color = null;
+		public IColor Color = null;
 		public float Scale = 1f;
 
 		public SlotData SlotData = null;
@@ -51,7 +51,7 @@ namespace Alex.Networking.Java.Packets.Play
 					var r = stream.ReadFloat();
 					var g = stream.ReadFloat();
 					var b = stream.ReadFloat();
-					Color = new Color(r, g, b);
+					Color = new NetworkColor(r, g, b);
 					Scale = stream.ReadFloat();
 
 					break;

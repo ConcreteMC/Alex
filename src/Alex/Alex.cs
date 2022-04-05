@@ -41,6 +41,7 @@ using Alex.Worlds.Multiplayer.Bedrock;
 using Alex.Worlds.Multiplayer.Java;
 using Alex.Worlds.Singleplayer;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
@@ -54,7 +55,6 @@ using RocketUI.Input;
 using RocketUI.Input.Listeners;
 using RocketUI.Utilities.Extensions;
 using RocketUI.Utilities.Helpers;
-using SimpleInjector;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
 using GpuResourceManager = Alex.Common.Graphics.GpuResources.GpuResourceManager;
@@ -285,59 +285,71 @@ namespace Alex
 
 		private void RegisterServiceContainer()
 		{
-			SimpleInjector.Container container = new SimpleInjector.Container();
-			container.Options.ResolveUnregisteredConcreteTypes = true;
+			var container = new ServiceCollection();
+			//container.Options.ResolveUnregisteredConcreteTypes = true;
 
-			container.RegisterInstance<Game>(this);
-			container.RegisterInstance<Alex>(this);
-			container.RegisterInstance<IGraphicsDeviceService>(DeviceManager);
-			container.RegisterInstance<GraphicsDevice>(GraphicsDevice);
-			container.RegisterSingleton<IGuiRenderer, GuiRenderer>();
-			container.RegisterSingleton<GuiManager>();
-			container.RegisterSingleton<InputManager>();
-			container.RegisterInstance<IServiceProvider>(container);
+			container.AddSingleton<Game>(this);
+			container.AddSingleton<Alex>(this);
+			container.AddSingleton<IGraphicsDeviceService>(DeviceManager);
+			container.AddSingleton<GraphicsDevice>(GraphicsDevice);
+			container.AddSingleton<IGuiRenderer, GuiRenderer>();
+			container.AddSingleton<GuiManager>();
+			container.AddSingleton<InputManager>();
+			//container.AddSingleton<IServiceProvider>(container);
 
-			container.RegisterSingleton<JavaServerQueryProvider>();
-			container.RegisterSingleton<BedrockServerQueryProvider>();
+			container.AddSingleton<JavaServerQueryProvider>();
+			container.AddSingleton<BedrockServerQueryProvider>();
 
-			container.Register<IRegistryManager, RegistryManager>(Lifestyle.Singleton);
+			container.AddSingleton<IRegistryManager, RegistryManager>();
 
-			container.RegisterSingleton<ResourceManager>();
-			container.RegisterInstance<ServerTypeManager>(ServerTypeManager);
-			container.Register<XboxAuthService>(Lifestyle.Singleton);
+			container.AddSingleton<ResourceManager>();
+			container.AddSingleton<ServerTypeManager>(ServerTypeManager);
+			container.AddSingleton<XboxAuthService>();
 
-			container.Register<BlobCache>(Lifestyle.Singleton);
-			container.Register<ResourcePackCache>(Lifestyle.Singleton);
+			container.AddSingleton<BlobCache>();
+			container.AddSingleton<ResourcePackCache>();
 
-			container.RegisterInstance<ContentManager>(Content);
-			container.RegisterInstance<IStorageSystem>(Storage);
-			container.RegisterInstance<IOptionsProvider>(Options);
-			container.RegisterInstance<Audio.AudioEngine>(AudioEngine);
+			container.AddSingleton<ContentManager>(Content);
+			container.AddSingleton<IStorageSystem>(Storage);
+			container.AddSingleton<IOptionsProvider>(Options);
+			container.AddSingleton<Audio.AudioEngine>(AudioEngine);
 
-			container.RegisterSingleton<GuiPanoramaSkyBox>();
+			container.AddSingleton<GuiPanoramaSkyBox>();
 
 			// RocketUI
-			container.Collection.Register<IInputListenerFactory>(
+			container.TryAddEnumerable(ServiceDescriptor.Singleton(typeof(IInputListenerFactory), typeof(AlexKeyboardInputListenerFactory)));
+			container.TryAddEnumerable(ServiceDescriptor.Singleton(typeof(IInputListenerFactory), typeof(AlexMouseInputListenerFactory)));
+			container.TryAddEnumerable(ServiceDescriptor.Singleton(typeof(IInputListenerFactory), typeof(AlexGamePadInputListenerFactory)));
+			
+			/*
 				new Type[]
 				{
 					typeof(AlexKeyboardInputListenerFactory), typeof(AlexMouseInputListenerFactory),
 					typeof(AlexGamePadInputListenerFactory)
-				}, Lifestyle.Singleton);
+				}, Lifestyle.Singleton);*/
 
-			container.Collection.Register<IHostedService>(typeof(Alex).Assembly);
+			foreach (var s in typeof(Alex).Assembly.GetTypes())
+			{
+				if (typeof(IHostedService).IsAssignableFrom(s))
+				{
+					container.TryAddEnumerable(ServiceDescriptor.Singleton(typeof(IHostedService), s));
+				}
+			}
 
 			if (LaunchSettings.RocketDebugging)
 			{
-				container.RegisterSingleton<RocketDebugSocketServer>();
-				container.Collection.Append<IHostedService, RocketDebugSocketServer>();
+				//container.AddSingleton<RocketDebugSocketServer>();
+				container.AddHostedService<RocketDebugSocketServer>();
+				//container.Collection.Append<IHostedService, RocketDebugSocketServer>();
 			}
 
 			PluginManager.Initiate(container, Options, LaunchSettings);
 
-			container.Verify();
-			Services.AddService<IServiceProvider>(container);
+			var c = container.BuildServiceProvider();
+			//container.Verify();
+			Services.AddService<IServiceProvider>(c);
 
-			ServiceContainer = container;
+			ServiceContainer = c;
 			PluginManager.Setup(ServiceContainer);
 		}
 

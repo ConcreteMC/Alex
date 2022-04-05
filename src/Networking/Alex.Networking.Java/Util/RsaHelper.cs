@@ -3,7 +3,7 @@ using System.IO;
 using System.Security.Cryptography;
 using NLog;
 
-namespace Alex.Networking.Java.Util.Encryption
+namespace Alex.Networking.Java.Util
 {
 	public class RsaHelper
 	{

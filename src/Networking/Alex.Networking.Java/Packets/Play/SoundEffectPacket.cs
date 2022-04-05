@@ -1,5 +1,6 @@
+using Alex.Interfaces;
+using Alex.Networking.Java.Models;
 using Alex.Networking.Java.Util;
-using Microsoft.Xna.Framework;
 
 namespace Alex.Networking.Java.Packets.Play
 {
@@ -7,7 +8,7 @@ namespace Alex.Networking.Java.Packets.Play
 	{
 		public int SoundId { get; set; }
 		public SoundCategory Category { get; set; }
-		public Vector3 Position { get; set; }
+		public IVector3 Position { get; set; }
 		public float Volume { get; set; }
 		public float Pitch { get; set; }
 
@@ -20,7 +21,7 @@ namespace Alex.Networking.Java.Packets.Play
 			var y = stream.ReadInt();
 			var z = stream.ReadInt();
 
-			Position = new Vector3(x / 8f, y / 8f, z / 8f);
+			Position = new NetworkVector3(x / 8f, y / 8f, z / 8f);
 
 			Volume = stream.ReadFloat();
 			Pitch = stream.ReadFloat();

@@ -1,11 +1,12 @@
+using Alex.Interfaces;
+using Alex.Networking.Java.Models;
 using Alex.Networking.Java.Util;
-using Microsoft.Xna.Framework;
 
 namespace Alex.Networking.Java.Packets.Play
 {
 	public class FacePlayerPacket : Packet<FacePlayerPacket>
 	{
-		public Vector3 Target { get; set; } = Vector3.Zero;
+		public IVector3 Target { get; set; } = NetworkVector3.Zero;
 		public bool LookAtEyes { get; set; } = false;
 		public bool IsEntity { get; set; } = false;
 		public int EntityId { get; set; } = 0;
@@ -18,7 +19,7 @@ namespace Alex.Networking.Java.Packets.Play
 			var x = (float)stream.ReadDouble();
 			var y = (float)stream.ReadDouble();
 			var z = (float)stream.ReadDouble();
-			Target = new Vector3(x, y, z);
+			Target = new NetworkVector3(x, y, z);
 			IsEntity = stream.ReadBool();
 
 			if (IsEntity)

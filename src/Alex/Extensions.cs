@@ -4,6 +4,7 @@ using System.IO;
 using System.Text;
 using Alex.Blocks.Minecraft.Signs;
 using Alex.Blocks.Minecraft.Terracotta;
+using Alex.Common;
 using Alex.Common.Blocks;
 using Alex.Common.Gui.Graphics;
 using Alex.Common.Utils.Vectors;
@@ -23,6 +24,26 @@ namespace Alex
 	{
 		static Extensions() { }
 
+		public static IColor ToInterface(this Color color)
+		{
+			return new ColorPrimitive(color.R, color.G, color.B, color.A);
+		}
+		
+		public static IVector3 ToInterface(this Vector3 color)
+		{
+			return new Vector3Primitive(color.X, color.Y, color.Z);
+		}
+		
+		public static Vector3 ToXna(this IVector3 vector)
+		{
+			return new Vector3(vector.X, vector.Y, vector.Z);
+		}
+
+		public static uint PackedValue(this IColor color)
+		{
+			return (uint) ((int) color.A << 24 | (int) color.B << 16 | (int) color.G << 8) | (uint) color.R;
+		}
+		
 		public static Color Blend(this Color color, Color backColor, byte amount)
 		{
 			amount = (byte)(255 - amount);
