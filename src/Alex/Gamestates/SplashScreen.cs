@@ -1,4 +1,5 @@
-﻿using Alex.Common.Gui.Elements;
+﻿using Alex.Common;
+using Alex.Common.Gui.Elements;
 using Alex.Common.Gui.Graphics;
 using Alex.Common.Utils;
 using Alex.Gamestates.Common;
@@ -50,13 +51,13 @@ namespace Alex.Gamestates
 			_progressBarContainer.AddChild(
 				_textDisplay = new TextElement()
 				{
-					Text = Text, TextColor = (Color)TextColor.White, Anchor = Alignment.TopLeft, HasShadow = false
+					Text = Text, TextColor = (Color)TextColor.White.ToXna(), Anchor = Alignment.TopLeft, HasShadow = false
 				});
 
 			_progressBarContainer.AddChild(
 				_percentageDisplay = new TextElement()
 				{
-					Text = Text, TextColor = (Color)TextColor.White, Anchor = Alignment.TopRight, HasShadow = false
+					Text = Text, TextColor = (Color)TextColor.White.ToXna(), Anchor = Alignment.TopRight, HasShadow = false
 				});
 
 			_progressBarContainer.AddChild(
@@ -66,7 +67,7 @@ namespace Alex.Gamestates
 				_subTextDisplay = new TextElement()
 				{
 					Text = Text,
-					TextColor = (Color)TextColor.White,
+					TextColor = (Color)TextColor.White.ToXna(),
 					Anchor = Alignment.BottomLeft,
 					HasShadow = false
 				});

@@ -1,4 +1,4 @@
-using Microsoft.Xna.Framework;
+using Alex.Interfaces;
 
 namespace Alex.ResourcePackLib.Json.Bedrock.Particles
 {
@@ -7,17 +7,17 @@ namespace Alex.ResourcePackLib.Json.Bedrock.Particles
 		/// <summary>
 		///		The velocity of the particle
 		/// </summary>
-		Vector3 Velocity { get; set; }
+		IVector3 Velocity { get; set; }
 
 		/// <summary>
 		///		The position of the particle
 		/// </summary>
-		Vector3 Position { get; set; }
+		IVector3 Position { get; set; }
 
 		/// <summary>
 		///		The acceleration applied to the particle
 		/// </summary>
-		Vector3 Acceleration { get; set; }
+		IVector3 Acceleration { get; set; }
 
 		/// <summary>
 		///		The drag co-efficient applied to the particle
@@ -42,16 +42,16 @@ namespace Alex.ResourcePackLib.Json.Bedrock.Particles
 		/// <summary>
 		///		The position of the sprite on the spritesheet
 		/// </summary>
-		Vector2 UvPosition { get; set; }
+		IVector2 UvPosition { get; set; }
 
 		/// <summary>
 		///		The size of the sprite on the spritesheet
 		/// </summary>
-		Vector2 UvSize { get; set; }
+		IVector2 UvSize { get; set; }
 
 		/// <summary>
 		///		Specifies the x and y size of the billboard.
 		/// </summary>
-		Vector2 Size { get; set; }
+		IVector2 Size { get; set; }
 	}
 }

@@ -1,4 +1,4 @@
-using Microsoft.Xna.Framework;
+using Alex.Interfaces;
 using Newtonsoft.Json;
 
 namespace Alex.ResourcePackLib.Json.Models.Entities
@@ -27,7 +27,7 @@ namespace Alex.ResourcePackLib.Json.Models.Entities
 		/// Offset of the visibility bounding box from the entity location point (in model space units).
 		/// </summary>
 		[JsonProperty("visible_bounds_offset", NullValueHandling = NullValueHandling.Ignore)]
-		public Vector3 VisibleBoundsOffset { get; set; }
+		public IVector3 VisibleBoundsOffset { get; set; }
 
 		/// <summary>
 		///	 Width of the visibility bounding box (in model space units).

@@ -6,6 +6,7 @@ using Alex.Common.Utils;
 using Alex.Graphics.Effect;
 using Alex.Graphics.Models;
 using Alex.Graphics.Models.Entity;
+using Alex.Interfaces;
 using Alex.ResourcePackLib.Json.Models.Entities;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -183,18 +184,18 @@ namespace Alex.Utils
 		{
 			ModelBone modelBone = new ModelBone() { Name = bone.Name, Box = new BoundingBox() };
 
-			modelBone.Pivot = bone.Pivot.HasValue ?
-				new Vector3(bone.Pivot.Value.X, bone.Pivot.Value.Y, bone.Pivot.Value.Z) : null;
+			modelBone.Pivot = bone.Pivot != null ?
+				new Vector3(bone.Pivot.X, bone.Pivot.Y, bone.Pivot.Z) : null;
 
-			if (bone.Rotation.HasValue)
+			if (bone.Rotation != null)
 			{
-				var r = bone.Rotation.Value;
+				var r = bone.Rotation;
 				modelBone.BaseRotation = new Vector3(r.X, r.Y, r.Z);
 			}
 
-			if (bone.BindPoseRotation.HasValue)
+			if (bone.BindPoseRotation != null)
 			{
-				var r = bone.BindPoseRotation.Value;
+				var r = bone.BindPoseRotation;
 				//	modelBone.BaseRotation += new Vector3(r.X, r.Y, r.Z);
 			}
 
@@ -229,7 +230,7 @@ namespace Alex.Utils
 						}
 					}*/
 
-					var modifier = new Vector3(origin.X, origin.Y, origin.Z);
+					var modifier = Primitives.Factory.Vector3(origin.X, origin.Y, origin.Z);
 
 					var bonePivotPoint = bone.Pivot;
 
@@ -266,20 +267,21 @@ namespace Alex.Utils
 
 					Matrix matrix = Matrix.Identity;
 
-					if (bone.BindPoseRotation.HasValue && bonePivotPoint.HasValue)
+					if (bone.BindPoseRotation != null && bonePivotPoint != null)
 					{
 						//	bonePivotPoint *= new Vector3(-1f, 1f, 1f);
-						var r = bone.BindPoseRotation.Value;
+						var r = bone.BindPoseRotation;
 
-						matrix *= Matrix.CreateTranslation(-bonePivotPoint.Value)
+						matrix *= Matrix.CreateTranslation(-bonePivotPoint.X, -bonePivotPoint.Y, -bonePivotPoint.Z)
 						          * MatrixHelper.CreateRotationDegrees(new Vector3(r.X, r.Y, r.Z))
-						          * Matrix.CreateTranslation(bonePivotPoint.Value);
+						          * Matrix.CreateTranslation(bonePivotPoint.X, bonePivotPoint.Y, bonePivotPoint.Z);
 					}
 
-					if (cube.Rotation.HasValue)
+					if (cube.Rotation != null)
 					{
-						var rotation = cube.Rotation.Value;
-						Vector3 pivot = cube.Pivot.GetValueOrDefault(bone.Pivot.GetValueOrDefault(Vector3.Zero));
+						var rotation = cube.Rotation;
+						var bPivot = bone.Pivot != null ? new Vector3(bone.Pivot.X, bone.Pivot.Y, bone.Pivot.Z) : Vector3.Zero;
+						Vector3 pivot = cube.Pivot != null ? new Vector3(cube.Pivot.X, cube.Pivot.Y, cube.Pivot.Z) : bPivot;
 
 						//	pivot *= new Vector3(-1f, 1f, 1f);
 						//if (cube.Pivot.HasValue)

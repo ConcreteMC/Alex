@@ -1,11 +1,9 @@
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Linq;
 using System.Reflection;
+using Alex.Interfaces;
 using Alex.ResourcePackLib.Json.Models.Entities;
 using Alex.ResourcePackLib.Json.Models.Items;
-using Microsoft.Xna.Framework;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using NLog;
@@ -114,7 +112,7 @@ namespace Alex.ResourcePackLib.Json.Converters
 					switch (prop.Key.ToLower())
 					{
 						case "visible_bounds_offset":
-							model.Description.VisibleBoundsOffset = property.ToObject<Vector3>(serializer);
+							model.Description.VisibleBoundsOffset = property.ToObject<IVector3>(serializer);
 
 							break;
 
@@ -154,20 +152,23 @@ namespace Alex.ResourcePackLib.Json.Converters
 			{
 				foreach (var bone in model.Bones)
 				{
-					if (bone.Pivot.HasValue)
+					if (bone.Pivot != null)
 					{
-						bone.Pivot *= new Vector3(-1f, 1f, 1f);
+						bone.Pivot = VectorUtils.Multiply(bone.Pivot, Primitives.Factory.Vector3(-1f, 1f, 1f));
+						//bone.Pivot *= Primitives.Factory.Vector3(-1f, 1f, 1f);
 					}
 
 					//bone.BindPoseRotation
-					if (bone.Rotation.HasValue)
+					if (bone.Rotation != null)
 					{
-						bone.Rotation *= new Vector3(-1f, -1f, 1f);
+						bone.Rotation = VectorUtils.Multiply(bone.Rotation, Primitives.Factory.Vector3(-1f, -1f, 1f));
+						//bone.Rotation *= Primitives.Factory.Vector3(-1f, -1f, 1f);
 					}
 
-					if (bone.BindPoseRotation.HasValue)
+					if (bone.BindPoseRotation != null)
 					{
-						bone.BindPoseRotation *= new Vector3(-1f, -1f, 1f);
+						bone.BindPoseRotation = VectorUtils.Multiply(bone.BindPoseRotation, Primitives.Factory.Vector3(-1f, -1f, 1f));
+						//bone.BindPoseRotation *= Primitives.Factory.Vector3(-1f, -1f, 1f);
 					}
 
 					if (bone.Cubes != null)
@@ -176,16 +177,18 @@ namespace Alex.ResourcePackLib.Json.Converters
 						{
 							var original = cube.Origin;
 
-							cube.Origin = new Vector3(-(original.X + cube.Size.X), original.Y, original.Z);
+							cube.Origin = Primitives.Factory.Vector3(-(original.X + cube.Size.X), original.Y, original.Z);
 
-							if (cube.Pivot.HasValue)
+							if (cube.Pivot != null)
 							{
-								cube.Pivot *= new Vector3(-1f, 1f, 1f);
+								cube.Pivot = VectorUtils.Multiply(cube.Pivot, Primitives.Factory.Vector3(-1f, 1f, 1f));
+								//cube.Pivot *= Primitives.Factory.Vector3(-1f, 1f, 1f);
 							}
 
-							if (cube.Rotation.HasValue)
+							if (cube.Rotation != null)
 							{
-								cube.Rotation *= new Vector3(-1f, -1f, 1f);
+								cube.Rotation = VectorUtils.Multiply(cube.Rotation, Primitives.Factory.Vector3(-1f, -1f, 1f));
+								//cube.Rotation *= Primitives.Factory.Vector3(-1f, -1f, 1f);
 							}
 						}
 					}

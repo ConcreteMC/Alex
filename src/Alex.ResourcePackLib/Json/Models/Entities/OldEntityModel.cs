@@ -1,9 +1,4 @@
-﻿using System.Collections.Generic;
-using Alex.ResourcePackLib.Json.Converters;
-using Microsoft.Xna.Framework;
-using MiNET.Utils.Skins;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
+﻿using Alex.Interfaces;
 using NLog;
 
 namespace Alex.ResourcePackLib.Json.Models.Entities
@@ -55,7 +50,7 @@ namespace Alex.ResourcePackLib.Json.Models.Entities
 		}
 
 		[J("visible_bounds_offset", NullValueHandling = N.Ignore)]
-		public Vector3 VisibleBoundsOffset
+		public IVector3 VisibleBoundsOffset
 		{
 			get
 			{

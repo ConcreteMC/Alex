@@ -1,3 +1,5 @@
+using Alex.Interfaces.Resources;
+
 namespace Alex.Common.Resources
 {
 	public interface IRegistryEntry<TType> where TType : class

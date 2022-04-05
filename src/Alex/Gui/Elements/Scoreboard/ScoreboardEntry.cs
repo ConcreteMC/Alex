@@ -1,3 +1,4 @@
+using Alex.Common;
 using Alex.Common.Utils;
 using Alex.Interfaces;
 using Alex.Networking.Java.Models;
@@ -69,7 +70,7 @@ namespace Alex.Gui.Elements.Scoreboard
 			Right.AddChild(
 				RightText = new TextElement()
 				{
-					Anchor = Alignment.TopRight, Text = score.ToString(), TextColor = TextColor.Red.ForegroundColor
+					Anchor = Alignment.TopRight, Text = score.ToString(), TextColor = TextColor.Red.ForegroundColor.ToXna()
 					//ParentElement = this
 				});
 

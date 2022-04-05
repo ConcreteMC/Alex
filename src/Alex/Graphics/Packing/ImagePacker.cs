@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using Alex.Common.Resources;
 using Alex.Common.Utils;
+using Alex.Interfaces.Resources;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
 using Point = SixLabors.ImageSharp.Point;

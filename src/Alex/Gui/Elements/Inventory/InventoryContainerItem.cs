@@ -1,3 +1,4 @@
+using Alex.Common;
 using Alex.Common.Utils;
 using Alex.Interfaces;
 using Alex.Items;
@@ -48,7 +49,7 @@ namespace Alex.Gui.Elements.Inventory
 			GuiItem.AddChild(
 				_counTextElement = new TextElement()
 				{
-					TextColor = (Color)TextColor.White,
+					TextColor = (Color)TextColor.White.ToXna(),
 					Anchor = Alignment.BottomRight,
 					Text = "",
 					Scale = 0.75f,

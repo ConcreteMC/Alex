@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Linq;
-using Microsoft.Xna.Framework;
+using Alex.Interfaces;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -10,7 +10,7 @@ namespace Alex.ResourcePackLib.Json.Converters
 	{
 		public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
 		{
-			var v = value is Vector3 ? (Vector3)value : new Vector3();
+			var v = value is IVector3 ? (IVector3)value : Primitives.Factory.Vector3Zero;
 
 			writer.WriteRawValue(JsonConvert.SerializeObject(new float[] { v.X, v.Y, v.Z }, Formatting.None));
 			/*serializer.Serialize(writer, new float[]
@@ -34,36 +34,39 @@ namespace Alex.ResourcePackLib.Json.Converters
 
 				if (arr.Count == 3)
 				{
-					var v3 = new Vector3();
+					var x = 0f;
+					var y = 0f;
+					var z = 0f;
+					var v3 = Primitives.Factory.Vector3(0,0,0);
 
 					if (arr[0].Type == JTokenType.Integer)
 					{
-						v3.X = arr[0].Value<int>();
+						x = arr[0].Value<int>();
 					}
 					else if (arr[0].Type == JTokenType.Float)
 					{
-						v3.X = arr[0].Value<float>();
+						x = arr[0].Value<float>();
 					}
 
 					if (arr[1].Type == JTokenType.Integer)
 					{
-						v3.Y = arr[1].Value<int>();
+						y = arr[1].Value<int>();
 					}
 					else if (arr[1].Type == JTokenType.Float)
 					{
-						v3.Y = arr[1].Value<float>();
+						y = arr[1].Value<float>();
 					}
 
 					if (arr[2].Type == JTokenType.Integer)
 					{
-						v3.Z = arr[2].Value<int>();
+						z = arr[2].Value<int>();
 					}
 					else if (arr[2].Type == JTokenType.Float)
 					{
-						v3.Z = arr[2].Value<float>();
+						z = arr[2].Value<float>();
 					}
 
-					return v3;
+					return Primitives.Factory.Vector3(x,y,z);
 				}
 			}
 
@@ -72,7 +75,7 @@ namespace Alex.ResourcePackLib.Json.Converters
 
 		public override bool CanConvert(Type objectType)
 		{
-			return typeof(Vector3).IsAssignableFrom(objectType) || typeof(Vector3?).IsAssignableFrom(objectType);
+			return typeof(IVector3).IsAssignableFrom(objectType) || typeof(IVector3).IsAssignableFrom(objectType);
 		}
 	}
 }

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Alex.Interfaces.Resources;
 
 namespace Alex.Common.Resources
 {

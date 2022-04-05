@@ -82,7 +82,7 @@ namespace Alex.Gamestates.Login
 
 			_authCodeElement = new TextElement()
 			{
-				TextColor = (Color)TextColor.Cyan,
+				TextColor = (Color)TextColor.Cyan.ToXna(),
 				Text = "Please wait...\nStarting authentication process...",
 				FontStyle = FontStyle.Italic,
 				Scale = 1.1f
@@ -114,7 +114,7 @@ namespace Alex.Gamestates.Login
 				t = new TextElement()
 				{
 					Text = "We are NOT in anyway or form affiliated with Mojang/Minecraft or Microsoft!",
-					TextColor = (Color)TextColor.Yellow,
+					TextColor = (Color)TextColor.Yellow.ToXna(),
 					Scale = 1f,
 					FontStyle = FontStyle.DropShadow,
 					Anchor = Alignment.MiddleCenter
@@ -126,7 +126,7 @@ namespace Alex.Gamestates.Login
 				info = new TextElement()
 				{
 					Text = "We will never collect/store or do anything with your data.",
-					TextColor = (Color)TextColor.Yellow,
+					TextColor = (Color)TextColor.Yellow.ToXna(),
 					Scale = 0.8f,
 					FontStyle = FontStyle.DropShadow,
 					Anchor = Alignment.MiddleCenter,
@@ -200,7 +200,7 @@ namespace Alex.Gamestates.Login
 			{
 				LoginButton.Enabled = true;
 
-				_authCodeElement.TextColor = (Color)TextColor.Cyan;
+				_authCodeElement.TextColor = (Color)TextColor.Cyan.ToXna();
 				_authCodeElement.FontStyle = FontStyle.Bold;
 				_authCodeElement.Scale = 2f;
 				_authCodeElement.Text = ConnectResponse.UserCode;
@@ -277,7 +277,7 @@ namespace Alex.Gamestates.Login
 
 		protected void ShowAuthenticationError(string reason = null)
 		{
-			_authCodeElement.TextColor = (Color)TextColor.Red;
+			_authCodeElement.TextColor = (Color)TextColor.Red.ToXna();
 			_authCodeElement.FontStyle = FontStyle.Bold;
 			_authCodeElement.Scale = 2f;
 			_authCodeElement.Text = $"Authentication failed.";

@@ -8,13 +8,25 @@ namespace Alex.Common.Utils.Vectors
 	public sealed class PlayerLocation : ICloneable, IVector3
 	{
 		public float X;
-		float IVector3.X => X;
-		
+		float IVector3.X
+		{
+			get => X;
+			set => X = value;
+		}
+
 		public float Y;
-		float IVector3.Y => Y;
-		
+		float IVector3.Y
+		{
+			get => Y;
+			set => Y = value;
+		}
+
 		public float Z;
-		float IVector3.Z => Z;
+		float IVector3.Z
+		{
+			get => Z;
+			set => Z = value;
+		}
 
 		public float Yaw;
 		public float Pitch;
@@ -219,6 +231,31 @@ namespace Alex.Common.Utils.Vectors
 		public override string ToString()
 		{
 			return $"X={X}, Y={Y}, Z={Z}, HeadYaw={HeadYaw}, Yaw={Yaw}, Pitch={Pitch}";
+		}
+
+		private bool Equals(PlayerLocation other)
+		{
+			return X.Equals(other.X) && Y.Equals(other.Y) && Z.Equals(other.Z) && Yaw.Equals(other.Yaw) && Pitch.Equals(other.Pitch) && HeadYaw.Equals(other.HeadYaw) && OnGround == other.OnGround;
+		}
+
+		/// <inheritdoc />
+		public bool Equals(IVector3 other)
+		{
+			if (other == null) return false;
+			
+			return X.Equals(other.X) && Y.Equals(other.Y) && Z.Equals(other.Z);
+		}
+
+		/// <inheritdoc />
+		public override bool Equals(object obj)
+		{
+			return ReferenceEquals(this, obj) || obj is PlayerLocation other && Equals(other);
+		}
+
+		/// <inheritdoc />
+		public override int GetHashCode()
+		{
+			return HashCode.Combine(X, Y, Z, Yaw, Pitch, HeadYaw, OnGround);
 		}
 	}
 }

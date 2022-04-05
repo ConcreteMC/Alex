@@ -17,6 +17,53 @@ namespace Alex.Common
 	{
 		private static Texture2D WhiteTexture { get; set; }
 
+		public static Color ToXna(this IColor c)
+		{
+			return new Color(c.R, c.G, c.B, c.A);
+		}
+		
+		public static Color ToXna(this TextColor color)
+		{
+			return color.ForegroundColor.ToXna();
+		}
+
+		public static TextColor ToTextColor(this Color color)
+		{
+			return TextColor.FromIColor(Primitives.Factory.Color(color.R, color.G, color.B, color.A));
+		}
+		
+		public static IColor ToIColor(this Color color)
+		{
+			return Primitives.Factory.Color(color.R, color.G, color.B, color.A);
+		}
+
+		public static Vector3 ToXnaVector3(this IColor color)
+		{
+			var c = color.ToXna().ToVector3();
+
+			return c;
+		}
+		
+		public static IVector3 ToVector3(this IColor color)
+		{
+			var c = color.ToXna().ToVector3();
+			return Primitives.Factory.Vector3(c.X, c.Y, c.Z);
+		}
+		
+		public static Vector3 GetVector3(this BlockFace face)
+		{
+			return face switch
+			{
+				BlockFace.Down  => Vector3.Down,
+				BlockFace.Up    => Vector3.Up,
+				BlockFace.East  => Vector3.Right,
+				BlockFace.West  => Vector3.Left,
+				BlockFace.North => Vector3.Forward,
+				BlockFace.South => Vector3.Backward,
+				_               => Vector3.Zero
+			};
+		}
+		
 		public static BlockCoordinates GetBlockCoordinates(this BlockFace face)
 		{
 			return face switch

@@ -5,6 +5,7 @@ using Alex.Common.Graphics;
 using Alex.Common.Resources;
 using Alex.Graphics.Models.Items;
 using Alex.Interfaces;
+using Alex.Interfaces.Resources;
 using Alex.Items;
 using Alex.ResourcePackLib.Json.Models;
 using Alex.ResourcePackLib.Json.Models.Items;

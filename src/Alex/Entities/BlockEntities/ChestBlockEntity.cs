@@ -8,6 +8,7 @@ using Alex.Common.Utils.Vectors;
 using Alex.Graphics.Models;
 using Alex.Graphics.Models.Entity.BlockEntities;
 using Alex.Interfaces;
+using Alex.Interfaces.Resources;
 using Alex.Utils;
 using Alex.Worlds;
 using fNbt;

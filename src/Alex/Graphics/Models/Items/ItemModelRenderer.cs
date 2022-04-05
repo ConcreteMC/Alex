@@ -189,7 +189,7 @@ namespace Alex.Graphics.Models.Items
 			}
 			else if (displayPosition.HasFlag(DisplayPosition.Ground))
 			{
-				root.BaseScale = displayElement.Scale * Scale;
+				root.BaseScale = new Vector3(displayElement.Scale.X, displayElement.Scale.Y, displayElement.Scale.Z) * Scale;
 
 				root.BaseRotation = new Vector3(
 					displayElement.Rotation.X, displayElement.Rotation.Y, displayElement.Rotation.Z);

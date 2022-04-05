@@ -1,7 +1,7 @@
 using System;
 using System.Diagnostics;
 
-namespace Alex.Common.Resources
+namespace Alex.Interfaces.Resources
 {
 	[DebuggerDisplay("{DebuggerDisplay,nq}")]
 	public class ResourceLocation : IEquatable<ResourceLocation>

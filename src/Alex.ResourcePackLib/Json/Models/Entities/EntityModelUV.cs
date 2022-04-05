@@ -1,8 +1,5 @@
 using System;
-using Alex.Common.Blocks;
 using Alex.Interfaces;
-using Alex.ResourcePackLib.Json.Converters;
-using Microsoft.Xna.Framework;
 using Newtonsoft.Json;
 
 namespace Alex.ResourcePackLib.Json.Models.Entities
@@ -21,11 +18,11 @@ namespace Alex.ResourcePackLib.Json.Models.Entities
 
 		[JsonProperty("down")] public EntityModelUVData Down { get; set; }
 
-		public EntityModelUV() : this(Vector2.Zero, false) { }
+		public EntityModelUV() : this(Primitives.Factory.Vector2Zero, false) { }
 
 		[JsonIgnore] public bool IsCube { get; }
 
-		public EntityModelUV(Vector2 origin, bool isCube = true)
+		public EntityModelUV(IVector2 origin, bool isCube = true)
 		{
 			IsCube = isCube;
 			var model = new EntityModelUVData() { Origin = origin };
@@ -59,19 +56,18 @@ namespace Alex.ResourcePackLib.Json.Models.Entities
 			return null;
 		}
 
-		public static implicit operator EntityModelUV(Vector2 vector)
-		{
+		public static EntityModelUV FromIVector2(IVector2 vector) {
 			return new EntityModelUV(vector);
 		}
 
-		public bool IsOutOfBound(Vector2 textureSize)
+		public bool IsOutOfBound(IVector2 textureSize)
 		{
 			if (IsCube)
 			{
 				return (Down.Origin.Y >= textureSize.Y);
 			}
 
-			foreach (BlockFace face in Enum.GetValues<BlockFace>())
+			foreach (BlockFace face in Enum.GetValues(typeof(BlockFace)))
 			{
 				var f = GetFace(face);
 
@@ -89,32 +85,32 @@ namespace Alex.ResourcePackLib.Json.Models.Entities
 		/// Specifies the uv origin for the face. For this face, it is the upper-left corner, when looking at the face with y being up.
 		/// </summary>
 		[JsonProperty("uv")]
-		public Vector2 Origin { get; set; }
+		public IVector2 Origin { get; set; }
 
 		/// <summary>
 		/// The face maps this many texels from the uv origin. If not specified, the box dimensions are used instead.
 		/// </summary>
 		[JsonProperty("uv_size")]
-		public Vector2? Size { get; set; } = null;
+		public IVector2 Size { get; set; } = null;
 
-		public EntityModelUVData Offset(Vector2 amount)
+		public EntityModelUVData Offset(IVector2 amount)
 		{
-			return new EntityModelUVData() { Origin = Origin + amount, Size = Size };
+			return new EntityModelUVData() { Origin = VectorUtils.Add(Origin, amount), Size = Size };
 		}
 
-		public EntityModelUVData WithSize(Vector2 size)
+		public EntityModelUVData WithSize(IVector2 size)
 		{
 			return new EntityModelUVData() { Origin = Origin, Size = size };
 		}
 
 		public EntityModelUVData WithSize(float x, float y)
 		{
-			return new EntityModelUVData() { Origin = Origin, Size = new Vector2(x, y) };
+			return new EntityModelUVData() { Origin = Origin, Size = Primitives.Factory.Vector2(x, y) };
 		}
 
 		public EntityModelUVData WithOptionalSize(float x, float y)
 		{
-			return new EntityModelUVData() { Origin = Origin, Size = Size.GetValueOrDefault(new Vector2(x, y)) };
+			return new EntityModelUVData() { Origin = Origin, Size = Size ?? Primitives.Factory.Vector2(x, y) };
 		}
 	}
 }

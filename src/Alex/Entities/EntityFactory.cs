@@ -19,7 +19,7 @@ using Newtonsoft.Json;
 using NLog;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
-using ResourceLocation = Alex.Common.Resources.ResourceLocation;
+using ResourceLocation = Alex.Interfaces.Resources.ResourceLocation;
 
 namespace Alex.Entities
 {

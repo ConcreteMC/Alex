@@ -42,7 +42,7 @@ namespace Alex.Gamestates.Login
 				t = new TextElement()
 				{
 					Text = "We are NOT in anyway or form affiliated with Mojang/Minecraft or Microsoft!",
-					TextColor = (Color)TextColor.Yellow,
+					TextColor = (Color)TextColor.Yellow.ToXna(),
 					Scale = 1f,
 					FontStyle = FontStyle.DropShadow,
 					Anchor = Alignment.MiddleCenter
@@ -54,7 +54,7 @@ namespace Alex.Gamestates.Login
 				info = new TextElement()
 				{
 					Text = "We will never collect/store or do anything with your data.",
-					TextColor = (Color)TextColor.Yellow,
+					TextColor = (Color)TextColor.Yellow.ToXna(),
 					Scale = 0.8f,
 					FontStyle = FontStyle.DropShadow,
 					Anchor = Alignment.MiddleCenter,
@@ -110,7 +110,7 @@ namespace Alex.Gamestates.Login
 
 			buttonRow.ChildAnchor = Alignment.MiddleCenter;
 
-			AddRocketElement(ErrorMessage = new TextElement() { TextColor = (Color)TextColor.Yellow });
+			AddRocketElement(ErrorMessage = new TextElement() { TextColor = (Color)TextColor.Yellow.ToXna() });
 
 			Initialized();
 		}

@@ -18,6 +18,7 @@ using Alex.Gui;
 using Alex.Gui.Elements;
 using Alex.Gui.Elements.Containers;
 using Alex.Gui.Elements.Context3D;
+using Alex.Interfaces.Resources;
 using Alex.ResourcePackLib.Json.Bedrock.Entity;
 using Alex.ResourcePackLib.Json.Models.Entities;
 using Alex.Utils;

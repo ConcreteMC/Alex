@@ -1,12 +1,10 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
-using Alex.Common.Utils;
+using Alex.Interfaces;
 using Alex.ResourcePackLib.Json.Converters.Bedrock;
 using ConcreteMC.MolangSharp.Parser;
 using ConcreteMC.MolangSharp.Runtime;
 using ConcreteMC.MolangSharp.Runtime.Value;
-using Microsoft.Xna.Framework;
 using Newtonsoft.Json;
 
 namespace Alex.ResourcePackLib.Json.Bedrock.MoLang
@@ -61,11 +59,11 @@ namespace Alex.ResourcePackLib.Json.Bedrock.MoLang
 			}
 		}
 
-		private Vector3 Evaluate(MoLangRuntime runtime,
+		private IVector3 Evaluate(MoLangRuntime runtime,
 			IExpression xExpressions,
 			IExpression yExpressions,
 			IExpression zExpressions,
-			Vector3 currentValue)
+			IVector3 currentValue)
 		{
 			runtime.Environment.ThisVariable = new DoubleValue(currentValue.X);
 			IMoValue x = runtime.Execute(xExpressions);
@@ -74,10 +72,10 @@ namespace Alex.ResourcePackLib.Json.Bedrock.MoLang
 			runtime.Environment.ThisVariable = new DoubleValue(currentValue.Z);
 			IMoValue z = runtime.Execute(zExpressions);
 
-			return new Vector3(x.AsFloat(), y.AsFloat(), z.AsFloat());
+			return VectorUtils.VectorFactory.Vector3(x.AsFloat(), y.AsFloat(), z.AsFloat());
 		}
 
-		private Vector3 Evaluate(MoLangRuntime runtime, IExpression[] expressions, Vector3 currentValue)
+		private IVector3 Evaluate(MoLangRuntime runtime, IExpression[] expressions, IVector3 currentValue)
 		{
 			if (expressions == null) return currentValue;
 
@@ -89,7 +87,7 @@ namespace Alex.ResourcePackLib.Json.Bedrock.MoLang
 			return Evaluate(runtime, expressions[0], expressions[0], expressions[0], currentValue);
 		}
 
-		private Vector3 Evaluate(MoLangRuntime runtime, AnimationChannelData complex, bool isPre, Vector3 currentValue)
+		private IVector3 Evaluate(MoLangRuntime runtime, AnimationChannelData complex, bool isPre, IVector3 currentValue)
 		{
 			if (complex == null)
 				return currentValue;
@@ -108,8 +106,8 @@ namespace Alex.ResourcePackLib.Json.Bedrock.MoLang
 			return Evaluate(runtime, complex.KeyFrame.Post, currentValue);
 		}
 
-		public Vector3 Evaluate(MoLangRuntime runtime,
-			Vector3 currentValue,
+		public IVector3 Evaluate(MoLangRuntime runtime,
+			IVector3 currentValue,
 			double? animationLength = null,
 			double elapsedTime = 0d,
 			bool isRotational = false)
@@ -150,13 +148,13 @@ namespace Alex.ResourcePackLib.Json.Bedrock.MoLang
 
 			var lerpTime = (float)(timeSinceLastKeyFrame / timeBetweenFrames);
 
-			Vector3 previousVector = Evaluate(runtime, previousChannelData, false, currentValue);
-			Vector3 nextVector = Evaluate(runtime, nextChannelData, true, currentValue);
+			IVector3 previousVector = Evaluate(runtime, previousChannelData, false, currentValue);
+			IVector3 nextVector = Evaluate(runtime, nextChannelData, true, currentValue);
 
 			if (isRotational)
-				return MathUtils.LerpVector3Degrees(previousVector, nextVector, lerpTime);
+				return VectorUtils.LerpVector3Degrees(previousVector, nextVector, lerpTime);
 
-			return MathUtils.LerpVector3Safe(previousVector, nextVector, lerpTime);
+			return VectorUtils.Lerp(previousVector, nextVector, lerpTime);
 		}
 	}
 }

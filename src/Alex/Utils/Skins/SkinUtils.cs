@@ -392,14 +392,14 @@ namespace Alex.Utils.Skins
 				if (bone.NeverRender)
 					a.NeverRender = true;
 
-				if (bone.Pivot.HasValue)
+				if (bone.Pivot != null)
 				{
-					a.Pivot = new float[] { bone.Pivot.Value.X, bone.Pivot.Value.Y, bone.Pivot.Value.Z };
+					a.Pivot = new float[] { bone.Pivot.X, bone.Pivot.Y, bone.Pivot.Z };
 				}
 
-				if (bone.Rotation.HasValue)
+				if (bone.Rotation != null)
 				{
-					a.Rotation = new float[] { bone.Rotation.Value.X, bone.Rotation.Value.Y, bone.Rotation.Value.Z };
+					a.Rotation = new float[] { bone.Rotation.X, bone.Rotation.Y, bone.Rotation.Z };
 				}
 
 				/*if (bone.BindPoseRotation.HasValue)
@@ -423,20 +423,20 @@ namespace Alex.Utils.Skins
 							Inflate = (float)(c.Inflate.HasValue ? c.Inflate.Value : 0f),
 							Origin = new float[] { c.Origin.X, c.Origin.Y, c.Origin.Z },
 							Size = new float[] { c.Size.X, c.Size.Y, c.Size.Z },
-							Uv = new float[] { c.Uv.South.Origin.X, c.Uv.South.Origin.Y }
+							Uv = new float[] { (float) c.Uv.South.Origin.X, (float) c.Uv.South.Origin.Y }
 						};
 
 						if (c.Mirror.HasValue)
 							newCube.Mirror = c.Mirror.Value;
 
-						if (c.Rotation.HasValue)
+						if (c.Rotation != null)
 							newCube.Rotation = new float[]
 							{
-								c.Rotation.Value.X, c.Rotation.Value.Y, c.Rotation.Value.Z
+								c.Rotation.X, c.Rotation.Y, c.Rotation.Z
 							};
 
-						if (c.Pivot.HasValue)
-							newCube.Pivot = new float[] { c.Pivot.Value.X, c.Pivot.Value.Y, c.Pivot.Value.Z };
+						if (c.Pivot != null)
+							newCube.Pivot = new float[] { c.Pivot.X, c.Pivot.Y, c.Pivot.Z };
 
 						a.Cubes.Add(newCube);
 					}

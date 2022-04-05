@@ -66,7 +66,7 @@ namespace Alex.ResourcePackLib.Json.Models.Items
 			var type = typeof(DisplayPosition);
 			var dict = new Dictionary<string, DisplayPosition>(StringComparer.OrdinalIgnoreCase);
 
-			foreach (var value in Enum.GetValues<DisplayPosition>())
+			foreach (DisplayPosition value in Enum.GetValues(typeof(DisplayPosition)))
 			{
 				var i = type.GetField(value.ToString());
 				var attr = i?.GetCustomAttribute<JsonEnumValueAttribute>();

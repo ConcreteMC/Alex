@@ -1,5 +1,6 @@
 using System;
 using System.Text;
+using Alex.Common;
 using Alex.Common.Utils;
 using Alex.Interfaces;
 using Alex.Interfaces.Net;
@@ -46,7 +47,7 @@ namespace Alex.Gui.Screens.Ingame
 			WarningElement = new TextElement
 			{
 				IsVisible = false,
-				TextColor = (Color)TextColor.Red,
+				TextColor = (Color)TextColor.Red.ToXna(),
 				Text = "",
 				Anchor = Alignment.TopLeft,
 				Scale = 1f,
@@ -64,7 +65,7 @@ namespace Alex.Gui.Screens.Ingame
 				BackgroundOverlay = Color.Black * 0.5f,
 				Anchor = Alignment.BottomRight,
 				TextOpacity = 0.95f,
-				TextColor = (Color)TextColor.Red,
+				TextColor = (Color)TextColor.Red.ToXna(),
 				Scale = 1f,
 				IsVisible = true,
 				TextAlignment = TextAlignment.Right
@@ -145,11 +146,11 @@ namespace Alex.Gui.Screens.Ingame
 
 				if (_state)
 				{
-					WarningElement.TextColor = (Color)TextColor.Yellow;
+					WarningElement.TextColor = (Color)TextColor.Yellow.ToXna();
 				}
 				else
 				{
-					WarningElement.TextColor = (Color)TextColor.Red;
+					WarningElement.TextColor = (Color)TextColor.Red.ToXna();
 				}
 
 				_state = !_state;

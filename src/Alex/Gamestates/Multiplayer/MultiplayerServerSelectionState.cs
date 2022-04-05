@@ -161,14 +161,14 @@ namespace Alex.Gamestates.Multiplayer
 				if (oldValue != null)
 				{
 					oldValue.BackgroundOverlay = Color.Transparent;
-					oldValue.DefaultColor = (Color)TextColor.DarkGray;
+					oldValue.DefaultColor = (Color)TextColor.DarkGray.ToXna();
 
 					oldValue.Enabled = false;
 					oldValue.Enabled = true;
 				}
 
 				value.BackgroundOverlay = new Color(Color.Black, 0.25f);
-				value.DefaultColor = (Color)TextColor.White;
+				value.DefaultColor = (Color)TextColor.White.ToXna();
 				_activeTabBtn = value;
 			}
 		}
@@ -179,7 +179,7 @@ namespace Alex.Gamestates.Multiplayer
 			{
 				Margin = Thickness.Zero,
 				BackgroundOverlay = Color.Transparent,
-				DefaultColor = (Color)TextColor.DarkGray
+				DefaultColor = (Color)TextColor.DarkGray.ToXna()
 			};
 
 			button.Action = () =>

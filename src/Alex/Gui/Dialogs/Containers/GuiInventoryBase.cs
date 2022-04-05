@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Alex.Common;
 using Alex.Common.Utils;
 using Alex.Gui.Elements.Inventory;
 using Alex.Interfaces;
@@ -46,7 +47,7 @@ namespace Alex.Gui.Dialogs.Containers
 					Background = new Color(Color.Black, 0.35f),
 					//			Enabled = false,
 					FontStyle = FontStyle.DropShadow,
-					TextColor = (Color)TextColor.Yellow,
+					TextColor = (Color)TextColor.Yellow.ToXna(),
 					ClipToBounds = false,
 					Anchor = Alignment.TopLeft
 					//BackgroundOverlay = new Color(Color.Black, 0.35f),

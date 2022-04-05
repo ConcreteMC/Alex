@@ -5,6 +5,7 @@ using Alex.Common.Blocks;
 using Alex.Common.Resources;
 using Alex.Common.Utils;
 using Alex.Interfaces;
+using Alex.Interfaces.Resources;
 using Alex.ResourcePackLib.Json.Bedrock.Entity;
 using Alex.Utils;
 using Alex.Worlds;

@@ -122,7 +122,7 @@ namespace Alex.Gamestates.Multiplayer
 			buttonRow.ChildAnchor = Alignment.MiddleCenter;
 
 
-			AddRocketElement(_errorMessage = new TextElement() { TextColor = (Color)TextColor.Red });
+			AddRocketElement(_errorMessage = new TextElement() { TextColor = (Color)TextColor.Red.ToXna() });
 
 			if (!string.IsNullOrWhiteSpace(name))
 			{

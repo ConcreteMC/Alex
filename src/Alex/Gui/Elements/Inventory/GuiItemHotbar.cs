@@ -1,4 +1,5 @@
 ﻿using System.Linq;
+using Alex.Common;
 using Alex.Common.Gui.Graphics;
 using Alex.Common.Utils;
 using Alex.Interfaces;
@@ -118,7 +119,7 @@ namespace Alex.Gui.Elements.Inventory
 			_itemNameTextElement = new FadingTextElement()
 			{
 				Anchor = Alignment.TopCenter,
-				TextColor = (Color)TextColor.White,
+				TextColor = (Color)TextColor.White.ToXna(),
 				Text = "",
 				Margin = new Thickness(0, -5, 0, 5),
 				FontStyle = FontStyle.DropShadow,

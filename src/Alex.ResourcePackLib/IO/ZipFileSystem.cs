@@ -1,17 +1,17 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using System.Text;
 using System.Threading;
 using Alex.ResourcePackLib.IO.Abstract;
-using Ionic.Zip;
 
 namespace Alex.ResourcePackLib.IO
 {
 	public class ZipFileSystem : IFilesystem
 	{
-		private ZipFile _archive;
+		private ZipArchive _archive;
 		private ReadOnlyCollection<ZipFileEntry> _entries;
 		internal object Lock = new object();
 		internal Thread ActiveThread = null;
@@ -19,7 +19,7 @@ namespace Alex.ResourcePackLib.IO
 		public ZipFileSystem(Stream stream, string name)
 		{
 			Name = name;
-			_archive = ZipFile.Read(stream);
+			_archive = new ZipArchive(stream);
 
 			List<ZipFileEntry> entries = new List<ZipFileEntry>();
 
@@ -63,17 +63,17 @@ namespace Alex.ResourcePackLib.IO
 
 		public class ZipFileEntry : IFile
 		{
-			private ZipEntry _entry;
+			private ZipArchiveEntry _entry;
 			private ZipFileSystem _archive;
 
-			public ZipFileEntry(ZipFileSystem archive, ZipEntry entry)
+			public ZipFileEntry(ZipFileSystem archive, ZipArchiveEntry entry)
 			{
 				_archive = archive;
 				_entry = entry;
 
-				FullName = DiskFileSystem.NormalizePath(entry.FileName);
+				FullName = DiskFileSystem.NormalizePath(entry.FullName);
 				Name = Path.GetFileName(FullName);
-				Length = entry.UncompressedSize;
+				Length = entry.Length;
 			}
 
 			/// <inheritdoc />
@@ -97,7 +97,8 @@ namespace Alex.ResourcePackLib.IO
 
 					using (MemoryStream ms = new MemoryStream())
 					{
-						_entry.Extract(ms);
+						using (var s = _entry.Open())
+							s.CopyTo(ms);
 
 						buffer = ms.ToArray();
 					}

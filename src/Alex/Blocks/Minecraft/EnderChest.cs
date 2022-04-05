@@ -4,6 +4,7 @@ using Alex.Blocks.State;
 using Alex.Common.Resources;
 using Alex.Common.Utils.Vectors;
 using Alex.Entities.BlockEntities;
+using Alex.Interfaces.Resources;
 using Alex.Worlds;
 using Alex.Worlds.Abstraction;
 using Microsoft.Xna.Framework;

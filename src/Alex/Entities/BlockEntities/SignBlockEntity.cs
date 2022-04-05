@@ -1,6 +1,7 @@
 using System;
 using Alex.Blocks;
 using Alex.Blocks.Minecraft.Signs;
+using Alex.Common;
 using Alex.Common.Blocks;
 using Alex.Common.Graphics;
 using Alex.Common.Resources;
@@ -8,6 +9,7 @@ using Alex.Common.Utils;
 using Alex.Graphics.Models;
 using Alex.Graphics.Models.Entity.BlockEntities;
 using Alex.Interfaces;
+using Alex.Interfaces.Resources;
 using Alex.Networking.Java.Models;
 using Alex.Networking.Java.Packets.Play;
 using Alex.Utils;
@@ -379,7 +381,7 @@ namespace Alex.Entities.BlockEntities
 					//renderArgs.SpriteBatch.FillRectangle(
 					//	new Rectangle(renderPosition.ToPoint(), c), new Color(Color.Black, 128), screenSpace.Z);
 
-					Alex.Font.DrawString(sb, line, renderPosition, (Color)TextColor.Black, FontStyle.None, Vector2.One);
+					Alex.Font.DrawString(sb, line, renderPosition, (Color)TextColor.Black.ToXna(), FontStyle.None, Vector2.One);
 
 					yOffset += c.Y;
 				}

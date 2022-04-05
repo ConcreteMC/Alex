@@ -3,6 +3,7 @@ using System.Linq;
 using Alex.Blocks;
 using Alex.Common.Graphics;
 using Alex.Common.Utils;
+using Alex.Interfaces;
 using Alex.Items;
 using Alex.ResourcePackLib.Json.Bedrock.Particles;
 using ConcreteMC.MolangSharp.Runtime;
@@ -192,7 +193,7 @@ namespace Alex.Particles
 			Runtime = new MoLangRuntime();
 			Runtime.Environment.Structs.TryAdd("query", this);
 
-			Position = position;
+			Position = Primitives.Factory.Vector3(position.X, position.Y, position.Z);
 			_color = new ColorStruct(Color.White);
 
 			Functions.Add("frame_alpha", mo => _deltaTime.TotalSeconds);
@@ -225,17 +226,17 @@ namespace Alex.Particles
 		/// <summary>
 		///		The velocity of the particle
 		/// </summary>
-		public Vector3 Velocity { get; set; } = Vector3.Zero;
+		public IVector3 Velocity { get; set; } = Primitives.Factory.Vector3Zero;
 
 		/// <summary>
 		///		The position of the particle
 		/// </summary>
-		public Vector3 Position { get; set; } = Vector3.Zero;
+		public IVector3 Position { get; set; } = Primitives.Factory.Vector3Zero;
 
 		/// <summary>
 		///		The acceleration applied to the particle
 		/// </summary>
-		public Vector3 Acceleration { get; set; } = Vector3.Zero;
+		public IVector3 Acceleration { get; set; } = Primitives.Factory.Vector3Zero;
 
 		/// <summary>
 		///		The drag co-efficient applied to the particle
@@ -281,7 +282,7 @@ namespace Alex.Particles
 		/// <summary>
 		///		The position of the sprite on the spritesheet
 		/// </summary>
-		public Vector2 UvPosition
+		public IVector2 UvPosition
 		{
 			get => _uvPosition;
 			set
@@ -294,7 +295,7 @@ namespace Alex.Particles
 		/// <summary>
 		///		The size of the sprite on the spritesheet
 		/// </summary>
-		public Vector2 UvSize
+		public IVector2 UvSize
 		{
 			get => _uvSize;
 			set
@@ -307,7 +308,7 @@ namespace Alex.Particles
 		/// <summary>
 		///		Specifies the x and y size of the billboard.
 		/// </summary>
-		public Vector2 Size { get; set; } = Vector2.One;
+		public IVector2 Size { get; set; } = Primitives.Factory.Vector2Zero;
 
 		/// <summary>
 		///		The color of the particle
@@ -329,14 +330,14 @@ namespace Alex.Particles
 		public MoLangRuntime Runtime { get; }
 
 		private TimeSpan _deltaTime = TimeSpan.Zero;
-		private Vector2 _uvPosition = Vector2.Zero;
-		private Vector2 _uvSize = Vector2.One;
+		private IVector2 _uvPosition = Primitives.Factory.Vector2Zero;
+		private IVector2 _uvSize = Primitives.Factory.Vector2Zero;
 
 		public bool Valid { get; set; } = true;
 
 		private void UpdateRectangle()
 		{
-			Rectangle = new Rectangle(_uvPosition.ToPoint(), _uvSize.ToPoint());
+			Rectangle = new Rectangle(new Point((int) Math.Floor(_uvPosition.X), (int) Math.Floor(_uvPosition.Y)),new Point((int) Math.Floor(_uvSize.X), (int) Math.Floor(_uvSize.Y)));
 		}
 
 		public void Update(GameTime gameTime)
@@ -346,9 +347,12 @@ namespace Alex.Particles
 			var dt = Alex.DeltaTime;
 			Lifetime += dt;
 
-			Position += Velocity * dt;
-			Velocity += Acceleration * dt;
-			Acceleration = -DragCoEfficient * Velocity;
+			Position = VectorUtils.Add(Position, VectorUtils.Multiply(Velocity, dt));
+		//	Position += Velocity * dt;
+			Velocity = VectorUtils.Add(Velocity, VectorUtils.Multiply(Acceleration, dt));
+			//Velocity += Acceleration * dt;
+			Acceleration = VectorUtils.Multiply(Velocity, -DragCoEfficient);
+			//Acceleration = -DragCoEfficient * Velocity;
 		}
 
 		private void SetVariable(string key, IMoValue value)
@@ -360,7 +364,7 @@ namespace Alex.Particles
 
 		public void OnTick(ICamera camera)
 		{
-			RenderScale = 1f - (Vector3.Distance(camera.Position, Position) / camera.FarDistance);
+			RenderScale = 1f - (VectorUtils.Distance(Primitives.Factory.Vector3(camera.Position.X, camera.Position.Y, camera.Position.Z), Position) / camera.FarDistance);
 		}
 
 		public void SetData(long data, ParticleDataMode dataMode)

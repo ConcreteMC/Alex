@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.Linq;
+using Alex.Interfaces;
 using Alex.ResourcePackLib.Json.Bedrock.Entity;
 using ConcreteMC.MolangSharp.Runtime;
 using ConcreteMC.MolangSharp.Runtime.Exceptions;
@@ -270,7 +271,7 @@ namespace Alex.Graphics.Models.Entity.Animations
 			if (value.Rotation != null)
 			{
 				var targetRotation = value.Rotation.Evaluate(
-					runtime, Vector3.Zero, _animation.AnimationLength, animationTime, true);
+					runtime, Primitives.Factory.Vector3Zero, _animation.AnimationLength, animationTime, true);
 
 				bone.RotateOverTime(targetRotation, elapsedTime, overrideOthers);
 			}
@@ -279,14 +280,14 @@ namespace Alex.Graphics.Models.Entity.Animations
 			if (value.Position != null)
 			{
 				var targetPosition = value.Position.Evaluate(
-					runtime, Vector3.Zero, _animation.AnimationLength, animationTime);
+					runtime, Primitives.Factory.Vector3Zero, _animation.AnimationLength, animationTime);
 
 				bone.TranslateOverTime(targetPosition, elapsedTime, overrideOthers);
 			}
 
 			if (value.Scale != null)
 			{
-				var targetScale = value.Scale.Evaluate(runtime, bone.Scale, _animation.AnimationLength, animationTime);
+				var targetScale = value.Scale.Evaluate(runtime, Primitives.Factory.Vector3(bone.Scale.X, bone.Scale.Y, bone.Scale.Z), _animation.AnimationLength, animationTime);
 
 				if (targetScale.X < 0.001d)
 					targetScale.X = 0;

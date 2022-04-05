@@ -7,9 +7,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
-using Alex.Common.Graphics.Typography;
-using Alex.Common.Resources;
-using Alex.Common.Utils;
+using Alex.Interfaces.Resources;
 using Alex.ResourcePackLib.Abstraction;
 using Alex.ResourcePackLib.Generic;
 using Alex.ResourcePackLib.IO.Abstract;
@@ -176,21 +174,19 @@ namespace Alex.ResourcePackLib
 		{
 			var contentsFile = _archive.GetEntry("contents.json");
 
-			byte[] data = null;
+			ReadOnlySpan<byte> data = null;
 			using (var stream = contentsFile.Open())
 			{
-				data = stream.ReadToByteArray();
+				data = stream.ReadToEnd();
 			}
 
-			data = data.Skip(256).ToArray();
-			
 			ContentsFile file = null;
 
-			using (MemoryStream ms = new MemoryStream(data))
+			using (MemoryStream ms = new MemoryStream(data.Slice(256).ToArray()))
 			{
 				using (var stream = ms.OpenEncoded(Encoding.Default.GetBytes(contentKey)))
 				{
-					using (var reader = new StreamReader(stream, null, true, leaveOpen: true))
+					using (var reader = new StreamReader(stream, null, true, 256, true))
 					{
 						var jsonData = reader.ReadToEnd();
 						file = JsonConvert.DeserializeObject<ContentsFile>(jsonData);

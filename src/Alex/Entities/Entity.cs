@@ -16,6 +16,7 @@ using Alex.Graphics.Models.Entity;
 using Alex.Graphics.Models.Entity.Animations;
 using Alex.Graphics.Models.Items;
 using Alex.Gui.Elements.Map;
+using Alex.Interfaces.Resources;
 using Alex.Items;
 using Alex.Networking.Java.Models;
 using Alex.Networking.Java.Packets.Play;

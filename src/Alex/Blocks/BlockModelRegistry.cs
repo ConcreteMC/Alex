@@ -1,4 +1,5 @@
 using Alex.Common.Resources;
+using Alex.Interfaces.Resources;
 using Alex.ResourcePackLib.Json.Models;
 
 namespace Alex.Blocks

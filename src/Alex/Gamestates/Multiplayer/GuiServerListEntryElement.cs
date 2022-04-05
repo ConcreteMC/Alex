@@ -5,6 +5,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
+using Alex.Common;
 using Alex.Common.Data.Servers;
 using Alex.Common.Gui.Elements.Icons;
 using Alex.Common.Gui.Graphics;
@@ -163,11 +164,11 @@ namespace Alex.Gamestates.Multiplayer
 			{
 				_serverMotd.Text = error;
 				_serverMotd.TranslationKey = error;
-				_serverMotd.TextColor = (Color)TextColor.Red;
+				_serverMotd.TextColor = (Color)TextColor.Red.ToXna();
 			}
 			else
 			{
-				_serverMotd.TextColor = (Color)TextColor.White;
+				_serverMotd.TextColor = (Color)TextColor.White.ToXna();
 			}
 
 			_pingStatus.SetOffline();

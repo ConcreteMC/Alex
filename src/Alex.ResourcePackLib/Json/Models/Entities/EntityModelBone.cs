@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel;
 using System.Linq;
-using Microsoft.Xna.Framework;
+using Alex.Interfaces;
 using Newtonsoft.Json;
 
 namespace Alex.ResourcePackLib.Json.Models.Entities
@@ -37,19 +37,19 @@ namespace Alex.ResourcePackLib.Json.Models.Entities
 		/// The bone pivots around this point (in model space units).
 		/// </summary>
 		[J("pivot", NullValueHandling = N.Ignore)]
-		public Vector3? Pivot { get; set; }
+		public IVector3 Pivot { get; set; }
 
 		/// <summary>
 		/// This is the initial rotation of the bone around the pivot, pre-animation (in degrees, x-then-y-then-z order).
 		/// </summary>
 		[J("rotation", NullValueHandling = N.Ignore)]
-		public Vector3? Rotation { get; set; } = null;
+		public IVector3 Rotation { get; set; } = null;
 
 		/// <summary>
 		///		The rotation for the bone (1.8.0 geometry only)
 		/// </summary>
 		[J("bind_pose_rotation", NullValueHandling = N.Ignore)]
-		public Vector3? BindPoseRotation { get; set; }
+		public IVector3 BindPoseRotation { get; set; }
 
 		[J("neverRender", DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate), DefaultValue(false)]
 		public bool NeverRender { get; set; } = false;
@@ -91,6 +91,6 @@ namespace Alex.ResourcePackLib.Json.Models.Entities
 	public sealed class EntityModelLocators
 	{
 		[J("lead", NullValueHandling = N.Ignore)]
-		public Vector3 Lead { get; set; }
+		public IVector3 Lead { get; set; }
 	}
 }

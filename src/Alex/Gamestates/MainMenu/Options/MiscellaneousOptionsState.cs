@@ -1,4 +1,5 @@
 using System;
+using Alex.Common;
 using Alex.Common.Utils;
 using Alex.Gui;
 using Alex.Interfaces;
@@ -26,7 +27,7 @@ namespace Alex.Gamestates.MainMenu.Options
 				{
 					Anchor = Alignment.BottomCenter,
 					Text = "WARNING: These settings might break your game!",
-					TextColor = (Color)TextColor.Yellow
+					TextColor = (Color)TextColor.Yellow.ToXna()
 				});
 			// TitleTranslationKey = "options.videoTitle";
 		}

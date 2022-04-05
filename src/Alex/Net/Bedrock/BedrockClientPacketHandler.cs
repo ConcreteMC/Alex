@@ -18,6 +18,8 @@ using Alex.Entities.Components.Effects;
 using Alex.Entities.Projectiles;
 using Alex.Gui.Dialogs;
 using Alex.Gui.Elements.Scoreboard;
+using Alex.Interfaces;
+using Alex.Interfaces.Resources;
 using Alex.Net.Bedrock.Packets;
 using Alex.Networking.Java.Packets.Play;
 using Alex.ResourcePackLib.Json.Bedrock.Sound;
@@ -44,6 +46,7 @@ using Color = Microsoft.Xna.Framework.Color;
 using CommandProperty = Alex.Utils.Commands.CommandProperty;
 using Dimension = Alex.Worlds.Dimension;
 using Entity = Alex.Entities.Entity;
+using GameMode = MiNET.Worlds.GameMode;
 using MessageType = Alex.Common.Data.MessageType;
 using Player = Alex.Entities.Player;
 using PlayerLocation = Alex.Common.Utils.Vectors.PlayerLocation;
@@ -1839,14 +1842,14 @@ namespace Alex.Net.Bedrock
 
 							uuid = new MiNET.Utils.UUID(Guid.NewGuid().ToByteArray());
 
-							Microsoft.Xna.Framework.Vector3 customColor = AlexInstance.GuiRenderer.GetGlobalOrDefault(
-								"$boss_health_bar_color", Microsoft.Xna.Framework.Vector3.Zero);
+							var customColor = AlexInstance.GuiRenderer.GetGlobalOrDefault(
+								"$boss_health_bar_color", Primitives.Factory.Vector3Zero);
 
 							container.Add(
 								uuid, text, health, BossBarPacket.BossBarColor.Pink,
 								BossBarPacket.BossBarDivisions.None, 0,
-								customColor == Microsoft.Xna.Framework.Vector3.Zero ? (Color?)null :
-									new Color(customColor));
+								customColor == Primitives.Factory.Vector3Zero ? (Color?)null :
+									new Color(new Vector3(customColor.X, customColor.Y, customColor.Z)));
 
 							return uuid;
 						});

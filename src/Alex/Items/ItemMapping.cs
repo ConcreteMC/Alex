@@ -1,4 +1,5 @@
 using Alex.Common.Resources;
+using Alex.Interfaces.Resources;
 
 namespace Alex.Items
 {

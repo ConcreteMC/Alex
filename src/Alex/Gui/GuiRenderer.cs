@@ -3,9 +3,11 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using Alex.Audio;
+using Alex.Common;
 using Alex.Common.Gui.Graphics;
 using Alex.Common.Localization;
 using Alex.Common.Utils;
+using Alex.Common.Utils.Vectors;
 using Alex.Interfaces;
 using Alex.Networking.Java.Models;
 using Alex.ResourcePackLib;
@@ -298,7 +300,7 @@ namespace Alex.Gui
 			foreach (var color in TextColor.Colors)
 			{
 				var c = GetGlobalOrDefault($"${color.Code}_color_format", color.ForegroundColor.ToVector3());
-				color.ForegroundColor = new Color(c);
+				color.ForegroundColor = new ColorPrimitive(c);
 			}
 
 			progressReceiver?.UpdateProgress(0, null, "gui/title/minecraft");

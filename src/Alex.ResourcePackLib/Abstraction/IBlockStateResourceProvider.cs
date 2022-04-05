@@ -1,4 +1,4 @@
-using Alex.Common.Resources;
+using Alex.Interfaces.Resources;
 using Alex.ResourcePackLib.Json.BlockStates;
 
 namespace Alex.ResourcePackLib.Abstraction

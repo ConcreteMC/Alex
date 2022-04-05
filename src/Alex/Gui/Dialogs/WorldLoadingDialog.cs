@@ -1,4 +1,5 @@
 ﻿using System;
+using Alex.Common;
 using Alex.Common.Gui.Elements;
 using Alex.Common.Gui.Graphics;
 using Alex.Common.Utils;
@@ -120,13 +121,13 @@ namespace Alex.Gui.Dialogs
 			rc.AddChild(
 				_textDisplay = new TextElement()
 				{
-					Text = Text, TextColor = (Color)TextColor.White, Anchor = Alignment.TopLeft, HasShadow = false
+					Text = Text, TextColor = (Color)TextColor.White.ToXna(), Anchor = Alignment.TopLeft, HasShadow = false
 				});
 
 			rc.AddChild(
 				_percentageDisplay = new TextElement()
 				{
-					Text = Text, TextColor = (Color)TextColor.White, Anchor = Alignment.TopRight, HasShadow = false
+					Text = Text, TextColor = (Color)TextColor.White.ToXna(), Anchor = Alignment.TopRight, HasShadow = false
 				});
 
 			element.AddRow(rc);
@@ -141,7 +142,7 @@ namespace Alex.Gui.Dialogs
 				_subTextDisplay = new TextElement()
 				{
 					Text = Text,
-					TextColor = (Color)TextColor.White,
+					TextColor = (Color)TextColor.White.ToXna(),
 					Anchor = Alignment.TopLeft,
 					HasShadow = false,
 					Margin = new Thickness(3, 0, 3, 0)

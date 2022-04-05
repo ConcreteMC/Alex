@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
+using Alex.Interfaces;
 using Alex.ResourcePackLib.Json.Models.Entities;
-using Microsoft.Xna.Framework;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -21,7 +21,7 @@ namespace Alex.ResourcePackLib.Json.Converters
 			{
 				var v = val.Down.Origin;
 
-				writer.WriteRawValue(JsonConvert.SerializeObject(new float[] { v.X, v.Y }, Formatting.None));
+				writer.WriteRawValue(JsonConvert.SerializeObject(new double[] { v.X, v.Y }, Formatting.None));
 
 				return;
 			}
@@ -49,7 +49,7 @@ namespace Alex.ResourcePackLib.Json.Converters
 
 			if (obj.Type == JTokenType.Array)
 			{
-				var origin = ((JArray)(obj)).ToObject<Vector2>(serializer);
+				var origin = ((JArray)(obj)).ToObject<IVector2>(serializer);
 
 				return new EntityModelUV(origin);
 			}

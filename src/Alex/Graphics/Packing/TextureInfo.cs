@@ -1,5 +1,6 @@
 using System;
 using Alex.Common.Resources;
+using Alex.Interfaces.Resources;
 using Alex.ResourcePackLib.Json.Textures;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;

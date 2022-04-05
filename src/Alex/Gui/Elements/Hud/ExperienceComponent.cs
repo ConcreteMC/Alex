@@ -1,4 +1,5 @@
 using System;
+using Alex.Common;
 using Alex.Common.Gui.Graphics;
 using Alex.Common.Utils;
 using Alex.Entities;
@@ -87,7 +88,7 @@ namespace Alex.Gui.Elements.Hud
 			if (ExperienceLevel >= 1f)
 				graphics.DrawString(
 					RectangleExtensions.BottomCenter(RenderBounds) - new Vector2(_textSize.X / 2f, _textSize.Y), _text,
-					TextColor.BrightGreen.ForegroundColor, FontStyle.DropShadow, 1f);
+					TextColor.BrightGreen.ForegroundColor.ToXna(), FontStyle.DropShadow, 1f);
 		}
 	}
 }

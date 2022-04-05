@@ -41,7 +41,7 @@ namespace Alex.Common.Graphics.Typography
 
 		public static void DrawString(this SpriteBatch sb, IFont font, string text, Vector2 position, TextColor color, FontStyle style, float rotation, Vector2 origin, Vector2 scale, float opacity = 1f, SpriteEffects effects = SpriteEffects.None, float layerDepth = 0f)
 		{
-			font.DrawString(sb, text, position, (Color)color, style, scale: scale, rotation: rotation, origin: origin, opacity: opacity, effects: effects, layerDepth: layerDepth);
+			font.DrawString(sb, text, position, color.ToXna(), style, scale: scale, rotation: rotation, origin: origin, opacity: opacity, effects: effects, layerDepth: layerDepth);
 		}
 
 		#region GuiSpriteBatch Shortcut Methods

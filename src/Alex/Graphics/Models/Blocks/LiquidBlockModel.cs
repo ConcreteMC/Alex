@@ -171,8 +171,8 @@ namespace Alex.Graphics.Models.Blocks
 
 			foreach (var face in renderedFaces)
 			{
-				var start = Vector3.Zero;
-				var end = Vector3.One;
+				var start = Primitives.Factory.Vector3Zero;
+				var end = Primitives.Factory.Vector3(1,1,1);
 
 				var faceMap = map;
 

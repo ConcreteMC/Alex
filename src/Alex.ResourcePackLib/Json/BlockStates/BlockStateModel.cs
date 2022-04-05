@@ -1,4 +1,4 @@
-﻿using Alex.Common.Resources;
+﻿using Alex.Interfaces.Resources;
 using Newtonsoft.Json;
 
 namespace Alex.ResourcePackLib.Json.BlockStates

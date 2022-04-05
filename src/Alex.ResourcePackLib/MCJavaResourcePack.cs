@@ -1,43 +1,28 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Diagnostics;
-using System.Drawing;
 using System.Globalization;
 using System.IO;
-using System.IO.Compression;
 using System.Linq;
 using System.Text;
-using System.Text.Json;
 using System.Text.RegularExpressions;
-using Alex.Common.Graphics.Typography;
-using Alex.Common.Resources;
-using Alex.Common.Utils;
+using Alex.Interfaces;
+using Alex.Interfaces.Resources;
 using Alex.ResourcePackLib.Abstraction;
 using Alex.ResourcePackLib.Generic;
-using Alex.ResourcePackLib.IO;
 using Alex.ResourcePackLib.IO.Abstract;
 using Alex.ResourcePackLib.Json;
 using Alex.ResourcePackLib.Json.BlockStates;
 using Alex.ResourcePackLib.Json.Fonts;
 using Alex.ResourcePackLib.Json.Models;
-using Alex.ResourcePackLib.Json.Models.Blocks;
-using Alex.ResourcePackLib.Json.Models.Items;
 using Alex.ResourcePackLib.Json.Sound;
 using Alex.ResourcePackLib.Json.Textures;
-using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 using NLog;
-using RocketUI;
 using SixLabors.ImageSharp;
-using SixLabors.ImageSharp.Advanced;
 using SixLabors.ImageSharp.Formats.Png;
 using SixLabors.ImageSharp.PixelFormats;
-using Color = Microsoft.Xna.Framework.Color;
+using IColor = Alex.Interfaces.IColor;
 using Image = SixLabors.ImageSharp.Image;
-using MathHelper = Microsoft.Xna.Framework.MathHelper;
 
 namespace Alex.ResourcePackLib
 {
@@ -66,45 +51,45 @@ namespace Alex.ResourcePackLib
         private const RegexOptions RegexOpts =
             RegexOptions.Compiled | RegexOptions.CultureInvariant | RegexOptions.IgnoreCase;
 
-        private static readonly Regex IsLanguageResource = new(
+        private static readonly Regex IsLanguageResource = new Regex(
             @"^(?(?=assets[\\\/])assets[\\\/]|)((?'namespace'.*)(?<!realms))[\\\/]lang[\\\/](?'filename'.*)[\\.](?'filetype'json|lang)$",
             RegexOpts);
 
-        private static readonly Regex IsFontTextureResource = new(
+        private static readonly Regex IsFontTextureResource = new Regex(
             @"^(?(?=assets[\\\/])assets[\\\/]|)(?'namespace'.*)[\\\/]textures[\\\/]font[\\\/](?'filename'.*)\.png$",
             RegexOpts);
 
-        private static readonly Regex IsTextureResource = new(
+        private static readonly Regex IsTextureResource = new Regex(
             @"^(?(?=assets[\\\/])assets[\\\/]|)(?'namespace'.*)[\\\/]textures[\\\/](?'filename'.*)\.png$", RegexOpts);
 
-        private static readonly Regex IsTextureMetaResource = new(
+        private static readonly Regex IsTextureMetaResource = new Regex(
             @"^(?(?=assets[\\\/])assets[\\\/]|)(?'namespace'.*)[\\\/]textures[\\\/](?'filename'.*)\.png.mcmeta$",
             RegexOpts);
 
-        private static readonly Regex IsModelRegex = new(
+        private static readonly Regex IsModelRegex = new Regex(
             @"^(?(?=assets[\\\/])assets[\\\/]|)(?'namespace'.*)[\\\/]models[\\\/](?'filename'.*)\.json$", RegexOpts);
 
-        private static readonly Regex IsBlockStateRegex = new(
+        private static readonly Regex IsBlockStateRegex = new Regex(
             @"^(?(?=assets[\\\/])assets[\\\/]|)(?'namespace'.*)[\\\/]blockstates[\\\/](?'filename'.*)\.json$",
             RegexOpts);
 
-        private static readonly Regex IsGlyphSizes = new(
+        private static readonly Regex IsGlyphSizes = new Regex(
             @"^(?(?=assets[\\\/])assets[\\\/]|)(?'namespace'.*)[\\\/]font[\\\/]glyph_sizes.bin$", RegexOpts);
 
-        private static readonly Regex IsFontDefinition = new(
+        private static readonly Regex IsFontDefinition = new Regex(
             @"^(?(?=assets[\\\/])assets[\\\/]|)(?'namespace'.*)[\\\/]font[\\\/](?'filename'.*)\.json$", RegexOpts);
 
-        private static readonly Regex IsParticle = new(
+        private static readonly Regex IsParticle = new Regex(
             @"^(?(?=assets[\\\/])assets[\\\/]|)(?'namespace'.*)[\\\/]particles[\\\/](?'filename'.*)\.json$", RegexOpts);
 
-        private static readonly Regex IsSoundDefinition = new(
+        private static readonly Regex IsSoundDefinition = new Regex(
             @"^(?(?=assets[\\\/])assets[\\\/]|)(?'namespace'.*)[\\\/]sounds.json$", RegexOpts);
 
-        private readonly Dictionary<ResourceLocation, Lazy<BlockStateResource>> _blockStates = new();
-        public Dictionary<ResourceLocation, ResourcePackModelBase> Models = new();
-        private readonly Dictionary<ResourceLocation, Func<Image<Rgba32>>> _bitmapCache = new();
-        private readonly Dictionary<ResourceLocation, TextureMeta> _textureMetaCache = new();
-        private readonly Dictionary<string, LanguageResource> _languageCache = new(StringComparer.OrdinalIgnoreCase);
+        private readonly Dictionary<ResourceLocation, Lazy<BlockStateResource>> _blockStates = new Dictionary<ResourceLocation, Lazy<BlockStateResource>>();
+        public Dictionary<ResourceLocation, ResourcePackModelBase> Models = new Dictionary<ResourceLocation, ResourcePackModelBase>();
+        private readonly Dictionary<ResourceLocation, Func<Image<Rgba32>>> _bitmapCache = new Dictionary<ResourceLocation, Func<Image<Rgba32>>>();
+        private readonly Dictionary<ResourceLocation, TextureMeta> _textureMetaCache = new Dictionary<ResourceLocation, TextureMeta>();
+        private readonly Dictionary<string, LanguageResource> _languageCache = new Dictionary<string, LanguageResource>(StringComparer.OrdinalIgnoreCase);
 
         private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(MCJavaResourcePack));
 
@@ -122,11 +107,11 @@ namespace Alex.ResourcePackLib
 
         private byte[] GlyphWidth = null;
 
-        private Color[] FoliageColors { get; set; } = null;
+        private IColor[] FoliageColors { get; set; } = null;
         private int _foliageWidth = 256;
         private int _foliageHeight = 256;
 
-        private Color[] GrassColors { get; set; } = null;
+        private IColor[] GrassColors { get; set; } = null;
         private int _grassHeight = 256;
         private int _grassWidth = 256;
 
@@ -430,8 +415,8 @@ namespace Alex.ResourcePackLib
 
                                     var startChar = int.Parse($"{f}00", NumberStyles.HexNumber);
 
-                                    var characters = Enumerable.Range(startChar, 256).Select(x => (char) x).Chunk(16)
-                                       .Select(x => new string(x)).ToArray();
+                                    var characters = Enumerable.Range(startChar, 256).Select(x => (char) x).Batch(16)
+                                       .Select(x => new string(x.ToArray())).ToArray();
 
                                     if (LoadBitmapFontSource(bitmapEntry, characters, out var bitmapFontSource))
                                     {
@@ -544,13 +529,13 @@ namespace Alex.ResourcePackLib
             }
         }
 
-        private Color[] GetColorArray(Image<Rgba32> image)
+        private IColor[] GetColorArray(Image<Rgba32> image)
         {
             var cloned = image;
 
             if (cloned.DangerousTryGetSinglePixelMemory(out var pixelSpan))
             {
-                return pixelSpan.ToArray().Select(x => new Color(x.Rgba)).ToArray();
+                return pixelSpan.ToArray().Select(x =>  Primitives.Factory.Color(x.Rgba)).ToArray();
             }
 
             return null;/*
@@ -756,17 +741,17 @@ namespace Alex.ResourcePackLib
 
         #endregion
 
-        public bool TryGetGrassColor(float temp, float rain, int elevation, out Color color)
+        public bool TryGetGrassColor(float temp, float rain, int elevation, out IColor color)
         {
-            color = new Color(94, 157, 52);
+            color = Primitives.Factory.Color(94, 157, 52);
 
             if (GrassColors == null) return false;
 
-            temp = MathHelper.Clamp(temp - elevation * 0.00166667f, 0f, 1f);
-            rain = MathHelper.Clamp(rain, 0f, 1f) * temp;
+            temp = Math.Clamp(temp - elevation * 0.00166667f, 0f, 1f);
+            rain = Math.Clamp(rain, 0f, 1f) * temp;
 
-            int x = (int)Math.Floor(MathHelper.Clamp(_grassWidth - (_grassWidth * temp), 0, _grassWidth));
-            int y = (int)Math.Floor(MathHelper.Clamp(_grassHeight - (_grassHeight * rain), 0, _grassHeight));
+            int x = (int)Math.Floor(Math.Clamp(_grassWidth - (_grassWidth * temp), 0, _grassWidth));
+            int y = (int)Math.Floor(Math.Clamp(_grassHeight - (_grassHeight * rain), 0, _grassHeight));
 
             var indx = _grassWidth * y + x;
 
@@ -775,21 +760,21 @@ namespace Alex.ResourcePackLib
 
             var result = GrassColors[indx];
 
-            color = new Color(result.R, result.G, result.B);
+            color =  Primitives.Factory.Color(result.R, result.G, result.B);
 
             return true;
         }
 
-        public bool TryGetFoliageColor(float temp, float rain, int elevation, out Color color)
+        public bool TryGetFoliageColor(float temp, float rain, int elevation, out IColor color)
         {
-            color = new Color(94, 157, 52);
+            color = Primitives.Factory.Color(94, 157, 52);
 
             if (FoliageColors == null) return false;
-            temp = MathHelper.Clamp(temp - elevation * 0.00166667f, 0f, 1f);
-            rain = MathHelper.Clamp(rain, 0f, 1f) * temp;
+            temp = Math.Clamp(temp - elevation * 0.00166667f, 0f, 1f);
+            rain = Math.Clamp(rain, 0f, 1f) * temp;
 
-            int x = (int)Math.Floor(MathHelper.Clamp(_foliageWidth - (_foliageWidth * temp), 0, _foliageWidth));
-            int y = (int)Math.Floor(MathHelper.Clamp(_foliageHeight - (_foliageHeight * rain), 0, _foliageHeight));
+            int x = (int)Math.Floor(Math.Clamp(_foliageWidth - (_foliageWidth * temp), 0, _foliageWidth));
+            int y = (int)Math.Floor(Math.Clamp(_foliageHeight - (_foliageHeight * rain), 0, _foliageHeight));
 
             var indx = _foliageWidth * y + x;
 
@@ -798,7 +783,7 @@ namespace Alex.ResourcePackLib
 
             var result = FoliageColors[indx];
 
-            color = new Color(result.R, result.G, result.B);
+            color = Primitives.Factory.Color(result.R, result.G, result.B);
 
             return true;
         }

@@ -1,4 +1,5 @@
-﻿using Alex.Common.Gui.Graphics;
+﻿using Alex.Common;
+using Alex.Common.Gui.Graphics;
 using Alex.Common.Utils;
 using Alex.Interfaces;
 using Microsoft.Xna.Framework;
@@ -70,7 +71,7 @@ namespace Alex.Gamestates.Common
 				HeaderTitle = new TextElement()
 				{
 					Text = Title,
-					TextColor = (Color)TextColor.White,
+					TextColor = (Color)TextColor.White.ToXna(),
 					Scale = 1f,
 					FontStyle = FontStyle.DropShadow | FontStyle.Bold,
 					Anchor = Alignment.BottomCenter,

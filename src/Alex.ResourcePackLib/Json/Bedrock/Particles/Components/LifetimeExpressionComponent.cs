@@ -1,6 +1,5 @@
 using ConcreteMC.MolangSharp.Parser;
 using ConcreteMC.MolangSharp.Runtime;
-using LibNoise.Combiner;
 using Newtonsoft.Json;
 
 namespace Alex.ResourcePackLib.Json.Bedrock.Particles.Components

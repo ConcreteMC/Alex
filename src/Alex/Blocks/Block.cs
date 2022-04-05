@@ -14,6 +14,7 @@ using Alex.Common.Utils.Vectors;
 using Alex.Entities;
 using Alex.Graphics.Models.Blocks;
 using Alex.Interfaces;
+using Alex.Interfaces.Resources;
 using Alex.Items;
 using Alex.ResourcePackLib.Json.BlockStates;
 using Alex.Utils;

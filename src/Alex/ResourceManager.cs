@@ -35,13 +35,14 @@ using Alex.ResourcePackLib.Json.Models.Entities;
 using Alex.ResourcePackLib.Json.Textures;
 using Alex.Utils.Assets;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
 using Newtonsoft.Json;
 using NLog;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
-using ResourceLocation = Alex.Common.Resources.ResourceLocation;
+using ResourceLocation = Alex.Interfaces.Resources.ResourceLocation;
 
 namespace Alex
 {
@@ -1166,7 +1167,7 @@ namespace Alex
 			{
 				if (resourcePack.TryGetGrassColor(temp, rain, elevation, out var color))
 				{
-					return color;
+					return new Microsoft.Xna.Framework.Color(color.R, color.G, color.B, color.A);
 				}
 			}
 
@@ -1179,7 +1180,7 @@ namespace Alex
 			{
 				if (resourcePack.TryGetFoliageColor(temp, rain, elevation, out var color))
 				{
-					return color;
+					return new Microsoft.Xna.Framework.Color(color.R, color.G, color.B, color.A);
 				}
 			}
 

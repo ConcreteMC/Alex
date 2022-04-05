@@ -1,4 +1,5 @@
 using Alex.Common.Graphics;
+using Alex.Interfaces;
 using Microsoft.Xna.Framework;
 
 namespace Alex.Graphics.Models;
@@ -136,6 +137,11 @@ public class BoneMatrices
 		_parent.IsMatricesDirty = _parent.IsMatricesDirty || changed;
 	}
 
+	public void RotateOverTime(IVector3 targetRotation, double time, bool overrideOthers = false)
+	{
+		RotateOverTime(new Vector3(targetRotation.X, targetRotation.Y, targetRotation.Z), time, overrideOthers);
+	}
+	
 	public void RotateOverTime(Vector3 targetRotation, double time, bool overrideOthers = false)
 	{
 		if (overrideOthers)
@@ -150,6 +156,11 @@ public class BoneMatrices
 		_tempRotationData.TargetTime = time;
 	}
 
+	public void TranslateOverTime(IVector3 targetTranslation, double time, bool overrideOthers = false)
+	{
+		TranslateOverTime(new Vector3(targetTranslation.X, targetTranslation.Y, targetTranslation.Z), time, overrideOthers);
+	}
+	
 	public void TranslateOverTime(Vector3 targetTranslation, double time, bool overrideOthers = false)
 	{
 		if (overrideOthers)
@@ -164,6 +175,11 @@ public class BoneMatrices
 		_tempPositionData.TargetTime = time;
 	}
 
+	public void ScaleOverTime(IVector3 targetScale, double time, bool overrideOthers = false)
+	{
+		ScaleOverTime(new Vector3(targetScale.X, targetScale.Y, targetScale.Z), time, overrideOthers);
+	}
+	
 	public void ScaleOverTime(Vector3 targetScale, double time, bool overrideOthers = false)
 	{
 		if (overrideOthers)

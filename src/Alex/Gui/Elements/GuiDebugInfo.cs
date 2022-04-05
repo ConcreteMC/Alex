@@ -1,4 +1,5 @@
 ﻿using System;
+using Alex.Common;
 using Alex.Common.Utils;
 using Alex.Interfaces;
 using Microsoft.Xna.Framework;
@@ -33,7 +34,7 @@ namespace Alex.Gui.Elements
 			_leftContainer.AddChild(
 				new TextElement(text, hasBackground)
 				{
-					TextColor = (Color)TextColor.White,
+					TextColor = (Color)TextColor.White.ToXna(),
 					FontStyle = FontStyle.DropShadow,
 					Scale = 1f,
 					BackgroundOverlay = Color.Black * 0.25f,
@@ -49,7 +50,7 @@ namespace Alex.Gui.Elements
 			_leftContainer.AddChild(
 				new AutoUpdatingTextElement(getDebugString, hasBackground)
 				{
-					TextColor = (Color)TextColor.White,
+					TextColor = (Color)TextColor.White.ToXna(),
 					FontStyle = FontStyle.DropShadow,
 					Scale = 1f,
 					BackgroundOverlay = Color.Black * 0.25f,
@@ -64,7 +65,7 @@ namespace Alex.Gui.Elements
 			_rightContainer.AddChild(
 				new TextElement(text, hasBackground)
 				{
-					TextColor = (Color)TextColor.White,
+					TextColor = (Color)TextColor.White.ToXna(),
 					FontStyle = FontStyle.DropShadow,
 					Scale = 1f,
 					BackgroundOverlay = Color.Black * 0.25f,
@@ -80,7 +81,7 @@ namespace Alex.Gui.Elements
 			_rightContainer.AddChild(
 				new AutoUpdatingTextElement(getDebugString, hasBackground)
 				{
-					TextColor = (Color)TextColor.White,
+					TextColor = (Color)TextColor.White.ToXna(),
 					FontStyle = FontStyle.DropShadow,
 					Scale = 1f,
 					BackgroundOverlay = Color.Black * 0.25f,

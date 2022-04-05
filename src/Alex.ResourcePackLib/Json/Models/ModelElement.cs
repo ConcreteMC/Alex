@@ -1,7 +1,5 @@
 ﻿using System.Collections.Generic;
-using Alex.Common.Blocks;
 using Alex.Interfaces;
-using Microsoft.Xna.Framework;
 
 namespace Alex.ResourcePackLib.Json.Models
 {
@@ -10,12 +8,12 @@ namespace Alex.ResourcePackLib.Json.Models
 		/// <summary>
 		/// Start point of a cube according to the scheme [x, y, z]. Values must be between -16 and 32.
 		/// </summary>
-		public Vector3 From { get; set; } = new Vector3(0, 0, 0);
+		public IVector3 From { get; set; } = Primitives.Factory.Vector3(0, 0, 0);
 
 		/// <summary>
 		/// Stop point of a cube according to the scheme [x, y, z]. Values must be between -16 and 32.
 		/// </summary>
-		public Vector3 To { get; set; } = new Vector3(16, 16, 16);
+		public IVector3 To { get; set; } = Primitives.Factory.Vector3(16, 16, 16);
 
 		/// <summary>
 		/// Defines the rotation of an element.
@@ -39,8 +37,8 @@ namespace Alex.ResourcePackLib.Json.Models
 
 			var clone = new ModelElement()
 			{
-				From = new Vector3(From.X, From.Y, From.Z),
-				To = new Vector3(To.X, To.Y, To.Z),
+				From = Primitives.Factory.Vector3(From.X, From.Y, From.Z),
+				To = Primitives.Factory.Vector3(To.X, To.Y, To.Z),
 				Rotation = Rotation.Clone(),
 				Shade = Shade
 			};

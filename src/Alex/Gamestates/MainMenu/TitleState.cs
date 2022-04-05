@@ -128,7 +128,7 @@ namespace Alex.Gamestates.MainMenu
 			AddChild(
 				_splashText = new TextElement()
 				{
-					TextColor = (Color)TextColor.Yellow,
+					TextColor = (Color)TextColor.Yellow.ToXna(),
 					Rotation = 17.5f,
 					Margin = new Thickness(275, 15, 0, 0),
 					Anchor = Alignment.TopCenter,

@@ -1,5 +1,4 @@
 using Alex.Interfaces.Converters;
-using Microsoft.Xna.Framework;
 using Newtonsoft.Json;
 
 namespace Alex.Interfaces
@@ -18,20 +17,6 @@ namespace Alex.Interfaces
 	
 	public static class BlockFaceHelper
 	{
-		public static Vector3 GetVector3(this BlockFace face)
-		{
-			return face switch
-			{
-				BlockFace.Down  => Vector3.Down,
-				BlockFace.Up    => Vector3.Up,
-				BlockFace.East  => Vector3.Right,
-				BlockFace.West  => Vector3.Left,
-				BlockFace.North => Vector3.Forward,
-				BlockFace.South => Vector3.Backward,
-				_               => Vector3.Zero
-			};
-		}
-
 		public static BlockFace Opposite(this BlockFace face)
 		{
 			return face switch

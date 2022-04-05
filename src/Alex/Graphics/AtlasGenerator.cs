@@ -5,6 +5,7 @@ using System.Linq;
 using Alex.Common.Resources;
 using Alex.Common.Utils;
 using Alex.Graphics.Packing;
+using Alex.Interfaces.Resources;
 using Alex.ResourcePackLib.Json.Textures;
 using Alex.Worlds.Singleplayer;
 using Microsoft.Xna.Framework;

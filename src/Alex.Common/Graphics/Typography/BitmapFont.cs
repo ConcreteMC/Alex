@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using Alex.Common.Utils;
 using Alex.Interfaces;
+using Alex.ResourcePackLib;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using MiNET.Worlds;
@@ -18,31 +19,6 @@ using Size = RocketUI.Size;
 
 namespace Alex.Common.Graphics.Typography
 {
-    public class BitmapFontSource
-    {
-        public Image<Rgba32> Image { get; }
-        public char[] Characters { get; }
-        public bool IsAscii { get; }
-        public string Name { get; }
-
-        public BitmapFontSource(string name, Image<Rgba32> image, string[] characters, bool isAscii = false)
-        {
-            Name = name;
-            Image = image;
-            Characters = characters.SelectMany(x => x.ToCharArray()).ToArray();
-            IsAscii = isAscii;
-        }
-
-        public BitmapFontSource(string name, Image<Rgba32> image, char unicodeStartChar)
-        {
-            Name = name;
-            Image = image;
-            Characters = Enumerable.Range(unicodeStartChar, 256)
-                .Select(x => (char)x)
-                .ToArray();
-        }
-    }
-
     public class BitmapFont : IFont
     {
         #region Properties
@@ -192,7 +168,7 @@ namespace Alex.Common.Graphics.Typography
             Vector2? origin = null,
             SpriteEffects effects = SpriteEffects.None,
             float layerDepth = 0f) => DrawString(
-            sb, text, position, (TextColor)color, style, scale, opacity, rotation, origin, effects, layerDepth);
+            sb, text, position, color.ToTextColor(), style, scale, opacity, rotation, origin, effects, layerDepth);
 
         private static char[] _colorChars = "0123456789abcdef".ToArray();
         public void DrawString(SpriteBatch sb,
@@ -373,8 +349,8 @@ namespace Alex.Common.Graphics.Typography
                     {
                         var localRotation = rotation;
                         var localScale = glyph.Scale * scaleVal * Scale;
-                        var localForegroundColor = styleColor.ForegroundColor * opacity;
-                        var localBackgroundColor = styleColor.BackgroundColor * opacity;
+                        var localForegroundColor = styleColor.ForegroundColor.ToXna() * opacity;
+                        var localBackgroundColor = styleColor.BackgroundColor.ToXna() * opacity;
 
                         if (styleRandom)
                         {
@@ -443,7 +419,7 @@ namespace Alex.Common.Graphics.Typography
                         //underlineEnd = new Vector2(underlineStart.X + width, underlineStart.Y);
                         previousUnderline = false;
                         
-                        sb.DrawLine(2, underlineStart,new Vector2(underlineStart.X + width, underlineStart.Y), styleColor.ForegroundColor * opacity, glyph.Scale * scaleVal * Scale, layerDepth);
+                        sb.DrawLine(2, underlineStart,new Vector2(underlineStart.X + width, underlineStart.Y), styleColor.ForegroundColor.ToXna() * opacity, glyph.Scale * scaleVal * Scale, layerDepth);
                     }
                     
                     //Strikethrough
@@ -458,7 +434,7 @@ namespace Alex.Common.Graphics.Typography
                         //End
                         styleStrikethrough = false;
                         
-                        sb.DrawLine(2, strikeStart, new Vector2(strikeStart.X + width, strikeStart.Y), styleColor.ForegroundColor * opacity, glyph.Scale * scaleVal * Scale, layerDepth);
+                        sb.DrawLine(2, strikeStart, new Vector2(strikeStart.X + width, strikeStart.Y), styleColor.ForegroundColor.ToXna() * opacity, glyph.Scale * scaleVal * Scale, layerDepth);
                     }
 
                     offsetX += width;

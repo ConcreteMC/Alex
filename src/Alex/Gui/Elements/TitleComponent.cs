@@ -1,4 +1,5 @@
 ﻿using System;
+using Alex.Common;
 using Alex.Common.Gui.Elements;
 using Alex.Common.Utils;
 using Alex.Common.World;
@@ -23,13 +24,13 @@ namespace Alex.Gui.Elements
 			_title = new TextElement()
 			{
 				//Anchor = Alignment.TopCenter,
-				TextColor = (Color)TextColor.White, FontStyle = FontStyle.DropShadow, Scale = 2f, Text = ""
+				TextColor = (Color)TextColor.White.ToXna(), FontStyle = FontStyle.DropShadow, Scale = 2f, Text = ""
 			};
 
 			_subTitle = new TextElement()
 			{
 				//Anchor = Alignment.MiddleCenter,
-				TextColor = (Color)TextColor.White, FontStyle = FontStyle.None, Scale = 1f, Text = ""
+				TextColor = (Color)TextColor.White.ToXna(), FontStyle = FontStyle.None, Scale = 1f, Text = ""
 			};
 
 			AddChild(_title);

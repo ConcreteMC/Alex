@@ -1,5 +1,6 @@
 using Alex.Common.Resources;
 using Alex.Graphics.Models.Entity.BlockEntities;
+using Alex.Interfaces.Resources;
 using Alex.Utils;
 using Alex.Worlds;
 

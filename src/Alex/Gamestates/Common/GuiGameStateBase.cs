@@ -1,4 +1,5 @@
-﻿using Alex.Common.Data.Options;
+﻿using Alex.Common;
+using Alex.Common.Data.Options;
 using Alex.Common.GameStates;
 using Alex.Common.Graphics;
 using Alex.Common.Services;
@@ -45,7 +46,7 @@ namespace Alex.Gamestates.Common
 				{
 					Anchor = Alignment.BottomLeft,
 					Text = "github.com/kennyvv/Alex",
-					TextColor = (Color)TextColor.White,
+					TextColor = (Color)TextColor.White.ToXna(),
 					TextOpacity = 0.5f,
 					Scale = 0.5f,
 					Margin = new Thickness(5, 0, 0, 5)
@@ -56,7 +57,7 @@ namespace Alex.Gamestates.Common
 				{
 					Anchor = Alignment.BottomRight,
 					Text = "Not affiliated with Mojang/Minecraft",
-					TextColor = (Color)TextColor.White,
+					TextColor = (Color)TextColor.White.ToXna(),
 					TextOpacity = 0.5f,
 					Scale = 0.5f,
 					Margin = new Thickness(0, 0, 5, 5)

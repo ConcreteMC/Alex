@@ -15,6 +15,7 @@ using Alex.Common.Blocks.Properties;
 using Alex.Common.Resources;
 using Alex.Common.Utils;
 using Alex.Graphics.Models.Blocks;
+using Alex.Interfaces.Resources;
 using Alex.ResourcePackLib.Json.BlockStates;
 using Alex.Utils;
 using Newtonsoft.Json;

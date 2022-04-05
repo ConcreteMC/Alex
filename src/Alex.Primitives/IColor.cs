@@ -1,6 +1,8 @@
+using System;
+
 namespace Alex.Interfaces
 {
-	public interface IColor
+	public interface IColor : IEquatable<IColor>
 	{
 		byte R { get; }
 		byte G { get; }

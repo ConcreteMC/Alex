@@ -31,7 +31,7 @@
     <ItemGroup>
         <PackageReference Include="MiNET.fnbt" Version="1.0.22" />
         <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
-        <PackageReference Include="NLog" Version="4.7.14" />
+        <PackageReference Include="NLog" Version="4.7.15" />
         <PackageReference Include="Portable.BouncyCastle" Version="1.9.0" />
     </ItemGroup>
     <ItemGroup>

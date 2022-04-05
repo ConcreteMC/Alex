@@ -1,4 +1,5 @@
 ﻿using System;
+using Alex.Common;
 using Alex.Common.Gui.Elements;
 using Alex.Common.Services;
 using Alex.Common.Utils;
@@ -31,7 +32,7 @@ namespace Alex.Gamestates.Multiplayer
 			AddRocketElement(
 				_connectButton = new AlexButton("Join Server", OnConnectButtonPressed) { Margin = new Thickness(5) });
 
-			AddRocketElement(_errorMessage = new TextElement() { TextColor = (Color)TextColor.Red });
+			AddRocketElement(_errorMessage = new TextElement() { TextColor = (Color)TextColor.Red.ToXna() });
 		}
 
 		private void OnConnectButtonPressed()

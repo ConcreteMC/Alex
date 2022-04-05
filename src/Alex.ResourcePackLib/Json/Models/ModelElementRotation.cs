@@ -1,4 +1,4 @@
-﻿using Microsoft.Xna.Framework;
+﻿using Alex.Interfaces;
 
 namespace Alex.ResourcePackLib.Json.Models
 {
@@ -7,7 +7,7 @@ namespace Alex.ResourcePackLib.Json.Models
 		/// <summary>
 		/// Sets the center of the rotation according to the scheme [x, y, z], defaults to [8, 8, 8].
 		/// </summary>
-		public Vector3 Origin { get; set; } = new Vector3(8, 8, 8);
+		public IVector3 Origin { get; set; } = Primitives.Factory.Vector3(8, 8, 8);
 
 		/// <summary>
 		/// Specifies the direction of rotation, can be "x", "y" or "z".
@@ -28,7 +28,7 @@ namespace Alex.ResourcePackLib.Json.Models
 		{
 			return new ModelElementRotation()
 			{
-				Angle = Angle, Axis = Axis, Origin = new Vector3(Origin.X, Origin.Y, Origin.Z), Rescale = Rescale
+				Angle = Angle, Axis = Axis, Origin = Primitives.Factory.Vector3(Origin.X, Origin.Y, Origin.Z), Rescale = Rescale
 			};
 		}
 	}

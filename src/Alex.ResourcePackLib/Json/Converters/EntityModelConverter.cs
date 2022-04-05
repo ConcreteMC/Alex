@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
+using Alex.Interfaces;
 using Alex.ResourcePackLib.Json.Models.Entities;
-using Microsoft.Xna.Framework;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using NLog;
@@ -65,7 +65,7 @@ namespace Alex.ResourcePackLib.Json.Converters
 					switch (prop.Key.ToLower())
 					{
 						case "visible_bounds_offset":
-							model.Description.VisibleBoundsOffset = property.ToObject<Vector3>(serializer);
+							model.Description.VisibleBoundsOffset = property.ToObject<IVector3>(serializer);
 
 							break;
 
@@ -137,7 +137,7 @@ namespace Alex.ResourcePackLib.Json.Converters
 					switch (prop.Key.ToLower())
 					{
 						case "visible_bounds_offset":
-							model.Description.VisibleBoundsOffset = property.ToObject<Vector3>(serializer);
+							model.Description.VisibleBoundsOffset = property.ToObject<IVector3>(serializer);
 
 							break;
 

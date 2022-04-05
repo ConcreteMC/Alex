@@ -1,4 +1,5 @@
 using Alex.Common.Utils.Vectors;
+using Alex.Interfaces;
 using Microsoft.Xna.Framework;
 
 namespace Alex.Common.Utils
@@ -18,6 +19,12 @@ namespace Alex.Common.Utils
 		}
 
 		public static Matrix CreateRotationDegrees(Vector3 input)
+		{
+			return Matrix.CreateRotationX(input.X.ToRadians()) * Matrix.CreateRotationY(input.Y.ToRadians())
+			                                                   * Matrix.CreateRotationZ(input.Z.ToRadians());
+		}
+		
+		public static Matrix CreateRotationDegrees(IVector3 input)
 		{
 			return Matrix.CreateRotationX(input.X.ToRadians()) * Matrix.CreateRotationY(input.Y.ToRadians())
 			                                                   * Matrix.CreateRotationZ(input.Z.ToRadians());

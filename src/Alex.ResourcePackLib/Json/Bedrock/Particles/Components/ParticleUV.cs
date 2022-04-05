@@ -1,6 +1,6 @@
+using Alex.Interfaces;
 using Alex.ResourcePackLib.Json.Bedrock.MoLang;
 using ConcreteMC.MolangSharp.Runtime;
-using Microsoft.Xna.Framework;
 using Newtonsoft.Json;
 
 namespace Alex.ResourcePackLib.Json.Bedrock.Particles.Components
@@ -17,24 +17,24 @@ namespace Alex.ResourcePackLib.Json.Bedrock.Particles.Components
 
 		[JsonProperty("flipbook")] public Flipbook Flipbook { get; set; }
 
-		public Vector2 GetUv(MoLangRuntime runtime)
+		public IVector2 GetUv(MoLangRuntime runtime)
 		{
 			if (Flipbook?.Base != null)
 			{
-				return Flipbook.Base.Evaluate(runtime, Vector2.Zero);
+				return Flipbook.Base.Evaluate(runtime, VectorUtils.VectorFactory.Vector2Zero);
 			}
 
-			return Uv?.Evaluate(runtime, Vector2.Zero) ?? Vector2.Zero;
+			return Uv?.Evaluate(runtime, VectorUtils.VectorFactory.Vector2Zero) ?? VectorUtils.VectorFactory.Vector2Zero;
 		}
 
-		public Vector2 GetSize(MoLangRuntime runtime)
+		public IVector2 GetSize(MoLangRuntime runtime)
 		{
 			if (Flipbook?.Size != null)
 			{
-				return Flipbook.Size.Value;
+				return Flipbook.Size;
 			}
 
-			return (Size?.Evaluate(runtime, Vector2.One) ?? (Vector2.One));
+			return (Size?.Evaluate(runtime, VectorUtils.VectorFactory.Vector2Zero) ?? VectorUtils.VectorFactory.Vector2Zero);
 		}
 	}
 }

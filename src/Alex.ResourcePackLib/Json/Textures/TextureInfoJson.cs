@@ -1,6 +1,5 @@
 ﻿using System;
 using Alex.ResourcePackLib.Json.Converters;
-using Microsoft.Xna.Framework;
 using Newtonsoft.Json;
 
 namespace Alex.ResourcePackLib.Json.Textures
@@ -15,7 +14,7 @@ namespace Alex.ResourcePackLib.Json.Textures
 		[JsonConverter(typeof(SingleOrArrayConverter<int>))]
 		public int[] BaseSize { get; set; }
 
-		public Rectangle InnerBounds
+		/*public Rectangle InnerBounds
 		{
 			get
 			{
@@ -62,6 +61,6 @@ namespace Alex.ResourcePackLib.Json.Textures
 
 				return new Rectangle();
 			}
-		}
+		}*/
 	}
 }

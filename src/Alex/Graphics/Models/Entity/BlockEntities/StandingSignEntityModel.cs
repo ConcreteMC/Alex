@@ -1,3 +1,4 @@
+using Alex.Interfaces;
 using Alex.ResourcePackLib.Json.Models.Entities;
 using Microsoft.Xna.Framework;
 
@@ -17,21 +18,20 @@ namespace Alex.Graphics.Models.Entity.BlockEntities
 				new EntityModelBone()
 				{
 					Name = "root",
-					Pivot = Vector3.Zero,
-					//BindPoseRotation = new Vector3(0f, 90f, 0f),
+					//BindPoseRotation = Primitives.Factory.Vector3(0f, 90f, 0f),
 					Cubes = new[]
 					{
 						new EntityModelCube()
 						{
-							Origin = new Vector3(-8, 6f, -1f),
-							Size = new Vector3(16, 11, 1),
-							Uv = new Vector2(9, 2)
+							Origin =Primitives.Factory.Vector3(-8, 6f, -1f),
+							Size = Primitives.Factory.Vector3(16, 11, 1),
+							Uv = EntityModelUV.FromIVector2(Primitives.Factory.Vector2(9, 2))
 						},
 						new EntityModelCube()
 						{
-							Origin = new Vector3(-1, 0f, -0.8f),
-							Size = new Vector3(2, 14, 2),
-							Uv = new Vector2(0, 14)
+							Origin = Primitives.Factory.Vector3(-1, 0f, -0.8f),
+							Size = Primitives.Factory.Vector3(2, 14, 2),
+							Uv = EntityModelUV.FromIVector2(Primitives.Factory.Vector2(0, 14))
 						}
 					}
 				}
@@ -53,14 +53,14 @@ namespace Alex.Graphics.Models.Entity.BlockEntities
 				new EntityModelBone()
 				{
 					Name = "root",
-					Pivot = new Vector3(0f, 0f, 0f),
+					Pivot = Primitives.Factory.Vector3(0f, 0f, 0f),
 					Cubes = new[]
 					{
 						new EntityModelCube()
 						{
-							Origin = new Vector3(-8f, 2.5f, 7f),
-							Size = new Vector3(16, 11, 1),
-							Uv = new Vector2(9, 2)
+							Origin = Primitives.Factory.Vector3(-8f, 2.5f, 7f),
+							Size = Primitives.Factory.Vector3(16, 11, 1),
+							Uv = EntityModelUV.FromIVector2(Primitives.Factory.Vector2(9, 2))
 						}
 					}
 				}

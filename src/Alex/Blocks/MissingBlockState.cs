@@ -6,6 +6,7 @@ using Alex.Common.Blocks;
 using Alex.Common.Resources;
 using Alex.Graphics.Models.Blocks;
 using Alex.Interfaces;
+using Alex.Interfaces.Resources;
 using Alex.ResourcePackLib.Json.BlockStates;
 
 namespace Alex.Blocks

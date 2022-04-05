@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Net;
+using Alex.Common;
 using Alex.Common.Gui.Elements;
 using Alex.Common.Services;
 using Alex.Common.Utils;
@@ -62,7 +63,7 @@ namespace Alex.Gamestates.InGame
 				{
 					TranslationKey = "multiplayer.disconnect.generic",
 					FontStyle = FontStyle.Bold | FontStyle.DropShadow,
-					TextColor = (Color)TextColor.White,
+					TextColor = (Color)TextColor.White.ToXna(),
 					Anchor = Alignment.MiddleCenter
 				});
 
@@ -97,7 +98,7 @@ namespace Alex.Gamestates.InGame
 							Width = 356,
 							MinWidth = 356,
 							TranslationKey = "disconnect.lost",
-							TextColor = (Color)TextColor.Red,
+							TextColor = (Color)TextColor.Red.ToXna(),
 							Anchor = Alignment.MiddleCenter,
 							Wrap = true,
 							TextAlignment = TextAlignment.Center

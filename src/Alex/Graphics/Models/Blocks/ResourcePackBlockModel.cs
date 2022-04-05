@@ -135,8 +135,10 @@ namespace Alex.Graphics.Models.Blocks
 				var eMaxZ = float.MinValue;
 
 				var element = model.Elements[index];
-				element.To *= Scale;
-				element.From *= Scale;
+				element.To = VectorUtils.Multiply(element.To, Scale);
+				element.From = VectorUtils.Multiply(element.From, Scale);
+				//element.To *= Scale;
+				//element.From *= Scale;
 
 				foreach (var face in element.Faces)
 				{
@@ -398,8 +400,10 @@ namespace Alex.Graphics.Models.Blocks
 			for (var index = 0; index < model.Elements.Length; index++)
 			{
 				var element = model.Elements[index];
-				element.To *= Scale;
-				element.From *= Scale;
+				element.To = VectorUtils.Multiply(element.To, Scale);
+				element.From = VectorUtils.Multiply(element.From, Scale);
+				//element.To *= Scale;
+				//element.From *= Scale;
 
 				foreach (var face in element.Faces)
 				{

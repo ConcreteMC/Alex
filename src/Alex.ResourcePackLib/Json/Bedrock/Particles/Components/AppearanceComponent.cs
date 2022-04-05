@@ -1,3 +1,4 @@
+using Alex.Interfaces;
 using Alex.ResourcePackLib.Json.Bedrock.MoLang;
 using ConcreteMC.MolangSharp.Runtime;
 using Newtonsoft.Json;
@@ -47,7 +48,7 @@ namespace Alex.ResourcePackLib.Json.Bedrock.Particles.Components
 				{
 					var frame = (int)((particle.Lifetime * flipbook.FPS.Value) % particle.FrameCount);
 
-					particle.UvPosition = UV.GetUv(runtime) + flipbook.Step * frame;
+					particle.UvPosition = VectorUtils.Add(UV.GetUv(runtime), VectorUtils.Multiply(flipbook.Step, frame));
 				}
 			}
 		}

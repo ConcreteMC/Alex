@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Alex.Common;
 using Alex.Common.Gui.Elements;
 using Alex.Common.Utils;
 using Alex.Gui.Elements;
@@ -191,7 +192,7 @@ namespace Alex.Gui.Forms
 				new TextElement()
 				{
 					Text = FixContrast(form.Title),
-					TextColor = (Color)TextColor.White,
+					TextColor = (Color)TextColor.White.ToXna(),
 					Scale = 2f,
 					FontStyle = FontStyle.DropShadow,
 					Anchor = Alignment.BottomCenter,

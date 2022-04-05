@@ -2,6 +2,8 @@
 using System.Threading;
 using Alex.Common;
 using Alex.Common.Utils;
+using Alex.Common.Utils.Vectors;
+using Alex.Interfaces;
 using Alex.Utils;
 using CommandLine;
 using MiNET.Utils;
@@ -27,6 +29,7 @@ namespace Alex
 		[STAThread]
 		static void Main(string[] args)
 		{
+			Primitives.Factory = new PrimitiveFactory();
 			//	ThreadPool.SetMinThreads(MaxThreads, Environment.ProcessorCount);
 			//ThreadPool.SetMaxThreads(MaxThreads, 2);
 			_startupThread = Thread.CurrentThread;

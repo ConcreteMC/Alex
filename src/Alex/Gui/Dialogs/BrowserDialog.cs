@@ -1,4 +1,5 @@
 using System;
+using Alex.Common;
 using Alex.Common.Utils;
 using Alex.Gui.Elements.Web;
 using Alex.Interfaces;
@@ -107,7 +108,7 @@ namespace Alex.Gui.Dialogs
 				_titleElement = new TextElement()
 				{
 					Text = Title,
-					TextColor = (Microsoft.Xna.Framework.Color)TextColor.White,
+					TextColor = (Microsoft.Xna.Framework.Color)TextColor.White.ToXna(),
 					Scale = 2f,
 					FontStyle = FontStyle.DropShadow,
 					Anchor = Alignment.BottomCenter,

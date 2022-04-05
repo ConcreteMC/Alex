@@ -18,6 +18,7 @@ using Alex.Blocks.Minecraft.Terracotta;
 using Alex.Blocks.Minecraft.Walls;
 using Alex.Common.Resources;
 using Alex.Entities.BlockEntities;
+using Alex.Interfaces.Resources;
 using Alex.Utils;
 using NLog;
 

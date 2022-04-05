@@ -1,10 +1,10 @@
 using System.Collections.Generic;
 using System.Linq;
+using Alex.Interfaces;
 using Alex.ResourcePackLib.Json.Converters.Bedrock;
 using ConcreteMC.MolangSharp.Parser;
 using ConcreteMC.MolangSharp.Runtime;
 using ConcreteMC.MolangSharp.Runtime.Value;
-using Microsoft.Xna.Framework;
 using Newtonsoft.Json;
 
 namespace Alex.ResourcePackLib.Json.Bedrock.MoLang
@@ -44,20 +44,20 @@ namespace Alex.ResourcePackLib.Json.Bedrock.MoLang
 			_keyFrames = newKeyFrames;
 		}
 
-		private Vector2 Evaluate(MoLangRuntime runtime,
+		private IVector2 Evaluate(MoLangRuntime runtime,
 			IExpression xExpressions,
 			IExpression yExpressions,
-			Vector2 currentValue)
+			IVector2 currentValue)
 		{
 			runtime.Environment.ThisVariable = new DoubleValue(currentValue.X);
 			IMoValue x = runtime.Execute(xExpressions);
 			runtime.Environment.ThisVariable = new DoubleValue(currentValue.Y);
 			IMoValue y = runtime.Execute(yExpressions);
 
-			return new Vector2(x.AsFloat(), y.AsFloat());
+			return VectorUtils.VectorFactory.Vector2(x.AsFloat(), y.AsFloat());
 		}
 
-		private Vector2 Evaluate(MoLangRuntime runtime, IExpression[] expressions, Vector2 currentValue)
+		private IVector2 Evaluate(MoLangRuntime runtime, IExpression[] expressions, IVector2 currentValue)
 		{
 			if (expressions.Length == 3)
 			{
@@ -67,13 +67,13 @@ namespace Alex.ResourcePackLib.Json.Bedrock.MoLang
 			return Evaluate(runtime, expressions[0], expressions[0], currentValue);
 		}
 
-		private Vector2 Evaluate(MoLangRuntime runtime,
+		private IVector2 Evaluate(MoLangRuntime runtime,
 			AnimationChannelData complex,
 			bool lookAHead,
-			Vector2 currentValue)
+			IVector2 currentValue)
 		{
 			if (complex == null)
-				return Vector2.Zero;
+				return VectorUtils.VectorFactory.Vector2(0,0);
 
 
 			if (complex.Expressions != null)
@@ -89,7 +89,7 @@ namespace Alex.ResourcePackLib.Json.Bedrock.MoLang
 			return Evaluate(runtime, complex.KeyFrame.Post, currentValue);
 		}
 
-		public Vector2 Evaluate(MoLangRuntime runtime, Vector2 currentValue, double animationTime = 0d)
+		public IVector2 Evaluate(MoLangRuntime runtime, IVector2 currentValue, double animationTime = 0d)
 		{
 			if (_keyFrames != null)
 			{
@@ -118,10 +118,10 @@ namespace Alex.ResourcePackLib.Json.Bedrock.MoLang
 
 				var timeBetweenFrames = (nextKey - previousKey);
 				var accumulator = elapsedTime - previousKey;
-				Vector2 previousVector = Evaluate(runtime, previous, false, currentValue);
-				Vector2 nextVector = Evaluate(runtime, next, true, currentValue);
+				IVector2 previousVector = Evaluate(runtime, previous, false, currentValue);
+				IVector2 nextVector = Evaluate(runtime, next, true, currentValue);
 
-				return Vector2.Lerp(previousVector, nextVector, (float)((1f / timeBetweenFrames) * accumulator));
+				return VectorUtils.Lerp(previousVector, nextVector, (float)((1f / timeBetweenFrames) * accumulator));
 			}
 
 			return Evaluate(runtime, _x, _y, currentValue);

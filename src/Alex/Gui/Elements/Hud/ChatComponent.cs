@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using Alex.Common;
 using Alex.Common.Data;
 using Alex.Common.Graphics.Typography;
 using Alex.Common.Input;
@@ -317,7 +318,7 @@ namespace Alex.Gui.Elements.Hud
 
 			Font.DrawString(
 				graphics.SpriteBatch, text, renderPos + new Vector2(Padding.Left, 2),
-				(Color)Interfaces.TextColor.White, opacity: alpha);
+				(Color)Interfaces.TextColor.White.ToXna(), opacity: alpha);
 
 			offset.Y -= (size.Y + 2);
 		}

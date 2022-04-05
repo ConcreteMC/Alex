@@ -6,6 +6,7 @@ using Alex.Common.Graphics;
 using Alex.Common.Resources;
 using Alex.Common.Utils.Vectors;
 using Alex.Interfaces;
+using Alex.Interfaces.Resources;
 using Alex.Utils;
 using Alex.Worlds.Abstraction;
 using Alex.Worlds.Chunks;
@@ -26,8 +27,8 @@ namespace Alex.Graphics.Models.Blocks
 		}
 
 		protected BlockShaderVertex[] GetFaceVertices(BlockFace blockFace,
-			Vector3 startPosition,
-			Vector3 endPosition,
+			IVector3 startPosition,
+			IVector3 endPosition,
 			BlockTextureData uvmap)
 		{
 			Color faceColor = Color.White;

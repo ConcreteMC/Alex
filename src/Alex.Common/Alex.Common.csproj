@@ -19,7 +19,7 @@
         <PackageReference Include="MiNET.fnbt" Version="1.0.22" />
         <PackageReference Include="MojangAPI" Version="1.1.0" />
         <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
-        <PackageReference Include="NLog" Version="4.7.14" />
+        <PackageReference Include="NLog" Version="4.7.15" />
         <PackageReference Include="SixLabors.ImageSharp" Version="2.1.0" />
         <PackageReference Include="SixLabors.ImageSharp.Drawing" Version="1.0.0-beta14" />
     </ItemGroup>
@@ -42,5 +42,6 @@
         <ProjectReference Include="..\..\submodules\RocketUI\src\RocketUI\RocketUI.csproj" Exclude="MonoGame.Framework.DesktopGL">
         </ProjectReference>
         <ProjectReference Include="..\Alex.Primitives\Alex.Primitives.csproj" />
+        <ProjectReference Include="..\Alex.ResourcePackLib\Alex.ResourcePackLib.csproj" />
     </ItemGroup>
 </Project>

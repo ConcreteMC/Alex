@@ -12,7 +12,7 @@ namespace Alex.Graphics.Models.Entity
 
 		private readonly bool _mirror = false;
 
-		public Cube(EntityModelCube cube, bool mirrored, float inflation, Vector3 originVector)
+		public Cube(EntityModelCube cube, bool mirrored, float inflation, IVector3 originVector)
 		{
 			_mirror = mirrored;
 
@@ -20,7 +20,7 @@ namespace Alex.Graphics.Models.Entity
 
 			var from = originVector; // cube.InflatedOrigin(inflation);
 
-			var to = from + inflatedSize;
+			var to = VectorUtils.Add(from, inflatedSize);// from + inflatedSize;
 
 			var uv = cube.Uv ?? new EntityModelUV();
 			var rawSize = cube.Size;
@@ -40,27 +40,27 @@ namespace Alex.Graphics.Models.Entity
 
 			Front = GetFrontVertex(
 				uv.North.WithOptionalSize(rawSize.X, rawSize.Y),
-				uv.South.Size.HasValue ? Vector2.Zero : new Vector2(rawSize.Z, rawSize.Z));
+				uv.South.Size != null ? Primitives.Factory.Vector2Zero : Primitives.Factory.Vector2(rawSize.Z, rawSize.Z));
 
 			Back = GetBackVertex(
 				uv.South.WithOptionalSize(rawSize.X, rawSize.Y),
-				uv.North.Size.HasValue ? Vector2.Zero : new Vector2(rawSize.Z + rawSize.Z + rawSize.X, rawSize.Z));
+				uv.North.Size != null ? Primitives.Factory.Vector2Zero : Primitives.Factory.Vector2(rawSize.Z + rawSize.Z + rawSize.X, rawSize.Z));
 
 			Left = GetLeftVertex(
 				uv.West.WithOptionalSize(rawSize.Z, rawSize.Y),
-				uv.West.Size.HasValue ? Vector2.Zero : new Vector2(rawSize.Z + rawSize.X, rawSize.Z));
+				uv.West.Size != null ? Primitives.Factory.Vector2Zero: Primitives.Factory.Vector2(rawSize.Z + rawSize.X, rawSize.Z));
 
 			Right = GetRightVertex(
 				uv.East.WithOptionalSize(rawSize.Z, rawSize.Y),
-				uv.East.Size.HasValue ? Vector2.Zero : new Vector2(0, rawSize.Z));
+				uv.East.Size != null ? Primitives.Factory.Vector2Zero : Primitives.Factory.Vector2(0, rawSize.Z));
 
 			Top = GetTopVertex(
 				uv.Up.WithOptionalSize(rawSize.X, rawSize.Z),
-				uv.Up.Size.HasValue ? Vector2.Zero : new Vector2(rawSize.Z, 0));
+				uv.Up.Size != null ? Primitives.Factory.Vector2Zero : Primitives.Factory.Vector2(rawSize.Z, 0));
 
 			Bottom = GetBottomVertex(
 				uv.Down.WithOptionalSize(rawSize.X, rawSize.Z),
-				uv.Down.Size.HasValue ? Vector2.Zero : new Vector2(rawSize.Z + rawSize.X, 0));
+				uv.Down.Size != null ? Primitives.Factory.Vector2Zero : Primitives.Factory.Vector2(rawSize.Z + rawSize.X, 0));
 		}
 
 		public (VertexPositionColorTexture[] vertices, short[] indexes) Front, Back, Left, Right, Top, Bottom;
@@ -75,13 +75,13 @@ namespace Alex.Graphics.Models.Entity
 		private readonly Vector3 _btmRightBack;
 
 		private (VertexPositionColorTexture[] vertices, short[] indexes) GetLeftVertex(EntityModelUVData uv,
-			Vector2 size)
+			IVector2 size)
 		{
 			//Vector3 normal = new Vector3(-1.0f, 0.0f, 0.0f) * Size;
 			Color normal = Models.ModelBase.AdjustColor(DefaultColor, BlockFace.West);
 
 			//var map = GetTextureMapping(uv + new Vector2(Size.Z + Size.X, Size.Z), Size.Z, Size.Y);
-			var map = GetTextureMapping(uv.Origin + size, uv.Size.Value.X, uv.Size.Value.Y);
+			var map = GetTextureMapping(VectorUtils.Add(uv.Origin, size), (float) uv.Size.X, (float) uv.Size.Y);
 
 			// Add the vertices for the RIGHT face. 
 			return (new VertexPositionColorTexture[]
@@ -100,12 +100,12 @@ namespace Alex.Graphics.Models.Entity
 		}
 
 		private (VertexPositionColorTexture[] vertices, short[] indexes) GetRightVertex(EntityModelUVData uv,
-			Vector2 size)
+			IVector2 size)
 		{
 			//Vector3 normal = new Vector3(1.0f, 0.0f, 0.0f) * Size;
 			Color normal = Models.ModelBase.AdjustColor(DefaultColor, BlockFace.East);
 
-			var map = GetTextureMapping(uv.Origin + size, uv.Size.Value.X, uv.Size.Value.Y);
+			var map = GetTextureMapping(VectorUtils.Add(uv.Origin, size), (float) uv.Size.X, (float) uv.Size.Y);
 			//var map = GetTextureMapping(uv + new Vector2(0, Size.Z), Size.Z, Size.Y);
 
 			// Add the vertices for the RIGHT face. 
@@ -121,12 +121,12 @@ namespace Alex.Graphics.Models.Entity
 		}
 
 		private (VertexPositionColorTexture[] vertices, short[] indexes) GetFrontVertex(EntityModelUVData uv,
-			Vector2 size)
+			IVector2 size)
 		{
 			//Vector3 normal = new Vector3(0.0f, 0.0f, 1.0f) * Size;
 			Color normal = Models.ModelBase.AdjustColor(DefaultColor, BlockFace.South);
 
-			var map = GetTextureMapping(uv.Origin + size, uv.Size.Value.X, uv.Size.Value.Y);
+			var map =GetTextureMapping(VectorUtils.Add(uv.Origin, size), (float) uv.Size.X, (float) uv.Size.Y);
 
 			// Add the vertices for the RIGHT face. 
 			return (new VertexPositionColorTexture[]
@@ -145,12 +145,12 @@ namespace Alex.Graphics.Models.Entity
 		}
 
 		private (VertexPositionColorTexture[] vertices, short[] indexes) GetBackVertex(EntityModelUVData uv,
-			Vector2 size)
+			IVector2 size)
 		{
 			//Vector3 normal = new Vector3(0.0f, 0.0f, -1.0f) * Size;
 			Color normal = Models.ModelBase.AdjustColor(DefaultColor, BlockFace.North);
 
-			var map = GetTextureMapping(uv.Origin + size, uv.Size.Value.X, uv.Size.Value.Y);
+			var map = GetTextureMapping(VectorUtils.Add(uv.Origin, size), (float) uv.Size.X, (float) uv.Size.Y);
 
 			// Add the vertices for the RIGHT face. 
 			return (new VertexPositionColorTexture[]
@@ -169,12 +169,12 @@ namespace Alex.Graphics.Models.Entity
 		}
 
 		private (VertexPositionColorTexture[] vertices, short[] indexes) GetTopVertex(EntityModelUVData uv,
-			Vector2 size)
+			IVector2 size)
 		{
 			//	Vector3 normal = new Vector3(0.0f, 1.0f, 0.0f) * Size;
 			Color normal = Models.ModelBase.AdjustColor(DefaultColor, BlockFace.Up);
 
-			var map = GetTextureMapping(uv.Origin + size, uv.Size.Value.X, uv.Size.Value.Y);
+			var map = GetTextureMapping(VectorUtils.Add(uv.Origin, size), (float) uv.Size.X, (float) uv.Size.Y);
 
 			// Add the vertices for the RIGHT face. 
 			return (new VertexPositionColorTexture[]
@@ -189,11 +189,11 @@ namespace Alex.Graphics.Models.Entity
 		}
 
 		private (VertexPositionColorTexture[] vertices, short[] indexes) GetBottomVertex(EntityModelUVData uv,
-			Vector2 size)
+			IVector2 size)
 		{
 			//	Vector3 normal = new Vector3(0.0f, -1.0f, 0.0f) * Size;
 			Color normal = Models.ModelBase.AdjustColor(DefaultColor, BlockFace.Down);
-			var map = GetTextureMapping(uv.Origin + size, uv.Size.Value.X, uv.Size.Value.Y);
+			var map = GetTextureMapping(VectorUtils.Add(uv.Origin, size), (float) uv.Size.X, (float) uv.Size.Y);
 
 			// Add the vertices for the RIGHT face. 
 			return (new VertexPositionColorTexture[]
@@ -207,9 +207,9 @@ namespace Alex.Graphics.Models.Entity
 			}, new short[] { 0, 1, 2, 0, 3, 1 });
 		}
 
-		private TextureMapping GetTextureMapping(Vector2 textureOffset, float regionWidth, float regionHeight)
+		private TextureMapping GetTextureMapping(IVector2 textureOffset, float regionWidth, float regionHeight)
 		{
-			return new TextureMapping(textureOffset, regionWidth, regionHeight, _mirror);
+			return new TextureMapping(new Vector2((float) textureOffset.X, (float) textureOffset.Y), regionWidth, regionHeight, _mirror);
 		}
 
 		private class TextureMapping

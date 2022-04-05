@@ -1,6 +1,4 @@
-﻿using Alex.Common.Graphics.Typography;
-
-namespace Alex.ResourcePackLib.Abstraction
+﻿namespace Alex.ResourcePackLib.Abstraction
 {
     public interface IFontSourceProvider
     {

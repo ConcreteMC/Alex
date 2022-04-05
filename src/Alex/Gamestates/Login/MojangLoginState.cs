@@ -1,4 +1,5 @@
 ﻿using System.Threading.Tasks;
+using Alex.Common;
 using Alex.Common.Services;
 using Alex.Common.Utils;
 using Alex.Gamestates.Multiplayer;
@@ -105,7 +106,7 @@ namespace Alex.Gamestates.Login
 		public void LoginFailed(string error)
 		{
 			ErrorMessage.Text = error;
-			ErrorMessage.TextColor = (Color)TextColor.Red;
+			ErrorMessage.TextColor = (Color)TextColor.Red.ToXna();
 
 			EnableInput();
 		}

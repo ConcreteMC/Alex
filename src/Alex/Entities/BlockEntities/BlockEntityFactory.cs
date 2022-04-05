@@ -2,6 +2,7 @@ using Alex.Common.Resources;
 using Alex.Common.Utils;
 using Alex.Common.Utils.Vectors;
 using Alex.Interfaces;
+using Alex.Interfaces.Resources;
 using Alex.Worlds;
 using fNbt;
 using Microsoft.Xna.Framework.Graphics;

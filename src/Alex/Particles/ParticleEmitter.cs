@@ -73,7 +73,10 @@ namespace Alex.Particles
 				if (Definition.TryGetComponent(out AppearanceTintingComponent atc))
 				{
 					if (atc.Color != null)
-						instance.Color = atc.Color.GetValue(instance.Runtime);
+					{
+						var atcColor = atc.Color.GetValue(instance.Runtime);
+						instance.Color = new Color(atcColor.G, atcColor.G, atcColor.B, atcColor.A);
+					}
 				}
 
 				isNew = true;
@@ -182,7 +185,7 @@ namespace Alex.Particles
 				var pos = instance.Position;
 
 				var screenSpace = spriteBatch.GraphicsDevice.Viewport.Project(
-					pos, camera.ProjectionMatrix, camera.ViewMatrix, Matrix.Identity);
+					new Vector3(pos.X, pos.Y, pos.Z), camera.ProjectionMatrix, camera.ViewMatrix, Matrix.Identity);
 
 				bool isOnScreen = spriteBatch.GraphicsDevice.Viewport.Bounds.Contains(
 					(int)screenSpace.X, (int)screenSpace.Y);
@@ -205,7 +208,7 @@ namespace Alex.Particles
 				spriteBatch.Draw(
 					Texture, textPosition, instance.Rectangle, instance.Color, 0f, Vector2.Zero,
 					//2f * ((scale)),
-					new Vector2(scale * instance.Size.X, scale * instance.Size.Y) * 16f, SpriteEffects.None, depth);
+					new Vector2((float) (scale * instance.Size.X), (float) (scale * instance.Size.Y)) * 16f, SpriteEffects.None, depth);
 
 				count++;
 

@@ -104,7 +104,7 @@ namespace Alex.Graphics.Models.Items
 				if (displayPosition.HasFlag(DisplayPosition.Gui))
 				{
 					root.Pivot = Vector3.Zero;
-					root.BaseScale = displayElement.Scale;
+					root.BaseScale = new Vector3(displayElement.Scale.X, displayElement.Scale.Y, displayElement.Scale.Z);
 					root.BaseRotation = new Vector3(25f, 45f, 0f);
 
 					root.BasePosition = new Vector3(
@@ -113,7 +113,7 @@ namespace Alex.Graphics.Models.Items
 				}
 				else if (displayPosition.HasFlag(DisplayPosition.ThirdPerson))
 				{
-					root.BaseScale = displayElement.Scale * Scale;
+					root.BaseScale = new Vector3(displayElement.Scale.X, displayElement.Scale.Y, displayElement.Scale.Z) * Scale;
 					root.BaseRotation = new Vector3(-67.5f, 0f, 0f);
 
 					root.BasePosition = new Vector3(
@@ -122,7 +122,7 @@ namespace Alex.Graphics.Models.Items
 				}
 				else if (displayPosition.HasFlag(DisplayPosition.FirstPerson))
 				{
-					root.BaseScale = displayElement.Scale * (Scale / 2f);
+					root.BaseScale = new Vector3(displayElement.Scale.X, displayElement.Scale.Y, displayElement.Scale.Z) * (Scale / 2f);
 
 					root.BaseRotation = new Vector3(-67.5f, 0f, 0f) + new Vector3(
 						displayElement.Rotation.X, displayElement.Rotation.Y, displayElement.Rotation.Z);
@@ -133,7 +133,7 @@ namespace Alex.Graphics.Models.Items
 				}
 				else if (displayPosition.HasFlag(DisplayPosition.Ground))
 				{
-					root.BaseScale = displayElement.Scale * Scale;
+					root.BaseScale = new Vector3(displayElement.Scale.X, displayElement.Scale.Y, displayElement.Scale.Z) * Scale;
 
 					root.BaseRotation = new Vector3(
 						displayElement.Rotation.X, displayElement.Rotation.Y, displayElement.Rotation.Z);

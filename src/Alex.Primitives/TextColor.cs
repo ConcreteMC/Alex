@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using NLog;
-using Color = Microsoft.Xna.Framework.Color;
 
 namespace Alex.Interfaces
 {
@@ -76,8 +75,8 @@ namespace Alex.Interfaces
 
 		public string[] Aliases { get; private set; }
 
-		public Color ForegroundColor;
-		public Color BackgroundColor;
+		public IColor ForegroundColor;
+		public IColor BackgroundColor;
 		public char Code;
 		private string[] _altNames;
 		private string _name;
@@ -101,8 +100,8 @@ namespace Alex.Interfaces
 		{
 			try
 			{
-				ForegroundColor = new Color(r, g, b);
-				BackgroundColor = new Color(br, bg, bb);
+				ForegroundColor = Primitives.Factory.Color(r, g, b);
+				BackgroundColor = Primitives.Factory.Color(br, bg, bb);
 			}
 			catch (Exception ex)
 			{
@@ -110,7 +109,7 @@ namespace Alex.Interfaces
 			}
 		}
 
-		public TextColor(Color c, bool lookupColor = true)
+		public TextColor(IColor c, bool lookupColor = true)
 		{
 			ForegroundColor = c;
 
@@ -123,7 +122,7 @@ namespace Alex.Interfaces
 			}
 			else
 			{
-				BackgroundColor = new Color(ToBackgroundColor(c.R), ToBackgroundColor(c.G), ToBackgroundColor(c.B));
+				BackgroundColor = Primitives.Factory.Color(ToBackgroundColor(c.R), ToBackgroundColor(c.G), ToBackgroundColor(c.B));
 			}
 		}
 
@@ -142,11 +141,11 @@ namespace Alex.Interfaces
 			Aliases = list.ToArray();
 		}
 
-		public static bool TryMatchColorByForegroundColor(Color color, out TextColor textColor)
+		public static bool TryMatchColorByForegroundColor(IColor color, out TextColor textColor)
 		{
 			foreach (var allColor in Colors)
 			{
-				if (allColor.ForegroundColor == color)
+				if (allColor.ForegroundColor.Equals(color))
 				{
 					textColor = allColor;
 
@@ -306,12 +305,12 @@ namespace Alex.Interfaces
 			return false;
 		}
 
-		private static int ToBackgroundColor(int foreground)
+		private static byte ToBackgroundColor(int foreground)
 		{
 			if (foreground <= 0)
 				return 0;
 
-			return (int)Math.Floor(foreground / 4f);
+			return (byte)Math.Floor(foreground / 4f);
 		}
 
 		public override string ToString()
@@ -371,13 +370,11 @@ namespace Alex.Interfaces
 			return sb.ToString();
 		}
 
-		public static explicit operator Color(TextColor textColor)
-		{
+		public static IColor ToIColor(TextColor textColor) {
 			return textColor.ForegroundColor;
 		}
 
-		public static explicit operator TextColor(Color color)
-		{
+		public static TextColor FromIColor(IColor color) {
 			if (TryMatchColorByForegroundColor(color, out var textColor))
 				return textColor;
 

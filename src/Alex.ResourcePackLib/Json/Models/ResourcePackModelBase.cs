@@ -1,10 +1,10 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Alex.Common.Resources;
+using Alex.Interfaces;
+using Alex.Interfaces.Resources;
 using Alex.ResourcePackLib.Json.Models.Blocks;
 using Alex.ResourcePackLib.Json.Models.Items;
-using Microsoft.Xna.Framework;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 
@@ -112,7 +112,7 @@ namespace Alex.ResourcePackLib.Json.Models
 				{
 					"gui",
 					new DisplayElement(
-						new Vector3(30, 225, 0), new Vector3(0, 0, 0), new Vector3(0.625f, 0.625f, 0.625f))
+						Primitives.Factory.Vector3(30, 225, 0), Primitives.Factory.Vector3(0, 0, 0), Primitives.Factory.Vector3(0.625f, 0.625f, 0.625f))
 				},
 				//{"gui", new DisplayElement(new Vector3(30, 255, 0), new Vector3(0,0,0), new Vector3(0.625f, 0.625f, 0.625f))},
 				//  {"gui", new DisplayElement(new Vector3(30, 255, 0), new Vector3(0,0,0), new Vector3(0.625f, 0.625f, 0.625f))}

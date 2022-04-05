@@ -70,16 +70,16 @@ namespace Alex.Graphics.Models.Items
 		{
 			if ((DisplayPosition & ResourcePackLib.Json.Models.Items.DisplayPosition.Ground) != 0)
 			{
-				return Matrix.CreateScale(activeDisplayItem.Scale * Scale)
+				return Matrix.CreateScale(new Vector3(activeDisplayItem.Scale.X, activeDisplayItem.Scale.Y, activeDisplayItem.Scale.Z) * Scale)
 				       * MatrixHelper.CreateRotationDegrees(activeDisplayItem.Rotation)
-				       * Matrix.CreateTranslation(activeDisplayItem.Translation) * characterMatrix;
+				       * Matrix.CreateTranslation(new Vector3(activeDisplayItem.Translation.X, activeDisplayItem.Translation.Y, activeDisplayItem.Translation.Z)) * characterMatrix;
 			}
 
 			if ((DisplayPosition & ResourcePackLib.Json.Models.Items.DisplayPosition.FirstPerson) != 0)
 			{
 				var translate = activeDisplayItem.Translation;
 
-				return Matrix.CreateScale(activeDisplayItem.Scale * (Scale / 2f))
+				return Matrix.CreateScale(new Vector3(activeDisplayItem.Scale.X, activeDisplayItem.Scale.Y, activeDisplayItem.Scale.Z) * (Scale / 2f))
 				       * MatrixHelper.CreateRotationDegrees(new Vector3(-67.5f, 0f, 0f))
 				       * MatrixHelper.CreateRotationDegrees(activeDisplayItem.Rotation)
 				       * Matrix.CreateTranslation(new Vector3(translate.X + 4f, translate.Y + 18f, translate.Z - 2f))
@@ -90,7 +90,7 @@ namespace Alex.Graphics.Models.Items
 			{
 				var translate = activeDisplayItem.Translation;
 
-				return Matrix.CreateScale(activeDisplayItem.Scale * Scale)
+				return Matrix.CreateScale(new Vector3(activeDisplayItem.Scale.X, activeDisplayItem.Scale.Y, activeDisplayItem.Scale.Z) * Scale)
 				       * MatrixHelper.CreateRotationDegrees(new Vector3(-67.5f, 0f, 0f))
 				       * MatrixHelper.CreateRotationDegrees(activeDisplayItem.Rotation)
 				       * Matrix.CreateTranslation(new Vector3(translate.X + 2f, translate.Y + (8f), translate.Z - 2f))
@@ -99,9 +99,9 @@ namespace Alex.Graphics.Models.Items
 
 			if ((DisplayPosition & ResourcePackLib.Json.Models.Items.DisplayPosition.Gui) != 0)
 			{
-				return Matrix.CreateScale(activeDisplayItem.Scale)
+				return Matrix.CreateScale(new Vector3(activeDisplayItem.Scale.X, activeDisplayItem.Scale.Y, activeDisplayItem.Scale.Z))
 				       * MatrixHelper.CreateRotationDegrees(new Vector3(25f, 45f, 0f))
-				       * Matrix.CreateTranslation(activeDisplayItem.Translation)
+				       * Matrix.CreateTranslation(new Vector3(activeDisplayItem.Translation.X, activeDisplayItem.Translation.Y, activeDisplayItem.Translation.Z))
 				       * Matrix.CreateTranslation(new Vector3(0f, 0.25f, 0f)) * characterMatrix;
 			}
 

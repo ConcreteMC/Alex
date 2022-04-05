@@ -14,6 +14,8 @@ using Alex.Entities.BlockEntities;
 using Alex.Graphics.Models.Entity;
 using Alex.Graphics.Models.Entity.BlockEntities;
 using Alex.Graphics.Models.Items;
+using Alex.Interfaces;
+using Alex.Interfaces.Resources;
 using Alex.ResourcePackLib.Json;
 using Alex.ResourcePackLib.Json.Models;
 using Alex.Utils;
@@ -86,28 +88,28 @@ namespace Alex.Items
 				{
 					"gui",
 					new DisplayElement(
-						new Vector3(30, 225, 0), new Vector3(0, 0, 0), new Vector3(0.625f, 0.625f, 0.625f))
+						Primitives.Factory.Vector3(30, 225, 0), Primitives.Factory.Vector3(0, 0, 0), Primitives.Factory.Vector3(0.625f, 0.625f, 0.625f))
 				},
 				{
 					"ground",
-					new DisplayElement(new Vector3(0, 0, 0), new Vector3(0, 3, 0), new Vector3(0.25f, 0.25f, 0.25f))
+					new DisplayElement(Primitives.Factory.Vector3(0, 0, 0), Primitives.Factory.Vector3(0, 3, 0), Primitives.Factory.Vector3(0.25f, 0.25f, 0.25f))
 				},
 				{
 					"fixed",
-					new DisplayElement(new Vector3(0, 0, 0), new Vector3(0, 0, 0), new Vector3(0.5f, 0.5f, 0.5f))
+					new DisplayElement(Primitives.Factory.Vector3(0, 0, 0), Primitives.Factory.Vector3(0, 0, 0), Primitives.Factory.Vector3(0.5f, 0.5f, 0.5f))
 				},
 				{
 					"thirdperson_righthand",
 					new DisplayElement(
-						new Vector3(75, 45, 0), new Vector3(0, 2.5f, 0), new Vector3(0.375f, 0.375f, 0.375f))
+						Primitives.Factory.Vector3(75, 45, 0), Primitives.Factory.Vector3(0, 2.5f, 0), Primitives.Factory.Vector3(0.375f, 0.375f, 0.375f))
 				},
 				{
 					"firstperson_righthand",
-					new DisplayElement(new Vector3(0, 45, 0), new Vector3(0, 0, 0), new Vector3(0.4f, 0.4f, 0.4f))
+					new DisplayElement(Primitives.Factory.Vector3(0, 45, 0), Primitives.Factory.Vector3(0, 0, 0), Primitives.Factory.Vector3(0.4f, 0.4f, 0.4f))
 				},
 				{
 					"firstperson_lefthand",
-					new DisplayElement(new Vector3(0, 225, 0), new Vector3(0, 0, 0), new Vector3(0.4f, 0.4f, 0.4f))
+					new DisplayElement(Primitives.Factory.Vector3(0, 225, 0), Primitives.Factory.Vector3(0, 0, 0), Primitives.Factory.Vector3(0.4f, 0.4f, 0.4f))
 				}
 			};
 

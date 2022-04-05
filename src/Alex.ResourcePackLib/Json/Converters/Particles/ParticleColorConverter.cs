@@ -1,8 +1,8 @@
 using System;
+using Alex.Interfaces;
 using Alex.ResourcePackLib.Json.Bedrock.MoLang;
 using ConcreteMC.MolangSharp.Parser;
 using ConcreteMC.MolangSharp.Runtime;
-using Microsoft.Xna.Framework;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -11,7 +11,7 @@ namespace Alex.ResourcePackLib.Json.Converters.Particles
 	[JsonConverter(typeof(ParticleColorConverter))]
 	public class ParticleColor
 	{
-		private Color? _value = null;
+		private IColor _value = null;
 		private GradientColors _gradientColors = null;
 		private MoLangVector4Expression _expression = null;
 
@@ -25,23 +25,23 @@ namespace Alex.ResourcePackLib.Json.Converters.Particles
 			_gradientColors = gradientColors;
 		}
 
-		public ParticleColor(Color color)
+		public ParticleColor(IColor color)
 		{
 			_value = color;
 		}
 
-		public Color GetValue(MoLangRuntime runtime)
+		public IColor GetValue(MoLangRuntime runtime)
 		{
-			if (_value.HasValue)
-				return _value.Value;
+			if (_value != null)
+				return _value;
 
 			if (_expression != null)
-				return new Color(_expression.Evaluate(runtime, new Vector4(1, 1, 1, 1f)));
+				return Primitives.Factory.Color(_expression.Evaluate(runtime, Primitives.Factory.Vector4(1, 1, 1, 1f)));
 
 			if (_gradientColors != null)
 				return _gradientColors.GetValue(runtime);
 
-			return Color.White;
+			return Primitives.Color.White;
 		}
 	}
 
@@ -51,9 +51,9 @@ namespace Alex.ResourcePackLib.Json.Converters.Particles
 
 		[JsonProperty("interpolant")] public IExpression Interpolant { get; set; }
 
-		public Color GetValue(MoLangRuntime runtime)
+		public IColor GetValue(MoLangRuntime runtime)
 		{
-			return Color.White;
+			return Primitives.Color.White;
 			;
 			//var interpolationValue = runtime.Execute(Interpolant).AsDouble();
 			//return 
@@ -97,7 +97,7 @@ namespace Alex.ResourcePackLib.Json.Converters.Particles
 				return new ParticleColor(new Color(obj.ToString()))
 			}*/
 
-			return new ParticleColor(Color.White);
+			return new ParticleColor(Primitives.Color.White);
 		}
 	}
 }
