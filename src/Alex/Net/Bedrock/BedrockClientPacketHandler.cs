@@ -275,7 +275,8 @@ namespace Alex.Net.Bedrock
 				//	Client.SpawnPoint = new Vector3(
 				//		message.spawn.X, message.spawn.Y - Player.EyeLevel, message.spawn.Z); //message.spawn;
 
-				Client.World.Dimension = (Dimension)message.levelSettings.spawnSettings.Dimension;
+				Client.SetDimension((Dimension)message.levelSettings.spawnSettings.Dimension);
+				//Client.World.Dimension = (Dimension)message.levelSettings.spawnSettings.Dimension;
 				Client.World.Difficulty = (Difficulty)message.levelSettings.difficulty;
 
 				Client.World?.UpdatePlayerPosition(
@@ -764,6 +765,12 @@ namespace Alex.Net.Bedrock
 		public void HandleMcpeUpdateSubChunkBlocksPacket(McpeUpdateSubChunkBlocksPacket message)
 		{
 			UnhandledPackage(message);
+		}
+
+		/// <inheritdoc />
+		public void HandleMcpeDimensionData(McpeDimensionData message)
+		{
+			Client.DimensionDefinitions = message.definitions;
 		}
 
 		/// <inheritdoc />
@@ -1630,7 +1637,7 @@ namespace Alex.Net.Bedrock
 				$"Initiating dimension change! Dimension={message.dimension} Respawn={message.respawn} Position={message.position}");
 			
 			World world = Client.World;
-			world.Dimension = (Dimension)message.dimension;
+			Client.SetDimension((Dimension) message.dimension);
 
 			Client.ResetInitialized();
 			var pos = new PlayerLocation(message.position.X, message.position.Y, message.position.Z);

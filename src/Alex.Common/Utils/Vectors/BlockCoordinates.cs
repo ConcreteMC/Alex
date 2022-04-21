@@ -2,6 +2,7 @@
 using System.Runtime.CompilerServices;
 using Alex.Interfaces;
 using Microsoft.Xna.Framework;
+using MiNET.Blocks;
 
 namespace Alex.Common.Utils.Vectors
 {
@@ -40,8 +41,14 @@ namespace Alex.Common.Utils.Vectors
 			Y = (int)Math.Floor(location.Y);
 			Z = (int)Math.Floor(location.Z);
 		}
-
-
+		
+		public BlockCoordinates(IVector3I vector3I)
+		{
+			X = vector3I.X;
+			Y = vector3I.Y;
+			Z = vector3I.Z;
+		}
+		
 		/// <summary>
 		/// Calculates the distance between two BlockCoordinates objects.
 		/// </summary>

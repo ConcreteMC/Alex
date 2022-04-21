@@ -5,7 +5,7 @@ namespace Alex.Networking.Java.Packets.Play
 	public class EntityEffectPacket : Packet<EntityEffectPacket>
 	{
 		public int EntityId { get; set; }
-		public byte EffectId { get; set; }
+		public int EffectId { get; set; }
 		public byte Amplifier { get; set; }
 		public int Duration { get; set; }
 		public byte Flags { get; set; }
@@ -16,7 +16,7 @@ namespace Alex.Networking.Java.Packets.Play
 		public override void Decode(MinecraftStream stream)
 		{
 			EntityId = stream.ReadVarInt();
-			EffectId = (byte)stream.ReadByte();
+			EffectId = stream.ReadVarInt();
 			Amplifier = (byte)stream.ReadByte();
 			Duration = stream.ReadVarInt();
 			Flags = (byte)stream.ReadByte();
@@ -25,7 +25,11 @@ namespace Alex.Networking.Java.Packets.Play
 		/// <inheritdoc />
 		public override void Encode(MinecraftStream stream)
 		{
-			throw new System.NotImplementedException();
+			stream.WriteVarInt(EntityId);
+			stream.WriteVarInt(EffectId);
+			stream.WriteByte(Amplifier);
+			stream.WriteVarInt(Duration);
+			stream.WriteByte(Flags);
 		}
 
 		/// <inheritdoc />

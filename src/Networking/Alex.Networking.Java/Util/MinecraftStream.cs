@@ -241,7 +241,7 @@ namespace Alex.Networking.Java.Util
 				z -= 2 ^ 26;
 			}
 
-			return new NetworkVector3(x, y, z);
+			return Primitives.Factory.Vector3((int) x, (int) y, (int) z);
 		}
 
 		public IVector3I ReadBlockCoordinates()
@@ -261,7 +261,7 @@ namespace Alex.Networking.Java.Util
 			if (z >= Math.Pow(2, 25))
 				z -= (long)Math.Pow(2, 26);
 
-			return new Vector3I((int)x, (int)y, (int)z);
+			return Primitives.Factory.Vector3I((int) x, (int) y, (int) z);
 		}
 
 		public SlotData ReadSlot()

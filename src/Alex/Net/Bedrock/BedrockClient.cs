@@ -55,6 +55,7 @@ using BlockCoordinates = Alex.Common.Utils.Vectors.BlockCoordinates;
 using BlockFace = Alex.Interfaces.BlockFace;
 using CertificateData = Alex.Utils.CertificateData;
 using ConnectionInfo = Alex.Interfaces.Net.ConnectionInfo;
+using Dimension = Alex.Worlds.Dimension;
 using ExtraData = Alex.Utils.ExtraData;
 using GeometryIdentifier = Alex.Utils.Skins.GeometryIdentifier;
 using Item = Alex.Items.Item;
@@ -103,7 +104,7 @@ namespace Alex.Net.Bedrock
 
 		public BlockCoordinates ChunkPublisherPosition { get; set; } = BlockCoordinates.Zero;
 		public uint ChunkPublisherRadius { get; set; } = 0;
-
+		public DimensionDefinitions DimensionDefinitions { get; set; } = null;
 		public BedrockClient(Alex alex,
 			ServerConnectionDetails endpoint,
 			PlayerProfile playerProfile,
@@ -137,6 +138,29 @@ namespace Alex.Net.Bedrock
 			Connection.RemoteEndpoint = endpoint.EndPoint;
 
 			Connection.CustomMessageHandlerFactory = CustomMessageHandlerFactory;
+		}
+
+		public void SetDimension(Dimension id)
+		{
+			World.Dimension = id;
+			string stringId = "minecraft:overworld";
+
+			switch (id)
+			{
+				case Dimension.Overworld:
+					break;
+				case Dimension.Nether:
+					stringId = "minecraft:nether";
+					break;
+				case Dimension.TheEnd:
+					stringId = "minecraft:the_end";
+					break;
+			}
+
+			if (DimensionDefinitions != null && DimensionDefinitions.TryGetValue(stringId, out var dimensionData))
+			{
+				ChunkProcessor.WorldSettings = new WorldSettings(dimensionData.MaxHeight, dimensionData.MinHeight);
+			}
 		}
 
 		protected virtual BedrockClientPacketHandler CreateMessageHandler()
