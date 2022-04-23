@@ -141,7 +141,7 @@ namespace Alex.Utils.Threading
 				}
 				catch (Exception ex)
 				{
-					Log.Warn(ex, $"Exception while executing enqueued task");
+					Log.Warn(ex, $"Exception while executing enqueued task Tag=\"{a.Tag}\"");
 				}
 
 				var afterRun = sw.Elapsed;

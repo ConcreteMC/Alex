@@ -164,7 +164,10 @@ namespace Alex.Gamestates.MainMenu
 
 		private void OnSingleplayerButtonPressed(object sender, MenuItemClickedEventArgs e)
 		{
-			Alex.GameStateManager.SetActiveState<WorldSelectionState>(true, false);
+			Alex.GameStateManager.SetActiveState(new WorldSelectionState()
+			{
+				BackgroundOverlay = BackgroundOverlay
+			}, true, false);
 		}
 
 		private void SwitchHeldItem(object sender, ElapsedEventArgs e)

@@ -14,7 +14,6 @@ using Alex.Networking.Java.Events;
 using Alex.Networking.Java.Packets;
 using Alex.Networking.Java.Packets.Login;
 using Alex.Networking.Java.Util;
-using Joveler.Compression.ZLib;
 using NLog;
 using Org.BouncyCastle.Utilities.Zlib;
 
@@ -24,9 +23,6 @@ namespace Alex.Networking.Java
 {
 	public class NetConnection : IDisposable
 	{
-		private static bool _zLibInitiated { get; set; }= false;
-		private static object _zLibLock = new object();
-		
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(NetConnection));
 
 		private CancellationTokenSource CancellationToken { get; }
@@ -37,15 +33,6 @@ namespace Alex.Networking.Java
 
 		public NetConnection(IPEndPoint targetEndpoint, CancellationToken cancellationToken)
 		{
-			lock (_zLibLock)
-			{
-				if (!_zLibInitiated)
-				{
-					ZLibInit.GlobalInit();
-					_zLibInitiated = true;
-				}
-			}
-
 			TargetEndpoint = targetEndpoint;
 
 			CancellationToken = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
@@ -368,7 +355,7 @@ namespace Alex.Networking.Java
 					
 					using (MinecraftStream a = new MinecraftStream(CancellationToken.Token))
 					{
-						using (ZLibStream outZStream = new ZLibStream(new MemoryStream(data), new ZLibDecompressOptions()))
+						using (var outZStream = new ZInputStream(new MemoryStream(data)))
 						{
 							await outZStream.CopyToAsync(a);
 						}
@@ -521,11 +508,8 @@ namespace Alex.Networking.Java
 						{
 							await mc.WriteVarIntAsync(encodedPacket.Length);
 
-							using (ZLibStream outZStream = new ZLibStream(
-								       mc, new ZLibCompressOptions()
-								       {
-									       LeaveOpen = true,Level = ZLibCompLevel.Default
-								       }))
+							using (var outZStream = new ZOutputStream(
+								       mc, true))
 							{
 								await outZStream.WriteAsync(encodedPacket, 0, encodedPacket.Length);
 							}

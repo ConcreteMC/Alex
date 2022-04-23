@@ -29,8 +29,7 @@
     </PropertyGroup>
     
     <ItemGroup>
-        <PackageReference Include="ConcreteMC.fNbt" Version="2022.3.29.161929" />
-        <PackageReference Include="Joveler.Compression.ZLib" Version="4.1.0" />
+        <PackageReference Include="ConcreteMC.fNbt" Version="2022.4.21.192055" />
         <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
         <PackageReference Include="NLog" Version="4.7.15" />
         <PackageReference Include="Portable.BouncyCastle" Version="1.9.0" />

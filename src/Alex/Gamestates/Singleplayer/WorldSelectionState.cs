@@ -7,6 +7,7 @@ using Alex.Gui;
 using Alex.Gui.Elements;
 using Alex.Utils;
 using Alex.Worlds.Multiplayer;
+using Microsoft.Xna.Framework;
 using MiNET;
 using MiNET.Worlds;
 using RocketUI;
@@ -24,12 +25,12 @@ public class WorldSelectionState : ListSelectionStateBase<WorldListEntry>
 	private AlexButton _editButton;
 	private AlexButton _recreateButton;
 
-	public WorldSelectionState(GuiPanoramaSkyBox skyBox, IStorageSystem storageSystem)
+	public WorldSelectionState()
 	{
 		TitleTranslationKey = "selectWorld.title";
 
-		_skyBox = skyBox;
-		_storageSystem = storageSystem.Open("storage", "worlds");
+		_skyBox = GetService<GuiPanoramaSkyBox>();
+		_storageSystem = GetService<IStorageSystem>().Open("storage", "worlds");
 
 		Header.Padding = new Thickness(3, 3, 3, 0);
 		Header.Margin = new Thickness(3, 3, 3, 0);
@@ -80,13 +81,29 @@ public class WorldSelectionState : ListSelectionStateBase<WorldListEntry>
 		Body.Margin = new Thickness(0, Header.Height, 0, Footer.Height);
 		SetButtonState(false);
 	}
-
+	
 	/// <inheritdoc />
 	protected override void OnSelectedItemChanged(WorldListEntry newItem)
 	{
 		base.OnSelectedItemChanged(newItem);
 
 		SetButtonState(newItem != null);
+	}
+
+	/// <inheritdoc />
+	protected override void OnItemDoubleClick(WorldListEntry item)
+	{
+		base.OnItemDoubleClick(item);
+		
+		if (SelectedItem != item)
+			return;
+
+		var selected = item?.WorldInfo;
+
+		if (selected == null)
+			return;
+
+		Load(selected);
 	}
 
 	private void SetButtonState(bool hasSelectedWorld)
@@ -154,13 +171,8 @@ public class WorldSelectionState : ListSelectionStateBase<WorldListEntry>
 		throw new System.NotImplementedException();
 	}
 
-	private void OnPlayButtonPressed()
+	private void Load(WorldInfo selected)
 	{
-		var selected = SelectedItem?.WorldInfo;
-
-		if (selected == null)
-			return;
-
 		if (_storageSystem.TryGetDirectory(selected.Name, out var directoryInfo))
 		{
 			AlexConfigProvider.Instance.Set("PCWorldFolder", directoryInfo.FullName);
@@ -256,5 +268,15 @@ public class WorldSelectionState : ListSelectionStateBase<WorldListEntry>
 					}
 				});
 		}
+	}
+	
+	private void OnPlayButtonPressed()
+	{
+		var selected = SelectedItem?.WorldInfo;
+
+		if (selected == null)
+			return;
+
+		Load(selected);
 	}
 }
