@@ -240,12 +240,12 @@ namespace Alex.Net.Bedrock
 
 			Client.ChangeDimensionResetEvent.Set();
 		}
-
+		
 		public void HandleMcpeStartGame(McpeStartGame message)
 		{
 			Log.Warn($"Experimental gameplay override={message.levelSettings.experimentalGameplayOverride} Experiments={message.levelSettings.experiments.Count} BaseGameVersion={message.levelSettings.gameVersion}");
 
-			if (message.levelSettings.gameVersion.Trim().StartsWith("1.17"))
+			if ( message.levelSettings.gameVersion.Trim().StartsWith("1.17"))
 			{
 				ChunkProcessor.WorldSettings = new WorldSettings(256, 0);
 			}
@@ -407,9 +407,10 @@ namespace Alex.Net.Bedrock
 					remotePlayer.HandleMetadata(message.metadata);
 				}
 
-				UpdateEntityAdventureFlags(
-					remotePlayer, message.flags, message.actionPermissions, message.commandPermission,
-					message.permissionLevel, message.customStoredPermissions);
+				//TODO: Fix adventure flags
+				//UpdateEntityAdventureFlags(
+				//	remotePlayer, message.flags, message.actionPermissions, message.commandPermission,
+				//	message.permissionLevel, message.customStoredPermissions);
 
 				Client.World.SpawnEntity(remotePlayer);
 
@@ -704,9 +705,17 @@ namespace Alex.Net.Bedrock
 			{
 				foreach (NbtCompound tag in ids.ToArray<NbtCompound>())
 				{
-					if (tag.TryGet("id", out NbtString id) && tag.TryGet("rid", out NbtInt realId))
+					if (tag.TryGet("id", out NbtString id) && tag.TryGet("rid", out var realId))
 					{
-						_entityIdentifiers[id.Value] = realId.Value;
+						int identifier = 0;
+
+						if (realId is NbtInt nbtInt)
+							identifier = nbtInt.Value;
+
+						if (realId is NbtByte nbtByte)
+							identifier = nbtByte.Value;
+						
+						_entityIdentifiers[id.Value] = identifier;
 
 						if (LoggingConstants.LogServerEntityDefinitions)
 #pragma warning disable CS0162

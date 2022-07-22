@@ -111,7 +111,7 @@ public class BeaconBlockEntity : BlockEntity
 		}
 
 		if (compound.TryGet<NbtInt>("Secondary", out var secondary)
-		    || compound.TryGet<NbtInt>("secondary", out primary))
+		    || compound.TryGet<NbtInt>("secondary", out secondary))
 		{
 			if (secondary.Value >= 0)
 			{
