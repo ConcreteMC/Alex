@@ -231,11 +231,27 @@ namespace Alex.Common.Utils
 		{
 			HttpClient client = _httpClient;
 			var xblResponse = await _xboxAuth.AuthenticateWithXBL(client, token.AccessToken);
+
+			if (xblResponse.Error)
+			{
+				return new MojangAuthResponse(MojangAuthResult.BadRequest)
+				{
+					ErrorMessage = "Invalid credentials...", StatusCode = (int)xblResponse.StatusCode
+				};
+			}
+			
 			var xblToken = xblResponse.Token;
 			var userHash = xblResponse.DisplayClaims.Xui[0].Uhs;
 
 			var xsts = await _xboxAuth.AuthenticatewithJavaXSTS(client, xblToken);
-
+			if (xsts.Error)
+			{
+				return new MojangAuthResponse(MojangAuthResult.BadRequest)
+				{
+					ErrorMessage = "Invalid credentials...", StatusCode = (int)xsts.StatusCode
+				};
+			}
+			
 			userHash = xsts.DisplayClaims.Xui[0].UserHash;
 			var xstsToken = xsts.Token;
 			var rawLoginResult = await _xboxAuth.AuthenticateWithMinecraft(client, userHash, xstsToken);

@@ -93,6 +93,7 @@
     <ItemGroup>
         <PackageReference Include="CommandLineParser" Version="2.9.0-preview1" />
         <PackageReference Include="ConcurrentHashSet" Version="1.3.0" />
+        <PackageReference Include="ConcurrentObservableCollections" Version="1.1.9" />
         <PackageReference Include="DiscordRichPresence" Version="1.0.175" />
         <PackageReference Include="EasyPipes" Version="1.3.0" />
         <PackageReference Include="FmodAudio" Version="2.2.5" />

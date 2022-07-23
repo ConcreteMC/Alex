@@ -496,7 +496,7 @@ namespace Alex.Worlds.Multiplayer
 
 					int t = World.ChunkManager.RenderDistance;
 					double radiusSquared = Math.Pow(t, 2);
-					var target = radiusSquared;
+					var target = radiusSquared - 1;
 
 					var playerChunkCoords = new ChunkCoordinates(World.Player.KnownPosition);
 

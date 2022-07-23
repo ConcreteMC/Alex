@@ -14,7 +14,9 @@ using Alex.Common.World;
 using Alex.Net.Bedrock;
 using Alex.Utils;
 using Alex.Utils.Caching;
+using Alex.Utils.Collections;
 using Alex.Worlds.Chunks;
+using ConcurrentObservableCollections.ConcurrentObservableDictionary;
 using fNbt;
 using MiNET;
 using MiNET.Net;
@@ -49,8 +51,8 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 		public BlobCache Cache { get; }
 
 		private BufferBlock<BufferItem> _dataQueue;
-		
-		private ObservableCollection<BlockCoordinates> _pendingRequests = new ObservableCollection<BlockCoordinates>();
+
+		private ConcurrentObservableDictionary<BlockCoordinates, bool> _pendingRequests = new ConcurrentObservableDictionary<BlockCoordinates, bool>();
 		public ChunkProcessor(BedrockClient client, CancellationToken cancellationToken, BlobCache blobCache)
 		{
 			Client = client;
@@ -88,37 +90,32 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			lock (_missingLock)
 			{
 				matches = _missing.Where(x => x.X == e.Position.X && x.Z == e.Position.Z).ToArray();
+			}
 
-				foreach (var match in matches)
+			foreach (var match in matches)
+			{
+				if (_pendingRequests.TryGetValue(match, out var m))
 				{
-					_pendingRequests.Remove(match);
+					_pendingRequests.TryRemove(match, out _);
 				}
 			}
 		}
 
-		private void PendingRequestsOnCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
+		private void PendingRequestsOnCollectionChanged(object sender, DictionaryChangedEventArgs<BlockCoordinates, bool> e)
 		{
-			if (e.Action == NotifyCollectionChangedAction.Remove && e.OldItems != null)
+			if (e.Action == NotifyCollectionChangedAction.Remove)
 			{
-				foreach (BlockCoordinates item in e.OldItems)
+				var chunkCoordinates = new ChunkCoordinates(e.Key.X, e.Key.Z);
+
+				if (!_pendingRequests.Any(x => x.Key.X == e.Key.X && x.Key.Z == e.Key.Z))
 				{
-					lock (_missingLock)
-					{
-						if (_missing.Contains(item))
-							_missing.Remove(item);
-					}
+					var chunkManager = Client?.World?.ChunkManager;
 
-					Interlocked.Decrement(ref _pendingCount);
+					if (chunkManager == null || !chunkManager.TryGetChunk(chunkCoordinates, out var chunk))
+						return;
 					
-					//if (!_pendingRequests.Any(x => x.X == item.X && x.Z == item.Z))
-					{	
-						var chunkManager = Client?.World?.ChunkManager;
-
-						if (chunkManager == null)
-							continue;
-						
-						chunkManager.ScheduleChunkUpdate(new ChunkCoordinates(item.X, item.Z), ScheduleType.Full);
-					}
+					chunk.CalculateHeight();
+					chunkManager.ScheduleChunkUpdate(chunkCoordinates, ScheduleType.Full);
 				}
 			}
 		}
@@ -172,8 +169,8 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 			var basePosition = new ChunkCoordinates(Client.World.Player.KnownPosition);
 
-			foreach (var group in missing.Where(x => !_pendingRequests.Contains(x))
-				        .OrderBy(x => basePosition.DistanceTo(new ChunkCoordinates(x.X, x.Z))).Chunk(16))
+			foreach (var bc in missing.Where(x => !_pendingRequests.ContainsKey(x))
+				        .OrderBy(x => basePosition.DistanceTo(new ChunkCoordinates(x.X, x.Z))))
 			{
 				McpeSubChunkRequestPacket subChunkRequestPacket = McpeSubChunkRequestPacket.CreateObject();
 				subChunkRequestPacket.dimension = (int) Client.World.Dimension;
@@ -183,7 +180,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 				List<SubChunkPositionOffset> offsets = new List<SubChunkPositionOffset>();
 
-				foreach (var bc in group)
+				//foreach (var bc in group)
 				{
 					var cc = basePosition - new ChunkCoordinates(bc.X, bc.Z);
 					
@@ -203,8 +200,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 					}
 
 					//_missing.Remove(bc);
-					_pendingRequests.Add(bc);
-					Interlocked.Increment(ref _pendingCount);
+					_pendingRequests.TryAdd(bc, true);
 				}
 
 				subChunkRequestPacket.offsets = offsets.ToArray();
@@ -233,10 +229,11 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			{
 				if (enqueuedChunk.SubChunkRequestMode == SubChunkRequestMode.SubChunkRequestModeLimited)
 				{
-					chunkManager.AddChunk(handledChunk, new ChunkCoordinates(handledChunk.X, handledChunk.Z), false);
-					
 					if (enqueuedChunk.SubChunkCount > 0)
 					{
+						handledChunk.IsNew = false;
+						chunkManager.AddChunk(handledChunk, new ChunkCoordinates(enqueuedChunk.X, enqueuedChunk.Z), false);
+						
 						for (uint y = enqueuedChunk.SubChunkCount; y > 0; y--)
 						{
 							lock (_missingLock)
@@ -246,7 +243,11 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 									_missing.Add(bc);
 							}
 						}
-						RequestMissing();
+						//RequestMissing();
+					}
+					else
+					{
+						handledChunk?.Dispose();
 					}
 				}
 				else if (enqueuedChunk.SubChunkRequestMode == SubChunkRequestMode.SubChunkRequestModeLegacy)
@@ -265,6 +266,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			var bc = new BlockCoordinates(data.X, data.Y, data.Z);
 			var cc = new ChunkCoordinates(data.X, data.Z);
 
+			bool keepPending = false;
 			try
 			{
 				var chunkManager = Client?.World?.ChunkManager;
@@ -272,96 +274,76 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 				if (chunkManager == null)
 					return;
 
-				if (data.Result != SubChunkRequestResult.Success)
+				if (chunkManager.TryGetChunk(cc, out var chunk))
 				{
-					if (data.Result != SubChunkRequestResult.SuccessAllAir)
+					switch (data.Result)
 					{
-						Log.Warn(
-							$"Got subchunk response. Result={data.Result} Position={{X: {data.X}, Y: {data.Y}, Z: {data.Z}}}");
+						case SubChunkRequestResult.NoSuchChunk:
+							keepPending = true;
+
+							break;
+
+						case SubChunkRequestResult.YIndexOutOfBounds:
+							Log.Warn($"Got out of bounds! Position={bc}");
+
+							break;
+					}
+
+					if (!keepPending)
+					{
+						lock (_missingLock)
+						{
+							_missing.Remove(bc);
+						}
 					}
 					
-					//Log.Warn($"Got subchunk response: {data.Result} - {data.Y}");
-					//return;
-				}
+					if (data.BlobHash != null)
+					{
+						Log.Info($"Blobhash!");
 
-				if (data.BlobHash != null)
-				{
-					Log.Info($"Blobhash!");
+						return;
+					}
 
-					//Cache based
-					return;
-				}
+					if (data.Data == null)
+					{
+						Log.Error($"Invalid subchunk data!");
 
-				if (data.Data == null)
-				{
-					Log.Error($"Invalid subchunk data!");
+						return;
+					}
 
-					return;
-				}
+					BedrockChunkSection section = null;
+					int subChunkIndex = int.MaxValue;
 
-				BedrockChunkSection section = null;
-				int subChunkIndex = int.MaxValue;
+					using (MemoryStream ms = new MemoryStream(data.Data))
+					{
+						section = BedrockChunkSection.Read(this, ms, ref subChunkIndex, WorldSettings);
+					}
 
-				using (MemoryStream ms = new MemoryStream(data.Data))
-				{
-					section = BedrockChunkSection.Read(
-						this, ms, ref subChunkIndex,
-						WorldSettings);
-				}
-
-				/*if (section == null)
-				{
-					Log.Warn($"Read null section!");
-
-					return;
-				}*/
-				
-				var sY = data.Y - (WorldSettings.MinY >> 4);
-				ChunkColumn chunk;
-				if (!chunkManager.TryGetChunk(cc, out chunk))
-				{
-					chunk = new BedrockChunkColumn(cc.X, cc.Z, WorldSettings);
+					var sY = data.Y - (WorldSettings.MinY >> 4);
 
 					if (section != null)
 					{
 						chunk[sY] = section;
+						chunk.CalculateHeight();
 					}
-
-					chunk.CalculateHeight();
-					chunkManager.AddChunk(chunk, cc, true);
-					
-					//	Log.Info($"Updating chunk! X={data.X} Y={data.Y} Z={data.Z}");
-				}
-				else
-				{
-					if (section != null)
-					{
-						chunk[sY] = section;
-					}
-
-					chunk.CalculateHeight();
-					chunk.CalculateLighting = true;
-					chunkManager.ScheduleChunkUpdate(cc, ScheduleType.Full);
 				}
 			}
 			finally
 			{
-				_pendingRequests.Remove(bc);
+				_pendingRequests[bc] = !keepPending;
+				_pendingRequests.TryRemove(bc, out _);
 			}
 		}
 		
 		public void Clear()
 		{
-			_pendingCount = 0;
-
 			lock (_missingLock)
 			{
 				if (_missing.Count > 0)
 					_missing.Clear();
 			}
 
-			if (_pendingRequests.Count > 0)
-				_pendingRequests.Clear();
+			_pendingRequests.Clear();
 			
 			if (_dataQueue.Count > 0)
 			{

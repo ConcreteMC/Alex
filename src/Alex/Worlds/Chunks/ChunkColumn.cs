@@ -34,8 +34,11 @@ namespace Alex.Worlds.Chunks
 		//	private readonly int[] _biomeId;
 		private readonly short[] _height = new short[256];
 
-		public object UpdateLock { get; set; } = new object();
+		//public object UpdateLock { get; set; } = new object();
+		public readonly SemaphoreSlim Semaphore = new SemaphoreSlim(1);
+		private readonly SemaphoreSlim DataSemaphore = new SemaphoreSlim(1);
 
+		public object QueueLock = new object();
 		public ConcurrentDictionary<BlockCoordinates, NbtCompound> BlockEntities { get; }
 		//public  NbtCompound[]                                       GetBlockEntities => BlockEntities.ToArray();
 
@@ -54,7 +57,6 @@ namespace Alex.Worlds.Chunks
 			}
 		}
 
-		private object _dataLock = new object();
 		public WorldSettings WorldSettings { get; }
 		protected readonly int _sectionOffset;
 		private ChunkData _chunkData;
@@ -130,13 +132,12 @@ namespace Alex.Worlds.Chunks
 		public static float AverageUpdateTime => MovingAverage.Average;
 		public static float MaxUpdateTime => MovingAverage.Maximum;
 		public static float MinUpdateTime => MovingAverage.Minimum;
-		public bool Scheduled { get; set; } = false;
 
 		private static readonly MovingAverage MovingAverage = new MovingAverage();
 
 		public bool UpdateBuffer(IBlockAccess world, bool applyChanges)
 		{
-			if (!Monitor.TryEnter(_dataLock, 0))
+			if (!DataSemaphore.Wait(0))
 				return false;
 
 			Stopwatch time = Stopwatch.StartNew();
@@ -219,7 +220,7 @@ namespace Alex.Worlds.Chunks
 			}
 			finally
 			{
-				Monitor.Exit(_dataLock);
+				DataSemaphore.Release();
 				time.Stop();
 
 				MovingAverage.ComputeAverage((float)time.Elapsed.TotalMilliseconds);
@@ -608,7 +609,6 @@ namespace Alex.Worlds.Chunks
 			return BlockEntities.TryRemove(coordinates, out _);
 		}
 
-		public List<ChunkCoordinates> Neighboring = new List<ChunkCoordinates>();
 		private bool _disposed = false;
 
 		private void Dispose(bool disposing)

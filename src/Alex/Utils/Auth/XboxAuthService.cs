@@ -274,7 +274,12 @@ namespace Alex.Utils.Auth
 				using (var response = await client.SendAsync(r, HttpCompletionOption.ResponseContentRead)
 					      .ConfigureAwait(false))
 				{
-					response.EnsureSuccessStatusCode();
+					if (!response.IsSuccessStatusCode)
+						return new AuthResponse<XuiDisplayClaims<XstsXui>>()
+						{
+							Error = true,
+							StatusCode = (int) response.StatusCode
+						};
 
 					var rawResponse = await response.Content.ReadAsStringAsync();
 
@@ -426,7 +431,12 @@ namespace Alex.Utils.Auth
 				using (var response = await client.SendAsync(r, HttpCompletionOption.ResponseContentRead)
 					      .ConfigureAwait(false))
 				{
-					response.EnsureSuccessStatusCode();
+					if (!response.IsSuccessStatusCode)
+						return new AuthResponse<XuiDisplayClaims<Xui>>()
+						{
+							Error = true,
+							StatusCode = (int) response.StatusCode
+						};
 
 					return JsonConvert.DeserializeObject<AuthResponse<XuiDisplayClaims<Xui>>>(
 						await response.Content.ReadAsStringAsync());

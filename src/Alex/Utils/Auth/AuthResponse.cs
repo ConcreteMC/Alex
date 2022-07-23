@@ -5,6 +5,8 @@ namespace Alex.Utils.Auth
 {
 	public class AuthResponse<TClaims>
 	{
+		[JsonIgnore] public bool Error { get; set; }
+		[JsonIgnore] public int StatusCode { get; set; }
 		[JsonProperty("IssueInstant")] public DateTimeOffset IssueInstant { get; set; }
 
 		[JsonProperty("NotAfter")] public DateTimeOffset NotAfter { get; set; }
