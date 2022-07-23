@@ -33,6 +33,6 @@
         <EmbeddedResource Include="Resources\unknown_pack.png" />
     </ItemGroup>
     <ItemGroup>
-      <ProjectReference Include="..\Alex.Primitives\Alex.Primitives.csproj" />
+      <ProjectReference Include="..\..\submodules\ConcreteMC.Primitives\src\Alex.Primitives.csproj" />
     </ItemGroup>
 </Project>

@@ -28,8 +28,8 @@
     </PropertyGroup>
 
     <ItemGroup>
+        <ProjectReference Include="..\..\..\submodules\ConcreteMC.Primitives\src\Alex.Primitives.csproj" />
         <ProjectReference Include="..\..\..\submodules\MiNET\src\MiNET\MiNET\MiNET.csproj" />
-        <ProjectReference Include="..\..\Alex.Primitives\Alex.Primitives.csproj" />
     </ItemGroup>
 
     <ItemGroup>

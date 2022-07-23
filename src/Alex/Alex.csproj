@@ -111,10 +111,10 @@
     </ItemGroup>
 
     <ItemGroup>
+        <ProjectReference Include="..\..\submodules\Networking\Java\src\Alex.Networking.Java.csproj" />
         <ProjectReference Include="..\Alex.Common\Alex.Common.csproj" />
         <ProjectReference Include="..\Alex.ResourcePackLib\Alex.ResourcePackLib.csproj" />
         <ProjectReference Include="..\Networking\Alex.Networking.Bedrock\Alex.Networking.Bedrock.csproj" />
-        <ProjectReference Include="..\Networking\Alex.Networking.Java\Alex.Networking.Java.csproj" />
     </ItemGroup>
 
     <ItemGroup>

@@ -6,3 +6,9 @@
 	path = submodules/MiNET
 	url = https://github.com/NiclasOlofsson/MiNET.git
 	update = rebase
+[submodule "submodules/Networking/Java"]
+	path = submodules/Networking/Java
+	url = git@github.com:ConcreteMC/Java-Protocol.git
+[submodule "submodules/ConcreteMC.Primitives"]
+	path = submodules/ConcreteMC.Primitives
+	url = git@github.com:ConcreteMC/Primitives.git

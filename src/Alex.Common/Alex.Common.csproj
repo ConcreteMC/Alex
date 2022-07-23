@@ -37,10 +37,10 @@
     </ItemGroup>
 
     <ItemGroup>
+        <ProjectReference Include="..\..\submodules\ConcreteMC.Primitives\src\Alex.Primitives.csproj" />
         <ProjectReference Include="..\..\submodules\MiNET\src\MiNET\MiNET\MiNET.csproj" />
         <ProjectReference Include="..\..\submodules\RocketUI\src\RocketUI\RocketUI.csproj" Exclude="MonoGame.Framework.DesktopGL">
         </ProjectReference>
-        <ProjectReference Include="..\Alex.Primitives\Alex.Primitives.csproj" />
         <ProjectReference Include="..\Alex.ResourcePackLib\Alex.ResourcePackLib.csproj" />
     </ItemGroup>
 </Project>
