@@ -32,6 +32,7 @@ using ConcreteMC.MolangSharp.Utils;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using MiNET;
+using MiNET.Net;
 using MiNET.Utils.Metadata;
 using NLog;
 using BoundingBox = Microsoft.Xna.Framework.BoundingBox;
@@ -212,6 +213,9 @@ namespace Alex.Entities
 		public bool IsWorldImmutable { get; set; } = false;
 		public bool IsNoPvP { get; set; } = true;
 		public bool IsNoPvM { get; set; } = true;
+		public bool IsMuted { get; set; } = false;
+		public bool CanBuild { get; set; } = true;
+		public bool CanMine { get; set; } = true;
 
 		[MoProperty("is_on_screen")]
 		public bool IsRendered
@@ -417,6 +421,84 @@ namespace Alex.Entities
 			//	modifier *= 0.29997683577f;
 
 			return (modifier);
+		}
+
+		public void SetAbilityLayer(AbilityLayer layer)
+		{
+			var values = layer.Values;
+			foreach (PlayerAbility ability in Enum.GetValues<PlayerAbility>())
+			{
+				if ((layer.Abilities & ability) != 0)
+				{
+					switch (ability)
+					{
+						case PlayerAbility.MayFly:
+							CanFly = (values & (uint)PlayerAbility.MayFly) != 0;
+							break;
+						
+						case PlayerAbility.Flying:
+							IsFlying = (values & (uint)PlayerAbility.Flying) != 0;
+							break;
+						
+						case PlayerAbility.Invulnerable:
+							Invulnerable = (values & (uint)PlayerAbility.Invulnerable) != 0;
+							break;
+
+						case PlayerAbility.Build:
+							CanBuild = (values & (uint)PlayerAbility.Build) != 0;
+							break;
+
+						case PlayerAbility.Mine:
+							CanMine = (values & (uint)PlayerAbility.Mine) != 0;
+							break;
+
+						case PlayerAbility.DoorsAndSwitches:
+							break;
+
+						case PlayerAbility.OpenContainers:
+							break;
+
+						case PlayerAbility.AttackPlayers:
+							break;
+
+						case PlayerAbility.AttackMobs:
+							break;
+
+						case PlayerAbility.OperatorCommands:
+							break;
+
+						case PlayerAbility.Teleport:
+							break;
+
+						case PlayerAbility.InstantBuild:
+							break;
+
+						case PlayerAbility.Lightning:
+							break;
+
+						case PlayerAbility.FlySpeed:
+							if ((values & (uint) PlayerAbility.FlySpeed) != 0)
+								FlyingSpeed = layer.FlySpeed * 8f;
+							break;
+
+						case PlayerAbility.WalkSpeed:
+							if ((values & (uint) PlayerAbility.WalkSpeed) != 0)
+								FlyingSpeed = layer.WalkSpeed * 8f;
+							break;
+
+						case PlayerAbility.Muted:
+							IsMuted = (values & (uint)PlayerAbility.Muted) != 0;
+							break;
+
+						case PlayerAbility.WorldBuilder:
+							break;
+
+						case PlayerAbility.NoClip:
+							HasCollision = (values & (uint)PlayerAbility.NoClip) == 0;
+							break;
+					}
+				}
+			}
 		}
 
 		private bool _skipRendering = false;

@@ -2394,7 +2394,7 @@ namespace Alex.Worlds.Multiplayer
 								{
 									var skin = entityModel.ToSkin();
 									skin.UpdateTexture(texture);
-									entity.Skin = skin;
+									entity.SetSkin(skin);
 								}
 								else { }
 

@@ -39,7 +39,10 @@ namespace Alex.Worlds.Singleplayer
 		/// <inheritdoc />
 		public override void EntityFell(long entityId, float distance, bool inVoid) { }
 
-		public override void EntityAction(int entityId, EntityAction action) { }
+		public override bool EntityAction(int entityId, EntityAction action)
+		{
+			return true;
+		}
 
 		/// <inheritdoc />
 		public override void PlayerAnimate(PlayerAnimations animation) { }

@@ -83,12 +83,16 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 		private void OnChunkRemoved(object sender, ChunkRemovedEventArgs e)
 		{
-			var matches = _missing.Where(x => x.X == e.Position.X && x.Z == e.Position.Z).ToArray();
+			BlockCoordinates[] matches;
 
-			foreach (var match in matches)
+			lock (_missingLock)
 			{
-				_missing.Remove(match);
-				_pendingRequests.Remove(match);
+				matches = _missing.Where(x => x.X == e.Position.X && x.Z == e.Position.Z).ToArray();
+
+				foreach (var match in matches)
+				{
+					_pendingRequests.Remove(match);
+				}
 			}
 		}
 
@@ -98,8 +102,11 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			{
 				foreach (BlockCoordinates item in e.OldItems)
 				{
-					if (_missing.Contains(item))
-						_missing.Remove(item);
+					lock (_missingLock)
+					{
+						if (_missing.Contains(item))
+							_missing.Remove(item);
+					}
 
 					Interlocked.Decrement(ref _pendingCount);
 					
@@ -150,15 +157,21 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			}
 		}
 
+		private object _missingLock = new object();
 		private List<BlockCoordinates> _missing = new List<BlockCoordinates>();
 
 		private int _pendingCount = 0;
 		public void RequestMissing()
 		{
-			var missing = _missing.ToList();
+			List<BlockCoordinates> missing;
+
+			lock (_missingLock)
+			{
+				missing = _missing.ToList();
+			}
+
 			var basePosition = new ChunkCoordinates(Client.World.Player.KnownPosition);
 
-			var radius = (Client.ChunkPublisherRadius + 1) / 16f;
 			foreach (var group in missing.Where(x => !_pendingRequests.Contains(x))
 				        .OrderBy(x => basePosition.DistanceTo(new ChunkCoordinates(x.X, x.Z))).Chunk(16))
 			{
@@ -173,9 +186,6 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 				foreach (var bc in group)
 				{
 					var cc = basePosition - new ChunkCoordinates(bc.X, bc.Z);
-					
-					if (Math.Abs(cc.X) > radius || Math.Abs(cc.Z) > radius)
-						continue;
 					
 					if (cc.X < sbyte.MinValue || cc.X > sbyte.MaxValue)
 						continue;
@@ -216,28 +226,30 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 				return;
 			}
-			
-			if (enqueuedChunk.SubChunkRequestMode == SubChunkRequestMode.SubChunkRequestModeLimited)
-			{
-				//chunkManager.AddChunk(handledChunk, new ChunkCoordinates(handledChunk.X, handledChunk.Z), false);
-				if (enqueuedChunk.SubChunkCount > 0)
-				{
-					for (uint y = enqueuedChunk.SubChunkCount; y > 0; y--)
-					{
-						_missing.Add(new BlockCoordinates(enqueuedChunk.X, (int) y, enqueuedChunk.Z));
-					}
-				}
-				//RequestMissing();
-				
-				return;
-			}
-			
+
 			var handledChunk = HandleChunk(enqueuedChunk);
 
 			if (handledChunk != null)
 			{
-				
-				if (enqueuedChunk.SubChunkRequestMode == SubChunkRequestMode.SubChunkRequestModeLegacy)
+				if (enqueuedChunk.SubChunkRequestMode == SubChunkRequestMode.SubChunkRequestModeLimited)
+				{
+					chunkManager.AddChunk(handledChunk, new ChunkCoordinates(handledChunk.X, handledChunk.Z), false);
+					
+					if (enqueuedChunk.SubChunkCount > 0)
+					{
+						for (uint y = enqueuedChunk.SubChunkCount; y > 0; y--)
+						{
+							lock (_missingLock)
+							{
+								var bc = new BlockCoordinates(enqueuedChunk.X, (int) y, enqueuedChunk.Z);
+								if (!_missing.Contains(bc))
+									_missing.Add(bc);
+							}
+						}
+						RequestMissing();
+					}
+				}
+				else if (enqueuedChunk.SubChunkRequestMode == SubChunkRequestMode.SubChunkRequestModeLegacy)
 				{
 					chunkManager.AddChunk(handledChunk, new ChunkCoordinates(handledChunk.X, handledChunk.Z), true);
 				}
@@ -263,9 +275,13 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 				if (data.Result != SubChunkRequestResult.Success)
 				{
 					if (data.Result != SubChunkRequestResult.SuccessAllAir)
-						Log.Warn($"Got subchunk response. Result={data.Result} Position={{X: {data.X}, Y: {data.Y}, Z: {data.Z}}}");
+					{
+						Log.Warn(
+							$"Got subchunk response. Result={data.Result} Position={{X: {data.X}, Y: {data.Y}, Z: {data.Z}}}");
+					}
+					
 					//Log.Warn($"Got subchunk response: {data.Result} - {data.Y}");
-					return;
+					//return;
 				}
 
 				if (data.BlobHash != null)
@@ -293,19 +309,24 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 						WorldSettings);
 				}
 
-				if (section == null)
+				/*if (section == null)
 				{
 					Log.Warn($"Read null section!");
 
 					return;
-				}
+				}*/
 				
 				var sY = data.Y - (WorldSettings.MinY >> 4);
 				ChunkColumn chunk;
 				if (!chunkManager.TryGetChunk(cc, out chunk))
 				{
 					chunk = new BedrockChunkColumn(cc.X, cc.Z, WorldSettings);
-					chunk[sY] = section;
+
+					if (section != null)
+					{
+						chunk[sY] = section;
+					}
+
 					chunk.CalculateHeight();
 					chunkManager.AddChunk(chunk, cc, true);
 					
@@ -313,34 +334,32 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 				}
 				else
 				{
-					chunk[sY] = section;
+					if (section != null)
+					{
+						chunk[sY] = section;
+					}
 
 					chunk.CalculateHeight();
-					//chunkManager.ScheduleChunkUpdate(cc, ScheduleType.Full);
+					chunk.CalculateLighting = true;
+					chunkManager.ScheduleChunkUpdate(cc, ScheduleType.Full);
 				}
 			}
 			finally
 			{
-				if (_pendingRequests.Remove(bc))
-				{
-				//	Interlocked.Decrement(ref _pendingCount);
-				}
-				
-				/*if (data.Result == SubChunkRequestResult.NoSuchChunk)
-					_missing.Add(bc);*/
-				/*var matching = _pendingRequests.FirstOrDefault(x => x.X == data.X && x.Z == data.Z && x.Y == data.Y);
-				if (matching != null)
-					_pendingRequests.Remove(matching);*/
+				_pendingRequests.Remove(bc);
 			}
 		}
 		
 		public void Clear()
 		{
 			_pendingCount = 0;
-			
-			if (_missing.Count > 0)
-				_missing.Clear();
-			
+
+			lock (_missingLock)
+			{
+				if (_missing.Count > 0)
+					_missing.Clear();
+			}
+
 			if (_pendingRequests.Count > 0)
 				_pendingRequests.Clear();
 			

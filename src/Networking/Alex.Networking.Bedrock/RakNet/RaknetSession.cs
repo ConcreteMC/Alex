@@ -640,8 +640,13 @@ namespace Alex.Networking.Bedrock.RakNet
 				var sendList = new List<Packet>();
 				int length = _sendQueue.Count;
 
+				int dataSize = 0;
+				
 				for (int i = 0; i < length; i++)
 				{
+					if (dataSize >= transmissionBandwidth)
+						break;
+					
 					Packet packet;
 
 					if (!_sendQueue.TryDequeue(out packet))
@@ -655,8 +660,10 @@ namespace Alex.Networking.Bedrock.RakNet
 
 						continue;
 					}
-
+					
 					sendList.Add(packet);
+					var data = packet.Encode();
+					dataSize += data.Length;
 				}
 
 				if (sendList.Count == 0) return;

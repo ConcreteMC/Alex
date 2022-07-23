@@ -12,7 +12,7 @@ namespace Alex
 		/// </summary>
 		/// 
 #if DEBUG
-		public const bool LogNetworkStatistics = false;
+		public const bool LogNetworkStatistics = true;
 #else
 		public const bool LogNetworkStatistics = false;
 #endif

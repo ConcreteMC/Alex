@@ -790,16 +790,17 @@ namespace Alex.Net.Bedrock
 				};
 			}
 
-			World.Player.Skin = new MiNET.Utils.Skins.Skin()
-			{
-				ResourcePatch = skin.ResourcePatch,
-				Width = skin.Width,
-				Height = skin.Height,
-				Data = skin.Data,
-				GeometryData = skin.GeometryData,
-				GeometryName = skin.GeometryName,
-				SkinId = skin.SkinId
-			};
+			World.Player.SetSkin(
+				new MiNET.Utils.Skins.Skin()
+				{
+					ResourcePatch = skin.ResourcePatch,
+					Width = skin.Width,
+					Height = skin.Height,
+					Data = skin.Data,
+					GeometryData = skin.GeometryData,
+					GeometryName = skin.GeometryName,
+					SkinId = skin.SkinId
+				});
 
 			var serialized = JsonConvert.SerializeObject(
 				new BedrockJwtData(skin)
@@ -856,7 +857,18 @@ namespace Alex.Net.Bedrock
 			SendPacket(settings);
 		}
 
-		public override void EntityAction(int entityId, EntityAction action)
+		public void RequestAbility(PlayerAbility ability, object value)
+		{
+			if (value is not bool or float)
+				throw new InvalidOperationException("Invalid value type, expected bool or float");
+			
+			McpeRequestAbility request = McpeRequestAbility.CreateObject();
+			request.ability = (int)ability;
+			request.Value = value;
+			SendPacket(request);
+		}
+		
+		public override bool EntityAction(int entityId, EntityAction action)
 		{
 			BlockCoordinates? coordinates = null;
 
@@ -871,19 +883,20 @@ namespace Alex.Net.Bedrock
 			{
 				case Common.Utils.EntityAction.StartFlying:
 					SendAdventureFlags();
-
-					return;
+					RequestAbility(PlayerAbility.Flying, true);
+					return true;
 
 				case Common.Utils.EntityAction.StopFlying:
 					SendAdventureFlags();
+					RequestAbility(PlayerAbility.Flying, false);
 
-					return;
+					return true;
 
 				case Common.Utils.EntityAction.StartSwimming:
 					translated = PlayerAction.StartSwimming;
 
 					if (ServerAuthoritiveMovement)
-						return;
+						return true;
 
 					break;
 
@@ -891,7 +904,7 @@ namespace Alex.Net.Bedrock
 					translated = PlayerAction.StopSwimming;
 
 					if (ServerAuthoritiveMovement)
-						return;
+						return true;
 
 					break;
 
@@ -899,7 +912,7 @@ namespace Alex.Net.Bedrock
 					translated = PlayerAction.StartSneak;
 
 					if (ServerAuthoritiveMovement)
-						return;
+						return true;
 
 					break;
 
@@ -907,7 +920,7 @@ namespace Alex.Net.Bedrock
 					translated = PlayerAction.StopSneak;
 
 					if (ServerAuthoritiveMovement)
-						return;
+						return true;
 
 					break;
 
@@ -915,7 +928,7 @@ namespace Alex.Net.Bedrock
 					translated = PlayerAction.StartSprint;
 
 					if (ServerAuthoritiveMovement)
-						return;
+						return true;
 
 					break;
 
@@ -923,7 +936,7 @@ namespace Alex.Net.Bedrock
 					translated = PlayerAction.StopSprint;
 
 					if (ServerAuthoritiveMovement)
-						return;
+						return true;
 
 					break;
 
@@ -931,15 +944,17 @@ namespace Alex.Net.Bedrock
 					translated = PlayerAction.Jump;
 
 					if (ServerAuthoritiveMovement)
-						return;
+						return true;
 
 					break;
 
 				default:
-					return;
+					return true;
 			}
 
 			SendPlayerAction(translated, coordinates, null);
+
+			return true;
 		}
 
 		/// <inheritdoc />

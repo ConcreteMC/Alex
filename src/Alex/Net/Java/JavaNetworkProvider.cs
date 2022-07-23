@@ -71,10 +71,10 @@ namespace Alex.Net.Java
 		/// <inheritdoc />
 		public override void EntityFell(long entityId, float distance, bool inVoid) { }
 
-		public override void EntityAction(int entityId, EntityAction action)
+		public override bool EntityAction(int entityId, EntityAction action)
 		{
 			if (action >= Common.Utils.EntityAction.Jump)
-				return;
+				return true;
 
 			EntityActionPacket packet = EntityActionPacket.CreateObject();
 
@@ -82,6 +82,8 @@ namespace Alex.Net.Java
 			packet.Action = (EntityActionPacket.EntityAction)((int)action);
 			packet.JumpBoost = 0;
 			Client.SendPacket(packet);
+
+			return true;
 		}
 
 		/// <inheritdoc />

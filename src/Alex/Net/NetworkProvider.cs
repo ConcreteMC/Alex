@@ -38,7 +38,7 @@ namespace Alex.Net
 
 		public abstract void EntityFell(long entityId, float distance, bool inVoid);
 
-		public abstract void EntityAction(int entityId, EntityAction action);
+		public abstract bool EntityAction(int entityId, EntityAction action);
 
 		public abstract void PlayerAnimate(PlayerAnimations animation);
 

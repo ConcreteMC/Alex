@@ -73,7 +73,8 @@ namespace Alex.Entities
 
 			if (skin != null)
 			{
-				Skin = skin;
+				SetSkin(skin);
+				//Skin = skin;
 			}
 			else
 			{
@@ -105,17 +106,35 @@ namespace Alex.Entities
 			{
 				return _skin;
 			}
-			set
-			{
-				if (value == null || value == _skin)
-					return;
-
-				_skin = value;
-
-				OnSkinValueChanged(value);
-			}
 		}
 
+		public void SetSkin(Skin skin, bool force = false)
+		{
+			if (skin == null || skin == _skin)
+				return;
+
+			_skin = skin;
+
+			if (force)
+			{
+				World.BackgroundWorker.Enqueue(
+					() =>
+					{
+						try
+						{
+							LoadSkin(skin);
+						}
+						catch (Exception ex)
+						{
+							Log.Warn(ex, $"Failed to load skin");
+						}
+					});
+
+				return;
+			}
+			OnSkinValueChanged(skin);
+		}
+		
 		public virtual void SetSprinting(bool sprinting)
 		{
 			if (sprinting)

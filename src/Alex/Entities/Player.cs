@@ -138,13 +138,13 @@ namespace Alex.Entities
 		{
 			if (swimming && !IsSwimming)
 			{
-				IsSwimming = true;
-				Network?.EntityAction((int)EntityId, EntityAction.StartSwimming);
+				if (Network?.EntityAction((int)EntityId, EntityAction.StartSwimming) == true)
+					IsSwimming = true;
 			}
 			else if (!swimming && IsSwimming)
 			{
-				IsSwimming = false;
-				Network?.EntityAction((int)EntityId, EntityAction.StopSwimming);
+				if (Network?.EntityAction((int)EntityId, EntityAction.StopSwimming) == true)
+					IsSwimming = false;
 			}
 		}
 
@@ -157,16 +157,16 @@ namespace Alex.Entities
 
 				return;
 			}
-
+			
 			if (flying && !IsFlying)
 			{
-				IsFlying = true;
-				Network?.EntityAction((int)EntityId, EntityAction.StartFlying);
+				if (Network?.EntityAction((int)EntityId, EntityAction.StartFlying) == true)
+					IsFlying = true;
 			}
 			else if (!flying && IsFlying)
 			{
-				IsFlying = false;
-				Network?.EntityAction((int)EntityId, EntityAction.StopFlying);
+				if (Network?.EntityAction((int)EntityId, EntityAction.StopFlying) == true)
+					IsFlying = false;
 			}
 		}
 
@@ -370,7 +370,7 @@ namespace Alex.Entities
 					{
 						if (Raytracer.HasValue)
 						{
-							if (beginLeftClick && !IsWorldImmutable)
+							if (beginLeftClick && !IsWorldImmutable && CanMine)
 							{
 								StartBreakingBlock();
 							}
@@ -517,6 +517,9 @@ namespace Alex.Entities
 				skin = skin.UpdateTexture(skinTexture);
 			}
 
+			SetSkin(skin, true);
+			//Skin = skin;
+			
 			var packet = McpePlayerSkin.CreateObject();
 			packet.skin = skin;
 
@@ -526,8 +529,6 @@ namespace Alex.Entities
 			packet.oldSkinName = Skin?.SkinId ?? "";
 
 			bc.SendPacket(packet);
-
-			Skin = skin;
 			Log.Info($"Stole skin from {sourceEntity.NameTag}");
 		}
 
@@ -679,13 +680,12 @@ namespace Alex.Entities
 
 		private void HandleLeftClick(Item slot, int hand)
 		{
-			HandleClick(slot, hand, Inventory.HotbarOffset + Inventory.SelectedSlot, false, true);
+			HandleClick(slot, hand, Inventory.HotbarOffset + Inventory.SelectedSlot, true);
 		}
 
 		private bool HandleClick(Item slot,
 			int hand,
 			int inventorySlot,
-			bool canModifyWorld = true,
 			bool isLeftClick = false)
 		{
 			//  Log.Info($"Clicky clicky click. Left click: {isLeftClick} Can modify world: {canModifyWorld} HasRaytrace: {HasRaytraceResult}");
@@ -721,7 +721,7 @@ namespace Alex.Entities
 					return true;
 				}
 
-				if (slot is ItemBlock ib && canModifyWorld && !isLeftClick)
+				if (slot is ItemBlock ib && CanBuild && !isLeftClick)
 				{
 					BlockState blockState = ib.Block;
 
@@ -746,7 +746,7 @@ namespace Alex.Entities
 				else
 				{
 					Log.Warn(
-						$"Can ModifyWorld: {canModifyWorld} | IsLeftClick={isLeftClick} | ItemBlock={slot.Name} | ItemType={slot.GetType()}");
+						$"Can Build: {CanBuild} | IsLeftClick={isLeftClick} | ItemBlock={slot.Name} | ItemType={slot.GetType()}");
 				}
 			}
 

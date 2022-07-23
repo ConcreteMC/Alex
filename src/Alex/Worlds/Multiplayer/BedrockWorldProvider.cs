@@ -81,11 +81,12 @@ namespace Alex.Worlds.Multiplayer
 
 						UnloadChunks(new ChunkCoordinates(pos), Client.World.ChunkManager.RenderDistance + 2);
 						_lastPrioritization = _tickTime;
-
-						Client.ChunkProcessor.RequestMissing();
 					}
 
 					SendLocation(World.Player.RenderLocation);
+					
+					if (_tickTime % 20 == 0)
+						Client.ChunkProcessor.RequestMissing();
 				}
 			}
 		}

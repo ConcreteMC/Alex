@@ -117,7 +117,7 @@ namespace Alex.Networking.Bedrock.RakNet
 			{
 				skippedMessageCount = 0;
 			}
-			else if (datagramSequenceNumber > expected)
+			else if (GreaterThan(datagramSequenceNumber, expected))
 			{
 				skippedMessageCount = datagramSequenceNumber - expected;
 
@@ -157,7 +157,7 @@ namespace Alex.Networking.Bedrock.RakNet
 				NextCongestionControlBlock = Interlocked.Read(ref _nextDatagramSequenceNumber);
 				BackoffThisBlock = true;
 
-				Log.Info($"(Resend) Enter slow start. Cwnd={CongestionWindow:F2}");
+				Log.Info($"(Resend) Enter slow start. SlowStartThreshold={SlowStartThreshold:F2} Cwnd={CongestionWindow:F2}");
 			}
 		}
 
@@ -171,7 +171,7 @@ namespace Alex.Networking.Bedrock.RakNet
 			{
 				SlowStartThreshold = CongestionWindow / 2D;
 
-				Log.Info($"Set congestion avoidance. Cwnd={CongestionWindow:F2}");
+				Log.Info($"Set congestion avoidance. SlowStartThreshold={SlowStartThreshold:F2} Cwnd={CongestionWindow:F2}");
 			}
 		}
 
@@ -216,7 +216,7 @@ namespace Alex.Networking.Bedrock.RakNet
 			if (!isContinuousSend)
 				return;
 
-			bool isNewCongestionControlPeriod = sequenceIndex > NextCongestionControlBlock;
+			bool isNewCongestionControlPeriod = GreaterThan(sequenceIndex, NextCongestionControlBlock);
 
 			if (isNewCongestionControlPeriod)
 			{
@@ -232,14 +232,21 @@ namespace Alex.Networking.Bedrock.RakNet
 				if (CongestionWindow > SlowStartThreshold && SlowStartThreshold != 0)
 					CongestionWindow = SlowStartThreshold + MtuSize * MtuSize / CongestionWindow;
 
-				Log.Info($"Slow start increase... Cwnd={CongestionWindow:F2}");
+				Log.Info($"Slow start increase... SlowStartThreshold={SlowStartThreshold:F2} Cwnd={CongestionWindow:F2}");
 			}
 			else if (isNewCongestionControlPeriod)
 			{
 				CongestionWindow += MtuSize * MtuSize / CongestionWindow;
 
-				Log.Info($"Congestion avoidance increase... Cwnd={CongestionWindow:F2}");
+				Log.Info($"Congestion avoidance increase... SlowStartThreshold={SlowStartThreshold:F2} Cwnd={CongestionWindow:F2}");
 			}
+		}
+
+		private bool GreaterThan(long a, long b)
+		{
+			var halfSpan = 0.5;
+
+			return b != a && b - a < halfSpan;
 		}
 
 		public bool IsInSlowStart()

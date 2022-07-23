@@ -417,6 +417,7 @@ namespace Alex.Net.Bedrock
 					remotePlayer.HandleMetadata(message.metadata);
 				}
 
+				HandleAbilityLayers(remotePlayer, message.layers);
 				//TODO: Fix adventure flags
 				//UpdateEntityAdventureFlags(
 				//	remotePlayer, message.flags, message.actionPermissions, message.commandPermission,
@@ -795,25 +796,22 @@ namespace Alex.Net.Bedrock
 		/// <inheritdoc />
 		public void HandleMcpeUpdateAbilities(McpeUpdateAbilities message)
 		{
+			var userId = BinaryPrimitives.ReverseEndianness(message.entityUniqueId);
 			var player = Client.World.Player;
-			if (message.entityUniqueId == 0 || message.entityUniqueId == Client.EntityId)
+			if (message.entityUniqueId == 0 || message.entityUniqueId == player.EntityId || userId == player.EntityId)
 			{
-				foreach (var layer in message.layers)
-				{
-					if (layer.Type == AbilityLayerType.Base)
-					{
-						player.CanFly = (layer.Values & PlayerAbility.MayFly) != 0;
-						player.SetFlying((layer.Values & PlayerAbility.Flying) != 0);
-						player.HasCollision = (layer.Values & PlayerAbility.NoClip) == 0;
-						player.Invulnerable = (layer.Values & PlayerAbility.Invulnerable) != 0;
-						player.IsWorldImmutable = (layer.Values & PlayerAbility.WorldBuilder) != 0;
-						player.FlyingSpeed = layer.FlySpeed;
-						player.MovementSpeed = layer.WalkSpeed;
-					}
-				}	
+				HandleAbilityLayers(player, message.layers);
 			}
 			//TODO: Implement update abilities
 			UnhandledPackage(message);
+		}
+
+		private void HandleAbilityLayers(Entity entity, AbilityLayers layers)
+		{
+			foreach (var layer in layers)
+			{
+				entity.SetAbilityLayer(layer);
+			}
 		}
 
 		/// <inheritdoc />
@@ -2306,7 +2304,7 @@ namespace Alex.Net.Bedrock
 
 			if (Client.World.EntityManager.TryGet(message.uuid, out var entity) && entity is RemotePlayer player)
 			{
-				player.Skin = message.skin;
+				player.SetSkin(message.skin);
 			}
 		}
 

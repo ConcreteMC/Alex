@@ -172,7 +172,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock.Resources
 
 			//_resourcePackIds = resourcePackIds;
 
-			if (AcceptServerResources && RequestMissing(true))
+			if (AcceptServerResources && RequestMissing())
 			{
 			//	response.responseStatus = (byte)McpeResourcePackClientResponse.ResponseStatus.SendPacks;
 				Status = ResourceManagerStatus.Downloading;
@@ -265,7 +265,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock.Resources
 				}
 				else
 				{
-					//RequestMissing();
+					RequestMissing();
 				}
 			}
 			else
