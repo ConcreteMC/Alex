@@ -64,6 +64,9 @@ namespace Alex.Utils
 
 		[JsonProperty("PieceTintColors")] public List<PieceTint> PieceTintColours { get; set; } = new List<PieceTint>();
 
+		[JsonProperty("IsEditorMode")]
+		public bool IsEditorMode { get; set; } = false;
+
 		public BedrockJwtData(MiNET.Utils.Skins.Skin skin)
 		{
 			SkinResourcePatch = skin.ResourcePatch ?? Convert.ToBase64String(

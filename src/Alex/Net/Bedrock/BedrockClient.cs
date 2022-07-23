@@ -376,6 +376,8 @@ namespace Alex.Net.Bedrock
 		private long _tickSyncTime = 0;
 		public void SendTickSync()
 		{
+			return;
+			;
 			Log.Info($"Syncing ticks...");
 			McpeTickSync tickSync = McpeTickSync.CreateObject();
 			tickSync.requestTime = _tickSyncTime = Tick;

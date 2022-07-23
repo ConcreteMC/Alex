@@ -88,7 +88,7 @@ namespace Alex.Gamestates.Common
 					})
 				{
 					//Margin = new Thickness(0, Header.Height, 0, Footer.Height),
-					//AutoSizeMode = AutoSizeMode.None,
+					AutoSizeMode = AutoSizeMode.None,
 					//Height = 100,
 					//MaxHeight = 100,
 					Orientation = Orientation.Vertical, Anchor = Alignment.Fill, ChildAnchor = Alignment.TopCenter,

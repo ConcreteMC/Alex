@@ -144,7 +144,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			var baseY = Client.World.Player.KnownPosition.Y;
 
 			subChunkRequestPacket.basePosition =
-				new MiNET.Utils.Vectors.BlockCoordinates(basePosition.X, 0, basePosition.Z);
+				new MiNET.Utils.Vectors.BlockCoordinates(basePosition.X , 0, basePosition.Z);
 
 			List<SubChunkPositionOffset> offsets = new List<SubChunkPositionOffset>();
 
@@ -190,22 +190,28 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 				return;
 			}
-
+			
+			if (enqueuedChunk.SubChunkRequestMode == SubChunkRequestMode.SubChunkRequestModeLimited)
+			{
+				//chunkManager.AddChunk(handledChunk, new ChunkCoordinates(handledChunk.X, handledChunk.Z), false);
+				if (enqueuedChunk.SubChunkCount > 0)
+				{
+					for (uint y = enqueuedChunk.SubChunkCount; y > 0; y--)
+					{
+						_missing.Add(new BlockCoordinates(enqueuedChunk.X, (int) y, enqueuedChunk.Z));
+					}
+				}
+				RequestMissing();
+				
+				return;
+			}
+			
 			var handledChunk = HandleChunk(enqueuedChunk);
 
 			if (handledChunk != null)
 			{
-				if (enqueuedChunk.SubChunkRequestMode == SubChunkRequestMode.SubChunkRequestModeLimited)
-				{
-					if (enqueuedChunk.SubChunkCount > 0)
-					{
-						for (uint y = enqueuedChunk.SubChunkCount; y > 0; y--)
-						{
-							_missing.Add(new BlockCoordinates(handledChunk.X, (int) y, handledChunk.Z));
-						}
-					}
-				}
-				else if (enqueuedChunk.SubChunkRequestMode == SubChunkRequestMode.SubChunkRequestModeLegacy)
+				
+				if (enqueuedChunk.SubChunkRequestMode == SubChunkRequestMode.SubChunkRequestModeLegacy)
 				{
 					chunkManager.AddChunk(handledChunk, new ChunkCoordinates(handledChunk.X, handledChunk.Z), true);
 				}
@@ -229,9 +235,9 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 				if (data.Result != SubChunkRequestResult.Success)
 				{
-					if (data.Result != SubChunkRequestResult.SuccessAllAir)
-						Log.Warn($"Got subchunk response: {data.Result}");
-
+					//if (data.Result != SubChunkRequestResult.SuccessAllAir)
+					//	Log.Warn($"Got subchunk response: {data.Result} - {data.Y}");
+					Log.Warn($"Got subchunk response: {data.Result} - {data.Y}");
 					return;
 				}
 

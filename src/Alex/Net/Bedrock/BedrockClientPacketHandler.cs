@@ -30,6 +30,7 @@ using Alex.Utils.Inventories;
 using Alex.Worlds;
 using Alex.Worlds.Abstraction;
 using Alex.Worlds.Multiplayer.Bedrock;
+using Alex.Worlds.Multiplayer.Bedrock.Resources;
 using fNbt;
 using Jose;
 using MiNET;
@@ -140,6 +141,7 @@ namespace Alex.Net.Bedrock
 
 			if (playStatus == McpePlayStatus.PlayStatus.LoginSuccess)
 			{
+				Client.ResourcePackManager.StatusChanged += ResourcePackStatusChanged;
 				Log.Info(
 					$"Play Status: Login success, reporting cache status as {(ChunkProcessor.Cache.Enabled ? "Enabled" : "Disabled")}");
 
@@ -164,12 +166,20 @@ namespace Alex.Net.Bedrock
 			else if (playStatus == McpePlayStatus.PlayStatus.PlayerSpawn)
 			{
 				Log.Info($"Play Status: Player spawn");
-				//Client.MarkAsInitialized();
+				Client.MarkAsInitialized();
 			}
 			else
 			{
 				Log.Warn($"Received unknown Play Status: ({message.status}){playStatus}");
 				Client.ShowDisconnect($"Unrecognized play status.", false, true, DisconnectReason.Network);
+			}
+		}
+
+		private void ResourcePackStatusChanged(object sender, ResourcePackManager.ResourceStatusChangedEventArgs e)
+		{
+			if (e.Status == ResourcePackManager.ResourceManagerStatus.Ready)
+			{
+			//	Client.RequestRenderDistance(0, Client.World.ChunkManager.RenderDistance);
 			}
 		}
 
@@ -780,6 +790,38 @@ namespace Alex.Net.Bedrock
 		public void HandleMcpeDimensionData(McpeDimensionData message)
 		{
 			Client.DimensionDefinitions = message.definitions;
+		}
+
+		/// <inheritdoc />
+		public void HandleMcpeUpdateAbilities(McpeUpdateAbilities message)
+		{
+			var player = Client.World.Player;
+			if (message.entityUniqueId == 0 || message.entityUniqueId == Client.EntityId)
+			{
+				foreach (var layer in message.layers)
+				{
+					if (layer.Type == AbilityLayerType.Base)
+					{
+						player.CanFly = (layer.Values & PlayerAbility.MayFly) != 0;
+						player.SetFlying((layer.Values & PlayerAbility.Flying) != 0);
+						player.HasCollision = (layer.Values & PlayerAbility.NoClip) == 0;
+						player.Invulnerable = (layer.Values & PlayerAbility.Invulnerable) != 0;
+						player.IsWorldImmutable = (layer.Values & PlayerAbility.WorldBuilder) != 0;
+						player.FlyingSpeed = layer.FlySpeed;
+						player.MovementSpeed = layer.WalkSpeed;
+					}
+				}	
+			}
+			//TODO: Implement update abilities
+			UnhandledPackage(message);
+		}
+
+		/// <inheritdoc />
+		public void HandleMcpeUpdateAdventureSettings(McpeUpdateAdventureSettings message)
+		{
+			var player = Client.World.Player;
+			player.IsNoPvM = message.noPvm;
+			player.IsWorldImmutable = message.immutableWorld;
 		}
 
 		/// <inheritdoc />

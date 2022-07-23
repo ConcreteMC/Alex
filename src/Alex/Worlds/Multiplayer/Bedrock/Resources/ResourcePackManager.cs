@@ -103,7 +103,8 @@ namespace Alex.Worlds.Multiplayer.Bedrock.Resources
 				
 			};
 			
-			response.resourcepackids.Add(missing.FirstOrDefault().Value.Identifier);
+			response.resourcepackids.AddRange(missing.Select(x => x.Value.Identifier));
+			//response.resourcepackids.Add(missing.FirstOrDefault().Value.Identifier);
 			_client.SendPacket(response);
 			
 			return true;
@@ -258,7 +259,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock.Resources
 				}
 				else
 				{
-					RequestMissing();
+					//RequestMissing();
 				}
 			}
 			else

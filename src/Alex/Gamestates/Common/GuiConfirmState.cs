@@ -38,7 +38,7 @@ namespace Alex.Gamestates.Common
 		{
 			_options = options;
 
-			Body.Anchor = Alignment.MiddleCenter;
+			//Body.Anchor = Alignment.MiddleCenter;
 
 			AddRocketElement(
 				new TextElement() { Text = options.MessageText, TranslationKey = options.MessageTranslationKey });

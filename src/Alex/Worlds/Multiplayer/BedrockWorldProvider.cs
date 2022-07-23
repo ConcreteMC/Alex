@@ -286,7 +286,7 @@ namespace Alex.Worlds.Multiplayer
 						break;
 					}
 
-					if ((!Client.GameStarted || percentage == 0) && sw.ElapsedMilliseconds >= 15000)
+					if ((!Client.GameStarted || percentage == 0) && sw.ElapsedMilliseconds >= 30000)
 					{
 						if (Client.DisconnectReason == DisconnectReason.Kicked)
 						{
@@ -338,7 +338,7 @@ namespace Alex.Worlds.Multiplayer
 				_gameStarted = true;
 
 				progressReport(LoadingState.Spawning, 99, "Waiting for Spawn Chunk");
-				SpinWait.SpinUntil(() => !World.Player.WaitingOnChunk);
+				//SpinWait.SpinUntil(() => !World.Player.WaitingOnChunk);
 
 				return LoadResult.Done;
 			}
