@@ -155,6 +155,7 @@ namespace Alex.Worlds.Multiplayer
 		{
 			_initiated = true;
 			Client.World = World;
+			Client.ChunkProcessor.Init(World);
 			Client.CommandProvider = new BedrockCommandProvider(World);
 		}
 

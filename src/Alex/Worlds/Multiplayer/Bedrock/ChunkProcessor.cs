@@ -76,13 +76,33 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			_pendingRequests.CollectionChanged += PendingRequestsOnCollectionChanged;
 		}
 
+		public void Init(World world)
+		{
+			world.ChunkManager.OnChunkRemoved += OnChunkRemoved;
+		}
+
+		private void OnChunkRemoved(object sender, ChunkRemovedEventArgs e)
+		{
+			var matches = _missing.Where(x => x.X == e.Position.X && x.Z == e.Position.Z).ToArray();
+
+			foreach (var match in matches)
+			{
+				_missing.Remove(match);
+				_pendingRequests.Remove(match);
+			}
+		}
+
 		private void PendingRequestsOnCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
 		{
-			List<ChunkCoordinates> handled = new List<ChunkCoordinates>();
 			if (e.Action == NotifyCollectionChangedAction.Remove && e.OldItems != null)
 			{
 				foreach (BlockCoordinates item in e.OldItems)
 				{
+					if (_missing.Contains(item))
+						_missing.Remove(item);
+
+					Interlocked.Decrement(ref _pendingCount);
+					
 					//if (!_pendingRequests.Any(x => x.X == item.X && x.Z == item.Z))
 					{	
 						var chunkManager = Client?.World?.ChunkManager;
@@ -132,49 +152,55 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 		private List<BlockCoordinates> _missing = new List<BlockCoordinates>();
 
+		private int _pendingCount = 0;
 		public void RequestMissing()
 		{
 			var missing = _missing.ToList();
-
-
-			McpeSubChunkRequestPacket subChunkRequestPacket = McpeSubChunkRequestPacket.CreateObject();
-			subChunkRequestPacket.dimension = (int) Client.World.Dimension;
-
 			var basePosition = new ChunkCoordinates(Client.World.Player.KnownPosition);
-			var baseY = Client.World.Player.KnownPosition.Y;
 
-			subChunkRequestPacket.basePosition =
-				new MiNET.Utils.Vectors.BlockCoordinates(basePosition.X , 0, basePosition.Z);
-
-			List<SubChunkPositionOffset> offsets = new List<SubChunkPositionOffset>();
-
-			foreach (var bc in missing)
+			var radius = (Client.ChunkPublisherRadius + 1) / 16f;
+			foreach (var group in missing.Where(x => !_pendingRequests.Contains(x))
+				        .OrderBy(x => basePosition.DistanceTo(new ChunkCoordinates(x.X, x.Z))).Chunk(16))
 			{
-				var cc = new ChunkCoordinates(bc.X, bc.Z);
-				var dx = basePosition.X - cc.X;
-				var dz = basePosition.Z - cc.Z;
-				
-				if (dx < sbyte.MinValue || dx > sbyte.MaxValue)
-					continue;
-				
-				if (dz < sbyte.MinValue || dz > sbyte.MaxValue)
-					continue;
-				
-				//	for (uint y = enqueuedChunk.SubChunkCount; y > 0; y--)
+				McpeSubChunkRequestPacket subChunkRequestPacket = McpeSubChunkRequestPacket.CreateObject();
+				subChunkRequestPacket.dimension = (int) Client.World.Dimension;
+
+				subChunkRequestPacket.basePosition =
+					new MiNET.Utils.Vectors.BlockCoordinates(basePosition.X, 0, basePosition.Z);
+
+				List<SubChunkPositionOffset> offsets = new List<SubChunkPositionOffset>();
+
+				foreach (var bc in group)
 				{
-					offsets.Add(
-						new SubChunkPositionOffset()
-						{
-							XOffset = (sbyte) dx, YOffset = (sbyte) bc.Y, ZOffset = (sbyte) dz
-						});
+					var cc = basePosition - new ChunkCoordinates(bc.X, bc.Z);
+					
+					if (Math.Abs(cc.X) > radius || Math.Abs(cc.Z) > radius)
+						continue;
+					
+					if (cc.X < sbyte.MinValue || cc.X > sbyte.MaxValue)
+						continue;
+
+					if (cc.Z < sbyte.MinValue || cc.Z > sbyte.MaxValue)
+						continue;
+
+					//	for (uint y = enqueuedChunk.SubChunkCount; y > 0; y--)
+					{
+						offsets.Add(
+							new SubChunkPositionOffset()
+							{
+								XOffset = (sbyte) cc.X, YOffset = (sbyte) bc.Y, ZOffset = (sbyte) cc.Z
+							});
+					}
+
+					//_missing.Remove(bc);
+					_pendingRequests.Add(bc);
+					Interlocked.Increment(ref _pendingCount);
 				}
 
-				_missing.Remove(bc);
+				subChunkRequestPacket.offsets = offsets.ToArray();
+
+				Client.SendPacket(subChunkRequestPacket);
 			}
-
-			subChunkRequestPacket.offsets = offsets.ToArray();
-
-			Client.SendPacket(subChunkRequestPacket);
 		}
 
 		private void HandleChunkData(ChunkData enqueuedChunk)
@@ -201,7 +227,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 						_missing.Add(new BlockCoordinates(enqueuedChunk.X, (int) y, enqueuedChunk.Z));
 					}
 				}
-				RequestMissing();
+				//RequestMissing();
 				
 				return;
 			}
@@ -224,6 +250,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 		
 		private void HandleSubChunkData(SubChunkData data)
 		{
+			var bc = new BlockCoordinates(data.X, data.Y, data.Z);
 			var cc = new ChunkCoordinates(data.X, data.Z);
 
 			try
@@ -235,9 +262,9 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 				if (data.Result != SubChunkRequestResult.Success)
 				{
-					//if (data.Result != SubChunkRequestResult.SuccessAllAir)
-					//	Log.Warn($"Got subchunk response: {data.Result} - {data.Y}");
-					Log.Warn($"Got subchunk response: {data.Result} - {data.Y}");
+					if (data.Result != SubChunkRequestResult.SuccessAllAir)
+						Log.Warn($"Got subchunk response. Result={data.Result} Position={{X: {data.X}, Y: {data.Y}, Z: {data.Z}}}");
+					//Log.Warn($"Got subchunk response: {data.Result} - {data.Y}");
 					return;
 				}
 
@@ -279,7 +306,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 				{
 					chunk = new BedrockChunkColumn(cc.X, cc.Z, WorldSettings);
 					chunk[sY] = section;
-					
+					chunk.CalculateHeight();
 					chunkManager.AddChunk(chunk, cc, true);
 					
 					//	Log.Info($"Updating chunk! X={data.X} Y={data.Y} Z={data.Z}");
@@ -289,11 +316,18 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 					chunk[sY] = section;
 
 					chunk.CalculateHeight();
-					chunkManager.ScheduleChunkUpdate(cc, ScheduleType.Full);
+					//chunkManager.ScheduleChunkUpdate(cc, ScheduleType.Full);
 				}
 			}
 			finally
 			{
+				if (_pendingRequests.Remove(bc))
+				{
+				//	Interlocked.Decrement(ref _pendingCount);
+				}
+				
+				/*if (data.Result == SubChunkRequestResult.NoSuchChunk)
+					_missing.Add(bc);*/
 				/*var matching = _pendingRequests.FirstOrDefault(x => x.X == data.X && x.Z == data.Z && x.Y == data.Y);
 				if (matching != null)
 					_pendingRequests.Remove(matching);*/
@@ -302,6 +336,14 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 		
 		public void Clear()
 		{
+			_pendingCount = 0;
+			
+			if (_missing.Count > 0)
+				_missing.Clear();
+			
+			if (_pendingRequests.Count > 0)
+				_pendingRequests.Clear();
+			
 			if (_dataQueue.Count > 0)
 			{
 				_dataQueue.TryReceiveAll(out _);

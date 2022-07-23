@@ -89,7 +89,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock.Resources
 			_client.SendPacket(response);
 		}
 
-		private bool RequestMissing()
+		private bool RequestMissing(bool all = false)
 		{
 			var missing = _resourcePackEntries.Where(x => !x.Value.IsComplete).ToArray();
 
@@ -102,9 +102,16 @@ namespace Alex.Worlds.Multiplayer.Bedrock.Resources
 			{
 				
 			};
+
+			if (all)
+			{
+				response.resourcepackids.AddRange(missing.Select(x => x.Value.Identifier));
+			}
+			else
+			{
+				response.resourcepackids.Add(missing.FirstOrDefault().Value.Identifier);
+			}
 			
-			response.resourcepackids.AddRange(missing.Select(x => x.Value.Identifier));
-			//response.resourcepackids.Add(missing.FirstOrDefault().Value.Identifier);
 			_client.SendPacket(response);
 			
 			return true;
@@ -165,7 +172,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock.Resources
 
 			//_resourcePackIds = resourcePackIds;
 
-			if (AcceptServerResources && RequestMissing())
+			if (AcceptServerResources && RequestMissing(true))
 			{
 			//	response.responseStatus = (byte)McpeResourcePackClientResponse.ResponseStatus.SendPacks;
 				Status = ResourceManagerStatus.Downloading;
@@ -223,11 +230,6 @@ namespace Alex.Worlds.Multiplayer.Bedrock.Resources
 		{
 			if (entry.IsComplete)
 			{
-				/*McpeResourcePackClientResponse response = McpeResourcePackClientResponse.CreateObject();
-				response.responseStatus = (byte)McpeResourcePackClientResponse.ResponseStatus.Completed;
-				response.resourcepackids = new ResourcePackIds() { entry.Identifier };
-				_client.SendPacket(response);*/
-
 				Log.Info(
 					$"Completed pack, Identifier={entry.Identifier} (Received: {FormattingUtils.GetBytesReadable(entry.TotalReceived)}, Expected: {FormattingUtils.GetBytesReadable(entry.ExpectedSize)})");
 
@@ -240,6 +242,10 @@ namespace Alex.Worlds.Multiplayer.Bedrock.Resources
 						
 					};
 
+					/*if (d.Value != null)
+					{
+						response.resourcepackids.Add(d.Value.Identifier);
+					}*/
 					response.resourcepackids.AddRange(_resourcePackEntries.Select(x => x.Value.Identifier));
 					
 					_client.SendPacket(response);
@@ -269,7 +275,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock.Resources
 				request.packageId = entry.PackageId;
 
 				Log.Info(
-					$"Requesting resource pack chunk, index={(entry.ExpectedIndex + 1)}/{entry.ChunkCount} packageId={request.packageId} (Received: {FormattingUtils.GetBytesReadable(entry.TotalReceived)}, Expected: {FormattingUtils.GetBytesReadable(entry.ExpectedSize)})");
+					$"Requesting resource pack chunk, index={(entry.ExpectedIndex + 1)}/{entry.ChunkCount} packageId={request.packageId}");
 
 				_client.SendPacket(request);
 			}
@@ -286,12 +292,12 @@ namespace Alex.Worlds.Multiplayer.Bedrock.Resources
 				return;
 			}
 			
-			Log.Info($"Received resourcepack chunk {message.chunkIndex + 1}/{packEntry.ChunkCount}");
 			if (packEntry.SetChunkData(message.chunkIndex, message.payload, out byte[] completedData))
 			{
 				_resourcePackCache.TryStore(packEntry.Identifier, completedData);
 			}
 			
+			Log.Info($"Received resourcepack chunk {message.chunkIndex + 1}/{packEntry.ChunkCount} (Received: {FormattingUtils.GetBytesReadable(packEntry.TotalReceived)}, Expected: {FormattingUtils.GetBytesReadable(packEntry.ExpectedSize)})");
 			CheckCompletion(packEntry);
 			
 
