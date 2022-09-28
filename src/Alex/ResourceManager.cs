@@ -693,7 +693,7 @@ namespace Alex
 
 				if (!Alex.GuiRenderer.SetLanguage(language))
 				{
-					language = "en_uk";
+					language = "en_us";
 					Alex.GuiRenderer.SetLanguage(language);
 				}
 
