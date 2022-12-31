@@ -419,7 +419,21 @@ namespace Alex
 				{
 					using (ZipArchive zipArchive = new ZipArchive(Storage.OpenFileStream(bedrockPath, FileMode.Open)))
 					{
-						zipArchive.ExtractToDirectory(di.FullName);
+						var root = "bedrock-samples-main/resource_pack/";
+						var resourcePackFiles = from currentEntry in zipArchive.Entries
+												where currentEntry.FullName.StartsWith(root)
+												where !String.IsNullOrWhiteSpace(currentEntry.Name)
+												select currentEntry;
+
+						foreach (ZipArchiveEntry entry in resourcePackFiles)
+						{
+							var path = Path.Combine(di.FullName, entry.FullName.Substring(root.Length));
+							if (!Directory.Exists(path))
+							{
+								Storage.TryCreateDirectory(Path.GetDirectoryName(path));
+							}
+							entry.ExtractToFile(path);
+						}
 					}
 
 					Storage.Delete(bedrockPath);
