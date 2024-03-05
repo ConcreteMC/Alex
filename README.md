@@ -1,3 +1,6 @@
+# Project no longer actively maintained
+I sadly no longer have the time or motivation to work on this project, i'd **strongly** recommend not using this to connect to **any** public servers as your account is likely to be flagged by anticheat. 
+
 # Alex
 ![Build status](https://github.com/ConcreteMC/Alex/workflows/.NET%20Core/badge.svg)
 [![Discord](https://img.shields.io/discord/433462740451852292.svg?color=7289da&label=Discord&logo=discord&style=flat-square)](https://discord.gg/txaahdU) 
