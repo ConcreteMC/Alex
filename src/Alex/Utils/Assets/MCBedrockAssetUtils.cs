@@ -18,7 +18,7 @@ namespace Alex.Utils.Assets
 	{
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(MCBedrockAssetUtils));
 
-		private const string VersionURL = "https://raw.githubusercontent.com/Mojang/bedrock-samples/main/version.json";
+		private const string VersionURL = "https://cdn.jsdelivr.net/gh/Mojang/bedrock-samples@main/version.json";
 		private const string DownloadURL = "https://codeload.github.com/Mojang/bedrock-samples/zip/refs/heads/main";
 		private static readonly string CurrentBedrockVersionStorageKey = Path.Combine("assets", "bedrock-version.txt");
 
